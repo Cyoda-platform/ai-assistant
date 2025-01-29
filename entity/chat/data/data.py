@@ -1,6 +1,6 @@
 import copy
 
-from common.config.config import MAX_ITERATION, RANDOM_AI_API
+from common.config.config import MAX_ITERATION
 
 APP_BUILDING_STACK_KEY = "app_building_stack"
 
@@ -309,6 +309,17 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
                        },
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY},
+                      {"question": None,
+                       "prompt": {
+                           "text": "Please, return a complete prd."
+                       },
+                       "file_name": "entity/app_design_prd.md",
+                       "answer": None,
+                       "function": None,
+                       "iteration": 0,
+                       "flow_step": GATHERING_REQUIREMENTS_STR,
+                       "max_iteration": 0,
+                       "stack": APP_BUILDING_STACK_KEY},
                       {"notification": DESIGN_PLEASE_WAIT,
                        "prompt": {},
                        "answer": None,
@@ -367,6 +378,7 @@ For more on Entity Workflows and EDA, check out this article by [Paul Schleger](
                           "max_iteration": 0,
                           "stack": WORKFLOW_STACK_KEY
                       },
+
                       {
                           "notification": """
 **While we work on your app design, let me quickly introduce Cyoda...** 😄
@@ -407,8 +419,29 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                           "max_iteration": 0,
                           "stack": APP_BUILDING_STACK_KEY
                       },
+
                       {
-                          "notification": "Awesome! Let's get started on generating your application code! I'll keep you updated with notifications on my progress and let you know when it's time to discuss any changes together",
+                          "notification": f"In this process, we will walk through each stage of building an application, from gathering initial requirements to designing, coding, and implementing the final logic.\n\n"
+"The stages of the process are as follows:\n\n"
+f"{APPLICATION_DESIGN_STR}: {APP_BUILDER_FLOW[1][APPLICATION_DESIGN_STR]},\n"
+f"{ENTITIES_DESIGN_STR}: {APP_BUILDER_FLOW[2][ENTITIES_DESIGN_STR]},\n"
+f"{WORKFLOW_DESIGN_STR}: {APP_BUILDER_FLOW[3][WORKFLOW_DESIGN_STR]},\n"
+f"{WORKFLOW_CODE_DESIGN_STR}: {APP_BUILDER_FLOW[4][WORKFLOW_CODE_DESIGN_STR]},\n"
+f"{LOGIC_CODE_DESIGN_STR}: {APP_BUILDER_FLOW[5][LOGIC_CODE_DESIGN_STR]}\n\n"
+f"***{GATHERING_REQUIREMENTS_STR}*** --> {APPLICATION_DESIGN_STR} --> {ENTITIES_DESIGN_STR} --> {WORKFLOW_DESIGN_STR} --> {WORKFLOW_CODE_DESIGN_STR} --> {LOGIC_CODE_DESIGN_STR}\n\n"
+"Each of these steps is crucial for ensuring that the application is built efficiently and meets the required specifications.",
+                          "prompt": {},
+                          "answer": None,
+                          "function": None,
+                          "info": True,
+                          "iteration": 0,
+                          "file_name": "entity/app_design.json",
+                          "flow_step": GATHERING_REQUIREMENTS_STR,
+                          "max_iteration": 0,
+                          "stack": APP_BUILDING_STACK_KEY},
+
+                      {
+                          "notification": "Awesome! Let's dive into generating your application code! 🚀 I'll keep you updated with notifications on my progress, and let you know when it's time to discuss any changes. Feel free to grab a coffee ☕ while I work—it's going to take about 5 minutes. You can either follow along with the notifications or just relax and wait for the final update!",
                           "prompt": {},
                           "answer": None,
                           "function": None,
@@ -433,64 +466,7 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                                "question": "We can discuss our ideas in the chat 💬💬, when you feel we are ready to start code generation - give me thumbs up 👍",
                                "approve": True}],
                        "stack": APP_BUILDING_STACK_KEY},
-                      {
-                          "question": "I'm ready with the PRD. We can discuss our ideas in the chat 💬💬, when you feel we are ready to start code generation - give me thumbs up 👍",
-                          "prompt": {},
-                          "answer": None,
-                          "function": None,
-                          "iteration": 0,
-                          # "file_name": "entity/app_design.json",
-                          "flow_step": GATHERING_REQUIREMENTS_STR,
-                          "approve": True,
-                          "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY},
-                      {"question": None,
-                       "prompt": {
-                           "text": "Please, return a complete prd"
-                       },
-                       "file_name": "entity/app_design_prd.md",
-                       "answer": None,
-                       "function": None,
-                       "iteration": 0,
-                       "flow_step": GATHERING_REQUIREMENTS_STR,
-                       "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY},
 
-                      {
-                          "notification": "Final step – let’s bring everything together into a single PRD doc! 📑 I'll be back with it very soon. ⏳",
-                          "prompt": {},
-                          "answer": None,
-                          "function": None,
-                          "iteration": 0,
-                          "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY
-                      },
-                      {"question": None,
-                       "prompt": {
-                           "text": "Hi! "
-                       },
-
-                       # "file_name": "entity/app_design.json",
-                       "answer": None,
-                       "approve": True,
-                       "function": None,
-                       "iteration": 0,
-                       "flow_step": GATHERING_REQUIREMENTS_STR,
-                       "max_iteration": MAX_ITERATION,
-                       "additional_questions": [
-                           {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
-                       "stack": APP_BUILDING_STACK_KEY},
-                      {
-                          "question": "I've shared my ideas on how we can design your application using the Cyoda platform, with entities and workflows 🚀. If you have any suggestions, questions, or want to make improvements, just let me know in the chat! 💬 If you're happy with everything, feel free to give me a thumbs up! 👍",
-                          "prompt": {},
-                          "answer": None,
-                          "function": None,
-                          "iteration": 0,
-                          "file_name": "entity/app_design.json",
-                          "flow_step": GATHERING_REQUIREMENTS_STR,
-                          "approve": True,
-                          "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY},
                       {"question": None,
                        "prompt": {
                            "text": """Please propose workflows for this requirement.
@@ -531,11 +507,10 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                       },
                       {"question": None,
                        "prompt": {
-                           "text": """Please outline entities for this requirement. 
-Add a single orchestration entity if necessary (API_REQUEST type is preferable, but need to discuss with the user).
+                           "text": """Please outline entities for this requirement. Return entities diagram (mermaid or plantuml).
 I am new to Cyoda and very new to application building, so please explain your choice for entity source and type in simple words. 
 Please also explain how entities in Cyoda are used to implement event driven pattern (e.g. event is sent when an entity is saved/updated).
-Please give me some json examples of data models for each entity, based on my requirement. If I provided entity schemas - just use them, if no - generate yours. 
+Please give me some json examples of data models for each entity, based on my requirement. Provide only example data. If I provided entity schemas - just use them, if no - generate yours. 
 If I ask you a general question, just return an answer to this question. 
 I say: """
                        },
@@ -546,6 +521,14 @@ I say: """
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY},
+                      {"notification": DESIGN_PLEASE_WAIT,
+                       "prompt": {},
+                       "answer": None,
+                       "function": None,
+                       "iteration": 0,
+                       "max_iteration": 0,
+                       "stack": APP_BUILDING_STACK_KEY
+                       },
                       {
                           "notification": """
 Thanks for giving the go-ahead! 🎉 Now let me generate the entities and workflow for your project.
@@ -1528,34 +1511,3 @@ def get_stack_by_name(name: str):
     }
 
     return stacks.get(name, None)
-
-#                       {
-#                           "notification": f"""
-# In this process, we will walk through each stage of building an application, from gathering initial requirements to designing, coding, and implementing the final logic.
-#
-# The stages of the process are as follows:
-#
-# {GATHERING_REQUIREMENTS_STR}: {APP_BUILDER_FLOW[0][GATHERING_REQUIREMENTS_STR]},
-#
-# {APPLICATION_DESIGN_STR}: {APP_BUILDER_FLOW[1][APPLICATION_DESIGN_STR]},
-#
-# {ENTITIES_DESIGN_STR}: {APP_BUILDER_FLOW[2][ENTITIES_DESIGN_STR]},
-#
-# {WORKFLOW_DESIGN_STR}: {APP_BUILDER_FLOW[3][WORKFLOW_DESIGN_STR]},
-#
-# {WORKFLOW_CODE_DESIGN_STR}: {APP_BUILDER_FLOW[4][WORKFLOW_CODE_DESIGN_STR]},
-#
-# {LOGIC_CODE_DESIGN_STR}: {APP_BUILDER_FLOW[5][LOGIC_CODE_DESIGN_STR]}
-#
-# ***{GATHERING_REQUIREMENTS_STR}*** --> {APPLICATION_DESIGN_STR} --> {ENTITIES_DESIGN_STR} --> {WORKFLOW_DESIGN_STR} --> {WORKFLOW_CODE_DESIGN_STR} --> {LOGIC_CODE_DESIGN_STR}
-#
-# Each of these steps is crucial for ensuring that the application is built efficiently and meets the required specifications.""",
-#                           "prompt": {},
-#                           "answer": None,
-#                           "function": None,
-#                           "info": True,
-#                           "iteration": 0,
-#                           "file_name": "entity/app_design.json",
-#                           "flow_step": GATHERING_REQUIREMENTS_STR,
-#                           "max_iteration": 0,
-#                           "stack": APP_BUILDING_STACK_KEY},
