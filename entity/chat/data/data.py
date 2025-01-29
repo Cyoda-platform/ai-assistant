@@ -422,14 +422,14 @@ For more on entity databases, check out this article by [Paul Schleger](https://
 
                       {
                           "notification": f"In this process, we will walk through each stage of building an application, from gathering initial requirements to designing, coding, and implementing the final logic.\n\n"
-"The stages of the process are as follows:\n\n"
-f"{APPLICATION_DESIGN_STR}: {APP_BUILDER_FLOW[1][APPLICATION_DESIGN_STR]},\n"
-f"{ENTITIES_DESIGN_STR}: {APP_BUILDER_FLOW[2][ENTITIES_DESIGN_STR]},\n"
-f"{WORKFLOW_DESIGN_STR}: {APP_BUILDER_FLOW[3][WORKFLOW_DESIGN_STR]},\n"
-f"{WORKFLOW_CODE_DESIGN_STR}: {APP_BUILDER_FLOW[4][WORKFLOW_CODE_DESIGN_STR]},\n"
-f"{LOGIC_CODE_DESIGN_STR}: {APP_BUILDER_FLOW[5][LOGIC_CODE_DESIGN_STR]}\n\n"
-f"***{GATHERING_REQUIREMENTS_STR}*** --> {APPLICATION_DESIGN_STR} --> {ENTITIES_DESIGN_STR} --> {WORKFLOW_DESIGN_STR} --> {WORKFLOW_CODE_DESIGN_STR} --> {LOGIC_CODE_DESIGN_STR}\n\n"
-"Each of these steps is crucial for ensuring that the application is built efficiently and meets the required specifications.",
+                                          "The stages of the process are as follows:\n\n"
+                                          f"{APPLICATION_DESIGN_STR}: {APP_BUILDER_FLOW[1][APPLICATION_DESIGN_STR]},\n"
+                                          f"{ENTITIES_DESIGN_STR}: {APP_BUILDER_FLOW[2][ENTITIES_DESIGN_STR]},\n"
+                                          f"{WORKFLOW_DESIGN_STR}: {APP_BUILDER_FLOW[3][WORKFLOW_DESIGN_STR]},\n"
+                                          f"{WORKFLOW_CODE_DESIGN_STR}: {APP_BUILDER_FLOW[4][WORKFLOW_CODE_DESIGN_STR]},\n"
+                                          f"{LOGIC_CODE_DESIGN_STR}: {APP_BUILDER_FLOW[5][LOGIC_CODE_DESIGN_STR]}\n\n"
+                                          f"***{GATHERING_REQUIREMENTS_STR}*** --> {APPLICATION_DESIGN_STR} --> {ENTITIES_DESIGN_STR} --> {WORKFLOW_DESIGN_STR} --> {WORKFLOW_CODE_DESIGN_STR} --> {LOGIC_CODE_DESIGN_STR}\n\n"
+                                          "Each of these steps is crucial for ensuring that the application is built efficiently and meets the required specifications.",
                           "prompt": {},
                           "answer": None,
                           "function": None,
@@ -466,6 +466,17 @@ f"***{GATHERING_REQUIREMENTS_STR}*** --> {APPLICATION_DESIGN_STR} --> {ENTITIES_
                                "question": "We can discuss our ideas in the chat 💬💬, when you feel we are ready to start code generation - give me thumbs up 👍",
                                "approve": True}],
                        "stack": APP_BUILDING_STACK_KEY},
+                      {
+                          "question": f"I'm ready with the design - we can discuss our ideas in the chat 💬💬, when you feel we are ready to start code generation - give me thumbs up 👍",
+                          "prompt": {},
+                          "answer": None,
+                          "function": None,
+                          "iteration": 0,
+                          "file_name": "entity/app_design.json",
+                          "flow_step": GATHERING_REQUIREMENTS_STR,
+                          "approve": True,
+                          "max_iteration": 0,
+                          "stack": APP_BUILDING_STACK_KEY},
 
                       {"question": None,
                        "prompt": {
