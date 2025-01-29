@@ -121,6 +121,12 @@ async def process_dialogue_script(token, technical_id) -> None:
 
             # Now append the event to the list
             chat["questions_queue"]["new_questions"].append(event)
+            await entity_service.update_item(token=token,
+                                             entity_model="chat",
+                                             entity_version=ENTITY_VERSION,
+                                             technical_id=technical_id,
+                                             entity=chat,
+                                             meta={})
 
     while stack and (stack[-1].get(QUESTION) or (stack[-1].get(NOTIFICATION) and not stack[-1].get(INFO))):
         _event = copy.deepcopy(stack.pop())
