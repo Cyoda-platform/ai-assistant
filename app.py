@@ -22,7 +22,7 @@ from logic.init import ai_service, cyoda_token, entity_service, chat_lock
 
 PUSH_NOTIFICATION = "push_notification"
 APPROVE = "approved"
-
+RATE_LIMIT = 100
 logger = logging.getLogger('django')
 
 app = Quart(__name__, static_folder='static', static_url_path='')
@@ -88,7 +88,7 @@ def _get_user_token(auth_header):
     return token
 
 @app.route('/')
-@rate_limit(30, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def index():
     # Ensure that 'index.html' is located in the 'static' folder
     return await send_from_directory(app.static_folder, 'index.html')
@@ -96,14 +96,14 @@ async def index():
 
 @app.route(API_PREFIX + '/chat-flow', methods=['GET'])
 @auth_required
-@rate_limit(30, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def get_chat_flow():
     return jsonify(APP_BUILDER_FLOW)
 
 
 @app.route(API_PREFIX + '/chats', methods=['GET'])
 @auth_required
-@rate_limit(30, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def get_chats():
     auth_header = request.headers.get('Authorization')
     user_id = _get_user_id(auth_header)
@@ -138,7 +138,7 @@ async def get_chats():
 
 @app.route(API_PREFIX + '/chats/<technical_id>', methods=['GET'])
 @auth_required
-@rate_limit(30, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def get_chat(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(auth_header, technical_id)
@@ -160,7 +160,7 @@ async def get_chat(technical_id):
 
 @app.route(API_PREFIX + '/chats/<technical_id>', methods=['DELETE'])
 @auth_required
-@rate_limit(30, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def delete_chat(technical_id):
     auth_header = request.headers.get('Authorization')
     await _get_chat_for_user(auth_header, technical_id)
@@ -175,7 +175,7 @@ async def delete_chat(technical_id):
 
 @app.route(API_PREFIX + '/chats', methods=['POST'])
 @auth_required
-@rate_limit(30, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def add_chat():
     auth_header = request.headers.get('Authorization')
     user_id = _get_user_id(auth_header)
@@ -469,7 +469,7 @@ async def _submit_answer_helper(technical_id, answer, auth_header, chat, user_fi
     if not answer:
         return jsonify({"message": "Invalid entity"}), 400
 
-    wait_notification = {"notification": DESIGN_PLEASE_WAIT,
+    wait_notification = {"notification": f"Thank you for your answer! {DESIGN_PLEASE_WAIT}",
                          "prompt": {},
                          "answer": None,
                          "function": None,

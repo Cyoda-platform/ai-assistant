@@ -321,6 +321,56 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
                           "notification": """
 **While we work on your app design, let me quickly introduce Cyoda...** 😄
 
+**On Entity Workflows and How an EDBMS Leads to a Horizontally Scalable Event-Driven Architecture (EDA)**
+
+In a previous article, we introduced the Entity Database (EDBMS). Now, let’s dive into how an EDBMS leads to a simpler, horizontally scalable event-driven architecture (EDA), where applications become “thin clients” with fewer moving parts and a smaller codebase. 😎
+
+### Entity Workflow
+An Entity Workflow includes:
+1. **States**: The logical status of an entity (e.g., LOCKED, UNLOCKED).
+2. **Transitions**: Pathways allowing an entity to change from one state to another.
+3. **Predicates**: Conditions or rules that decide if a transition can happen.
+4. **Actions**: Events triggered by transitions.
+
+### Example: Careful Turnstile
+A turnstile can have states like LOCKED and UNLOCKED. When a coin is added, it transitions to UNLOCKED. We can add actions to lock or unlock the turnstile based on the state. 🔒
+
+#### Automating Transitions
+We can automate transitions based on safety checks, like ensuring it's safe to pass before unlocking the turnstile. This makes the workflow smarter and more automated. 🤖
+
+#### Adding More Features
+You can further enhance workflows by adding states like OFFLINE or controlling status lights. By adding predicates and actions, we can easily update the turnstile’s behavior as needed. 🚦
+
+### Workflow Diagram
+Here’s a textual depiction of the turnstile workflow:
+
+None --> New --> LOCKED --> Coin --> UNLOCKED --> Coin --> LOCKED
+
+- The flow starts at **None** when the turnstile is first created.
+- Then, it transitions to **LOCKED** via the **New** transition.
+- From **LOCKED**, inserting a **Coin** moves it to **UNLOCKED**.
+- From **UNLOCKED**, pressing the **Push** button brings it back to **LOCKED**.
+- Inserting a **Coin** again when it's **LOCKED** keeps it in a loop between **LOCKED** and **UNLOCKED**.
+
+### Why This Works
+Entity workflows are intuitive and iterative. They break complex tasks into smaller, manageable actions and rules that can be reused, making systems more adaptable to change and easier to maintain. 🔄
+
+For more on Entity Workflows and EDA, check out this article by [Paul Schleger](https://medium.com/@paul_42036/entity-workflows-for-event-driven-architectures-4d491cf898a5).
+""",
+                          "prompt": {},
+                          "info": True,
+                          "answer": None,
+                          "function": None,
+                          "iteration": 0,
+                          "file_name": "entity/app_design.json",
+                          "flow_step": APPLICATION_DESIGN_STR,
+                          "max_iteration": 0,
+                          "stack": WORKFLOW_STACK_KEY
+                      },
+                      {
+                          "notification": """
+**While we work on your app design, let me quickly introduce Cyoda...** 😄
+
 **Simplify My Work-Life! 😅**
 
 Most databases only store and retrieve data, but if I want to do more, I need many other tools. More tools = more complexity! 😬 I prefer simpler systems with fewer parts that fit together. But as tech improves, systems get harder to connect. 😕
@@ -357,6 +407,15 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                           "max_iteration": 0,
                           "stack": APP_BUILDING_STACK_KEY
                       },
+                      {
+                          "notification": "Awesome! Let's get started on generating your application code! I'll keep you updated with notifications on my progress and let you know when it's time to discuss any changes together",
+                          "prompt": {},
+                          "answer": None,
+                          "function": None,
+                          "iteration": 0,
+                          "max_iteration": 0,
+                          "stack": APP_BUILDING_STACK_KEY
+                      },
                       {"question": None,
                        "prompt": {
                            "text": "Hi! "
@@ -370,10 +429,12 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": MAX_ITERATION,
                        "additional_questions": [
-                           {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
+                           {
+                               "question": "We can discuss our ideas in the chat 💬💬, when you feel we are ready to start code generation - give me thumbs up 👍",
+                               "approve": True}],
                        "stack": APP_BUILDING_STACK_KEY},
                       {
-                          "question": APPROVAL_NOTIFICATION,
+                          "question": "I'm ready with the PRD. We can discuss our ideas in the chat 💬💬, when you feel we are ready to start code generation - give me thumbs up 👍",
                           "prompt": {},
                           "answer": None,
                           "function": None,
@@ -394,14 +455,42 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY},
-                      {"notification": DESIGN_PLEASE_WAIT,
-                       "prompt": {},
+
+                      {
+                          "notification": "Final step – let’s bring everything together into a single PRD doc! 📑 I'll be back with it very soon. ⏳",
+                          "prompt": {},
+                          "answer": None,
+                          "function": None,
+                          "iteration": 0,
+                          "max_iteration": 0,
+                          "stack": APP_BUILDING_STACK_KEY
+                      },
+                      {"question": None,
+                       "prompt": {
+                           "text": "Hi! "
+                       },
+
+                       # "file_name": "entity/app_design.json",
                        "answer": None,
+                       "approve": True,
                        "function": None,
                        "iteration": 0,
-                       "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY
-                       },
+                       "flow_step": GATHERING_REQUIREMENTS_STR,
+                       "max_iteration": MAX_ITERATION,
+                       "additional_questions": [
+                           {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
+                       "stack": APP_BUILDING_STACK_KEY},
+                      {
+                          "question": "I've shared my ideas on how we can design your application using the Cyoda platform, with entities and workflows 🚀. If you have any suggestions, questions, or want to make improvements, just let me know in the chat! 💬 If you're happy with everything, feel free to give me a thumbs up! 👍",
+                          "prompt": {},
+                          "answer": None,
+                          "function": None,
+                          "iteration": 0,
+                          "file_name": "entity/app_design.json",
+                          "flow_step": GATHERING_REQUIREMENTS_STR,
+                          "approve": True,
+                          "max_iteration": 0,
+                          "stack": APP_BUILDING_STACK_KEY},
                       {"question": None,
                        "prompt": {
                            "text": """Please propose workflows for this requirement.
@@ -431,17 +520,24 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY},
-                      {"notification": DESIGN_PLEASE_WAIT,
-                       "prompt": {},
-                       "answer": None,
-                       "function": None,
-                       "iteration": 0,
-                       "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY
-                       },
+                      {
+                          "notification": "I'm ready with the entities. Now I need to generate the workflows to give life to our data - I'll be back with it very soon. ⏳",
+                          "prompt": {},
+                          "answer": None,
+                          "function": None,
+                          "iteration": 0,
+                          "max_iteration": 0,
+                          "stack": APP_BUILDING_STACK_KEY
+                      },
                       {"question": None,
                        "prompt": {
-                           "text": "Please give me some examples of data models for each entity, based on my requirement. If I provided entity schemas - just use them, if no - generate yours. Make sure you take care about data consistency (e.g. referential). If there is any data ingestion involved add parameters to the orchestration entity."
+                           "text": """Please outline entities for this requirement. 
+Add a single orchestration entity if necessary (API_REQUEST type is preferable, but need to discuss with the user).
+I am new to Cyoda and very new to application building, so please explain your choice for entity source and type in simple words. 
+Please also explain how entities in Cyoda are used to implement event driven pattern (e.g. event is sent when an entity is saved/updated).
+Please give me some json examples of data models for each entity, based on my requirement. If I provided entity schemas - just use them, if no - generate yours. 
+If I ask you a general question, just return an answer to this question. 
+I say: """
                        },
                        # "file_name": "entity/app_design.json",
                        "answer": None,
@@ -450,36 +546,52 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY},
-                      {"notification": DESIGN_PLEASE_WAIT,
-                       "prompt": {},
-                       "answer": None,
-                       "function": None,
-                       "iteration": 0,
-                       "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY
-                       },
+                      {
+                          "notification": """
+Thanks for giving the go-ahead! 🎉 Now let me generate the entities and workflow for your project.
+
+Entities represent your data 📊.
+Workflow shows the actions you can take with that data ⚙️.
+I'll share my suggestions with you, but feel free to make changes whenever you like! ✨
+
+For more on entity databases, check out this article by [Paul Schleger](https://medium.com/@paul_42036/whats-an-entity-database-11f8538b631a) 📚.
+""",
+                          "prompt": {},
+                          "answer": None,
+                          "function": None,
+                          "iteration": 0,
+                          "max_iteration": 0,
+                          "stack": APP_BUILDING_STACK_KEY
+                      },
                       {"question": None,
                        "prompt": {
-                           "text": "Please validate the my requirement and propose entities for this requirement. Add a single orchestration entity if necessary (API_REQUEST type is preferable, but need to discuss with the user). Please explain the information about entity source and type and make a suggestion, you can ask me for a recommendation. I am new to Cyoda and very new to application building, so please explain your choice in simple words. Also please don't use Cyoda specific terms, I don't understand them. Please also explain how entities in Cyoda are used to implement event driven pattern (e.g. event is sent when an entity is saved/updated). If I ask you a general question, just return an answer to this question. I say: "
+                           "text": "Hi! This is a general question, but remember we are building Cyoda app, and currently we are designing my journey and sequence diagram, so if the user requirement is sufficient it's a nice idea to return these mermaid diagrams. If my question is completely irrelevant - answer it as is , but remind that we are building app here. I say:"
                        },
+
                        # "file_name": "entity/app_design.json",
                        "answer": None,
+                       "approve": True,
                        "function": None,
                        "iteration": 0,
                        "flow_step": GATHERING_REQUIREMENTS_STR,
-                       "max_iteration": 0,
+                       "max_iteration": MAX_ITERATION,
+                       "additional_questions": [
+                           {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
                        "stack": APP_BUILDING_STACK_KEY},
-                      {"notification": DESIGN_PLEASE_WAIT,
-                       "prompt": {},
-                       "answer": None,
-                       "function": None,
-                       "iteration": 0,
-                       "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY
-                       },
+                      {
+                          "question": f"{APPROVAL_NOTIFICATION}",
+                          "prompt": {},
+                          "answer": None,
+                          "function": None,
+                          "iteration": 0,
+                          "file_name": "entity/app_design.json",
+                          "flow_step": GATHERING_REQUIREMENTS_STR,
+                          "approve": True,
+                          "max_iteration": 0,
+                          "stack": APP_BUILDING_STACK_KEY},
                       {"question": None,
                        "prompt": {
-                           "text": "Please validate my requirement and return journey diagram and sequence diagram. Use markdown with mermaid dialect (```mermaid). Explain your choice in simple words, but try to keep everything short and friendly. Talk to me like we are close friends. If I ask you a general question, just return an answer to this question. I say: "
+                           "text": "Please validate my requirement and return journey diagram and sequence diagram. Use markdown with mermaid dialect (```mermaid). Explain your choice in simple words, but try to keep everything short and friendly. Talk to me like we are close friends. If I ask you a general question, just return an answer to this question. Start your answer with what you understood from my requirement. If my requirement is not clear enough (too short etc) - return a suggestion to discuss the requirement in detail. My requirement: "
                        },
                        # "file_name": "entity/app_design.json",
                        "answer": None,
@@ -487,6 +599,8 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                        "iteration": 0,
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": 0,
+                       # "additional_questions": [
+                       #    {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
                        "stack": APP_BUILDING_STACK_KEY},
                       {
                           "question": "💡 What kind of application would you like to build? I'd love to hear your ideas! Feel free to share them with me! 😊",
@@ -905,56 +1019,7 @@ workflow_stack = lambda entity: [
         "flow_step": WORKFLOW_CODE_DESIGN_STR,
         "max_iteration": 0,
         "stack": PROCESSORS_STACK_KEY},
-    {
-        "notification": """
-**While we work on your app design, let me quickly introduce Cyoda...** 😄
 
-**On Entity Workflows and How an EDBMS Leads to a Horizontally Scalable Event-Driven Architecture (EDA)**
-
-In a previous article, we introduced the Entity Database (EDBMS). Now, let’s dive into how an EDBMS leads to a simpler, horizontally scalable event-driven architecture (EDA), where applications become “thin clients” with fewer moving parts and a smaller codebase. 😎
-
-### Entity Workflow
-An Entity Workflow includes:
-1. **States**: The logical status of an entity (e.g., LOCKED, UNLOCKED).
-2. **Transitions**: Pathways allowing an entity to change from one state to another.
-3. **Predicates**: Conditions or rules that decide if a transition can happen.
-4. **Actions**: Events triggered by transitions.
-
-### Example: Careful Turnstile
-A turnstile can have states like LOCKED and UNLOCKED. When a coin is added, it transitions to UNLOCKED. We can add actions to lock or unlock the turnstile based on the state. 🔒
-
-#### Automating Transitions
-We can automate transitions based on safety checks, like ensuring it's safe to pass before unlocking the turnstile. This makes the workflow smarter and more automated. 🤖
-
-#### Adding More Features
-You can further enhance workflows by adding states like OFFLINE or controlling status lights. By adding predicates and actions, we can easily update the turnstile’s behavior as needed. 🚦
-
-### Workflow Diagram
-Here’s a textual depiction of the turnstile workflow:
-
-None --> New --> LOCKED --> Coin --> UNLOCKED --> Coin --> LOCKED
-
-- The flow starts at **None** when the turnstile is first created.
-- Then, it transitions to **LOCKED** via the **New** transition.
-- From **LOCKED**, inserting a **Coin** moves it to **UNLOCKED**.
-- From **UNLOCKED**, pressing the **Push** button brings it back to **LOCKED**.
-- Inserting a **Coin** again when it's **LOCKED** keeps it in a loop between **LOCKED** and **UNLOCKED**.
-
-### Why This Works
-Entity workflows are intuitive and iterative. They break complex tasks into smaller, manageable actions and rules that can be reused, making systems more adaptable to change and easier to maintain. 🔄
-
-For more on Entity Workflows and EDA, check out this article by [Paul Schleger](https://medium.com/@paul_42036/entity-workflows-for-event-driven-architectures-4d491cf898a5).
-""",
-        "prompt": {},
-        "info": True,
-        "answer": None,
-        "function": None,
-        "iteration": 0,
-        "file_name": "entity/app_design.json",
-        "flow_step": APPLICATION_DESIGN_STR,
-        "max_iteration": 0,
-        "stack": WORKFLOW_STACK_KEY
-    },
     {
         "notification": f"""Proceeding to {WORKFLOW_DESIGN_STR}
         
