@@ -164,7 +164,7 @@ async def save_raw_data_to_entity_file(token, _event, chat) -> str:
     file_name = _event["file_name"]
     await _save_file(chat_id=chat["chat_id"], _data=json.dumps(_event["answer"]), item=file_name)
     notification_text = PUSHED_CHANGES_NOTIFICATION.format(file_name=file_name, repository_url=REPOSITORY_URL,
-                                                           chat_id=chat["chat_id"])
+                                                           chat_id=chat["chat_id"], publish=True)
     await _send_notification(chat=chat, event=_event, notification_text=notification_text)
     return _event["answer"]
 
@@ -176,7 +176,7 @@ async def generate_cyoda_workflow(token, _event, chat):
     try:
         if (_event.get("entity").get("entity_workflow") and _event.get("entity").get("entity_workflow").get(
                 "transitions")):
-            ai_question = f"what workflow could you recommend for this sketch: {json.dumps(_event.get("entity").get("entity_workflow"))}. All transitions automated, no criteria needed, only externalized processors allowed, calculation node = {chat["chat_id"]}  , calculation_response_timeout_ms = 120000 .  Return only json without any comments."
+            ai_question = f"what workflow could you recommend for this sketch: {json.dumps(_event.get("entity").get("entity_workflow"))}. All transitions automated, no criteria needed, only externalized processors allowed, calculation node = {chat["chat_id"]}, calculation_response_timeout_ms = 120000, sync_process=false, new_transaction_for_async=true.  Return only json without any comments."
             resp = await ai_service.ai_chat(token=token, chat_id=chat["chat_id"], ai_endpoint=WORKFLOW_AI_API,
                                             ai_question=ai_question)
             workflow = parse_workflow_json(resp)

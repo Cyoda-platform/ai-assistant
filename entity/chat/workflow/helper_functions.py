@@ -129,7 +129,7 @@ def _mock_ai(prompt_text):
     return json_mock_data.get(prompt_text[:15], json.dumps({"entity": "some random text"}))
 
 
-def get_event_template(event, question='', notification='', answer='', prompt=None, file_name=None, editable=False):
+def get_event_template(event, question='', notification='', answer=None, prompt=None, file_name=None, editable=False, publish=False):
     # Predefined keys for the final JSON structure
     final_json = {
         "question": question,  # Sets the provided question
@@ -145,7 +145,8 @@ def get_event_template(event, question='', notification='', answer='', prompt=No
         "file_name": file_name if file_name else event.get('file_name', ''),
         "context": event.get('context', {}),
         "approve": True,
-        "editable": editable
+        "editable": editable,
+        "publish": publish if publish else event.get('publish', {})
     }
     exclusion_values = ['stack']  # Values to be excluded from the final JSON
 
@@ -416,7 +417,7 @@ async def _git_push(chat_id, file_paths: list, commit_message: str):
         logger.exception(e)
 
 
-async def _send_notification(chat, event, notification_text, file_name=None, editable=False):
+async def _send_notification(chat, event, notification_text, file_name=None, editable=False, publish=False):
     stack = chat["chat_flow"]["current_flow"]
     notification_event = get_event_template(notification=notification_text,
                                             event=event,
@@ -424,7 +425,8 @@ async def _send_notification(chat, event, notification_text, file_name=None, edi
                                             answer='',
                                             prompt={},
                                             file_name=file_name,
-                                            editable=editable)
+                                            editable=editable,
+                                            publish=publish)
     stack.append(notification_event)
     return stack
 
@@ -486,7 +488,7 @@ async def save_result_to_file(chat, _event, _data):
         notification_text = PUSHED_CHANGES_NOTIFICATION.format(file_name=file_name, repository_url=REPOSITORY_URL,
                                                                chat_id=chat["chat_id"])
         await _send_notification(chat=chat, event=_event, notification_text=notification_text, file_name=file_name,
-                                 editable=True)
+                                 editable=True, publish=True)
 
 
 async def generate_data_ingestion_code_for_entity(_event, chat, entity, files_notifications, target_dir, token):
@@ -537,7 +539,7 @@ async def generate_file_contents(_event, chat, file_name, ai_question,
     # Send a notification with the generated code file
     notification_text = PUSHED_CHANGES_NOTIFICATION.format(file_name=file_name, repository_url=REPOSITORY_URL,
                                                            chat_id=chat["chat_id"])
-    await _send_notification(chat=chat, event=_event, notification_text=notification_text)
+    await _send_notification(chat=chat, event=_event, notification_text=notification_text, publish=True)
     notification_text = f"""{REPOSITORY_URL}/tree/{chat['chat_id']}/{file_name}
 
 {generated_text}"""

@@ -19,7 +19,7 @@ FORM_SUBMISSION_STACK_KEY = "form_submission_stack"
 FILE_UPLOAD_STACK_KEY = "file_upload_stack"
 
 API_REQUEST_STACK_KEY = "api_request_stack"
-APPROVAL_NOTIFICATION = "Give me thumbs up 👍 if I got you right or we can discuss our ideas in the chat 💬💬"
+APPROVAL_NOTIFICATION = "Give a thumbs up 👍 if you'd like to proceed to the next question. If you'd like to discuss further, let's chat 💬"
 DESIGN_PLEASE_WAIT = "Please give me a moment to think everything over 🤔⏳"
 APPROVE_WARNING = "Sorry, you cannot skip this question. If you're unsure about anything, please refer to the example answers for guidance. If you need further help, just let us know! 😊 Apologies for the inconvenience!🙌"
 OPERATION_FAILED_WARNING = "⚠️ Sorry, this action is not available right now. Please try again or wait for new questions ⚠️"
@@ -57,11 +57,11 @@ I’ve submitted changes to the file: `{file_name}` in your branch. You can chec
 1. **Pulling or fetching** the changes from the remote repository, or  
 2. **Opening the link** to view the file directly: [View changes here]( {repository_url}/tree/{chat_id}/{file_name}) 🔗 (this will open in a new tab).
 
-If you’re happy with the changes, feel free to **modify the file** if needed and click **Approve** so I can pull your updates. 👍
+Feel free to **modify the file** as necessary
 
-Also, you can use **Canvas** to discuss the changes with me anytime around the app-building flow! 🖌️💬
+I will proceed with my work... I'll let you know when we can discuss the changes and make necessary update.
+"""
 
-Let me know if you have any questions or suggestions! 😄"""
 FILES_NOTIFICATIONS = {
     "code": {
         "text": "🖌️💬",
@@ -217,7 +217,7 @@ ENTITIES_DESIGN = {
 }
 
 # Finished
-app_building_stack = [{"question": "Finished",
+app_building_stack = [{"question": "Your application is finished! Thank you for collaboration!",
                        "prompt": {},
                        "answer": None,
                        "function": None,
@@ -225,7 +225,8 @@ app_building_stack = [{"question": "Finished",
                        "iteration": 0,
                        "file_name": "entity/chat.json",
                        "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY},
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True},
                       {"question": None,
                        "prompt": {},
                        "answer": None,
@@ -247,21 +248,8 @@ We are available in the **Google Tech Channel** to support you. If you spot any 
 For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re here to help! 😊
                        """,
                        "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY},
-                      {"question": None,
-                       "prompt": {
-                           "text": "Hi! "
-                       },
-
-                       # "file_name": "entity/app_design.json",
-                       "answer": None,
-                       "approve": True,
-                       "function": None,
-                       "iteration": 0,
-                       "max_iteration": MAX_ITERATION,
-                       "additional_questions": [
-                           {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
-                       "stack": APP_BUILDING_STACK_KEY},
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True},
                       {
                           "question": APPROVAL_NOTIFICATION,
                           "prompt": {},
@@ -272,7 +260,8 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
                           "flow_step": GATHERING_REQUIREMENTS_STR,
                           "approve": True,
                           "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY},
+                          "stack": APP_BUILDING_STACK_KEY,
+                          "publish": True},
                       # add_design_stack
                       {"question": None,
                        "prompt": {},
@@ -286,7 +275,7 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
                        "stack": APP_BUILDING_STACK_KEY},
                       {"question": None,
                        "prompt": {
-                           "text": "Generate Cyoda design, based on the requirement and the final prd. Use only lowercase underscore for namings. If the entity is saved in the workflow of another entity (e.g. JOB) then its source will be ENTITY_EVENT. Prefer entity source/type mentioned in the prd, if it is unclear default to API_REQUEST or ENTITY_EVENT for secondary data. Avoid scheduler unless specified explicitly.",
+                           "text": "Generate Cyoda design, based on the requirement and the final prd. Use only lowercase underscore for namings. If the entity is saved in the workflow of another entity then its source will be ENTITY_EVENT. The JOB entity_source defaults to API_REQUEST. Prefer entity source/type mentioned in the prd, if it is unclear default to API_REQUEST or ENTITY_EVENT for secondary data. Avoid scheduler unless specified explicitly.",
                            "schema": {
                                "$schema": "http://json-schema.org/draft-07/schema#",
                                "title": "Cyoda design",
@@ -309,6 +298,15 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
                        },
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY},
+                      {"notification": DESIGN_PLEASE_WAIT,
+                       "prompt": {},
+                       "answer": None,
+                       "function": None,
+                       "iteration": 0,
+                       "max_iteration": 0,
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True
+                       },
                       {"question": None,
                        "prompt": {
                            "text": "Please, return a complete prd."
@@ -319,117 +317,57 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
                        "iteration": 0,
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY},
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True},
                       {"notification": DESIGN_PLEASE_WAIT,
                        "prompt": {},
                        "answer": None,
                        "function": None,
                        "iteration": 0,
                        "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True
                        },
                       {
                           "notification": """
-**While we work on your app design, let me quickly introduce Cyoda...** 😄
+Awesome! Let's dive into generating your application code! 🚀 
 
-**On Entity Workflows and How an EDBMS Leads to a Horizontally Scalable Event-Driven Architecture (EDA)**
+I'll keep you updated with notifications on my progress, and let you know when it's time to discuss any changes.
+ 
+Feel free to grab a coffee ☕ while I work—it's going to take about 2 minutes. 
+ 
+Just relax and wait for the update!
 
-In a previous article, we introduced the Entity Database (EDBMS). Now, let’s dive into how an EDBMS leads to a simpler, horizontally scalable event-driven architecture (EDA), where applications become “thin clients” with fewer moving parts and a smaller codebase. 😎
+In this process, we will walk through each stage of building an application, from gathering initial requirements to designing, coding, and implementing the final logic.
 
-### Entity Workflow
-An Entity Workflow includes:
-1. **States**: The logical status of an entity (e.g., LOCKED, UNLOCKED).
-2. **Transitions**: Pathways allowing an entity to change from one state to another.
-3. **Predicates**: Conditions or rules that decide if a transition can happen.
-4. **Actions**: Events triggered by transitions.
+### The stages of the process are as follows:
 
-### Example: Careful Turnstile
-A turnstile can have states like LOCKED and UNLOCKED. When a coin is added, it transitions to UNLOCKED. We can add actions to lock or unlock the turnstile based on the state. 🔒
+1. **Application design**:  
+   Let's design the application using diagrams and chat. You'll receive a text document with the PRD as the output.  
+   *Output documents*: entity/app_design.md
 
-#### Automating Transitions
-We can automate transitions based on safety checks, like ensuring it's safe to pass before unlocking the turnstile. This makes the workflow smarter and more automated. 🤖
+2. **Entities design**:  
+   Let's define the JSON data structure for each entity.
+   *Output documents*: entity/*
 
-#### Adding More Features
-You can further enhance workflows by adding states like OFFLINE or controlling status lights. By adding predicates and actions, we can easily update the turnstile’s behavior as needed. 🚦
+3. **Workflow design**:  
+   Let's ensure our entity workflow is correctly defined.
+   *Output documents*: entity/*/workflow.json
 
-### Workflow Diagram
-Here’s a textual depiction of the turnstile workflow:
+4. **Workflow processors code design**:  
+   Let's implement the workflow processors.
+   *Output documents*: entity/*/workflow.py
 
-None --> New --> LOCKED --> Coin --> UNLOCKED --> Coin --> LOCKED
+5. **Additional logic code design**:  
+   Let's develop any additional business logic.
+   *Output documents*: entity/*/api.py or entity/*/logic.py
 
-- The flow starts at **None** when the turnstile is first created.
-- Then, it transitions to **LOCKED** via the **New** transition.
-- From **LOCKED**, inserting a **Coin** moves it to **UNLOCKED**.
-- From **UNLOCKED**, pressing the **Push** button brings it back to **LOCKED**.
-- Inserting a **Coin** again when it's **LOCKED** keeps it in a loop between **LOCKED** and **UNLOCKED**.
+---
 
-### Why This Works
-Entity workflows are intuitive and iterative. They break complex tasks into smaller, manageable actions and rules that can be reused, making systems more adaptable to change and easier to maintain. 🔄
+### Process Flow:
 
-For more on Entity Workflows and EDA, check out this article by [Paul Schleger](https://medium.com/@paul_42036/entity-workflows-for-event-driven-architectures-4d491cf898a5).
-""",
-                          "prompt": {},
-                          "info": True,
-                          "answer": None,
-                          "function": None,
-                          "iteration": 0,
-                          "file_name": "entity/app_design.json",
-                          "flow_step": APPLICATION_DESIGN_STR,
-                          "max_iteration": 0,
-                          "stack": WORKFLOW_STACK_KEY
-                      },
-
-                      {
-                          "notification": """
-**While we work on your app design, let me quickly introduce Cyoda...** 😄
-
-**Simplify My Work-Life! 😅**
-
-Most databases only store and retrieve data, but if I want to do more, I need many other tools. More tools = more complexity! 😬 I prefer simpler systems with fewer parts that fit together. But as tech improves, systems get harder to connect. 😕
-
-I love creating things that work quickly. So, how can we simplify? 🤔 Systems really only do three things:
-1. Take in information 📨
-2. Change, delete, or create info 🔄
-3. Make info accessible 🔍
-
-But we need **information**—not just data! 📚
-
-Most systems need a database. But let’s go beyond storage and process data too. Think of it as a "smart" database that does more! 😎
-
-**Entities Make It Easier!**  
-We don’t think in tables or numbers—we think in real-world things! 🤔 A database should focus on **entities**—things that have a start, middle, and end, like orders or payments. These entities change over time and follow rules, like a workflow. ⏳
-
-**Why Entity State Machines are Great!**  
-Viewing data as "entities" makes it easier to understand and use. It’s like mapping out real-life processes. 🔄 And you can change things without breaking the system. 💪
-
-**The Entity Database (EDBMS)**  
-An EDBMS keeps everything simple by managing processes and rules inside the database. It’s like having a smart assistant for your business. 😎 Great for industries like healthcare, manufacturing, or customer management, where data and processes are tightly linked.
-
-Let’s build better, simpler systems! 🚀
-
-For more on entity databases, check out this article by [Paul Schleger](https://medium.com/@paul_42036/whats-an-entity-database-11f8538b631a).
-""",
-                          "prompt": {},
-                          "answer": None,
-                          "function": None,
-                          "iteration": 0,
-                          "info": True,
-                          "file_name": "entity/app_design.json",
-                          "flow_step": APPLICATION_DESIGN_STR,
-                          "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY
-                      },
-
-                      {
-                          "notification": f"In this process, we will walk through each stage of building an application, from gathering initial requirements to designing, coding, and implementing the final logic.\n\n"
-                                          "The stages of the process are as follows:\n\n"
-                                          f"{APPLICATION_DESIGN_STR}: {APP_BUILDER_FLOW[1][APPLICATION_DESIGN_STR]},\n"
-                                          f"{ENTITIES_DESIGN_STR}: {APP_BUILDER_FLOW[2][ENTITIES_DESIGN_STR]},\n"
-                                          f"{WORKFLOW_DESIGN_STR}: {APP_BUILDER_FLOW[3][WORKFLOW_DESIGN_STR]},\n"
-                                          f"{WORKFLOW_CODE_DESIGN_STR}: {APP_BUILDER_FLOW[4][WORKFLOW_CODE_DESIGN_STR]},\n"
-                                          f"{LOGIC_CODE_DESIGN_STR}: {APP_BUILDER_FLOW[5][LOGIC_CODE_DESIGN_STR]}\n\n"
-                                          f"***{GATHERING_REQUIREMENTS_STR}*** --> {APPLICATION_DESIGN_STR} --> {ENTITIES_DESIGN_STR} --> {WORKFLOW_DESIGN_STR} --> {WORKFLOW_CODE_DESIGN_STR} --> {LOGIC_CODE_DESIGN_STR}\n\n"
-                                          "Each of these steps is crucial for ensuring that the application is built efficiently and meets the required specifications.",
+Gathering requirements --> **Application design** --> **Entities design** --> **Workflow design** --> **Workflow processors code design** --> **Additional logic code design**         
+                          """,
                           "prompt": {},
                           "answer": None,
                           "function": None,
@@ -438,17 +376,8 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                           "file_name": "entity/app_design.json",
                           "flow_step": GATHERING_REQUIREMENTS_STR,
                           "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY},
-
-                      {
-                          "notification": "Awesome! Let's dive into generating your application code! 🚀 I'll keep you updated with notifications on my progress, and let you know when it's time to discuss any changes. Feel free to grab a coffee ☕ while I work—it's going to take about 5 minutes. You can either follow along with the notifications or just relax and wait for the final update!",
-                          "prompt": {},
-                          "answer": None,
-                          "function": None,
-                          "iteration": 0,
-                          "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY
-                      },
+                          "stack": APP_BUILDING_STACK_KEY,
+                          "publish": True},
                       {"question": None,
                        "prompt": {
                            "text": "Hi! "
@@ -465,7 +394,8 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                            {
                                "question": "We can discuss our ideas in the chat 💬💬, when you feel we are ready to start code generation - give me thumbs up 👍",
                                "approve": True}],
-                       "stack": APP_BUILDING_STACK_KEY},
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True},
                       {
                           "question": f"I'm ready with the design - we can discuss our ideas in the chat 💬💬, when you feel we are ready to start code generation - give me thumbs up 👍",
                           "prompt": {},
@@ -476,7 +406,8 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                           "flow_step": GATHERING_REQUIREMENTS_STR,
                           "approve": True,
                           "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY},
+                          "stack": APP_BUILDING_STACK_KEY,
+                          "publish": True},
 
                       {"question": None,
                        "prompt": {
@@ -506,7 +437,8 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                        "iteration": 0,
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY},
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True},
                       {
                           "notification": "I'm ready with the entities. Now I need to generate the workflows to give life to our data - I'll be back with it very soon. ⏳",
                           "prompt": {},
@@ -514,7 +446,8 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                           "function": None,
                           "iteration": 0,
                           "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY
+                          "stack": APP_BUILDING_STACK_KEY,
+                          "publish": True
                       },
                       {"question": None,
                        "prompt": {
@@ -531,22 +464,50 @@ I say: """
                        "iteration": 0,
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY},
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True},
                       {"notification": DESIGN_PLEASE_WAIT,
                        "prompt": {},
                        "answer": None,
                        "function": None,
                        "iteration": 0,
                        "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True
                        },
                       {
                           "notification": """
-Thanks for giving the go-ahead! 🎉 Now let me generate the entities and workflow for your project.
+Thanks for the go-ahead!
+There are many ways to structure systems. We suggest using **event-driven design** with **entities** and **state machines**. This approach has proven to work exceptionally well for **high-availability** and **data-intensive** applications, ensuring scalability and simplicity.
 
-Entities represent your data 📊.
-Workflow shows the actions you can take with that data ⚙️.
-I'll share my suggestions with you, but feel free to make changes whenever you like! ✨
+### What are **Entities**? 🤔
+Entities are **data units** that represent real-world objects. Each entity has a **lifecycle**, **states**, and **transitions** that define how it evolves over time.
+
+### Our Approach: 💡
+- **Entities** represent things like a **Light Bulb** 💡.
+- **State Machines** visualize the **lifecycle** of entities (states + transitions) 🔄.
+- **Event-Driven Architecture** triggers actions based on events, making systems responsive and scalable ⚡.
+
+### Simple Light Bulb Example 💡:
+- **States**:  
+  - **OFF** 🚫  
+  - **ON** ✅
+
+- **Transitions**:  
+  - **New** → OFF (initial state)  
+  - **Flip Switch** → ON  
+  - **Flip Switch Again** → OFF
+---
+
+### Light Bulb Flowchart:
+
+```mermaid
+stateDiagram-v2
+    [*] --> OFF
+    OFF --> ON : Flip Switch
+    ON --> OFF : Flip Switch Again
+```    
+🎉 Let’s dive into creating your project’s **entities** and **workflow** to build a scalable and data-intensive system! 
 
 For more on entity databases, check out this article by [Paul Schleger](https://medium.com/@paul_42036/whats-an-entity-database-11f8538b631a) 📚.
 """,
@@ -555,7 +516,8 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                           "function": None,
                           "iteration": 0,
                           "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY
+                          "stack": APP_BUILDING_STACK_KEY,
+                          "publish": True
                       },
                       {"question": None,
                        "prompt": {
@@ -571,7 +533,8 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                        "max_iteration": MAX_ITERATION,
                        "additional_questions": [
                            {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
-                       "stack": APP_BUILDING_STACK_KEY},
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True},
                       {
                           "question": f"{APPROVAL_NOTIFICATION}",
                           "prompt": {},
@@ -582,10 +545,11 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                           "flow_step": GATHERING_REQUIREMENTS_STR,
                           "approve": True,
                           "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY},
+                          "stack": APP_BUILDING_STACK_KEY,
+                          "publish": True},
                       {"question": None,
                        "prompt": {
-                           "text": "Please validate my requirement and return journey diagram and sequence diagram. Use markdown with mermaid dialect (```mermaid). Explain your choice in simple words, but try to keep everything short and friendly. Talk to me like we are close friends. If I ask you a general question, just return an answer to this question. Start your answer with what you understood from my requirement. If my requirement is not clear enough (too short etc) - return a suggestion to discuss the requirement in detail. My requirement: "
+                           "text": "Please validate my requirement and return journey diagram and sequence diagram. Use markdown with mermaid dialect (```mermaid). Explain your choice in simple words, but try to keep everything short and friendly. Talk to me like we are close friends. If I ask you a general question, just return an answer to this question. Start your answer with what you understood from my requirement. My requirement: "
                        },
                        # "file_name": "entity/app_design.json",
                        "answer": None,
@@ -595,7 +559,22 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                        "max_iteration": 0,
                        # "additional_questions": [
                        #    {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
-                       "stack": APP_BUILDING_STACK_KEY},
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True},
+                      {"question": None,
+                       "prompt": {
+                           "text": "We are in the loop of requirement validation. Talk to me like we are close friends. If I ask you a general question, just return an answer to this question. Start your answer with what you understood from my requirement. Help me improve my requirement, i.e. if any information is missing help me understand why we need it and ask for it very friendly, like api docs, my expectations, if we need ha, persistence, what api will the future application provide. Speak in simple words and remember - we are in a chat loop - so you do not have to ask all questions at once. Guide slowly. My requirement: "
+                       },
+                       # "file_name": "entity/app_design.json",
+                       "answer": None,
+                       "function": None,
+                       "iteration": 0,
+                       "flow_step": GATHERING_REQUIREMENTS_STR,
+                       "max_iteration": MAX_ITERATION,
+                       "additional_questions": [
+                           {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True},
                       {
                           "question": "💡 What kind of application would you like to build? I'd love to hear your ideas! Feel free to share them with me! 😊",
                           "prompt": {},
@@ -617,7 +596,8 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                               Once the report is generated, the application should send it to the admin's email 📧. 
                               Additionally, the data ingestion process should be scheduled to run **once a day** ⏰."""],
                           "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY},
+                          "stack": APP_BUILDING_STACK_KEY,
+                          "publish": True},
 
                       # add_instruction
                       {"question": None,
@@ -628,8 +608,8 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                        "iteration": 0,
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY},
-
+                       "stack": APP_BUILDING_STACK_KEY,
+                       },
                       # init_chats
                       {"question": None,
                        "prompt": {},
@@ -638,7 +618,8 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "iteration": 0,
                        "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY},
+                       "stack": APP_BUILDING_STACK_KEY,
+                       },
                       # clone_repo
                       {"question": None,
                        "prompt": {},
@@ -647,8 +628,9 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                        "iteration": 0,
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY},
-
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True
+                       },
                       {
                           "notification": """
 👋 Welcome to Cyoda Application Builder! We’re excited to build something amazing with you! 😄  
@@ -668,7 +650,9 @@ If something goes wrong, no worries—just roll back! 😬 Your app will be live
                           "info": True,
                           "file_name": "instruction.txt",
                           "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY
+                          "stack": APP_BUILDING_STACK_KEY,
+                          "publish": True
+
                       },
                       {
                           "notification": """
@@ -681,7 +665,7 @@ If something goes wrong, no worries—just roll back! 😬 Your app will be live
                           "info": True,
                           "file_name": "instruction.txt",
                           "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY
+                          "stack": APP_BUILDING_STACK_KEY,
                       }
                       ]
 
@@ -697,6 +681,22 @@ data_ingestion_stack = lambda entities: [
     #     "approve": True,
     #     "max_iteration": 0,
     #     "stack": DATA_INGESTION_STACK_KEY},
+    {"question": None,
+     "prompt": {
+         "text": "Hi! Could you please explain what you've done, why you wrote the code you wrote, what tests you added. Also please answer my questions if I have any. I say: "
+     },
+
+     # "file_name": "entity/app_design.json",
+     "answer": None,
+     "approve": True,
+     "function": None,
+     "iteration": 0,
+     "flow_step": ENTITIES_DESIGN_STR,
+     "max_iteration": MAX_ITERATION,
+     "additional_questions": [
+         {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
+     "stack": DATA_INGESTION_STACK_KEY,
+     "publish": True},
     {
         "question": None,
         "prompt": {},
@@ -735,7 +735,8 @@ data_ingestion_stack = lambda entities: [
         "flow_step": ENTITIES_DESIGN_STR,
         "files_notifications": FILES_NOTIFICATIONS,
         "max_iteration": 0,
-        "stack": DATA_INGESTION_STACK_KEY},
+        "stack": DATA_INGESTION_STACK_KEY,
+        "publish": True},
     {
         "question": None,
         "prompt": {},
@@ -750,7 +751,8 @@ data_ingestion_stack = lambda entities: [
         "iteration": 0,
         "flow_step": ENTITIES_DESIGN_STR,
         "max_iteration": 0,
-        "stack": DATA_INGESTION_STACK_KEY},
+        "stack": DATA_INGESTION_STACK_KEY,
+        "publish": True},
     {"question": None,
      "prompt": {
          "text": "Hi! "
@@ -765,7 +767,8 @@ data_ingestion_stack = lambda entities: [
      "max_iteration": MAX_ITERATION,
      "additional_questions": [
          {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
-     "stack": APP_BUILDING_STACK_KEY},
+     "stack": APP_BUILDING_STACK_KEY,
+     "publish": True},
     {
         "question": f"😊 Could you please update the files with the necessary information? Once you're done, just click 'Approve' 👍. Thanks so much!",
         "prompt": {},
@@ -776,7 +779,8 @@ data_ingestion_stack = lambda entities: [
         "iteration": 0,
         "flow_step": ENTITIES_DESIGN_STR,
         "max_iteration": 0,
-        "stack": DATA_INGESTION_STACK_KEY},
+        "stack": DATA_INGESTION_STACK_KEY,
+        "publish": True},
     {
         "question": None,
         "prompt": {},
@@ -790,7 +794,8 @@ data_ingestion_stack = lambda entities: [
         "iteration": 0,
         "flow_step": ENTITIES_DESIGN_STR,
         "max_iteration": 0,
-        "stack": DATA_INGESTION_STACK_KEY},
+        "stack": DATA_INGESTION_STACK_KEY,
+        "publish": True},
     {
         "question": None,
         "prompt": {},
@@ -842,7 +847,8 @@ Looking forward to your feedback! 🌟
         "info": True,
         "iteration": 0,
         "max_iteration": 0,
-        "stack": DATA_INGESTION_STACK_KEY},
+        "stack": DATA_INGESTION_STACK_KEY,
+        "publish": True},
 ]
 
 entity_stack = lambda entities: [
@@ -857,6 +863,22 @@ entity_stack = lambda entities: [
     #     "flow_step": ENTITIES_DESIGN_STR,
     #     "max_iteration": 0,
     #     "stack": ENTITY_STACK_KEY},
+    {"question": None,
+     "prompt": {
+         "text": "Hi! Could you please shortly explain what you've done Also pleas answer my questions if I have any. I say: "
+     },
+
+     # "file_name": "entity/app_design.json",
+     "answer": None,
+     "approve": True,
+     "function": None,
+     "iteration": 0,
+     "flow_step": ENTITIES_DESIGN_STR,
+     "max_iteration": MAX_ITERATION,
+     "additional_questions": [
+         {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
+     "stack": ENTITY_STACK_KEY,
+     "publish": True},
     {
         "question": None,
         "prompt": {},
@@ -928,6 +950,21 @@ Looking forward to your feedback! 🌟
         "flow_step": ENTITIES_DESIGN_STR,
         "max_iteration": 0,
         "stack": ENTITY_STACK_KEY},
+    {
+        "notification": f"""Proceeding to {ENTITIES_DESIGN_STR}
+
+
+{GATHERING_REQUIREMENTS_STR} --> {APPLICATION_DESIGN_STR} --> ***{ENTITIES_DESIGN_STR}*** --> {WORKFLOW_DESIGN_STR} --> {WORKFLOW_CODE_DESIGN_STR} --> {LOGIC_CODE_DESIGN_STR}""",
+        "prompt": {},
+        "answer": None,
+        "function": None,
+        "info": True,
+        "iteration": 0,
+        "max_iteration": 0,
+        "flow_step": ENTITIES_DESIGN_STR,
+        "stack": ENTITY_STACK_KEY,
+        "publish": True
+    },
 ]
 
 workflow_stack = lambda entity: [
@@ -1025,7 +1062,8 @@ workflow_stack = lambda entity: [
         "info": True,
         "iteration": 0,
         "max_iteration": 0,
-        "stack": WORKFLOW_STACK_KEY},
+        "stack": WORKFLOW_STACK_KEY,
+        "publish": True},
 ]
 
 processors_stack = lambda entity: [
@@ -1046,6 +1084,22 @@ processors_stack = lambda entity: [
     #  "additional_questions": [
     #      {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
     #  "stack": APP_BUILDING_STACK_KEY},
+    {"question": None,
+     "prompt": {
+         "text": f"Hi! Could you please explain what processors functions you wrote. Explain that they are isolated functions in a faas way like aws lambda. They will be triggered by Cyoda grpc server when the {entity.get('entity_name')} entity state changes. Tell what tests you wrote and how you mocked Cyoda entity service (repository) so that i can test every function in an isolated fashion. Also please answer my questions if I have any. I say: "
+     },
+
+     # "file_name": "entity/app_design.json",
+     "answer": None,
+     "approve": True,
+     "function": None,
+     "iteration": 0,
+     "flow_step": WORKFLOW_CODE_DESIGN_STR,
+     "max_iteration": MAX_ITERATION,
+     "additional_questions": [
+         {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
+     "stack": PROCESSORS_STACK_KEY,
+     "publish": True},
     {"question": None,
      "prompt": {
          "text": f"Please, generate the processor functions for {entity.get('entity_name')} "
@@ -1129,7 +1183,8 @@ Our workflow will have a set of functions 🛠️ (think of them as isolated fun
         "info": True,
         "iteration": 0,
         "max_iteration": 0,
-        "stack": PROCESSORS_STACK_KEY},
+        "stack": PROCESSORS_STACK_KEY,
+        "publish": True},
 ]
 
 scheduler_stack = lambda entity: [
@@ -1174,7 +1229,7 @@ scheduler_stack = lambda entity: [
      "flow_step": LOGIC_CODE_DESIGN_STR,
      "additional_questions": [{"question": QUESTION_OR_VALIDATE, "approve": True}],
      "max_iteration": MAX_ITERATION,
-     "stack": SCHEDULER_STACK_KEY
+     "stack": SCHEDULER_STACK_KEY,
      },
     {
         "question": f"Let's generate the logic to schedule saving the entity {entity.get("entity_name")}. Would you like to specify any details?",
@@ -1220,7 +1275,8 @@ scheduler_stack = lambda entity: [
         "info": True,
         "iteration": 0,
         "max_iteration": 0,
-        "stack": SCHEDULER_STACK_KEY},
+        "stack": SCHEDULER_STACK_KEY,
+        "publish": True},
 ]
 
 form_submission_stack = lambda entity: [
@@ -1305,7 +1361,7 @@ form_submission_stack = lambda entity: [
         "max_iteration": 0,
         "stack": FORM_SUBMISSION_STACK_KEY},
     {
-        "notification": f"""Proceeding to {WORKFLOW_CODE_DESIGN_STR}
+        "notification": f"""Proceeding to {LOGIC_CODE_DESIGN_STR}
         
         
 {GATHERING_REQUIREMENTS_STR} --> {APPLICATION_DESIGN_STR} --> {ENTITIES_DESIGN_STR} --> {WORKFLOW_DESIGN_STR} --> {WORKFLOW_CODE_DESIGN_STR} --> ***{LOGIC_CODE_DESIGN_STR}***""",
@@ -1400,7 +1456,7 @@ file_upload_stack = lambda entity: [
         "max_iteration": 0,
         "stack": FILE_UPLOAD_STACK_KEY},
     {
-        "notification": f"""Proceeding to {WORKFLOW_CODE_DESIGN_STR}
+        "notification": f"""Proceeding to {LOGIC_CODE_DESIGN_STR}
         
         
 {GATHERING_REQUIREMENTS_STR} --> {APPLICATION_DESIGN_STR} --> {ENTITIES_DESIGN_STR} --> {WORKFLOW_DESIGN_STR} --> {WORKFLOW_CODE_DESIGN_STR} --> ***{LOGIC_CODE_DESIGN_STR}***""",
@@ -1444,6 +1500,22 @@ api_request_stack = lambda entity: [
     #  "max_iteration": 0},
     # ========================================================================================================
     # Generate the processor functions
+    {"question": None,
+     "prompt": {
+         "text": "Hi! Could you please explain what you've done what api you added and why. Also please answer my questions if I have any. I say: "
+     },
+
+     # "file_name": "entity/app_design.json",
+     "answer": None,
+     "approve": True,
+     "function": None,
+     "iteration": 0,
+     "flow_step": LOGIC_CODE_DESIGN_STR,
+     "max_iteration": MAX_ITERATION,
+     "additional_questions": [
+         {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
+     "stack": API_REQUEST_STACK_KEY,
+     "publish": True},
     {"question": None,
      "prompt": {
          "text": f"Generate the quart additional api.py file to save the entity {entity.get("entity_name")} based on the user suggestions if there are any, if not you can proceed. Also generate tests with mocks for external services or functions so that the user can try out the functions right away in isolated environment. **Tests should be in the same file with the code** User says: ",
@@ -1494,7 +1566,7 @@ api_request_stack = lambda entity: [
     #     "max_iteration": 0,
     #     "stack": API_REQUEST_STACK_KEY},
     {
-        "notification": f"""Proceeding to {WORKFLOW_CODE_DESIGN_STR}
+        "notification": f"""Proceeding to {LOGIC_CODE_DESIGN_STR}
         
         
 {GATHERING_REQUIREMENTS_STR} --> {APPLICATION_DESIGN_STR} --> {ENTITIES_DESIGN_STR} --> {WORKFLOW_DESIGN_STR} --> {WORKFLOW_CODE_DESIGN_STR} --> ***{LOGIC_CODE_DESIGN_STR}***""",
@@ -1504,7 +1576,8 @@ api_request_stack = lambda entity: [
         "info": True,
         "iteration": 0,
         "max_iteration": 0,
-        "stack": API_REQUEST_STACK_KEY},
+        "stack": API_REQUEST_STACK_KEY,
+        "publish": True},
 ]
 
 

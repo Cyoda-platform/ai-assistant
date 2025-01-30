@@ -106,21 +106,22 @@ async def process_dialogue_script(token, technical_id) -> None:
         The user has submitted these changes: {diff_result_before_pull}"""
 
     while stack and not stack[-1].get(QUESTION):
-        event = copy.deepcopy(stack.pop())
-        finished_stack.append(event)
-        if event.get(FUNCTION):
-            await dispatch_function(token, event, chat)
-        elif event.get(PROMPT):
-            await process_answer(token, event, chat)
-        elif event.get(NOTIFICATION):
+        _event = copy.deepcopy(stack.pop())
+        finished_stack.append(_event)
+        if _event.get(FUNCTION):
+            await dispatch_function(token, _event, chat)
+        elif _event.get(PROMPT):
+            await process_answer(token, _event, chat)
+        elif _event.get(NOTIFICATION):
             if "questions_queue" not in chat:
                 chat["questions_queue"] = {}
 
             if "new_questions" not in chat["questions_queue"]:
                 chat["questions_queue"]["new_questions"] = []
 
-            # Now append the event to the list
-            chat["questions_queue"]["new_questions"].append(event)
+            # Now append the _event to the list
+            if _event.get("publish"):
+                chat["questions_queue"]["new_questions"].append(_event)
             await entity_service.update_item(token=token,
                                              entity_model="chat",
                                              entity_version=ENTITY_VERSION,
@@ -136,8 +137,9 @@ async def process_dialogue_script(token, technical_id) -> None:
         if "new_questions" not in chat["questions_queue"]:
             chat["questions_queue"]["new_questions"] = []
 
-        # Now append the event to the list
-        chat["questions_queue"]["new_questions"].append(_process_question(_event))
+        # Now append the _event to the list
+        if _event.get(QUESTION) or (_event.get(NOTIFICATION) and _event.get("publish")):
+            chat["questions_queue"]["new_questions"].append(_process_question(_event))
         finished_stack.append(_event)
 
     await entity_service.update_item(token=token,
