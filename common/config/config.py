@@ -40,3 +40,4 @@ ENABLE_AUTH = os.getenv("ENABLE_AUTH", "true").lower() == "true"
 MAX_TEXT_SIZE = 50 * 1024 #limit text size to 50KB
 MAX_FILE_SIZE = 500 * 1024 #limit file size to 500KB
 USER_FILES_DIR_NAME = "entity/user_files"
+RAW_REPOSITORY_URL=os.getenv("RAW_REPOSITORY_URL")

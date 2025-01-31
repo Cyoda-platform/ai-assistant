@@ -603,6 +603,35 @@ async def _get_resources(entity, files_notifications, target_dir):
     )
 
 
+async def get_remote_branches(chat_id):
+    clone_dir = f"{PROJECT_DIR}/{chat_id}/{REPOSITORY_NAME}"
+
+    try:
+        # Start the git branch -r command asynchronously to get remote branches
+        process = await asyncio.create_subprocess_exec(
+            'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+            'branch', '-r',
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        # Wait for the process to complete
+        stdout, stderr = await process.communicate()
+
+        if process.returncode == 0:
+            remote_branches = stdout.decode('utf-8').splitlines()
+            # Clean the output to remove "origin/" prefix if you only want branch names
+            remote_branches = [branch.strip().replace("origin/", "") for branch in remote_branches]
+            return remote_branches
+        else:
+            error_message = stderr.decode('utf-8')
+            raise Exception(f"Error fetching remote branches: {error_message}")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return []
+
+
 def comment_out_non_code(text):
     if '```python' in text:
         lines = text.splitlines()

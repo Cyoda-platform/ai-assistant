@@ -1,22 +1,24 @@
 import asyncio
 import copy
 import functools
+import json
 import logging
 from datetime import timedelta
 
+import aiohttp
 import jwt
 
 from quart import Quart, request, jsonify, send_from_directory, websocket
 from quart_cors import cors
 from quart_rate_limiter import RateLimiter, rate_limit
 from common.config.config import MOCK_AI, CYODA_AI_API, ENTITY_VERSION, API_PREFIX, API_URL, ENABLE_AUTH, MAX_TEXT_SIZE, \
-    MAX_FILE_SIZE, USER_FILES_DIR_NAME
+    MAX_FILE_SIZE, USER_FILES_DIR_NAME, CHAT_REPOSITORY, REPOSITORY_URL, RAW_REPOSITORY_URL
 from common.exception.exceptions import ChatNotFoundException, UnauthorizedAccessException
 from common.util.utils import clean_formatting, send_get_request, read_file, \
     get_project_file_name, current_timestamp
 from entity.chat.data.data import app_building_stack, APP_BUILDER_FLOW, DESIGN_PLEASE_WAIT, \
     APPROVE_WARNING, DESIGN_IN_PROGRESS_WARNING, OPERATION_NOT_SUPPORTED_WARNING, ADDITIONAL_QUESTION_ROLLBACK_WARNING
-from entity.chat.workflow.helper_functions import git_pull, _save_file
+from entity.chat.workflow.helper_functions import git_pull, _save_file, get_remote_branches
 from logic.logic import process_dialogue_script
 from logic.init import ai_service, cyoda_token, entity_service, chat_lock
 
@@ -28,6 +30,7 @@ logger = logging.getLogger('django')
 app = Quart(__name__, static_folder='static', static_url_path='')
 app = cors(app, allow_origin="*")
 rate_limiter = RateLimiter(app)
+
 
 @app.before_serving
 async def add_cors_headers():
@@ -81,11 +84,13 @@ def auth_required(func):
 
     return wrapper
 
+
 def _get_user_token(auth_header):
     if not auth_header:
         return None
     token = auth_header.split(" ")[1]
     return token
+
 
 @app.route('/')
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
@@ -124,13 +129,13 @@ async def get_chats():
                                                             ],
                                                             "type": "group"
                                                         },
-                                                            "local": {"key": "user_id", "value": user_id}})
+                                                           "local": {"key": "user_id", "value": user_id}})
     chats_view = [{
         'technical_id': chat['technical_id'],
         'chat_id': chat['chat_id'],
         'name': chat['name'],
         'description': chat['description'],
-        'date': chat['date']
+        'date': "2025-01-30T23:48:21.073+00:00"
     } for chat in chats]
 
     return jsonify({"chats": chats_view})
@@ -142,6 +147,7 @@ async def get_chats():
 async def get_chat(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(auth_header, technical_id)
+
     dialogue = []
     if "finished_flow" in chat.get("chat_flow", {}):
         for item in chat["chat_flow"]["finished_flow"]:
@@ -382,7 +388,19 @@ async def _get_chat_for_user(auth_header, technical_id):
                                          entity_version=ENTITY_VERSION,
                                          technical_id=technical_id)
 
-    if not chat:
+    if not chat and CHAT_REPOSITORY == "local":
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{RAW_REPOSITORY_URL}/{technical_id}/entity/chat.json") as response:
+                data = await response.text()
+        chat = json.loads(data)
+        if not chat:
+            raise ChatNotFoundException()
+        await entity_service.add_item(token=auth_header,
+                                entity_model="chat",
+                                entity_version=ENTITY_VERSION,
+                                entity=chat)
+
+    elif not chat:
         raise ChatNotFoundException()
 
     if chat["user_id"] != user_id:
@@ -438,13 +456,14 @@ async def rollback_dialogue_script(technical_id, auth_header, chat, question):
         return jsonify({
             "message": DESIGN_IN_PROGRESS_WARNING}), 400
     if not question:
-            return jsonify({
-                "message": OPERATION_NOT_SUPPORTED_WARNING}), 400
+        return jsonify({
+            "message": OPERATION_NOT_SUPPORTED_WARNING}), 400
     event = finished_flow.pop()
     while finished_flow and (not event.get("question") or event.get("question") != question):
-        if event.get("stack") and (not event.get('iteration') or (event.get('iteration') and event.get('iteration') < 2)):
-            new_event=copy.deepcopy(event)
-            new_event['iteration']=0
+        if event.get("stack") and (
+                not event.get('iteration') or (event.get('iteration') and event.get('iteration') < 2)):
+            new_event = copy.deepcopy(event)
+            new_event['iteration'] = 0
             current_flow.append(new_event)
         event = finished_flow.pop()
     finished_flow.append(event)
@@ -466,8 +485,11 @@ async def _submit_answer_helper(technical_id, answer, auth_header, chat, user_fi
     if len(question_queue) > 0:
         return jsonify({
             "message": "Could you please have a look at a couple of more questions before submitting your answer?"}), 400
-    if not answer:
+    if not answer and not user_file:
         return jsonify({"message": "Invalid entity"}), 400
+    if not answer and user_file:
+        answer = "please, consider the contents of this file"
+
 
     wait_notification = {"notification": f"Thank you for your answer! {DESIGN_PLEASE_WAIT}",
                          "prompt": {},
@@ -483,7 +505,7 @@ async def _submit_answer_helper(technical_id, answer, auth_header, chat, user_fi
         finished_stack = chat["chat_flow"].get("finished_flow", [])
         if not current_stack:
             return jsonify({"message": "Finished"}), 200
-        #question_queue.append(wait_notification)
+        # question_queue.append(wait_notification)
         if not finished_stack[-1].get("question"):
             retry_notification = {"notification": DESIGN_IN_PROGRESS_WARNING}
             question_queue.append(retry_notification)

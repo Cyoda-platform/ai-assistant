@@ -217,7 +217,25 @@ ENTITIES_DESIGN = {
 }
 
 # Finished
-app_building_stack = [{"question": "Your application is finished! Thank you for collaboration!",
+app_building_stack = [{"question": None,
+                       "prompt": {
+                           "text": "Hi! "
+                       },
+
+                       # "file_name": "entity/app_design.json",
+                       "answer": None,
+                       "approve": True,
+                       "function": None,
+                       "iteration": 0,
+                       "flow_step": GATHERING_REQUIREMENTS_STR,
+                       "max_iteration": MAX_ITERATION,
+                       "additional_questions": [
+                           {
+                               "question": "We can discuss our ideas in the chat 💬💬, when you feel we are ready to start code generation - give me thumbs up 👍",
+                               "approve": True}],
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True},
+                      {"question": "Your application is finished! Thank you for collaboration!",
                        "prompt": {},
                        "answer": None,
                        "function": None,
@@ -549,9 +567,9 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                           "publish": True},
                       {"question": None,
                        "prompt": {
-                           "text": "Please validate my requirement and return journey diagram and sequence diagram. Use markdown with mermaid dialect (```mermaid). Explain your choice in simple words, but try to keep everything short and friendly. Talk to me like we are close friends. If I ask you a general question, just return an answer to this question. Start your answer with what you understood from my requirement. My requirement: "
+                           "text": "Please validate my requirement and return user requirement doc with user stories, journey diagram and sequence diagram. Use markdown with mermaid dialect (```mermaid). Explain your choice in simple words, but try to keep everything short and friendly. Talk to me like we are close friends. If I ask you a general question, just return an answer to this question. Start your answer with what you understood from my requirement. My requirement: "
                        },
-                       # "file_name": "entity/app_design.json",
+                       "file_name": "entity/user_requirement.md",
                        "answer": None,
                        "function": None,
                        "iteration": 0,
@@ -563,7 +581,7 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                        "publish": True},
                       {"question": None,
                        "prompt": {
-                           "text": "We are in the loop of requirement validation. Talk to me like we are close friends. If I ask you a general question, just return an answer to this question. Start your answer with what you understood from my requirement. Help me improve my requirement, i.e. if any information is missing help me understand why we need it and ask for it very friendly, like api docs, my expectations, if we need ha, persistence, what api will the future application provide. Speak in simple words and remember - we are in a chat loop - so you do not have to ask all questions at once. Guide slowly. My requirement: "
+                           "text": "We are in the loop of requirement validation. Talk to me like we are close friends. If I ask you a general question, just return an answer to this question. Start your answer with what you understood from my requirement. Help me improve my requirement, i.e. if any information is missing help me understand why we need it and ask for it very friendly, like api docs, my expectations, if we need ha, persistence, what api will the future application provide. Speak in simple words and remember - we are in a chat loop - so you do not have to ask all questions at once. Guide slowly, suggest to attach relevant doc files and user requirement as files. My requirement: "
                        },
                        # "file_name": "entity/app_design.json",
                        "answer": None,
@@ -802,7 +820,7 @@ data_ingestion_stack = lambda entities: [
         "answer": None,
         "function": {"name": "refresh_context"},
         "context": {
-            "files": ["entity/app_design.json", "entity/user_requirement.md"],
+            "files": ["entity/app_design.json", "entity/user_requirement.md", "entity/user_files/**"],
         },
         "iteration": 0,
         "flow_step": ENTITIES_DESIGN_STR,

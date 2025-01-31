@@ -1,8 +1,7 @@
 import json
 import logging
-
 from common.config.config import CYODA_AI_URL, MOCK_AI, CYODA_AI_API, WORKFLOW_AI_API, CONNECTION_AI_API, RANDOM_AI_API, \
-    MAX_TEXT_SIZE, MAX_FILE_SIZE, USER_FILES_DIR_NAME
+    MAX_TEXT_SIZE, USER_FILES_DIR_NAME
 from common.util.utils import parse_json, validate_result, send_post_request, ValidationErrorException, \
     get_project_file_name, read_file_object
 
@@ -82,17 +81,13 @@ class AiAssistantService:
             logger.error(f"Answer size exceeds {MAX_TEXT_SIZE} limit")
             return {"error": f"Answer size exceeds {MAX_TEXT_SIZE} limit"}
         if user_file:
-            if isinstance(user_file, str):
-                file_path = get_project_file_name(chat_id, user_file, folder_name=USER_FILES_DIR_NAME)
-                user_file = await read_file_object(file_path)
-
+            file_path = get_project_file_name(chat_id, user_file, folder_name=USER_FILES_DIR_NAME)
             data = {"chat_id": f"{chat_id}", "question": f"{ai_question}"}
-            resp = await send_post_request(token, CYODA_AI_URL, "%s/chat-file" % API_V_CYODA_, data, user_file=user_file)
-            return resp.get('message')
+            resp = await send_post_request(token, CYODA_AI_URL, "%s/chat-file" % API_V_CYODA_, data, user_file=file_path)
         else:
             data = json.dumps({"chat_id": f"{chat_id}", "question": f"{ai_question}"})
             resp = await send_post_request(token, CYODA_AI_URL, "%s/chat" % API_V_CYODA_, data)
-            return resp.get('message')
+        return resp.get('message')
 
 
     async def chat_workflow(self, token, chat_id, ai_question):

@@ -458,27 +458,25 @@ async def send_request(headers, url, method, data, json, files=None):
                         if response:
                             data = await response.json()
                             return data
-                form_data = aiohttp.FormData()
+                form = aiohttp.FormData()
+                async with aiofiles.open(files, 'rb') as f:
+                    file_content = await f.read()
 
-                # Add regular data (non-file) to form data
-                if data:
-                    for key, value in data.items():
-                        form_data.add_field(key, value)
+                async with aiofiles.open(files, 'rb') as f:
+                    form.add_field('file', file_content, filename=files, content_type='application/json')
 
-                # Add JSON data (if any) to form data
-                if json:
-                    form_data.add_field('json', str(json))  # Assuming JSON is a dictionary
+                # Add additional form data (key-value pairs)
+                for key, value in data.items():
+                    form.add_field(key, value)
 
-                # Add files (if any) to form data
-                if files:
-                    for filename, file_data in files.items():
-                        form_data.add_field('file', file_data, filename=filename,
-                                            content_type='application/octet-stream')
-
-                # Send the POST request with the form data (which includes files, if provided)
-                async with session.post(url, headers=headers, data=form_data) as response:
-                    if response:
-                        return await response.json()
+                # Send the POST request
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(url, headers=headers, data=form) as response:
+                        if response.status == 200:
+                            return await response.json()
+                        else:
+                            print(f"Request failed with status code {response.status}")
+                            return None
             elif method == 'PUT':
                 async with session.put(url, headers=headers, data=data, json=json) as response:
                     if response:
@@ -496,21 +494,14 @@ async def send_post_request(token: str, api_url: str, path: str, data=None, json
     url = f"{api_url}/{path}"
     token = f"Bearer {token}" if not token.startswith('Bearer') else token
     try:
-        if user_file:
-            headers = {
-                "Authorization": f"{token}",
-            }
-            # Remove Content-Type from headers as it will be set automatically in multipart
-            files = {'file': user_file}
-            response = await send_request(headers=headers, url=url, method='POST', data=data, json=json, files=files)
-        else:
-            # Regular JSON request
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"{token}",
-            }
-            response = await send_request(headers=headers, url=url, method='POST', data=data, json=json)
-
+        headers = {
+            "Authorization": f"{token}",
+        } if user_file else  {
+            "Content-Type": "application/json",
+            "Authorization": f"{token}",
+        }
+        # Remove Content-Type from headers as it will be set automatically in multipart
+        response = await send_request(headers=headers, url=url, method='POST', data=data, json=json, files=user_file)
         return response
     except Exception as err:
         logger.error(f"Error during POST request to {url}: {err}")

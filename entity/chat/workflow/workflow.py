@@ -51,15 +51,16 @@ async def add_instruction(token, _event, chat):
 
 async def refresh_context(token, _event, chat):
     # clean chat history and re-initialize
-    await git_pull(chat['chat_id'])
-    await ai_service.init_cyoda_chat(token=token, chat_id=chat["chat_id"])
+    chat_id = chat["chat_id"]
+    await git_pull(chat_id)
+    await ai_service.init_cyoda_chat(token=token, chat_id=chat_id)
     contents = await _build_context_from_project_files(chat=chat, files=_event["context"]["files"],
                                                        excluded_files=_event["context"].get("excluded_files"))
     _event.setdefault('function', {}).setdefault("prompt", {})
     _event["function"]["prompt"][
         "text"] = f"Please remember these files contents and reuse later: {json.dumps(contents)} . Do not do any mapping logic - it is not relevant. Just remember the code and the application design to reuse in your future application building. Return confirmation that you remembered everything"
-    await run_chat(chat=chat, _event=_event, token=token, ai_endpoint=CYODA_AI_API, chat_id=chat["chat_id"])
-
+    await run_chat(chat=chat, _event=_event, token=token, ai_endpoint=CYODA_AI_API, chat_id=chat_id)
+    await _save_file(chat_id=chat_id, _data=json.dumps(chat), item=_event["file_name"])
 
 async def add_design_stack(token, _event, chat) -> list:
     file_name = _event["file_name"]
