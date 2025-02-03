@@ -24,7 +24,7 @@ from logic.init import ai_service, cyoda_token, entity_service, chat_lock
 
 PUSH_NOTIFICATION = "push_notification"
 APPROVE = "approved"
-RATE_LIMIT = 100
+RATE_LIMIT = 300
 logger = logging.getLogger('django')
 
 app = Quart(__name__, static_folder='static', static_url_path='')
