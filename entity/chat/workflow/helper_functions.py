@@ -354,7 +354,7 @@ async def git_pull(chat_id, merge_strategy="recursive"):
         logger.error(f"Unexpected error during git pull: {e}")
         logger.exception(e)
 
-
+#todo git push in case of interim changes will throw an error
 async def _git_push(chat_id, file_paths: list, commit_message: str):
     await git_pull(chat_id=chat_id)
 
@@ -754,6 +754,9 @@ def _process_question(question):
     # Return the original question if conditions are not met
     question["processed"] = True
     return question
+
+
+
 
 
 if __name__ == "__main__":

@@ -231,7 +231,7 @@ app_building_stack = [{"question": None,
                        "max_iteration": MAX_ITERATION,
                        "additional_questions": [
                            {
-                               "question": "We can discuss our ideas in the chat 💬💬, when you feel we are ready to start code generation - give me thumbs up 👍",
+                               "question": "Feel free to ask any questions or discuss the design in the chat 💬💬",
                                "approve": True}],
                        "stack": APP_BUILDING_STACK_KEY,
                        "publish": True},
@@ -242,6 +242,56 @@ app_building_stack = [{"question": None,
                        "index": 2,
                        "iteration": 0,
                        "file_name": "entity/chat.json",
+                       "max_iteration": 0,
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True},
+                      {"question": None,
+                       "prompt": {},
+                       "answer": None,
+                       "function": {"name": "remove_api_registration"},
+                       "index": 2,
+                       "iteration": 0,
+                       "file_name": "app.py",
+                       "notification_text": """
+                       """,
+                       "max_iteration": 0,
+                       "stack": APP_BUILDING_STACK_KEY,
+                       "publish": True},
+                      {"question": None,
+                       "prompt": {},
+                       "answer": None,
+                       "function": {"name": "save_env_file"},
+                       "index": 2,
+                       "iteration": 0,
+                       "file_name": ".env.template",
+                       "notification_text": """
+### Setup Instructions for Your Application
+
+Your application is ready! Please follow the steps below to configure it:
+
+1. **Move the `.env.template` to `.env`**:
+    Rename the `.env.template` file to `.env`:
+    ```bash
+    mv .env.template .env
+    ```
+
+2. **Update the `.env` file**:
+    Open the `.env` file and replace the placeholder values with your actual environment variables and credentials. For example, replace `CHAT_ID_VAR` with `$chat_id` and fill in other necessary values.
+
+    You might need to specify the path to .env file in your IDE run configurations.
+
+3. **Start Your Application**:
+    Once you've updated the `.env` file, you can start your application by running:
+    ```bash
+    python app.py
+    ```
+    or just run the app.py in your IDE.
+Please also update your api.py files to use cyoda_token until authentication featute is fully implemented. Sorry for inconvenience!
+Your application should now be up and running! 🎉
+
+You can check the api with http://localhost:5000/scalar
+
+                       """,
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY,
                        "publish": True},
@@ -268,6 +318,7 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY,
                        "publish": True},
+
                       {
                           "question": APPROVAL_NOTIFICATION,
                           "prompt": {},
@@ -293,7 +344,7 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
                        "stack": APP_BUILDING_STACK_KEY},
                       {"question": None,
                        "prompt": {
-                           "text": "Generate Cyoda design, based on the requirement and the final prd. Use only lowercase underscore for namings. If the entity is saved in the workflow of another entity then its source will be ENTITY_EVENT. The JOB entity_source defaults to API_REQUEST. Prefer entity source/type mentioned in the prd, if it is unclear default to API_REQUEST or ENTITY_EVENT for secondary data. Avoid scheduler unless specified explicitly.",
+                           "text": "Generate Cyoda design json, based on the complete prd. Use only lowercase underscore for namings. If the entity is saved in the workflow of another entity then its source will be ENTITY_EVENT. The JOB entity_source defaults to API_REQUEST. Prefer entity source/type mentioned in the prd, if it is unclear default to API_REQUEST or ENTITY_EVENT for secondary data. Avoid scheduler unless specified explicitly. You should not change entities or their workflows. You should not omit or add entities which are not listed in the prd. You should follow the complete prd 100% as it was confirmed.",
                            "schema": {
                                "$schema": "http://json-schema.org/draft-07/schema#",
                                "title": "Cyoda design",
@@ -426,53 +477,26 @@ Gathering requirements --> **Application design** --> **Entities design** --> **
                           "max_iteration": 0,
                           "stack": APP_BUILDING_STACK_KEY,
                           "publish": True},
-
-                      {"question": None,
-                       "prompt": {
-                           "text": """Please propose workflows for this requirement.
-                           If you have an orchestration entity, maybe let's consider adding a workflow only to the orchestration entity. 
-                           Please explain the information about how the workflow is launched.
-                           ***For each not empty (has transitions) entity workflow let's provide a flowchart***
-                           Example:
-                            ```mermaid
-                            flowchart TD
-                               A[Start State] -->|transition: transition_name_1, processor: processor_name_1, processor attributes: sync_process=true/false, new_transaction_for_async=true/false, none_transactional_for_async=true/false| B[State 1]
-                               B -->|transition: transition_name_2, processor: processor_name_2, processor attributes: sync_process=true/false, new_transaction_for_async=true/false, none_transactional_for_async=true/false| C[State 2]
-                               C --> D[End State]
-
-                               %% Decision point for criteria
-                               B -->|criteria: criteria_name, entityModelName equals some_value| D1{Decision: Check Criteria}
-                               D1 -->|true| C
-                               D1 -->|false| E[Error: Criteria not met]
-
-                               class A,B,C,D,D1 automated;
-                               ``` 
-                                If I ask you a general question, just return an answer to this question.
-                               """},
-                       # "file_name": "entity/app_design.json",
-                       "answer": None,
-                       "function": None,
-                       "iteration": 0,
-                       "flow_step": GATHERING_REQUIREMENTS_STR,
-                       "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY,
-                       "publish": True},
-                      {
-                          "notification": "I'm ready with the entities. Now I need to generate the workflows to give life to our data - I'll be back with it very soon. ⏳",
-                          "prompt": {},
-                          "answer": None,
-                          "function": None,
-                          "iteration": 0,
-                          "max_iteration": 0,
-                          "stack": APP_BUILDING_STACK_KEY,
-                          "publish": True
-                      },
                       {"question": None,
                        "prompt": {
                            "text": """Please outline entities for this requirement. Return entities diagram (mermaid or plantuml).
-I am new to Cyoda and very new to application building, so please explain your choice for entity source and type in simple words. 
-Please also explain how entities in Cyoda are used to implement event driven pattern (e.g. event is sent when an entity is saved/updated).
-Please give me some json examples of data models for each entity, based on my requirement. Provide only example data. If I provided entity schemas - just use them, if no - generate yours. 
+Please give me some json examples of data models for each entity, based on my requirement (you can use abridged json versions substituting excessive text with ...) . Provide only example data. If I provided entity schemas - just use them (abridged), if no - generate yours. 
+For each entity specify how it should be saved - through the workflow of a different entity (ENTITY_EVENT, SECONDARY_DATA) or directly via an API call or maybe via scheduler.
+For an orchestration entity (if there is any) consider adding a single workflow per app. If there is no orchestration entity - then add workflow to any entity where it makes sense.
+***For each workflow let's provide a flowchart***
+Example:
+```mermaid
+flowchart TD
+  A[Start State] -->|transition: transition_name_1, processor: processor_name_1, processor attributes: sync_process=true/false, new_transaction_for_async=true/false, none_transactional_for_async=true/false| B[State 1]
+  B -->|transition: transition_name_2, processor: processor_name_2, processor attributes: sync_process=true/false, new_transaction_for_async=true/false, none_transactional_for_async=true/false| C[State 2]
+  C --> D[End State]
+  %% Decision point for criteria (only if necessary!)
+  B -->|criteria: criteria_name, entityModelName equals some_value| D1{Decision: Check Criteria}
+  D1 -->|true| C
+  D1 -->|false| E[Error: Criteria not met]
+class A,B,C,D,D1 automated;
+``` 
+If I ask you a general question, just return an answer to this question.
 If I ask you a general question, just return an answer to this question. 
 I say: """
                        },
@@ -701,7 +725,7 @@ data_ingestion_stack = lambda entities: [
     #     "stack": DATA_INGESTION_STACK_KEY},
     {"question": None,
      "prompt": {
-         "text": "Hi! Could you please explain what you've done, why you wrote the code you wrote, what tests you added. Also please answer my questions if I have any. I say: "
+         "text": "Hi! Could you please explain what you've done, why you wrote the code you wrote, what tests you added. Also please answer my questions if I have any.  Your answer should be well-structured with markdown and not exceed 100 words. I say: "
      },
 
      # "file_name": "entity/app_design.json",
@@ -883,7 +907,7 @@ entity_stack = lambda entities: [
     #     "stack": ENTITY_STACK_KEY},
     {"question": None,
      "prompt": {
-         "text": "Hi! Could you please shortly explain what you've done Also pleas answer my questions if I have any. I say: "
+         "text": "Hi! Could you please shortly explain what you've done. Also please answer my questions if I have any.  Your answer should be well-structured with markdown and not exceed 100 words. I say: "
      },
 
      # "file_name": "entity/app_design.json",
@@ -1104,7 +1128,7 @@ processors_stack = lambda entity: [
     #  "stack": APP_BUILDING_STACK_KEY},
     {"question": None,
      "prompt": {
-         "text": f"Hi! Could you please explain what processors functions you wrote. Explain that they are isolated functions in a faas way like aws lambda. They will be triggered by Cyoda grpc server when the {entity.get('entity_name')} entity state changes. Tell what tests you wrote and how you mocked Cyoda entity service (repository) so that i can test every function in an isolated fashion. Also please answer my questions if I have any. I say: "
+         "text": f"Hi! Could you please explain what processors functions you wrote. Explain that they are isolated functions in a faas way like aws lambda. They will be triggered by Cyoda grpc server when the {entity.get('entity_name')} entity state changes. Tell what tests you wrote and how you mocked Cyoda entity service (repository) so that i can test every function in an isolated fashion. Also please answer my questions if I have any.  Your answer should be well-structured with markdown and not exceed 100 words. I say: "
      },
 
      # "file_name": "entity/app_design.json",
@@ -1519,8 +1543,47 @@ api_request_stack = lambda entity: [
     # ========================================================================================================
     # Generate the processor functions
     {"question": None,
+     "prompt": {},
+     "answer": None,
+     "function": {"name": "register_api_with_app"},
+     "index": 2,
+     "iteration": 0,
+     "file_name": "app.py",
+     "entity": entity,
+     "notification_text": """
+### Setup Instructions for Your Application
+
+Your application is ready! Please follow the steps below to configure it:
+
+1. **Move the `.env.template` to `.env`**:
+    Rename the `.env.template` file to `.env`:
+    ```bash
+    mv .env.template .env
+    ```
+
+2. **Update the `.env` file**:
+    Open the `.env` file and replace the placeholder values with your actual environment variables and credentials. For example, replace `CHAT_ID_VAR` with `$chat_id` and fill in other necessary values.
+
+    You might need to specify the path to .env file in your IDE run configurations.
+
+3. **Start Your Application**:
+    Once you've updated the `.env` file, you can start your application by running:
+    ```bash
+    python app.py
+    ```
+    or just run the app.py in your IDE.
+
+Your application should now be up and running! 🎉
+
+You can check the api with http://localhost:5000/scalar
+
+                       """,
+     "max_iteration": 0,
+     "stack": APP_BUILDING_STACK_KEY,
+     "publish": True},
+    {"question": None,
      "prompt": {
-         "text": "Hi! Could you please explain what you've done what api you added and why. Also please answer my questions if I have any. I say: "
+         "text": "Hi! Could you please explain what you've done what api you added and why. Also please answer my questions if I have any. Your answer should be well-structured with markdown and not exceed 100 words. I say: "
      },
 
      # "file_name": "entity/app_design.json",
@@ -1530,13 +1593,13 @@ api_request_stack = lambda entity: [
      "iteration": 0,
      "flow_step": LOGIC_CODE_DESIGN_STR,
      "max_iteration": MAX_ITERATION,
-     "additional_questions": [
-         {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
+     #"additional_questions": [
+     #    {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
      "stack": API_REQUEST_STACK_KEY,
      "publish": True},
     {"question": None,
      "prompt": {
-         "text": f"Generate the quart additional api.py file to save the entity {entity.get("entity_name")} based on the user suggestions if there are any, if not you can proceed. Also generate tests with mocks for external services or functions so that the user can try out the functions right away in isolated environment. **Tests should be in the same file with the code** User says: ",
+         "text": f"Generate the quart additional api.py file to save the entity {entity.get("entity_name")} based on the user suggestions if there are any, if not you can proceed. Use blueprint api_bp_{entity.get("entity_name")} = Blueprint('api/{entity.get("entity_name")}', __name__) and @api_bp_{entity.get("entity_name")}.route respectively. Please use const ENTITY_VERSION for entity version and const cyoda_token for token. User says: ",
      },
      "answer": None,
      "function": None,

@@ -3,6 +3,7 @@ import json
 import asyncio
 import os
 import logging
+import aiofiles
 
 from common.ai.ai_assistant_service import dataset
 from common.config.config import MOCK_AI, CYODA_AI_API, PROJECT_DIR, REPOSITORY_NAME, CLONE_REPO, \
@@ -17,7 +18,7 @@ from entity.chat.data.data import scheduler_stack, api_request_stack, workflow_s
     data_ingestion_stack, PUSHED_CHANGES_NOTIFICATION, BRANCH_READY_NOTIFICATION
 from entity.chat.workflow.helper_functions import _save_file, _sort_entities, _send_notification, \
     _build_context_from_project_files, run_chat, _send_notification_with_file, git_pull, \
-    generate_data_ingestion_code_for_entity, generate_file_contents, save_result_to_file
+    generate_data_ingestion_code_for_entity, generate_file_contents, save_result_to_file, _git_push
 from logic.init import ai_service
 
 # Configure logging
@@ -321,6 +322,73 @@ async def finish_flow(token, _event, chat):
     await _save_file(chat_id=chat_id, _data=json.dumps(dataset.get(chat_id)), item=f"entity/dataset_{chat_id}.json")
     del dataset[chat_id]
 
+
+async def save_env_file(token, _event, chat):
+    chat_id = chat["chat_id"]
+    file_name = get_project_file_name(chat_id = chat_id, file_name = _event["file_name"])
+    async with aiofiles.open(file_name, 'r') as template_file:
+        content = await template_file.read()
+
+    # Replace CHAT_ID_VAR with $chat_id
+    updated_content = content.replace('CHAT_ID_VAR', chat_id)
+
+    # Save the updated content to a new file
+    async with aiofiles.open(file_name, 'w') as new_file:
+        await new_file.write(updated_content)
+    await _git_push(chat_id, [file_name], "Added env file template")
+    await _send_notification(chat=chat, event=_event, notification_text=_event.get("notification_text"))
+
+
+async def remove_api_registration(token, _event, chat):
+    # Read the file asynchronously
+    chat_id = chat["chat_id"]
+    file_name = get_project_file_name(chat_id=chat_id, file_name=_event["file_name"])
+
+    async with aiofiles.open(file_name, 'r') as template_file:
+        content = await template_file.read()
+
+    # Define the lines to remove
+    line_1 = "from entity.ENTITY_NAME_VAR.api import api_bp_ENTITY_NAME_VAR"
+    line_2 = "app.register_blueprint(api_bp_ENTITY_NAME_VAR, url_prefix='/api/ENTITY_NAME_VAR')"
+
+    # Remove the lines by replacing them with an empty string
+    content = content.replace(line_1, '')
+    content = content.replace(line_2, '')
+
+    # Write the updated content back to the file
+    async with aiofiles.open(file_name, 'w') as new_file:
+        await new_file.write(content)
+    await _git_push(chat_id, [file_name], "Removed api registration template")
+
+
+async def register_api_with_app(token, _event, chat):
+    chat_id = chat["chat_id"]
+    file_name = get_project_file_name(chat_id=chat_id, file_name=_event["file_name"])
+
+    # Read the template file asynchronously
+    async with aiofiles.open(file_name, 'r') as template_file:
+        content = await template_file.read()
+
+    # Replace ENTITY_NAME_VAR with _event["entity"]["entity_name"]
+    entity_name = _event["entity"]["entity_name"]
+    content = content.replace('ENTITY_NAME_VAR', entity_name)
+    line1 = f"from entity.{entity_name}.api import api_bp_{entity_name}"
+    # Create line2
+    line2 = "from entity.ENTITY_NAME_VAR.api import api_bp_ENTITY_NAME_VAR"
+    # Replace the original line with two lines
+    content = content.replace(line1, f"{line1}\n{line2}")
+
+    line1 = f"app.register_blueprint(api_bp_{entity_name}, url_prefix='/api/{entity_name}')"
+    # Create line2
+    line2 = f"app.register_blueprint(api_bp_ENTITY_NAME_VAR, url_prefix='/api/ENTITY_NAME_VAR')"
+    # Replace the original line with two lines
+    content = content.replace(line1, f"{line1}\n{line2}")
+    # Write the updated content back to the file
+    async with aiofiles.open(file_name, 'w') as new_file:
+        await new_file.write(content)
+    await _git_push(chat_id, [file_name], "Added api registration")
+
+
 async def verify_cyoda_doc(token, _event, chat):
 
     prd_doc_path = _event["function"]["files"]["prd_doc_path"]
@@ -331,7 +399,7 @@ async def verify_cyoda_doc(token, _event, chat):
     result = await run_chat(chat=chat, _event=_event, token=token, ai_endpoint=CYODA_AI_API, chat_id=chat["chat_id"])
     await save_result_to_file(chat=chat, _data=json.dumps(result), _event=_event)
 
-def main():
+def main_parse_json():
     if __name__ == "__main__":
         resp = "test ```json\n{\n  \"name\": \"hello_world_workflow\",\n  \"description\": \"A simple workflow to send a Hello World email.\",\n  \"workflow_criteria\": {\n    \"externalized_criteria\": [],\n    \"condition_criteria\": []\n  },\n  \"transitions\": [\n    {\n      \"name\": \"send_email\",\n      \"description\": \"Triggered by a scheduled job to send a Hello World email.\",\n      \"start_state\": \"None\",\n      \"start_state_description\": \"Initial state before sending email.\",\n      \"end_state\": \"email_sent\",\n      \"end_state_description\": \"Email has been successfully sent.\",\n      \"automated\": true,\n      \"transition_criteria\": {\n        \"externalized_criteria\": [],\n        \"condition_criteria\": []\n      },\n      \"processes\": {\n        \"schedule_transition_processors\": [],\n        \"externalized_processors\": [\n          {\n            \"name\": \"send_hello_world_email\",\n            \"description\": \"Process to send a Hello World email.\",\n            \"calculation_nodes_tags\": \"3d1da699-c188-11ef-bd5b-40c2ba0ac9eb\",\n            \"attach_entity\": false,\n            \"calculation_response_timeout_ms\": \"5000\",\n            \"retry_policy\": \"FIXED\",\n            \"sync_process\": true,\n            \"new_transaction_for_async\": false,\n            \"none_transactional_for_async\": false,\n            \"processor_criteria\": {\n              \"externalized_criteria\": [],\n              \"condition_criteria\": []\n            }\n          }\n        ]\n      }\n    }\n  ]\n}\n``` test"
         resp = "{'name': 'send_hello_world_email_workflow', 'description': \"Workflow to send a 'Hello World' email at a scheduled time.\", 'workflow_criteria': {'externalized_criteria': [], 'condition_criteria': []}, 'transitions': [{'name': 'scheduled_send_email', 'description': \"Triggered by a schedule to send a 'Hello World' email.\", 'start_state': 'None', 'start_state_description': 'Initial state before the email is sent.', 'end_state': 'email_sent', 'end_state_description': 'Email has been successfully sent.', 'automated': True, 'transition_criteria': {'externalized_criteria': [], 'condition_criteria': []}, 'processes': {'schedule_transition_processors': [], 'externalized_processors': [{'name': 'send_email_process', 'description': \"Process to send 'Hello World' email at 5 PM every day.\", 'calculation_nodes_tags': 'd0ada585-c201-11ef-8296-40c2ba0ac9eb', 'attach_entity': True, 'calculation_response_timeout_ms': '5000', 'retry_policy': 'NONE', 'sync_process': True, 'new_transaction_for_async': False, 'none_transactional_for_async': False, 'processor_criteria': {'externalized_criteria': [], 'condition_criteria': []}}]}}]}"
@@ -339,6 +407,18 @@ def main():
         print(parse_json(resp))
         print(json.dumps(parse_json(resp)))
 
+def main_register_api_with_app():
+    if __name__ == "__main__":
+        event = {}
+        event["entity"]={}
+        event["entity"]["entity_name"] = "test_entity"
+        event["file_name"] = "app.py"
+        chat = {"chat_id": "f460bfb3-e253-11ef-9cdb-40c2ba0ac9eb"}
+        asyncio.run(register_api_with_app("token", event, chat))
+
+def main():
+    if __name__ == "__main__":
+        pass
 
 if __name__ == "__main__":
     main()
