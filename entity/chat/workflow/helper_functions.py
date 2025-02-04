@@ -451,15 +451,21 @@ async def _build_context_from_project_files(chat, files, excluded_files):
         if "**" in root_path or os.path.isdir(root_path):
             # Use glob to get all files matching the pattern (including files in subdirectories)
             for file_path in glob.glob(root_path, recursive=True):  # recursive=True to include files in subdirectories
-                if os.path.isfile(file_path) and not any(file_path.endswith(excluded) for excluded in excluded_files):
-                    async with aiofiles.open(file_path, "r") as f:
-                        contents.append({file_path: await f.read()})
+                try:
+                    if os.path.isfile(file_path) and not any(file_path.endswith(excluded) for excluded in excluded_files):
+                        async with aiofiles.open(file_path, "r") as f:
+                            contents.append({file_path: await f.read()})
+                except:
+                    logger.exception(e)
         else:
-            file_path = get_project_file_name(chat["chat_id"], file_pattern)
-            # Check if the file exists before trying to open it
-            if os.path.isfile(file_path):
-                async with aiofiles.open(file_path, "r") as f:
-                    contents.append({file_pattern: await f.read()})
+            try:
+                file_path = get_project_file_name(chat["chat_id"], file_pattern)
+                # Check if the file exists before trying to open it
+                if os.path.isfile(file_path):
+                    async with aiofiles.open(file_path, "r") as f:
+                        contents.append({file_pattern: await f.read()})
+            except:
+                logger.exception(e)
     return contents
 
 

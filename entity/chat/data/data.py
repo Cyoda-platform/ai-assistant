@@ -725,7 +725,7 @@ data_ingestion_stack = lambda entities: [
     #     "stack": DATA_INGESTION_STACK_KEY},
     {"question": None,
      "prompt": {
-         "text": "Hi! Could you please explain what you've done, why you wrote the code you wrote, what tests you added. Also please answer my questions if I have any.  Your answer should be well-structured with markdown and not exceed 100 words. I say: "
+         "text": "Hi! "
      },
 
      # "file_name": "entity/app_design.json",
@@ -737,6 +737,20 @@ data_ingestion_stack = lambda entities: [
      "max_iteration": MAX_ITERATION,
      "additional_questions": [
          {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
+     "stack": DATA_INGESTION_STACK_KEY,
+     "publish": True},
+    {"question": None,
+     "prompt": {
+         "text": "Hi! Could you please explain what you've done, why you wrote the code you wrote, what tests you added. Also please answer my questions if I have any.  Your answer should be well-structured with markdown and not exceed 100 words. I say: "
+     },
+
+     # "file_name": "entity/app_design.json",
+     "answer": None,
+     "approve": True,
+     "function": None,
+     "iteration": 0,
+     "flow_step": ENTITIES_DESIGN_STR,
+     "max_iteration": 0,
      "stack": DATA_INGESTION_STACK_KEY,
      "publish": True},
     {
@@ -763,7 +777,7 @@ data_ingestion_stack = lambda entities: [
         "notification_text": "🎉 The code for data ingestion has been generated successfully! Please check it out and click 'Approve' if you're ready to move on to the next iteration. Feel free to use Canvas QA to suggest any improvements! 😊",
         "iteration": 0,
         "flow_step": ENTITIES_DESIGN_STR,
-        "max_iteration": MAX_ITERATION,
+        "max_iteration": 0,
         "stack": DATA_INGESTION_STACK_KEY
     },
     {
@@ -838,18 +852,18 @@ data_ingestion_stack = lambda entities: [
         "max_iteration": 0,
         "stack": DATA_INGESTION_STACK_KEY,
         "publish": True},
-    {
-        "question": None,
-        "prompt": {},
-        "answer": None,
-        "function": {"name": "refresh_context"},
-        "context": {
-            "files": ["entity/app_design.json", "entity/user_requirement.md", "entity/user_files/**"],
-        },
-        "iteration": 0,
-        "flow_step": ENTITIES_DESIGN_STR,
-        "max_iteration": 0,
-        "stack": DATA_INGESTION_STACK_KEY},
+    # {
+    #     "question": None,
+    #     "prompt": {},
+    #     "answer": None,
+    #     "function": {"name": "refresh_context"},
+    #     "context": {
+    #         "files": ["entity/app_design.json", "entity/user_requirement.md", "entity/user_files/**"],
+    #     },
+    #     "iteration": 0,
+    #     "flow_step": ENTITIES_DESIGN_STR,
+    #     "max_iteration": 0,
+    #     "stack": DATA_INGESTION_STACK_KEY},
     {
         "notification": """
 We are currently generating templates for your data ingestion entities! 🎉 Once I’m done, you’ll find each entity in a separate folder: `entity/{entity_name}/{entity_name}.json`. 🗂️
@@ -907,7 +921,7 @@ entity_stack = lambda entities: [
     #     "stack": ENTITY_STACK_KEY},
     {"question": None,
      "prompt": {
-         "text": "Hi! Could you please shortly explain what you've done. Also please answer my questions if I have any.  Your answer should be well-structured with markdown and not exceed 100 words. I say: "
+         "text": "Hi! "
      },
 
      # "file_name": "entity/app_design.json",
@@ -919,6 +933,20 @@ entity_stack = lambda entities: [
      "max_iteration": MAX_ITERATION,
      "additional_questions": [
          {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
+     "stack": ENTITY_STACK_KEY,
+     "publish": True},
+    {"question": None,
+     "prompt": {
+         "text": "Hi! Could you please shortly explain what you've done. Also please answer my questions if I have any.  Your answer should be well-structured with markdown and not exceed 100 words. I say: "
+     },
+
+     # "file_name": "entity/app_design.json",
+     "answer": None,
+     "approve": True,
+     "function": None,
+     "iteration": 0,
+     "flow_step": ENTITIES_DESIGN_STR,
+     "max_iteration": 0,
      "stack": ENTITY_STACK_KEY,
      "publish": True},
     {
@@ -978,20 +1006,20 @@ Looking forward to your feedback! 🌟
     #     "files_notifications": FILES_NOTIFICATIONS,
     #     "max_iteration": 0,
     #     "stack": ENTITY_STACK_KEY},
-    {
-        "question": None,
-        "prompt": {},
-        "answer": None,
-        "function": {"name": "refresh_context"},
-        "context": {
-            "files": ["entity/**"],
-            "excluded_files": ["entity/workflow.py", "entity/__init__.py"],
-        },
-        "notification_text": "",
-        "iteration": 0,
-        "flow_step": ENTITIES_DESIGN_STR,
-        "max_iteration": 0,
-        "stack": ENTITY_STACK_KEY},
+    # {
+    #     "question": None,
+    #     "prompt": {},
+    #     "answer": None,
+    #     "function": {"name": "refresh_context"},
+    #     "context": {
+    #         "files": ["entity/**"],
+    #         "excluded_files": ["entity/workflow.py", "entity/__init__.py"],
+    #     },
+    #     "notification_text": "",
+    #     "iteration": 0,
+    #     "flow_step": ENTITIES_DESIGN_STR,
+    #     "max_iteration": 0,
+    #     "stack": ENTITY_STACK_KEY},
     {
         "notification": f"""Proceeding to {ENTITIES_DESIGN_STR}
 
@@ -1128,7 +1156,7 @@ processors_stack = lambda entity: [
     #  "stack": APP_BUILDING_STACK_KEY},
     {"question": None,
      "prompt": {
-         "text": f"Hi! Could you please explain what processors functions you wrote. Explain that they are isolated functions in a faas way like aws lambda. They will be triggered by Cyoda grpc server when the {entity.get('entity_name')} entity state changes. Tell what tests you wrote and how you mocked Cyoda entity service (repository) so that i can test every function in an isolated fashion. Also please answer my questions if I have any.  Your answer should be well-structured with markdown and not exceed 100 words. I say: "
+         "text": f"Hi! "
      },
 
      # "file_name": "entity/app_design.json",
@@ -1140,6 +1168,20 @@ processors_stack = lambda entity: [
      "max_iteration": MAX_ITERATION,
      "additional_questions": [
          {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
+     "stack": PROCESSORS_STACK_KEY,
+     "publish": True},
+    {"question": None,
+     "prompt": {
+         "text": f"Hi! Could you please explain what processors functions you wrote. Explain that they are isolated functions in a faas way like aws lambda. They will be triggered by Cyoda grpc server when the {entity.get('entity_name')} entity state changes. Tell what tests you wrote and how you mocked Cyoda entity service (repository) so that i can test every function in an isolated fashion. Also please answer my questions if I have any.  Your answer should be well-structured with markdown and not exceed 100 words. I say: "
+     },
+
+     # "file_name": "entity/app_design.json",
+     "answer": None,
+     "approve": True,
+     "function": None,
+     "iteration": 0,
+     "flow_step": WORKFLOW_CODE_DESIGN_STR,
+     "max_iteration": 0,
      "stack": PROCESSORS_STACK_KEY,
      "publish": True},
     {"question": None,
@@ -1270,7 +1312,7 @@ scheduler_stack = lambda entity: [
      "file_name": f"entity/{entity.get("entity_name")}/logic.py",
      "flow_step": LOGIC_CODE_DESIGN_STR,
      "additional_questions": [{"question": QUESTION_OR_VALIDATE, "approve": True}],
-     "max_iteration": MAX_ITERATION,
+     "max_iteration": 0,
      "stack": SCHEDULER_STACK_KEY,
      },
     {
@@ -1581,6 +1623,23 @@ You can check the api with http://localhost:5000/scalar
      "max_iteration": 0,
      "stack": APP_BUILDING_STACK_KEY,
      "publish": True},
+
+    {"question": None,
+     "prompt": {
+         "text": "Hi! "
+     },
+
+     # "file_name": "entity/app_design.json",
+     "answer": None,
+     "approve": True,
+     "function": None,
+     "iteration": 0,
+     "flow_step": LOGIC_CODE_DESIGN_STR,
+     "max_iteration": MAX_ITERATION,
+     "additional_questions": [
+         {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
+     "stack": API_REQUEST_STACK_KEY,
+     "publish": True},
     {"question": None,
      "prompt": {
          "text": "Hi! Could you please explain what you've done what api you added and why. Also please answer my questions if I have any. Your answer should be well-structured with markdown and not exceed 100 words. I say: "
@@ -1592,9 +1651,7 @@ You can check the api with http://localhost:5000/scalar
      "function": None,
      "iteration": 0,
      "flow_step": LOGIC_CODE_DESIGN_STR,
-     "max_iteration": MAX_ITERATION,
-     #"additional_questions": [
-     #    {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
+     "max_iteration": 0,
      "stack": API_REQUEST_STACK_KEY,
      "publish": True},
     {"question": None,

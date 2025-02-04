@@ -1,5 +1,6 @@
 import json
 import logging
+import aiofiles
 from common.config.config import CYODA_AI_URL, MOCK_AI, CYODA_AI_API, WORKFLOW_AI_API, CONNECTION_AI_API, RANDOM_AI_API, \
     MAX_TEXT_SIZE, USER_FILES_DIR_NAME
 from common.util.utils import parse_json, validate_result, send_post_request, ValidationErrorException, \
@@ -60,8 +61,14 @@ class AiAssistantService:
                 return {"error": f"Answer size exceeds {MAX_TEXT_SIZE} limit"}
             if MOCK_AI=="true":
                 return {"entity": "some random text"}
+            if user_file and user_file.lower().endswith(('.jpg', '.jpeg', '.png')):
+                file_description = await self.chat_random(token=token, chat_id=chat_id, ai_question="Please, return detailed file description", user_file=user_file)
+                ai_question = f"{ai_question}. File description: {file_description}"
+                user_file_txt = user_file.rsplit('.', 1)[0] + '.txt'
+                async with aiofiles.open(get_project_file_name(chat_id, user_file_txt, folder_name=USER_FILES_DIR_NAME), 'w') as output:
+                    await output.write(file_description)
             if ai_endpoint == CYODA_AI_API:
-                resp = await self.chat_cyoda(token=token, chat_id=chat_id, ai_question=ai_question, user_file=user_file)
+                resp = await self.chat_cyoda(token=token, chat_id=chat_id, ai_question=ai_question, user_file=user_file if user_file and not user_file.lower().endswith(('.jpg', '.jpeg', '.png')) else None)
             elif ai_endpoint == WORKFLOW_AI_API:
                 resp = await self.chat_workflow(token=token, chat_id=chat_id, ai_question=ai_question)
             elif ai_endpoint == CONNECTION_AI_API:
@@ -164,23 +171,12 @@ class AiAssistantService:
         if ai_question and len(str(ai_question).encode('utf-8')) > MAX_TEXT_SIZE:
             logger.error(f"Answer size exceeds {MAX_TEXT_SIZE} limit")
             return {"error": f"Answer size exceeds {MAX_TEXT_SIZE} limit"}
-
         if user_file:
-            if isinstance(user_file, str):
-                file_path = get_project_file_name(chat_id, user_file, folder_name=USER_FILES_DIR_NAME)
-                user_file = await read_file_object(file_path)
-            data = {
-            "question": f"{ai_question}",
-            "return_object": "random",
-            "chat_id": f"{chat_id}"
-            }
-            resp = await send_post_request(token, CYODA_AI_URL, "%s/chat-file" % API_V_RANDOM_, data, user_file=user_file)
-            return resp.get('message')
+            file_path = get_project_file_name(chat_id, user_file, folder_name=USER_FILES_DIR_NAME)
+            data = {"chat_id": f"{chat_id}", "question": f"{ai_question}"}
+            resp = await send_post_request(token, CYODA_AI_URL, "%s/chat-file" % API_V_RANDOM_, data,
+                                           user_file=file_path)
         else:
-            data = json.dumps({
-                "question": f"{ai_question}",
-                "return_object": "random",
-                "chat_id": f"{chat_id}"
-            })
+            data = json.dumps({"chat_id": f"{chat_id}", "question": f"{ai_question}"})
             resp = await send_post_request(token, CYODA_AI_URL, "%s/chat" % API_V_RANDOM_, data)
-            return resp.get('message')
+        return resp.get('message')

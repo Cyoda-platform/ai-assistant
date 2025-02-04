@@ -2,7 +2,7 @@ import copy
 import logging
 from typing import Dict, Any
 
-from common.config.config import CYODA_AI_API, ENTITY_VERSION
+from common.config.config import CYODA_AI_API, ENTITY_VERSION, MAX_ITERATION
 from common.config.conts import NOTIFICATION, QUESTION, FUNCTION, PROMPT, CAN_PROCEED, INFO
 from entity.workflow import dispatch_function
 from entity.chat.workflow.helper_functions import get_event_template, save_result_to_file, run_chat, _process_question, \
@@ -34,6 +34,8 @@ async def process_answer(token, _event: Dict[str, Any], chat) -> None:
                       chat_id=chat["chat_id"])
 
         if repeat_iteration(_event, result):
+            if not _event.get("additional_questions", []):
+                _event["iteration"] = MAX_ITERATION
             _event["iteration"] += 1
             stack.append(copy.deepcopy(_event))
             if _event.get("additional_questions"):
