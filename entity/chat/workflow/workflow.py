@@ -411,7 +411,7 @@ async def register_workflow_with_app(token, _event, chat):
 
         suggested_workflow = entity.get("endpoints").get("POST")[0].get("suggested_workflow", [])
 
-        await generate_cyoda_workflow(token=token, entity_name=entity_name, entity_workflow=suggested_workflow, chat_id=chat["chat_id"], file_name =f"entity/{entity_name}/workflow.py")
+        await generate_cyoda_workflow(token=token, entity_name=entity_name, entity_workflow=suggested_workflow, chat_id=chat["chat_id"], file_name =f"entity/{entity_name}/workflow.json")
 
         event_copy["function"]["prompt"]["text"] = event_copy["function"]["prompt"]["text"].format(entity_name =entity_name, suggested_workflow = json.dumps(suggested_workflow))
         result = await run_chat(chat=chat, _event=event_copy, token=token, ai_endpoint=CYODA_AI_API if not event_copy.get("function").get("model_api") else event_copy.get("function").get("model_api"), chat_id=chat["chat_id"])
