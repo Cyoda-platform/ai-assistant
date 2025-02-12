@@ -1,24 +1,23 @@
-import copy
 import json
 import asyncio
 import os
 import logging
+from copy import deepcopy
+
 import aiofiles
 
-from common.ai.ai_assistant_service import dataset
+from common.ai.ai_assistant_service import dataset, OPEN_AI
 from common.config.config import MOCK_AI, CYODA_AI_API, PROJECT_DIR, REPOSITORY_NAME, CLONE_REPO, \
-    REPOSITORY_URL, WORKFLOW_AI_API
-from common.config.conts import SCHEDULED_STACK, API_REQUEST_STACK, \
-    WORKFLOW_STACK, \
+    REPOSITORY_URL
+from common.config.conts import WORKFLOW_STACK, \
     ENTITY_STACK, PROCESSORS_STACK, EXTERNAL_SOURCES_PULL_BASED_RAW_DATA, WEB_SCRAPING_PULL_BASED_RAW_DATA, \
     TRANSACTIONAL_PULL_BASED_RAW_DATA
-from common.config.enums import TextType
-from common.util.utils import read_file, get_project_file_name, parse_json, parse_workflow_json
-from entity.chat.data.data import scheduler_stack, api_request_stack, workflow_stack, entity_stack, processors_stack, \
-    data_ingestion_stack, PUSHED_CHANGES_NOTIFICATION, BRANCH_READY_NOTIFICATION
+from common.util.utils import read_file, get_project_file_name, parse_json
+from entity.chat.data.data import PUSHED_CHANGES_NOTIFICATION, BRANCH_READY_NOTIFICATION
 from entity.chat.workflow.helper_functions import _save_file, _sort_entities, _send_notification, \
     _build_context_from_project_files, run_chat, _send_notification_with_file, git_pull, \
-    generate_data_ingestion_code_for_entity, generate_file_contents, save_result_to_file, _git_push
+    generate_data_ingestion_code_for_entity, save_result_to_file, _git_push, \
+    generate_cyoda_workflow
 from logic.init import ai_service
 
 # Configure logging
@@ -26,14 +25,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 entry_point_to_stack = {
-    SCHEDULED_STACK: copy.deepcopy(scheduler_stack),
-    API_REQUEST_STACK: copy.deepcopy(api_request_stack),
-    EXTERNAL_SOURCES_PULL_BASED_RAW_DATA: copy.deepcopy(data_ingestion_stack),
-    WEB_SCRAPING_PULL_BASED_RAW_DATA: copy.deepcopy(data_ingestion_stack),
-    TRANSACTIONAL_PULL_BASED_RAW_DATA: copy.deepcopy(data_ingestion_stack),
-    WORKFLOW_STACK: copy.deepcopy(workflow_stack),
-    ENTITY_STACK: copy.deepcopy(entity_stack),
-    PROCESSORS_STACK: copy.deepcopy(processors_stack)
 }
 
 
@@ -54,14 +45,20 @@ async def refresh_context(token, _event, chat):
     # clean chat history and re-initialize
     chat_id = chat["chat_id"]
     await git_pull(chat_id)
+    if _event.get("function").get("model_api") and _event.get("function").get("model_api").get("model") == OPEN_AI:
+        await ai_service.refresh_open_ai_chat(token, chat_id)
+        return
     await ai_service.init_cyoda_chat(token=token, chat_id=chat_id)
-    contents = await _build_context_from_project_files(chat=chat, files=_event["context"]["files"],
-                                                       excluded_files=_event["context"].get("excluded_files"))
+    contents = {}
+    if _event["context"] and _event["context"]["files"]:
+        contents = await _build_context_from_project_files(chat=chat, files=_event["context"]["files"],
+                                                           excluded_files=_event["context"].get("excluded_files"))
     _event.setdefault('function', {}).setdefault("prompt", {})
-    _event["function"]["prompt"][
-        "text"] = f"Please remember these files contents and reuse later: {json.dumps(contents)} . Do not do any mapping logic - it is not relevant. Just remember the code and the application design to reuse in your future application building. Return confirmation that you remembered everything"
+    _event["function"]["prompt"]["text"] = f"Please remember these files contents and reuse later: {json.dumps(contents)} . Do not do any mapping logic - it is not relevant. Just remember the code and the application design to reuse in your future application building. Return confirmation that you remembered everything"
     await run_chat(chat=chat, _event=_event, token=token, ai_endpoint=CYODA_AI_API, chat_id=chat_id)
-    await _save_file(chat_id=chat_id, _data=json.dumps(chat), item=_event["file_name"])
+    if _event.get("file_name"):
+        await _save_file(chat_id=chat_id, _data=json.dumps(chat), item=_event["file_name"])
+
 
 async def add_design_stack(token, _event, chat) -> list:
     file_name = _event["file_name"]
@@ -171,47 +168,6 @@ async def save_raw_data_to_entity_file(token, _event, chat) -> str:
     return _event["answer"]
 
 
-async def generate_cyoda_workflow(token, _event, chat):
-    # sourcery skip: use-named-expression
-    if MOCK_AI == "true":
-        return
-    try:
-        if (_event.get("entity").get("entity_workflow") and _event.get("entity").get("entity_workflow").get(
-                "transitions")):
-            ai_question = f"what workflow could you recommend for this sketch: {json.dumps(_event.get("entity").get("entity_workflow"))}. All transitions automated, no criteria needed, only externalized processors allowed, calculation node = {chat["chat_id"]}, calculation_response_timeout_ms = 120000, sync_process=false, new_transaction_for_async=true.  Return only json without any comments."
-            resp = await ai_service.ai_chat(token=token, chat_id=chat["chat_id"], ai_endpoint=WORKFLOW_AI_API,
-                                            ai_question=ai_question)
-            workflow = parse_workflow_json(resp)
-            workflow_json = json.loads(workflow)
-            workflow_json["workflow_criteria"] = {
-                "externalized_criteria": [
-
-                ],
-                "condition_criteria": [
-                    {
-                        "name": _event.get("entity").get("entity_name"),
-                        "description": "Workflow criteria",
-                        "condition": {
-                            "group_condition_operator": "AND",
-                            "conditions": [
-                                {
-                                    "field_name": "entityModelName",
-                                    "is_meta_field": True,
-                                    "operation": "equals",
-                                    "value": _event.get("entity").get("entity_name"),
-                                    "value_type": "strings"
-                                }
-                            ]
-                        }
-                    }
-                ]
-            }
-            await _save_file(chat_id=chat["chat_id"], _data=json.dumps(workflow_json), item=_event["file_name"])
-    except Exception as e:
-        logger.error(f"Error generating workflow: {e}")
-        logger.exception("Error generating workflow")
-
-
 async def generate_data_ingestion_entities_template(token, _event, chat):
     # todo add a directory /user_files. Scan this directory and formulate the requirements from there
     entities = _event.get("entities", [])
@@ -285,31 +241,39 @@ async def generate_data_ingestion_code(token, _event, chat):
 
 async def generate_entities_template(token, _event, chat):
     # Fetch entities from the event
-    entities = _event.get("entities", [])
-    user_data = f"Please, take into account the user suggestions. User suggestions take higher priority. User says: {_event["answer"]}" if \
-        _event["answer"] else ''
-    # List of tasks to be executed concurrently
-    tasks = []
-    for entity in entities:
-        # Define a function to handle the task for each entity
-        async def handle_entity(_entity):
-            ai_question = _event.get("function").get("prompts").get("ai_question").format(
-                entity_name=_entity.get("entity_name"), user_data=user_data)
-            if ai_question:
-                # Generate file contents asynchronously for each entity
-                await generate_file_contents(
-                    _event=_event,
-                    chat=chat,
-                    file_name=f"entity/{_entity.get('entity_name')}/{_entity.get('entity_name')}.json",
-                    ai_question=ai_question,
-                    token=token,
-                    text_type=TextType.JSON
-                )
+    entities_data = {}
+    try:
+        file_path = get_project_file_name(chat["chat_id"], "entity/entities_design.json")
+        # Open the file asynchronously
+        async with aiofiles.open(file_path, 'r') as f:
+            # Read the content of the file
+            entities_text = await f.read()
 
-        # Add the task to the list
-        tasks.append(handle_entity(entity))
-    # Wait for all tasks to complete
-    await asyncio.gather(*tasks)
+        # Parse the JSON from the file content
+        entities_data = json.loads(entities_text)
+    except Exception as e:
+        logger.exception(e)
+    entities_list = []
+    for entity in entities_data["primary_entities"]:
+        entities_list.append(entity.get("entity_name"))
+    for entity in entities_data["secondary_entities"]:
+        entities_list.append(entity.get("entity_name"))
+
+    event_copy = deepcopy(_event)
+    event_copy["function"]["prompt"]["text"] = event_copy["function"]["prompt"]["text"].format(entities_list = json.dumps(entities_list))
+    entity_data_design = await run_chat(chat=chat, _event=event_copy, token=token,
+                            ai_endpoint=CYODA_AI_API if not event_copy.get("function").get(
+                                "model_api") else event_copy.get("function").get("model_api"),
+                            chat_id=chat["chat_id"])
+    await _save_file(chat_id=chat["chat_id"],
+                     _data=entity_data_design,
+                     item=f"entity/entities_data_design.json")
+
+    entity_data_design_json = entity_data_design
+    for entity in entity_data_design_json["entities"]:
+        await _save_file(chat_id=chat["chat_id"],
+                         _data=json.dumps(entity.get('entity_data_example')),
+                         item=f"entity/{entity.get('entity_name')}/{entity.get('entity_name')}.json")
     # Send notification after all tasks are completed
     await _send_notification(chat=chat, event=_event, notification_text=_event.get("notification_text"))
 
@@ -318,14 +282,14 @@ async def finish_flow(token, _event, chat):
     chat_id = chat["chat_id"]
     await _save_file(chat_id=chat_id, _data=json.dumps(chat), item=_event["file_name"])
     await _send_notification(chat=chat, event=_event, notification_text=_event.get("notification_text"))
-    #todo remove later
+    # todo remove later
     await _save_file(chat_id=chat_id, _data=json.dumps(dataset.get(chat_id)), item=f"entity/dataset_{chat_id}.json")
     del dataset[chat_id]
 
 
 async def save_env_file(token, _event, chat):
     chat_id = chat["chat_id"]
-    file_name = get_project_file_name(chat_id = chat_id, file_name = _event["file_name"])
+    file_name = get_project_file_name(chat_id=chat_id, file_name=_event["file_name"])
     async with aiofiles.open(file_name, 'r') as template_file:
         content = await template_file.read()
 
@@ -363,41 +327,124 @@ async def remove_api_registration(token, _event, chat):
 
 async def register_api_with_app(token, _event, chat):
     chat_id = chat["chat_id"]
-    file_name = get_project_file_name(chat_id=chat_id, file_name=_event["file_name"])
+    app_file_name = get_project_file_name(chat_id=chat_id, file_name="app.py")
 
     # Read the template file asynchronously
-    async with aiofiles.open(file_name, 'r') as template_file:
+    async with aiofiles.open(app_file_name, 'r') as template_file:
         content = await template_file.read()
 
-    # Replace ENTITY_NAME_VAR with _event["entity"]["entity_name"]
-    entity_name = _event["entity"]["entity_name"]
-    content = content.replace('ENTITY_NAME_VAR', entity_name)
-    line1 = f"from entity.{entity_name}.api import api_bp_{entity_name}"
-    # Create line2
-    line2 = "from entity.ENTITY_NAME_VAR.api import api_bp_ENTITY_NAME_VAR"
-    # Replace the original line with two lines
-    content = content.replace(line1, f"{line1}\n{line2}")
+    entities_file_pattern = "entity/entities_design.json"
+    entities_data = {}
+    try:
+        file_path = get_project_file_name(chat["chat_id"], entities_file_pattern)
+        # Open the file asynchronously
+        async with aiofiles.open(file_path, 'r') as f:
+            # Read the content of the file
+            entities_text = await f.read()
 
-    line1 = f"app.register_blueprint(api_bp_{entity_name}, url_prefix='/api/{entity_name}')"
-    # Create line2
-    line2 = f"app.register_blueprint(api_bp_ENTITY_NAME_VAR, url_prefix='/api/ENTITY_NAME_VAR')"
-    # Replace the original line with two lines
-    content = content.replace(line1, f"{line1}\n{line2}")
-    # Write the updated content back to the file
-    async with aiofiles.open(file_name, 'w') as new_file:
+        # Parse the JSON from the file content
+        entities_data = json.loads(entities_text)
+    except Exception as e:
+        logger.exception(e)
+    entities_list = []
+    for entity in entities_data["primary_entities"]:
+        entities_list.append(entity)
+    for entity in entities_data["secondary_entities"]:
+        entities_list.append(entity)
+    for entity in entities_list:
+        event_copy = deepcopy(_event)
+        endpoint_list = []
+
+        # Loop through each method (POST, GET, etc.)
+        for method, endpoint_data in entity["endpoints"].items():
+            for endpoint in endpoint_data:
+                endpoint_name = endpoint["endpoint"]
+                description = endpoint["description"]
+                endpoint_list.append((endpoint_name, method, description))
+        event_copy["function"]["prompt"]["text"] = event_copy["function"]["prompt"]["text"].format(entity_name = entity.get('entity_name'), entity_endpoints = json.dumps(endpoint_list))
+        result = await run_chat(chat=chat, _event=event_copy, token=token, ai_endpoint=CYODA_AI_API if not event_copy.get("function").get("model_api") else event_copy.get("function").get("model_api"),
+                                chat_id=chat["chat_id"])
+
+        await _save_file(chat_id=chat["chat_id"],
+                         _data=json.dumps(result),
+                         item=f"entity/{entity.get('entity_name')}/api.py")
+    # Send notification after all tasks are completed
+        await _send_notification(chat=chat, event=_event, notification_text=_event.get("notification_text"))
+
+        # Replace ENTITY_NAME_VAR with _event["entity"]["entity_name"]
+        entity_name = entity.get('entity_name')
+        content = content.replace('ENTITY_NAME_VAR', entity_name)
+        line1 = f"from entity.{entity_name}.api import api_bp_{entity_name}"
+        # Create line2
+        line2 = "from entity.ENTITY_NAME_VAR.api import api_bp_ENTITY_NAME_VAR"
+        # Replace the original line with two lines
+        content = content.replace(line1, f"{line1}\n{line2}")
+
+        line1 = f"app.register_blueprint(api_bp_{entity_name}, url_prefix='/api/{entity_name}')"
+        # Create line2
+        line2 = f"app.register_blueprint(api_bp_ENTITY_NAME_VAR, url_prefix='/api/ENTITY_NAME_VAR')"
+        # Replace the original line with two lines
+        content = content.replace(line1, f"{line1}\n{line2}")
+        # Write the updated content back to the file
+    async with aiofiles.open(app_file_name, 'w') as new_file:
         await new_file.write(content)
-    await _git_push(chat_id, [file_name], "Added api registration")
+    await _git_push(chat_id, [app_file_name], "Added api registration")
+
+
+async def register_workflow_with_app(token, _event, chat):
+    entities_file_pattern = "entity/entities_design.json"
+    entities_data = {}
+    try:
+        file_path = get_project_file_name(chat["chat_id"], entities_file_pattern)
+        # Open the file asynchronously
+        async with aiofiles.open(file_path, 'r') as f:
+            # Read the content of the file
+            entities_text = await f.read()
+
+        # Parse the JSON from the file content
+        entities_data = json.loads(entities_text)
+    except Exception as e:
+        logger.exception(e)
+    for entity in entities_data["primary_entities"]:
+        event_copy = deepcopy(_event)
+        entity_name = entity.get('entity_name')
+
+        suggested_workflow = entity.get("endpoints").get("POST")[0].get("suggested_workflow", [])
+
+        await generate_cyoda_workflow(token=token, entity_name=entity_name, entity_workflow=suggested_workflow, chat_id=chat["chat_id"], file_name =f"entity/{entity_name}/workflow.py")
+
+        event_copy["function"]["prompt"]["text"] = event_copy["function"]["prompt"]["text"].format(entity_name =entity_name, suggested_workflow = json.dumps(suggested_workflow))
+        result = await run_chat(chat=chat, _event=event_copy, token=token, ai_endpoint=CYODA_AI_API if not event_copy.get("function").get("model_api") else event_copy.get("function").get("model_api"), chat_id=chat["chat_id"])
+
+        await _save_file(chat_id=chat["chat_id"],
+                         _data=json.dumps(result),
+                         item=f"entity/{entity_name}/workflow.py")
+        event_copy["function"]["prompt"]["text"] = "implement all the logic in workflow.py,  you can find working implementation in prototype.py - use the relevant information"
+        event_copy["function"]["prompt"]["attached_files"] = [f"entity/{entity_name}/workflow.py", "entity/prototype.py"]
+        event_copy["function"]["prompt"]["api"] =  {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 2000}
+        event_copy["function"]["model_api"] = {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 2000}
+        result = await run_chat(chat=chat, _event=event_copy, token=token, ai_endpoint=CYODA_AI_API if not event_copy.get("function").get("model_api") else event_copy.get("function").get("model_api"),
+                                chat_id=chat["chat_id"])
+        await _save_file(chat_id=chat["chat_id"],
+                         _data=json.dumps(result),
+                         item=f"entity/{entity_name}/workflow.py")
+    # Send notification after all tasks are completed
+        await _send_notification(chat=chat, event=_event, notification_text=_event.get("notification_text"))
 
 
 async def verify_cyoda_doc(token, _event, chat):
-
     prd_doc_path = _event["function"]["files"]["prd_doc_path"]
     json_doc_path = _event["function"]["files"]["json_doc_path"]
     prd_doc = await read_file(get_project_file_name(chat_id=chat['chat_id'], file_name=prd_doc_path))
     json_doc = await read_file(get_project_file_name(chat_id=chat['chat_id'], file_name=json_doc_path))
-    _event["function"]["prompt"]["text"] = _event["function"]["prompt"]["text"].format(json_doc=json_doc, prd_doc=prd_doc)
+    _event["function"]["prompt"]["text"] = _event["function"]["prompt"]["text"].format(json_doc=json_doc,
+                                                                                       prd_doc=prd_doc)
     result = await run_chat(chat=chat, _event=_event, token=token, ai_endpoint=CYODA_AI_API, chat_id=chat["chat_id"])
     await save_result_to_file(chat=chat, _data=json.dumps(result), _event=_event)
+
+
+
+
 
 def main_parse_json():
     if __name__ == "__main__":
@@ -407,18 +454,21 @@ def main_parse_json():
         print(parse_json(resp))
         print(json.dumps(parse_json(resp)))
 
+
 def main_register_api_with_app():
     if __name__ == "__main__":
         event = {}
-        event["entity"]={}
+        event["entity"] = {}
         event["entity"]["entity_name"] = "test_entity"
         event["file_name"] = "app.py"
         chat = {"chat_id": "f460bfb3-e253-11ef-9cdb-40c2ba0ac9eb"}
         asyncio.run(register_api_with_app("token", event, chat))
 
+
 def main():
     if __name__ == "__main__":
         pass
+
 
 if __name__ == "__main__":
     main()

@@ -1,19 +1,26 @@
 import json
 import logging
-import aiofiles
 from common.config.config import CYODA_AI_URL, MOCK_AI, CYODA_AI_API, WORKFLOW_AI_API, CONNECTION_AI_API, RANDOM_AI_API, \
     MAX_TEXT_SIZE, USER_FILES_DIR_NAME
+from common.config.conts import EMPTY_PROMPT
+from common.util.file_reader import read_file_content
 from common.util.utils import parse_json, validate_result, send_post_request, ValidationErrorException, \
     get_project_file_name, read_file_object
+from openai import AsyncOpenAI
 
+client = AsyncOpenAI()
 API_V_CONNECTIONS_ = "api/v1/connections"
 API_V_CYODA_ = "api/v1/cyoda"
 API_V_WORKFLOWS_ = "api/v1/workflows"
 API_V_RANDOM_ = "api/v1/random"
+OPEN_AI = "gpt-4o-mini"
+OPEN_AI_4o = "gpt-4o"
 logger = logging.getLogger(__name__)
-
-#todo remove later
+conversation_history = {}
+# todo remove later
 dataset = {}
+
+
 def add_to_dataset(chat_id, ai_question, ai_endpoint, answer):
     if chat_id not in dataset:
         dataset[chat_id] = []  # Create a new chat session if it doesn't exist
@@ -21,12 +28,29 @@ def add_to_dataset(chat_id, ai_question, ai_endpoint, answer):
     dataset[chat_id].append({"ai_endpoint": ai_endpoint, "question": ai_question, "answer": answer})
 
 
+def add_to_conversation_history(chat_id, message):
+    if chat_id not in conversation_history:
+        conversation_history[chat_id] = [{
+            "role": "system",
+            "content": (
+                "You are a highly knowledgeable, helpful, and friendly assistant. "
+                "You excel at providing clear, concise, and thorough answers in "
+                "a user-friendly manner. Always strive to provide additional context, "
+                "examples, or best practices where relevant. "
+                "If you are unsure of an answer, acknowledge it rather than providing "
+                "inaccurate information."
+            ),
+        }]  # Create a new chat session if it doesn't exist
+        # Add the question and answer pair to the list of the corresponding chat session
+    conversation_history[chat_id].append(message)
+
+
 class AiAssistantService:
     def __init__(self):
         pass
 
     async def init_chat(self, token, chat_id):
-        if MOCK_AI=="true":
+        if MOCK_AI == "true":
             return {"success": True}
         data = json.dumps({"chat_id": f"{chat_id}"})
         endpoints = [API_V_CYODA_, API_V_WORKFLOWS_, API_V_RANDOM_]
@@ -54,30 +78,34 @@ class AiAssistantService:
         resp = await send_post_request(token, CYODA_AI_URL, "%s/initial" % API_V_RANDOM_, data)
         return resp.get('message')
 
+    async def refresh_open_ai_chat(self, token, chat_id):
+        conversation_history[chat_id].clear()
+
     async def ai_chat(self, token, chat_id, ai_endpoint, ai_question, user_file=None):
         try:
+            model = ai_endpoint.get("model")
+            if ai_question == EMPTY_PROMPT:
+                return ""
             if ai_question and len(str(ai_question).encode('utf-8')) > MAX_TEXT_SIZE:
                 logger.error(f"Answer size exceeds {MAX_TEXT_SIZE} limit")
                 return {"error": f"Answer size exceeds {MAX_TEXT_SIZE} limit"}
-            if MOCK_AI=="true":
+            if MOCK_AI == "true":
                 return {"entity": "some random text"}
-            if user_file and user_file.lower().endswith(('.jpg', '.jpeg', '.png')):
-                file_description = await self.chat_random(token=token, chat_id=chat_id, ai_question="Please, return detailed file description", user_file=user_file)
-                ai_question = f"{ai_question}. File description: {file_description}"
-                user_file_txt = user_file.rsplit('.', 1)[0] + '.txt'
-                async with aiofiles.open(get_project_file_name(chat_id, user_file_txt, folder_name=USER_FILES_DIR_NAME), 'w') as output:
-                    await output.write(file_description)
-            if ai_endpoint == CYODA_AI_API:
-                resp = await self.chat_cyoda(token=token, chat_id=chat_id, ai_question=ai_question, user_file=user_file if user_file and not user_file.lower().endswith(('.jpg', '.jpeg', '.png')) else None)
-            elif ai_endpoint == WORKFLOW_AI_API:
+            resp = ""
+            if model == CYODA_AI_API:
+                resp = await self.chat_cyoda(token=token, chat_id=chat_id, ai_question=ai_question,
+                                             user_file=user_file)
+            elif model == WORKFLOW_AI_API:
                 resp = await self.chat_workflow(token=token, chat_id=chat_id, ai_question=ai_question)
-            elif ai_endpoint == CONNECTION_AI_API:
+            elif model == CONNECTION_AI_API:
                 resp = await self.chat_connection(token=token, chat_id=chat_id, ai_question=ai_question)
-            elif ai_endpoint == RANDOM_AI_API:
-                resp = await self.chat_random(token=token, chat_id=chat_id, ai_question=ai_question, user_file=user_file)
-            else:
-                return {"error": "Invalid endpoint"}
-            add_to_dataset(ai_endpoint=ai_endpoint, ai_question=ai_question, chat_id=chat_id, answer=resp)
+            elif model == RANDOM_AI_API:
+                resp = await self.chat_random(token=token, chat_id=chat_id, ai_question=ai_question,
+                                              user_file=user_file)
+            elif model == OPEN_AI or model == OPEN_AI_4o:
+                resp = await self.chat_cyoda_open_ai(token=token, chat_id=chat_id, ai_question=ai_question,
+                                                     user_file=user_file, model=ai_endpoint)
+                add_to_dataset(ai_endpoint=ai_endpoint, ai_question=ai_question, chat_id=chat_id, answer=resp)
             return resp
         except Exception as e:
             logger.exception(e)
@@ -90,11 +118,41 @@ class AiAssistantService:
         if user_file:
             file_path = get_project_file_name(chat_id, user_file, folder_name=USER_FILES_DIR_NAME)
             data = {"chat_id": f"{chat_id}", "question": f"{ai_question}"}
-            resp = await send_post_request(token, CYODA_AI_URL, "%s/chat-file" % API_V_CYODA_, data, user_file=file_path)
+            resp = await send_post_request(token, CYODA_AI_URL, "%s/chat-file" % API_V_CYODA_, data,
+                                           user_file=file_path)
         else:
             data = json.dumps({"chat_id": f"{chat_id}", "question": f"{ai_question}"})
             resp = await send_post_request(token, CYODA_AI_URL, "%s/chat" % API_V_CYODA_, data)
         return resp.get('message')
+
+    async def chat_cyoda_open_ai(self, token, chat_id, ai_question, user_file=None,
+                                 model={"model": OPEN_AI, "temperature": 0.7, "max_tokens": 700}):
+        logger.info(ai_question)
+        if ai_question and len(str(ai_question).encode('utf-8')) > MAX_TEXT_SIZE:
+            logger.error(f"Answer size exceeds {MAX_TEXT_SIZE} limit")
+            return {"error": f"Answer size exceeds {MAX_TEXT_SIZE} limit"}
+        if user_file:
+            file_path = get_project_file_name(chat_id, user_file, folder_name=USER_FILES_DIR_NAME)
+            file_contents = read_file_content(file_path)
+            ai_question = f"{ai_question} \n {user_file}: {file_contents}"
+        add_to_conversation_history(chat_id, {"role": "user", "content": ai_question})
+
+        # Send the entire conversation history
+        completion = await client.chat.completions.create(
+            model=model.get("model", OPEN_AI),
+            messages=conversation_history[chat_id],
+            temperature=model.get("temperature", 0.7),
+            max_tokens=model.get("max_tokens", 700),
+            top_p=1.0,
+            frequency_penalty=0.0,
+            presence_penalty=0.0
+        )
+
+        # Output the model's response
+        assistant_response = completion.choices[0].message.content
+        add_to_conversation_history(chat_id, {"role": "assistant", "content": assistant_response})
+        logger.info(assistant_response)
+        return assistant_response
 
 
     async def chat_workflow(self, token, chat_id, ai_question):
@@ -123,7 +181,8 @@ class AiAssistantService:
         except Exception as e:
             logger.error(f"Failed to export workflow: {e}")
 
-    async def validate_and_parse_json(self, token:str, chat_id: str, data: str, schema: str, ai_endpoint:str, max_retries: int):
+    async def validate_and_parse_json(self, token: str, chat_id: str, data: str, schema: str, ai_endpoint: str,
+                                      max_retries: int):
         try:
             parsed_data = parse_json(data)
         except Exception as e:
@@ -146,13 +205,13 @@ class AiAssistantService:
                         f"using this json schema: {json.dumps(schema)}. "
                         f"Return only the DTO JSON."
                     )
-                    retry_result = await self.ai_chat(token=token, chat_id=chat_id, ai_endpoint=ai_endpoint, ai_question=question)
+                    retry_result = await self.ai_chat(token=token, chat_id=chat_id, ai_endpoint=ai_endpoint,
+                                                      ai_question=question)
                     parsed_data = parse_json(retry_result)
             finally:
                 attempt += 1
         logger.error(f"Maximum retry attempts reached. Validation failed. Attempt: {attempt}")
         raise ValueError("JSON validation failed after retries.")
-
 
     async def chat_connection(self, token, chat_id, ai_question):
         if ai_question and len(str(ai_question).encode('utf-8')) > MAX_TEXT_SIZE:
@@ -165,7 +224,6 @@ class AiAssistantService:
         })
         resp = await send_post_request(token, CYODA_AI_URL, "%s/chat" % API_V_CONNECTIONS_, data)
         return resp.get('message')
-
 
     async def chat_random(self, token, chat_id, ai_question, user_file=None):
         if ai_question and len(str(ai_question).encode('utf-8')) > MAX_TEXT_SIZE:

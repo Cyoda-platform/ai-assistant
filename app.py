@@ -151,7 +151,7 @@ async def get_chat(technical_id):
     dialogue = []
     if "finished_flow" in chat.get("chat_flow", {}):
         for item in chat["chat_flow"]["finished_flow"]:
-            if item.get("question") or item.get("notification") or item.get("answer"):
+            if (item.get("question") or item.get("notification") or item.get("answer")) and item.get("publish"):
                 dialogue.append(item)
     chats_view = {
         'technical_id': technical_id,

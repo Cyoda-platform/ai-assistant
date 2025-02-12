@@ -9,9 +9,9 @@ import aiofiles
 import black
 
 from common.config.config import MOCK_AI, VALIDATION_MAX_RETRIES, PROJECT_DIR, REPOSITORY_NAME, CLONE_REPO, \
-    CYODA_AI_API, REPOSITORY_URL
+    CYODA_AI_API, REPOSITORY_URL, WORKFLOW_AI_API, ENTITY_VERSION
 from common.config.enums import TextType
-from common.util.utils import parse_json, get_project_file_name, read_file, format_json_if_needed
+from common.util.utils import parse_json, get_project_file_name, read_file, format_json_if_needed, parse_workflow_json
 from entity.chat.data.data import PUSHED_CHANGES_NOTIFICATION
 from logic.init import ai_service
 
@@ -59,7 +59,7 @@ async def _get_valid_result(_data, schema, token, ai_endpoint, chat_id):
 
 
 async def run_chat(chat, _event, token, ai_endpoint, chat_id, additional_prompt=None):
-    event_prompt, prompt = build_prompt(_event, chat) if not additional_prompt else (
+    event_prompt, prompt = await build_prompt(_event, chat) if not additional_prompt else (
         {"prompt": additional_prompt}, additional_prompt)
     user_file_name = None
     if _event.get("user_file") and _event.get("user_file_processed") is False:
@@ -86,12 +86,12 @@ async def run_chat(chat, _event, token, ai_endpoint, chat_id, additional_prompt=
     return result
 
 
-def build_prompt(_event, chat):
+async def build_prompt(_event, chat):
     if _event.get("function") and _event["function"].get("prompt"):
         event_prompt = _event["function"]["prompt"]
     else:
         event_prompt = _event.get("prompt", {})
-    prompt_text = _enrich_prompt_with_context(_event, chat, event_prompt)
+    prompt_text = await _enrich_prompt_with_context(_event, chat, event_prompt)
     prompt = f'{prompt_text}: {_event.get("answer", "")}' if _event.get(
         "answer") else prompt_text
     prompt = f'{prompt}. Use this json schema http://json-schema.org/draft-07/schema# to understand how to structure your answer: {event_prompt.get("schema", "")}. It will be validated against this schema. Return only json (python dictionary)' if event_prompt.get(
@@ -99,8 +99,19 @@ def build_prompt(_event, chat):
     return event_prompt, prompt
 
 
-def _enrich_prompt_with_context(_event, chat, event_prompt):
+async def _enrich_prompt_with_context(_event, chat, event_prompt):
     prompt_text = event_prompt.get("text", "")
+    if event_prompt.get("attached_files"):
+        attached_files = event_prompt.get("attached_files")
+        contents = []
+        for file_pattern in attached_files:
+            file_path = get_project_file_name(chat["chat_id"], file_pattern)
+            # Check if the file exists before trying to open it
+            if os.path.isfile(file_path):
+                async with aiofiles.open(file_path, "r") as f:
+                    contents.append({file_pattern: await f.read()})
+        prompt_text = prompt_text + " \n " + json.dumps(contents)
+
     prompt_context = _event.get("context", {}).get("prompt", {})
     if prompt_context:
         # Loop through each item in the context dictionary
@@ -129,7 +140,8 @@ def _mock_ai(prompt_text):
     return json_mock_data.get(prompt_text[:15], json.dumps({"entity": "some random text"}))
 
 
-def get_event_template(event, question='', notification='', answer=None, prompt=None, file_name=None, editable=False, publish=False):
+def get_event_template(event, question='', notification='', answer=None, prompt=None, file_name=None, editable=False,
+                       publish=False):
     # Predefined keys for the final JSON structure
     final_json = {
         "question": question,  # Sets the provided question
@@ -354,7 +366,8 @@ async def git_pull(chat_id, merge_strategy="recursive"):
         logger.error(f"Unexpected error during git pull: {e}")
         logger.exception(e)
 
-#todo git push in case of interim changes will throw an error
+
+# todo git push in case of interim changes will throw an error
 async def _git_push(chat_id, file_paths: list, commit_message: str):
     await git_pull(chat_id=chat_id)
 
@@ -452,7 +465,8 @@ async def _build_context_from_project_files(chat, files, excluded_files):
             # Use glob to get all files matching the pattern (including files in subdirectories)
             for file_path in glob.glob(root_path, recursive=True):  # recursive=True to include files in subdirectories
                 try:
-                    if os.path.isfile(file_path) and not any(file_path.endswith(excluded) for excluded in excluded_files):
+                    if os.path.isfile(file_path) and not any(
+                            file_path.endswith(excluded) for excluded in excluded_files):
                         async with aiofiles.open(file_path, "r") as f:
                             contents.append({file_path: await f.read()})
                 except:
@@ -664,6 +678,59 @@ def comment_out_non_code(text):
     else:
         return text
 
+#what workflow could you recommend for this sketch: class_name = com.cyoda.tdb.model.treenode.TreeNodeEntity, name = job, workflow transitions: [{"name": "create_report", "start_state": "initial", "end_state": "report_generated", "process": "create_report"}]. All transitions automated, no criteria needed, only externalized processors allowed, calculation node = 3fc5df73-e8db-11ef-81a1-40c2ba0ac9eb, calculation_response_timeout_ms = 120000, sync_process=false, new_transaction_for_async=true.  Return only json without any comments.
+async def generate_cyoda_workflow(token, entity_name, entity_workflow, chat_id, file_name):
+    # sourcery skip: use-named-expression
+    if MOCK_AI == "true":
+        return
+    try:
+        transitions = [{
+            "name": item.get("action", ""),
+            "start_state": item.get("start_state", ""),
+            "end_state": item.get("end_state", ""),
+            "process": item.get("action", "")
+        } for item in entity_workflow]
+        ai_question = f"what workflow could you recommend for this sketch: class_name = com.cyoda.tdb.model.treenode.TreeNodeEntity, name = {entity_name}, workflow transitions: {json.dumps(transitions)}. All transitions automated, no criteria needed, only externalized processors allowed, calculation node = {chat_id}, calculation_response_timeout_ms = 120000, sync_process=false, new_transaction_for_async=true.  Return only json without any comments."
+        resp = await ai_service.ai_chat(token=token, chat_id=chat_id, ai_endpoint={"model": WORKFLOW_AI_API},
+                                        ai_question=ai_question)
+        logger.info(resp)
+        workflow = parse_workflow_json(resp)
+        workflow_json = json.loads(workflow)
+        workflow_json["workflow_criteria"] = {
+            "externalized_criteria": [
+
+            ],
+            "condition_criteria": [
+                {
+                    "name": entity_name,
+                    "description": "Workflow criteria",
+                    "condition": {
+                        "group_condition_operator": "AND",
+                        "conditions": [
+                            {
+                                "field_name": "entityModelName",
+                                "is_meta_field": True,
+                                "operation": "equals",
+                                "value": entity_name,
+                                "value_type": "strings"
+                            },
+                            {
+                                "field_name": "entityModelVersion",
+                                "is_meta_field": True,
+                                "operation": "equals",
+                                "value": ENTITY_VERSION,
+                                "value_type": "strings"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+        await _save_file(chat_id=chat_id, _data=json.dumps(workflow_json), item=file_name)
+    except Exception as e:
+        logger.error(f"Error generating workflow: {e}")
+        logger.exception("Error generating workflow")
+
 
 def main():
     input = """```python
@@ -760,9 +827,6 @@ def _process_question(question):
     # Return the original question if conditions are not met
     question["processed"] = True
     return question
-
-
-
 
 
 if __name__ == "__main__":
