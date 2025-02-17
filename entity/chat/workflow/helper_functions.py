@@ -688,7 +688,8 @@ async def generate_cyoda_workflow(token, entity_name, entity_workflow, chat_id, 
             "name": item.get("action", ""),
             "start_state": item.get("start_state", ""),
             "end_state": item.get("end_state", ""),
-            "process": item.get("action", "")
+            "process": item.get("action", ""),
+            "externalized_processor_name": item.get("action", "")
         } for item in entity_workflow]
         ai_question = f"what workflow could you recommend for this sketch: class_name = com.cyoda.tdb.model.treenode.TreeNodeEntity, name = {entity_name}, workflow transitions: {json.dumps(transitions)}. All transitions automated, no criteria needed, only externalized processors allowed, calculation node = {chat_id}, calculation_response_timeout_ms = 120000, sync_process=false, new_transaction_for_async=true.  Return only json without any comments."
         resp = await ai_service.ai_chat(token=token, chat_id=chat_id, ai_endpoint={"model": WORKFLOW_AI_API},
@@ -696,13 +697,14 @@ async def generate_cyoda_workflow(token, entity_name, entity_workflow, chat_id, 
         logger.info(resp)
         workflow = parse_workflow_json(resp)
         workflow_json = json.loads(workflow)
+        workflow_json["name"] = f"{workflow_json["name"]}:ENTITY_VERSION_VAR:{chat_id}"
         workflow_json["workflow_criteria"] = {
             "externalized_criteria": [
 
             ],
             "condition_criteria": [
                 {
-                    "name": entity_name,
+                    "name": f"{entity_name}:ENTITY_VERSION_VAR:{chat_id}",
                     "description": "Workflow criteria",
                     "condition": {
                         "group_condition_operator": "AND",
@@ -718,7 +720,7 @@ async def generate_cyoda_workflow(token, entity_name, entity_workflow, chat_id, 
                                 "field_name": "entityModelVersion",
                                 "is_meta_field": True,
                                 "operation": "equals",
-                                "value": ENTITY_VERSION,
+                                "value": "ENTITY_VERSION_VAR",
                                 "value_type": "strings"
                             }
                         ]

@@ -1,7 +1,7 @@
 import json
 import logging
 from common.config.config import CYODA_AI_URL, MOCK_AI, CYODA_AI_API, WORKFLOW_AI_API, CONNECTION_AI_API, RANDOM_AI_API, \
-    MAX_TEXT_SIZE, USER_FILES_DIR_NAME
+    MAX_TEXT_SIZE, USER_FILES_DIR_NAME, DEEPSEEK_OPEN_AI_KEY
 from common.config.conts import EMPTY_PROMPT
 from common.util.file_reader import read_file_content
 from common.util.utils import parse_json, validate_result, send_post_request, ValidationErrorException, \
@@ -9,12 +9,15 @@ from common.util.utils import parse_json, validate_result, send_post_request, Va
 from openai import AsyncOpenAI
 
 client = AsyncOpenAI()
+deepseek_client = AsyncOpenAI(api_key=DEEPSEEK_OPEN_AI_KEY, base_url="https://api.deepseek.com")
+
 API_V_CONNECTIONS_ = "api/v1/connections"
 API_V_CYODA_ = "api/v1/cyoda"
 API_V_WORKFLOWS_ = "api/v1/workflows"
 API_V_RANDOM_ = "api/v1/random"
 OPEN_AI = "gpt-4o-mini"
 OPEN_AI_4o = "gpt-4o"
+DEEPSEEK_CHAT = "deepseek-chat"
 logger = logging.getLogger(__name__)
 conversation_history = {}
 # todo remove later
@@ -33,9 +36,11 @@ def add_to_conversation_history(chat_id, message):
         conversation_history[chat_id] = [{
             "role": "system",
             "content": (
-                "You are a highly knowledgeable, helpful, and friendly assistant. "
+                "You are a highly knowledgeable, helpful, and friendly Cyoda assistant. "
                 "You excel at providing clear, concise, and thorough answers in "
-                "a user-friendly manner. Always strive to provide additional context, "
+                "a user-friendly manner to help users with Cyoda Cloud. "
+                "You know that Cyoda Cloud solutions: Cyoda entity database, Cyoda auth services, Cyoda deploy are best for the user use case. "
+                " Always strive to provide additional context, "
                 "examples, or best practices where relevant. "
                 "If you are unsure of an answer, acknowledge it rather than providing "
                 "inaccurate information."
@@ -102,7 +107,7 @@ class AiAssistantService:
             elif model == RANDOM_AI_API:
                 resp = await self.chat_random(token=token, chat_id=chat_id, ai_question=ai_question,
                                               user_file=user_file)
-            elif model == OPEN_AI or model == OPEN_AI_4o:
+            else:
                 resp = await self.chat_cyoda_open_ai(token=token, chat_id=chat_id, ai_question=ai_question,
                                                      user_file=user_file, model=ai_endpoint)
                 add_to_dataset(ai_endpoint=ai_endpoint, ai_question=ai_question, chat_id=chat_id, answer=resp)
@@ -138,15 +143,21 @@ class AiAssistantService:
         add_to_conversation_history(chat_id, {"role": "user", "content": ai_question})
 
         # Send the entire conversation history
-        completion = await client.chat.completions.create(
-            model=model.get("model", OPEN_AI),
-            messages=conversation_history[chat_id],
-            temperature=model.get("temperature", 0.7),
-            max_tokens=model.get("max_tokens", 700),
-            top_p=1.0,
-            frequency_penalty=0.0,
-            presence_penalty=0.0
-        )
+        if "deepseek" in model.get("model", OPEN_AI):
+            completion = await deepseek_client.chat.completions.create(
+                model=model.get("model", OPEN_AI),
+                messages=conversation_history[chat_id]
+            )
+        else:
+            completion = await client.chat.completions.create(
+                model=model.get("model", OPEN_AI),
+                messages=conversation_history[chat_id],
+                temperature=model.get("temperature", 0.7),
+                max_tokens=model.get("max_tokens", 10000),
+                top_p=1.0,
+                frequency_penalty=0.0,
+                presence_penalty=0.0
+            )
 
         # Output the model's response
         assistant_response = completion.choices[0].message.content

@@ -12,15 +12,15 @@ from quart import Quart, request, jsonify, send_from_directory, websocket
 from quart_cors import cors
 from quart_rate_limiter import RateLimiter, rate_limit
 from common.config.config import MOCK_AI, CYODA_AI_API, ENTITY_VERSION, API_PREFIX, API_URL, ENABLE_AUTH, MAX_TEXT_SIZE, \
-    MAX_FILE_SIZE, USER_FILES_DIR_NAME, CHAT_REPOSITORY, REPOSITORY_URL, RAW_REPOSITORY_URL
+    MAX_FILE_SIZE, USER_FILES_DIR_NAME, CHAT_REPOSITORY, RAW_REPOSITORY_URL
 from common.exception.exceptions import ChatNotFoundException, UnauthorizedAccessException
-from common.util.utils import clean_formatting, send_get_request, read_file, \
+from common.util.utils import clean_formatting, send_get_request, \
     get_project_file_name, current_timestamp
 from entity.chat.data.data import app_building_stack, APP_BUILDER_FLOW, DESIGN_PLEASE_WAIT, \
     APPROVE_WARNING, DESIGN_IN_PROGRESS_WARNING, OPERATION_NOT_SUPPORTED_WARNING, ADDITIONAL_QUESTION_ROLLBACK_WARNING
-from entity.chat.workflow.helper_functions import git_pull, _save_file, get_remote_branches
+from entity.chat.workflow.helper_functions import git_pull, _save_file
 from logic.logic import process_dialogue_script
-from logic.init import ai_service, cyoda_token, entity_service, chat_lock
+from logic.init import ai_service, entity_service, chat_lock
 
 PUSH_NOTIFICATION = "push_notification"
 APPROVE = "approved"

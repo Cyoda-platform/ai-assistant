@@ -434,18 +434,31 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
 
                       {"question": None,
                        "function": {"name": "register_workflow_with_app",
-                                    "model_api": {"model": OPEN_AI, "temperature": 0.2, "max_tokens": 2000},
+                                    "model_api": {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 10000},
                                     "prompt": {
-                                        "text": "Generate the workflow.py file to implement entity {entity_name} workflow functions: {suggested_workflow}. Use the template to complete you answer. Make sure you do not deviate from the template imports and methods signatures!",
-                                        "attached_files": ["workflow_template.txt", "entity/prototype.py"],
-                                        "api": {"model": OPEN_AI, "temperature": 0.2, "max_tokens": 2000},
+                                        "text": """
+Please complete the entity job workflow code using relevant code and nested functions from prototype.py, to make it fully functioning. Start all supplementary functions with "_".
+We are migrating prototype.py code to production ready workflow code so any in-memory caches if relevant - should be replaced with specified entity_service methods
+
+```python
+                                        
+{workflow_code_template} 
+
+```
+
+Return fully functioning code
+
+""",
+                                        "attached_files": ["entity/prototype.py"],
+                                        "api": {"model": OPEN_AI, "temperature": 0.2, "max_tokens": 10000},
                                     }},
                        "answer": None,
                        "index": 0,
                        "iteration": 0,
                        "flow_step": LOGIC_CODE_DESIGN_STR,
                        "max_iteration": 0,
-                       "stack": API_REQUEST_STACK_KEY},
+                       "stack": API_REQUEST_STACK_KEY,
+                       "publish": False},
                       {
                           "question": None,
                           "prompt": {},
@@ -459,17 +472,15 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
 
                       {"question": None,
                        "function": {"name": "register_api_with_app",
-                                    "model_api": {"model": OPEN_AI, "temperature": 0.2},
-                                    "prompt": {
-                                        "text": "Generate the quart additional api.py file to implement entity {entity_name} endpoints: {entity_endpoints}. Fill in the template to complete you answer. Make sure you do not deviate from the template imports and used methods! entity_service has only add_item and get_item methods, choose from them.",
-                                        "attached_files": ["api_template.txt"],
-                                    }},
+                                    "model_api": {"model": OPEN_AI, "temperature": 0.2}
+                                    },
                        "answer": None,
                        "index": 0,
                        "iteration": 0,
                        "flow_step": LOGIC_CODE_DESIGN_STR,
                        "max_iteration": 0,
-                       "stack": API_REQUEST_STACK_KEY
+                       "stack": API_REQUEST_STACK_KEY,
+                       "publish": False
                        },
                       {
                           "question": None,
@@ -489,7 +500,7 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
                        "iteration": 0,
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY,
-                       "publish": True
+                       "publish": False
                        },
                       {"question": None,
                        "prompt": {
@@ -505,7 +516,7 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY,
-                       "publish": True},
+                       "publish": False},
                       {
                           "question": None,
                           "prompt": {},
@@ -519,7 +530,7 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
                       {"question": None,
                        "function": {
                            "name": "generate_entities_template",
-                           "model_api": {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 2000},
+                           "model_api": {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 10000},
                            "prompt": {
                                "text": "Please, transform data about entities {entities_list} into the following json: {{ \"entities\": [ {{ \"entity_name\": \"\", //put entity name here, lowercase, underscore \\n \"entity_data_example\": \"\", //put entity data golden json example according to the requirement, list all entity attributes specified by the user or relevant to the request body}} ] }}",
                                "api": {"model": OPEN_AI, "temperature": 0.7},
@@ -573,51 +584,14 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
                           "stack": APP_BUILDING_STACK_KEY},
                       # =========================================================================================
                       {"question": None,
-                       "prompt": {
-                           "text": """
-
-Please analyze entity/entities_design.json and make sure that primary entities contain related secondary entities. Make sure each entity (validate by entity_name) is either primary or secondary - it cannot be both. Return the corrected json if there were errors, if it is ok -return as is.:
-""",
-                           "api": {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 2000},
-                           "schema": ENTITY_DESIGN_SCHEMA,
-                           "attached_files": ["entity/entities_design.json"]
-                       },
+                       "function": {"name": "generate_entities_design"},
                        "file_name": "entity/entities_design.json",
                        "answer": None,
-                       "function": None,
                        "iteration": 0,
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY,
-                       "publish": False},
-                      {"question": None,
-                       "prompt": {
-                           "text": """
-You are given prototype.py with api implementation . Please use only endpoints that are present in api.py - do not add or remove any endpoint.
-For each resource in the url path we save we need an entity. Entity name equals resource name (transform to lowercase underscore, a-Z)
-For each resource in the url path we get we need an entity. Entity name equals resource name (transform to lowercase underscore, a-Z)
-
-For each resource we save with POST we need a workflow. Lets call such entities primary
-For each resource we GET but do not save with POST we do not need workflow. Let’s call such entities secondary and establish depends on $primary_entity relation
-
-Entity can be either primary or secondary - not both.
-Please return the response in the following format, "related_secondary_entities" is not required but is very important attribute - these are secondary entities that relate to this primary entity:
-{ "primary_entities": [ { "entity_name": "", "endpoints": { "POST": [ { "endpoint": "", "description": "", "suggested_workflow": [ { "start_state": "", "end_state": "", "action": "", "complete_code_for_action_derived_from_the_prototype": "", "description": "", "related_secondary_entities": [] } ] } ], "GET": [ { "endpoint": "", "description": "" } ] } } ], "secondary_entities": [ { "entity_name": "", "endpoints": { "GET": [ { "endpoint": "", "description": "" } ] } } ] }.
-Return json without wrapping in the 'properties' attribute.
-
-Please analyze this prototype code and return the entities:
-""",
-                           "api": {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 2000},
-                           "schema": ENTITY_DESIGN_SCHEMA,
-                           "attached_files": ["entity/prototype.py"]
-                       },
-                       "file_name": "entity/entities_design.json",
-                       "answer": None,
-                       "function": None,
-                       "iteration": 0,
-                       "flow_step": GATHERING_REQUIREMENTS_STR,
-                       "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY,
+                       "notification_text": "entities design json has been saved",
                        "publish": False},
                       {
                           "question": None,
@@ -672,7 +646,7 @@ For more on entity databases, check out this article by [Paul Schleger](https://
                           "iteration": 0,
                           "max_iteration": 0,
                           "stack": APP_BUILDING_STACK_KEY,
-                          "publish": True
+                          "publish": False
                       },
                       {
                           "notification": """
@@ -794,7 +768,7 @@ Just give me a thumbs up! 👍
                       {"question": None,
                        "prompt": {
                            "text": "Please return fully functioning prototype.py code taking into account user suggestions if any.",
-                           "api": {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 2000}
+                           "api": {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 10000}
                        },
                        "file_name": "entity/prototype.py",
                        "answer": None,
@@ -842,7 +816,7 @@ This will allow you to validate the API response.
                       {"question": None,
                        "prompt": {
                            "text": "Now that we’ve finalized the API design, please provide the code for the prototype.py file. The implementation should be a working prototype rather than a fully robust solution. Incorporate any details I’ve already specified—such as external APIs, models, or specific calculations—and use mocks or placeholders only where requirements are unclear or incomplete. Wherever you introduce a mock or placeholder, include a TODO comment to indicate the missing or uncertain parts. The goal is to verify the user experience (UX) and identify any gaps in the requirements before we proceed with a more thorough implementation. Please double-check you are using all the information provided earlier. Use aiohttp.ClientSession for http requests, and Quart api. Use QuartSchema(app) but do not add any @validate_request as our data is dynamic, just add QuartSchema(app) one line. Use this entry point: if __name__ == '__main__':app.run(use_reloader=False, debug=True, host='0.0.0.0', port=8000, threaded=True)",
-                           "api": {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 2000}
+                           "api": {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 10000}
                        },
                        "answer": None,
                        "function": None,
@@ -932,7 +906,7 @@ that necessary.
 Ask questions if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations. 
 Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. 
 Max tokens = 300. Here is my requirement: """,
-                           "api": {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 300}
+                           "api": {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 10000}
                        },
                        # "file_name": "entity/app_design.json",
                        "answer": None,

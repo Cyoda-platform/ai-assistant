@@ -7,7 +7,7 @@ from common.config.conts import NOTIFICATION, QUESTION, FUNCTION, PROMPT, CAN_PR
 from entity.workflow import dispatch_function
 from entity.chat.workflow.helper_functions import get_event_template, save_result_to_file, run_chat, _process_question, \
     git_pull
-from logic.init import cyoda_token, entity_service
+from logic.init import entity_service
 from logic.notifier import clients_queue
 
 

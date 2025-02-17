@@ -6,7 +6,7 @@ from copy import deepcopy
 
 import aiofiles
 
-from common.ai.ai_assistant_service import dataset, OPEN_AI
+from common.ai.ai_assistant_service import dataset, OPEN_AI, DEEPSEEK_CHAT
 from common.config.config import MOCK_AI, CYODA_AI_API, PROJECT_DIR, REPOSITORY_NAME, CLONE_REPO, \
     REPOSITORY_URL
 from common.config.conts import WORKFLOW_STACK, \
@@ -14,6 +14,9 @@ from common.config.conts import WORKFLOW_STACK, \
     TRANSACTIONAL_PULL_BASED_RAW_DATA
 from common.util.utils import read_file, get_project_file_name, parse_json
 from entity.chat.data.data import PUSHED_CHANGES_NOTIFICATION, BRANCH_READY_NOTIFICATION
+from entity.chat.workflow.gen_and_validation.api_generator import generate_api_code
+from entity.chat.workflow.gen_and_validation.entities_design_generator import extract_endpoints, generate_spec
+from entity.chat.workflow.gen_and_validation.workflow_generator import generate_workflow_code
 from entity.chat.workflow.helper_functions import _save_file, _sort_entities, _send_notification, \
     _build_context_from_project_files, run_chat, _send_notification_with_file, git_pull, \
     generate_data_ingestion_code_for_entity, save_result_to_file, _git_push, \
@@ -54,7 +57,8 @@ async def refresh_context(token, _event, chat):
         contents = await _build_context_from_project_files(chat=chat, files=_event["context"]["files"],
                                                            excluded_files=_event["context"].get("excluded_files"))
     _event.setdefault('function', {}).setdefault("prompt", {})
-    _event["function"]["prompt"]["text"] = f"Please remember these files contents and reuse later: {json.dumps(contents)} . Do not do any mapping logic - it is not relevant. Just remember the code and the application design to reuse in your future application building. Return confirmation that you remembered everything"
+    _event["function"]["prompt"][
+        "text"] = f"Please remember these files contents and reuse later: {json.dumps(contents)} . Do not do any mapping logic - it is not relevant. Just remember the code and the application design to reuse in your future application building. Return confirmation that you remembered everything"
     await run_chat(chat=chat, _event=_event, token=token, ai_endpoint=CYODA_AI_API, chat_id=chat_id)
     if _event.get("file_name"):
         await _save_file(chat_id=chat_id, _data=json.dumps(chat), item=_event["file_name"])
@@ -260,11 +264,12 @@ async def generate_entities_template(token, _event, chat):
         entities_list.append(entity.get("entity_name"))
 
     event_copy = deepcopy(_event)
-    event_copy["function"]["prompt"]["text"] = event_copy["function"]["prompt"]["text"].format(entities_list = json.dumps(entities_list))
+    event_copy["function"]["prompt"]["text"] = event_copy["function"]["prompt"]["text"].format(
+        entities_list=json.dumps(entities_list))
     entity_data_design = await run_chat(chat=chat, _event=event_copy, token=token,
-                            ai_endpoint=CYODA_AI_API if not event_copy.get("function").get(
-                                "model_api") else event_copy.get("function").get("model_api"),
-                            chat_id=chat["chat_id"])
+                                        ai_endpoint=CYODA_AI_API if not event_copy.get("function").get(
+                                            "model_api") else event_copy.get("function").get("model_api"),
+                                        chat_id=chat["chat_id"])
     await _save_file(chat_id=chat["chat_id"],
                      _data=entity_data_design,
                      item=f"entity/entities_data_design.json")
@@ -355,20 +360,27 @@ async def register_api_with_app(token, _event, chat):
         event_copy = deepcopy(_event)
         endpoint_list = []
 
-        # Loop through each method (POST, GET, etc.)
-        for method, endpoint_data in entity["endpoints"].items():
-            for endpoint in endpoint_data:
-                endpoint_name = endpoint["endpoint"]
-                description = endpoint["description"]
-                endpoint_list.append((endpoint_name, method, description))
-        event_copy["function"]["prompt"]["text"] = event_copy["function"]["prompt"]["text"].format(entity_name = entity.get('entity_name'), entity_endpoints = json.dumps(endpoint_list))
-        result = await run_chat(chat=chat, _event=event_copy, token=token, ai_endpoint=CYODA_AI_API if not event_copy.get("function").get("model_api") else event_copy.get("function").get("model_api"),
-                                chat_id=chat["chat_id"])
+        # event_copy["function"]["prompt"]["attached_files"] = [f"entity/{entity.get('entity_name')}/api.py",
+        #                                                       "entity/prototype.py"]
+        # # Loop through each method (POST, GET, etc.)
+        # for method, endpoint_data in entity["endpoints"].items():
+        #     for endpoint in endpoint_data:
+        #         endpoint_name = endpoint["endpoint"]
+        #         description = endpoint["description"]
+        #         endpoint_list.append((endpoint_name, method, description))
+        # event_copy["function"]["prompt"]["text"] = event_copy["function"]["prompt"]["text"].format(
+        #     entity_name=entity.get('entity_name'), entity_endpoints=json.dumps(endpoint_list))
+        # result = await run_chat(chat=chat, _event=event_copy, token=token,
+        #                         ai_endpoint=CYODA_AI_API if not event_copy.get("function").get(
+        #                             "model_api") else event_copy.get("function").get("model_api"),
+        #                         chat_id=chat["chat_id"])
+
+        api_template_content = generate_api_code(schema=entity)
 
         await _save_file(chat_id=chat["chat_id"],
-                         _data=json.dumps(result),
+                         _data=json.dumps(api_template_content),
                          item=f"entity/{entity.get('entity_name')}/api.py")
-    # Send notification after all tasks are completed
+        # Send notification after all tasks are completed
         await _send_notification(chat=chat, event=_event, notification_text=_event.get("notification_text"))
 
         # Replace ENTITY_NAME_VAR with _event["entity"]["entity_name"]
@@ -409,26 +421,46 @@ async def register_workflow_with_app(token, _event, chat):
         event_copy = deepcopy(_event)
         entity_name = entity.get('entity_name')
 
-        suggested_workflow = entity.get("endpoints").get("POST")[0].get("suggested_workflow", [])
+        suggested_workflow = entity.get("suggested_workflow")
 
-        await generate_cyoda_workflow(token=token, entity_name=entity_name, entity_workflow=suggested_workflow, chat_id=chat["chat_id"], file_name =f"entity/{entity_name}/workflow.json")
+        await generate_cyoda_workflow(token=token, entity_name=entity_name, entity_workflow=suggested_workflow,
+                                      chat_id=chat["chat_id"], file_name=f"entity/{entity_name}/workflow.json")
 
-        event_copy["function"]["prompt"]["text"] = event_copy["function"]["prompt"]["text"].format(entity_name =entity_name, suggested_workflow = json.dumps(suggested_workflow))
-        result = await run_chat(chat=chat, _event=event_copy, token=token, ai_endpoint=CYODA_AI_API if not event_copy.get("function").get("model_api") else event_copy.get("function").get("model_api"), chat_id=chat["chat_id"])
+        workflow_template_content = generate_workflow_code(schema=suggested_workflow)
+
+        event_copy["function"]["prompt"]["text"] = event_copy["function"]["prompt"]["text"].format(
+            entity_name=entity_name, workflow_code_template=workflow_template_content)
+        result = await run_chat(chat=chat, _event=event_copy, token=token,
+                                ai_endpoint=CYODA_AI_API if not event_copy.get("function").get(
+                                    "model_api") else event_copy.get("function").get("model_api"),
+                                chat_id=chat["chat_id"])
 
         await _save_file(chat_id=chat["chat_id"],
                          _data=json.dumps(result),
                          item=f"entity/{entity_name}/workflow.py")
-        event_copy["function"]["prompt"]["text"] = "implement all the logic in workflow.py,  you can find working implementation in prototype.py - use the relevant information"
-        event_copy["function"]["prompt"]["attached_files"] = [f"entity/{entity_name}/workflow.py", "entity/prototype.py"]
-        event_copy["function"]["prompt"]["api"] =  {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 2000}
-        event_copy["function"]["model_api"] = {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 2000}
-        result = await run_chat(chat=chat, _event=event_copy, token=token, ai_endpoint=CYODA_AI_API if not event_copy.get("function").get("model_api") else event_copy.get("function").get("model_api"),
+        #todo add validation
+        # generate tests
+        event_copy["function"]["prompt"]["text"] = f"""
+
+Hello, could you write unittest tests for this code:
+
+{result}
+       
+my_module = 'workflow'
+one simple assertion is enough
+"""
+
+        event_copy["function"]["prompt"]["attached_files"] = None
+        event_copy["function"]["prompt"]["api"] = {"model": DEEPSEEK_CHAT, "temperature": 0.7, "max_tokens": 10000}
+        event_copy["function"]["model_api"] = {"model": DEEPSEEK_CHAT, "temperature": 0.7, "max_tokens": 10000}
+        result = await run_chat(chat=chat, _event=event_copy, token=token,
+                                ai_endpoint = event_copy.get("function").get("model_api"),
                                 chat_id=chat["chat_id"])
         await _save_file(chat_id=chat["chat_id"],
                          _data=json.dumps(result),
-                         item=f"entity/{entity_name}/workflow.py")
-    # Send notification after all tasks are completed
+                         item=f"entity/{entity_name}/workflow_test.py")
+
+        # Send notification after all tasks are completed
         await _send_notification(chat=chat, event=_event, notification_text=_event.get("notification_text"))
 
 
@@ -442,8 +474,16 @@ async def verify_cyoda_doc(token, _event, chat):
     result = await run_chat(chat=chat, _event=_event, token=token, ai_endpoint=CYODA_AI_API, chat_id=chat["chat_id"])
     await save_result_to_file(chat=chat, _data=json.dumps(result), _event=_event)
 
+async def generate_entities_design(token, _event, chat):
+    prototype_content = await read_file(get_project_file_name(chat_id=chat['chat_id'], file_name="entity/prototype.py"))
+    endpoints = extract_endpoints(prototype_content)
+    entities_design_spec = generate_spec(endpoints)
+    await _save_file(chat_id=chat["chat_id"],
+                     _data=json.dumps(entities_design_spec),
+                     item=f"entity/entities_design.json")
 
-
+    # Send notification after all tasks are completed
+    await _send_notification(chat=chat, event=_event, notification_text=_event.get("notification_text"))
 
 
 def main_parse_json():

@@ -1,0 +1,40 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Cyoda design",
+    "type": "object",
+    "entities": [
+        {
+            "entity_name": "data_collection_job",
+            "entity_type": "JOB",
+            "entity_source": "SCHEDULED",
+            "depends_on_entity": "None",
+            "entity_workflow": {
+                "name": "data_collection_workflow",
+                "class_name": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+                "transitions": [
+                    {
+                        "name": "collect_data_from_source_a",
+                        "description": "Collect data from source A.",
+                        "start_state": "None",
+                        "start_state_description": "Initial state before data collection.",
+                        "end_state": "data_collected_a",
+                        "end_state_description": "Data from source A has been successfully collected.",
+                        "process": {
+                            "name": "collect_data_a_process",
+                            "description": "Process to collect raw data from source A.",
+                            "adds_new_entites": "raw_data_a_entity"
+                        }
+                    }
+
+                ]
+            }
+        },
+        {
+            "entity_name": "raw_data_a_entity",
+            "entity_type": "EXTERNAL_SOURCES_PULL_BASED_RAW_DATA",
+            "entity_source": "ENTITY_EVENT",
+            "depends_on_entity": "data_collection_job",
+            "entity_workflow": { }
+        }
+    ]
+}
