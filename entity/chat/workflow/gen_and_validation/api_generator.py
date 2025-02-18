@@ -58,8 +58,9 @@ def generate_api_code(schema: dict) -> str:
         for ep in ep_list:
             route = ep.get("endpoint", f"/{entity_name}")
             description = ep.get("description", "")
-            # Extract any URL parameters (e.g. <report_id>) for function signature
-            params = re.findall(r'<([^>]+)>', route)
+            # Extract any URL parameters (e.g. <report_id> or <int:id>) for function signature
+            # This regex ignores the type (if present) and only captures the parameter name.
+            params = re.findall(r'<(?:[^:]+:)?([^>]+)>', route)
             params_str = ", ".join(params) if params else ""
 
             # Create a function name based on HTTP method and route information
@@ -157,24 +158,18 @@ def generate_api_code(schema: dict) -> str:
 
 def main():
     schema = {
-    "entity_name": "job",
-    "endpoints": {
-        "POST": [
-            {
-                "endpoint": "/job",
-                "description": "Create a report for Bitcoin conversion rates and send via email."
+            "entity_name": "report",
+            "endpoints": {
+                "GET": [
+                    {
+                        "endpoint": "/reports/<report_id>",
+                        "description": "Retrieve report information.",
+                        "complete_code_for_action_derived_from_the_prototype": "\n    report = reports.get(report_id)\n    if not report:\n        return jsonify({\"error\": \"Report not found.\"}), 404\n    return jsonify({\n        \"id\": report_id,\n        \"btc_usd_rate\": report[\"btc_usd_rate\"],\n        \"btc_eur_rate\": report[\"btc_eur_rate\"],\n        \"timestamp\": report[\"timestamp\"]\n    }), 200\n"
+                    }
+                ]
             }
-        ],
-        "GET": [
-            {
-                "endpoint": "/report/<report_id>",
-                "description": "Retrieve the report based on report ID."
-            }
-        ]
-    }
-}
+        }
     result = generate_api_code(schema)
-
     print(result)
 
 

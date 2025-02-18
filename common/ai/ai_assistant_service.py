@@ -1,7 +1,7 @@
 import json
 import logging
 from common.config.config import CYODA_AI_URL, MOCK_AI, CYODA_AI_API, WORKFLOW_AI_API, CONNECTION_AI_API, RANDOM_AI_API, \
-    MAX_TEXT_SIZE, USER_FILES_DIR_NAME, DEEPSEEK_OPEN_AI_KEY
+    MAX_TEXT_SIZE, USER_FILES_DIR_NAME, DEEPSEEK_API_KEY
 from common.config.conts import EMPTY_PROMPT
 from common.util.file_reader import read_file_content
 from common.util.utils import parse_json, validate_result, send_post_request, ValidationErrorException, \
@@ -9,7 +9,7 @@ from common.util.utils import parse_json, validate_result, send_post_request, Va
 from openai import AsyncOpenAI
 
 client = AsyncOpenAI()
-deepseek_client = AsyncOpenAI(api_key=DEEPSEEK_OPEN_AI_KEY, base_url="https://api.deepseek.com")
+deepseek_client = AsyncOpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
 API_V_CONNECTIONS_ = "api/v1/connections"
 API_V_CYODA_ = "api/v1/cyoda"

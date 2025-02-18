@@ -139,7 +139,7 @@ def validate_code_by_text(code, schema, entity_name):
 if __name__ == "__main__":
     # Sample code string to validate.
     sample_code = '''
-import json
+    import json
 import logging
 from app_init.app_init import entity_service
 from common.config.config import ENTITY_VERSION
@@ -147,69 +147,62 @@ from common.config.config import ENTITY_VERSION
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-async def _fetch_bitcoin_rates():
-    await asyncio.sleep(0.1)
-    return {"BTC": 50000}
+async def create_post(data, meta={'token': 'cyoda_token'}):
+    """
+    Create a new post.
 
-async def _send_email(report_id, rates, email):
-    logger.info(f"Sending report {report_id} to {email} with rates: {rates}")
-    await asyncio.sleep(0.1)
-
-async def create_report(data: "cyoda_token"}):
-    """Initiates the report creation process and sends an email."""
+    Complete business logic
+    """
     try:
-        data = await request.get_json()
-        email = data.get('email')
-        report_id = str(uuid.uuid4())
-        rates = await _fetch_bitcoin_rates()
-        asyncio.create_task(_send_email(report_id, rates, email))
-        reports[report_id] = {...}
-        # Correct call: literal entity name.
-        #result = await entity_service.add_item(meta['token'], 'report', ENTITY_VERSION, data)
-        return jsonify({...}), 202
-    except Exception as e:
-        logger.error(f"Error in send_teamcity_request: {e}")
-        raise
+        # Validate input data
+        if not data.get('title') or not data.get('topics') or not data.get('body'):
+            return {"message": "Title, topics, and body are required."}, 400
 
-async def create_report_with_var(data, meta={"token": "cyoda_token"}):
-    """Action with variable entity name usage (should trigger an error)."""
-    try:
-        data = await request.get_json()
-        email = data.get('email')
-        report_id = str(uuid.uuid4())
-        rates = await _fetch_bitcoin_rates()
-        asyncio.create_task(_send_email(report_id, rates, email))
-        reports[report_id] = {...}
-        # Incorrect call: variable is used for entity name.
-        result = await entity_service.add_item(meta['token'], job, ENTITY_VERSION, data)
-        return jsonify({...}), 202
-    except Exception as e:
-        logger.error(f"Error in create_report_with_var: {e}")
-        raise
+        # Call the service to create a post
+        post = await _create_post_in_service(data, meta)
+        
+        return {"message": "Post created successfully", "post_id": post['id']}, 201
 
-async def extra_helper(param):
-    # This supplementary function does not start with an underscore.
-    pass
+    except Exception as e:
+        logger.error(f"Error in create_post: {e}")
+        return {"message": "An error occurred while creating the post."}, 500
+
+async def _create_post_in_service(data, meta):
+    """
+    Helper function to interact with the entity_service for post creation.
+    """
+    # Prepare the post data
+    post_data = {
+        'title': data['title'],
+        'topics': data['topics'],
+        'body': data['body'],
+        'upvotes': 0,
+        'downvotes': 0
+    }
+    
+    # Call the entity_service to create a post
+    post = await entity_service.create_post(post_data, meta['token'])
+    
+    if not post:
+        logger.error("Failed to create post in entity_service.")
+        raise Exception("Entity service failed to create post.")
+    
+    return post
 '''
 
     # Sample schema corresponding to the intended workflow.
     sample_schema = {
         "suggested_workflow": [
-            {
-                "action": "create_report",
-                "description": "Initiates the report creation process and sends an email.",
-                "complete_code_for_action_derived_from_the_prototype": "",
-                "related_secondary_entities": ["report"]
-            },
-            {
-                "action": "create_report_with_var",
-                "description": "Action with variable entity name usage.",
-                "complete_code_for_action_derived_from_the_prototype": "",
-                "related_secondary_entities": ["report"]
-            }
-        ]
-    }
-
+                            {
+                                "start_state": "post_not_created",
+                                "end_state": "post_created",
+                                "action": "create_post",
+                                "complete_code_for_action_derived_from_the_prototype": "\n    data = await request.get_json()\n    post_id = str(len(posts) + 1)  # Simple post ID generation\n    posts[post_id] = {'title': data['title'], 'topics': data['topics'], 'body': data['body'], 'upvotes': 0, 'downvotes': 0}\n    return jsonify({\"post_id\": post_id, \"message\": \"Post created successfully\"}), 201\n",
+                                "description": "Create a new post.",
+                                "related_secondary_entities": []
+                            }
+                        ]
+                    }
     # Run validation and collect errors.
     error_list = validate_code_by_text(sample_code, sample_schema, "job")
 

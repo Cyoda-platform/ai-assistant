@@ -438,7 +438,8 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
                                     "prompt": {
                                         "text": """
 Please complete the entity job workflow code using relevant code and nested functions from prototype.py, to make it fully functioning. Start all supplementary functions with "_".
-We are migrating prototype.py code to production ready workflow code so any in-memory caches if relevant - should be replaced with specified entity_service methods
+
+Remove all mock/non-relevant/useless code. If there is no code that does useful work (data ingestion, specific task, adding new entity) - just leave a log message.
 
 ```python
                                         
@@ -446,8 +447,7 @@ We are migrating prototype.py code to production ready workflow code so any in-m
 
 ```
 
-Return fully functioning code
-
+Return fully functioning code. 
 """,
                                         "attached_files": ["entity/prototype.py"],
                                         "api": {"model": OPEN_AI, "temperature": 0.2, "max_tokens": 10000},
@@ -767,7 +767,7 @@ Just give me a thumbs up! 👍
                           "publish": True},
                       {"question": None,
                        "prompt": {
-                           "text": "Please return fully functioning prototype.py code taking into account user suggestions if any.",
+                           "text": "Please return fully functioning prototype.py code taking into account user suggestions if any. You cannot use sqlalchemy in the prototype or any external implementation for persistence or cache, only local cache.",
                            "api": {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 10000}
                        },
                        "file_name": "entity/prototype.py",
@@ -815,7 +815,7 @@ This will allow you to validate the API response.
                           "publish": True},
                       {"question": None,
                        "prompt": {
-                           "text": "Now that we’ve finalized the API design, please provide the code for the prototype.py file. The implementation should be a working prototype rather than a fully robust solution. Incorporate any details I’ve already specified—such as external APIs, models, or specific calculations—and use mocks or placeholders only where requirements are unclear or incomplete. Wherever you introduce a mock or placeholder, include a TODO comment to indicate the missing or uncertain parts. The goal is to verify the user experience (UX) and identify any gaps in the requirements before we proceed with a more thorough implementation. Please double-check you are using all the information provided earlier. Use aiohttp.ClientSession for http requests, and Quart api. Use QuartSchema(app) but do not add any @validate_request as our data is dynamic, just add QuartSchema(app) one line. Use this entry point: if __name__ == '__main__':app.run(use_reloader=False, debug=True, host='0.0.0.0', port=8000, threaded=True)",
+                           "text": "Now that we’ve finalized the API design, please provide the code for the prototype.py file. The implementation should be a working prototype rather than a fully robust solution. Incorporate any details I’ve already specified—such as external APIs, models, or specific calculations—and use mocks or placeholders only where requirements are unclear or incomplete. Wherever you introduce a mock or placeholder, include a TODO comment to indicate the missing or uncertain parts. The goal is to verify the user experience (UX) and identify any gaps in the requirements before we proceed with a more thorough implementation. Please double-check you are using all the information provided earlier. Use aiohttp.ClientSession for http requests, and Quart api. Use QuartSchema(app) but do not add any @validate_request as our data is dynamic, just add QuartSchema(app) one line. Use this entry point: if __name__ == '__main__':app.run(use_reloader=False, debug=True, host='0.0.0.0', port=8000, threaded=True) . Mock any persistence, do not use any particular implementation, kust local cache (e.g. you cannot use sqlalchemy in the prototype or any external implementation for persistence or cache)",
                            "api": {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 10000}
                        },
                        "answer": None,
@@ -869,7 +869,7 @@ This will allow you to validate the API response.
                        "publish": True},
                       {"question": None,
                        "prompt": {
-                           "text": """Please, help me define the functional requirements for my project in the form of user stories. Outline the necessary API endpoints, including details on request/response formats. Additionally, provide a visual representation of the user-app interaction using Mermaid diagrams (e.g. journey/sequence).""",
+                           "text": """Please, help me define the functional requirements for my project in the form of user stories. Outline the necessary API endpoints (adhering to Restful rules, using only nouns in endpoints), including details on request/response formats. Additionally, provide a visual representation of the user-app interaction using Mermaid diagrams (e.g. journey/sequence).""",
                            "api": {"model": OPEN_AI, "temperature": 0.3}
                        },
                        # "file_name": "entity/app_design.json",

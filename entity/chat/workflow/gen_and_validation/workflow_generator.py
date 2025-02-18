@@ -21,8 +21,11 @@ def generate_workflow_code(schema):
     lines.append("import json")
     lines.append("import logging")
     lines.append("from aiohttp import ClientSession")
-    lines.append("from app_init.app_init import entity_service")
-    lines.append("from common.config.config import ENTITY_VERSION")
+
+    # Append the entity_service import only if any step uses related_secondary_entities.
+    if any(step.get("related_secondary_entities", []) for step in schema):
+        lines.append("from app_init.app_init import entity_service")
+        lines.append("from common.config.config import ENTITY_VERSION")
     lines.append("")
     lines.append("logging.basicConfig(level=logging.INFO)")
     lines.append("logger = logging.getLogger(__name__)")
@@ -60,10 +63,13 @@ def generate_workflow_code(schema):
                 "    # The following commented-out code shows how to save and retrieve secondary entities:")
             for entity in secondary_entities:
                 func_body.append(
+                    "    # We are migrating prototype.py code to production ready workflow code so any in-memory caches if relevant - should be replaced with specified entity_service methods.")
+                func_body.append(
                     f"    # {entity}_id = await entity_service.add_item(token=meta['token'], entity_model='{entity}', entity_version=ENTITY_VERSION, entity={entity}_data)")
                 func_body.append(
                     f"    # {entity}_data = await entity_service.get_item(token=meta['token'], entity_model='{entity}', entity_version=ENTITY_VERSION, technical_id={entity}_id)")
-                func_body.append("    # Don't forget to add a reference to the just saved secondary entity to the primary entity data - so that we can track the results: ")
+                func_body.append(
+                    "    # Don't forget to add a reference to the just saved secondary entity to the primary entity data - so that we can track the results: ")
                 func_body.append(f"    # data['{entity}_id'] = {entity}_id")
             func_body.append(" ")
             func_body.append("    # Optionally update the current entity data with calculated results: ")
@@ -95,24 +101,15 @@ def generate_workflow_code(schema):
 if __name__ == "__main__":
     # Example schema input – replace with your own schema as needed.
     example_schema = [
-            {
-                "action": "create_report",
-                "description": "Initiates the report creation process and sends an email.",
-                "complete_code_for_action_derived_from_the_prototype": (
-                    "data = await request.get_json()\n"
-                    "email = data.get('email')  # Extract email from request data\n"
-                    "report_id = str(uuid.uuid4())  # Generate a unique report ID\n"
-                    "rates = await _fetch_bitcoin_rates()\n"
-                    "asyncio.create_task(_send_email(report_id, rates, email))  # Send email asynchronously\n"
-                    "reports[report_id] = {...}\n"
-                    "return jsonify({...}), 202"
-                ),
-                "related_secondary_entities": [
-                    "report"
-                ]
-            }
-        ]
-
+        {
+            "start_state": "post_not_created",
+            "end_state": "post_created",
+            "action": "create_post",
+            "complete_code_for_action_derived_from_the_prototype": "\n    data = await request.get_json()\n    post_id = generate_id(mock_posts)\n    mock_posts[post_id] = {\n        'title': data['title'],\n        'body': data['body'],\n        'topics': data['topics'],\n        'user_id': data.get('user_id', '1')  # TODO: Get actual user_id when auth is implemented\n    }\n    return jsonify({\"post_id\": post_id, \"message\": \"Post created successfully\"})\n",
+            "description": "Create a new post.",
+            "related_secondary_entities": []
+        }
+    ]
 
     # Generate the code based on the provided schema
     generated_code = generate_workflow_code(example_schema)

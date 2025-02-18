@@ -93,7 +93,7 @@ def _get_user_token(auth_header):
 
 
 @app.route('/')
-@rate_limit(RATE_LIMIT, timedelta(minutes=1))
+#@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def index():
     # Ensure that 'index.html' is located in the 'static' folder
     return await send_from_directory(app.static_folder, 'index.html')
@@ -108,7 +108,7 @@ async def get_chat_flow():
 
 @app.route(API_PREFIX + '/chats', methods=['GET'])
 @auth_required
-@rate_limit(RATE_LIMIT, timedelta(minutes=1))
+#@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def get_chats():
     auth_header = request.headers.get('Authorization')
     user_id = _get_user_id(auth_header)
@@ -143,7 +143,7 @@ async def get_chats():
 
 @app.route(API_PREFIX + '/chats/<technical_id>', methods=['GET'])
 @auth_required
-@rate_limit(RATE_LIMIT, timedelta(minutes=1))
+#@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def get_chat(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(auth_header, technical_id)
@@ -166,7 +166,7 @@ async def get_chat(technical_id):
 
 @app.route(API_PREFIX + '/chats/<technical_id>', methods=['DELETE'])
 @auth_required
-@rate_limit(RATE_LIMIT, timedelta(minutes=1))
+#@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def delete_chat(technical_id):
     auth_header = request.headers.get('Authorization')
     await _get_chat_for_user(auth_header, technical_id)
@@ -181,7 +181,7 @@ async def delete_chat(technical_id):
 
 @app.route(API_PREFIX + '/chats', methods=['POST'])
 @auth_required
-@rate_limit(RATE_LIMIT, timedelta(minutes=1))
+#@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def add_chat():
     auth_header = request.headers.get('Authorization')
     user_id = _get_user_id(auth_header)
@@ -227,7 +227,7 @@ async def add_chat():
 # polling for new questions here
 @app.route(API_PREFIX + '/chats/<technical_id>/questions', methods=['GET'])
 @auth_required
-@rate_limit(30, timedelta(minutes=1))
+#@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def get_question(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(auth_header, technical_id)
@@ -237,7 +237,7 @@ async def get_question(technical_id):
 
 @app.route(API_PREFIX + '/chats/<technical_id>/notification', methods=['PUT'])
 @auth_required
-@rate_limit(30, timedelta(minutes=1))
+#@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def edit_file(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(auth_header, technical_id)
@@ -266,7 +266,7 @@ async def edit_file(technical_id):
 
 @app.route(API_PREFIX + '/chats/<technical_id>/text-questions', methods=['POST'])
 @auth_required
-@rate_limit(30, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def submit_question_text(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(auth_header, technical_id)
@@ -279,7 +279,7 @@ async def submit_question_text(technical_id):
 
 @app.route(API_PREFIX + '/chats/<technical_id>/questions', methods=['POST'])
 @auth_required
-@rate_limit(30, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def submit_question(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(auth_header, technical_id)
@@ -297,7 +297,7 @@ async def submit_question(technical_id):
 
 @app.route(API_PREFIX + '/chats/<technical_id>/push-notify', methods=['POST'])
 @auth_required
-@rate_limit(30, timedelta(minutes=1))
+#@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def push_notify(technical_id):
     return jsonify({"error": OPERATION_NOT_SUPPORTED_WARNING}), 400
     # auth_header = request.headers.get('Authorization')
@@ -308,7 +308,7 @@ async def push_notify(technical_id):
 
 @app.route(API_PREFIX + '/chats/<technical_id>/approve', methods=['POST'])
 @auth_required
-@rate_limit(30, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def approve(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(auth_header, technical_id)
@@ -317,7 +317,7 @@ async def approve(technical_id):
 
 @app.route(API_PREFIX + '/chats/<technical_id>/rollback', methods=['POST'])
 @auth_required
-@rate_limit(30, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def rollback(technical_id):
     auth_header = request.headers.get('Authorization')
     req_data = await request.get_json()
@@ -330,7 +330,7 @@ async def rollback(technical_id):
 
 @app.route(API_PREFIX + '/chats/<technical_id>/text-answers', methods=['POST'])
 @auth_required
-@rate_limit(30, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def submit_answer_text(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(auth_header, technical_id)
@@ -343,7 +343,7 @@ async def submit_answer_text(technical_id):
 
 @app.route(API_PREFIX + '/chats/<technical_id>/answers', methods=['POST'])
 @auth_required
-@rate_limit(30, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def submit_answer(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(auth_header, technical_id)

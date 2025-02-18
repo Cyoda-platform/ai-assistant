@@ -12,7 +12,7 @@ load_dotenv()
 # Load cyoda environment variables
 API_PREFIX = os.getenv("API_PREFIX", "/api/v1")
 CYODA_AI_URL = os.getenv("CYODA_AI_URL")
-DEEPSEEK_OPEN_AI_KEY = os.getenv("DEEPSEEK_OPEN_AI_KEY")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 API_URL = os.getenv("CYODA_API_URL") + "/api"
 decoded_bytes_cyoda_api_key = base64.b64decode(os.getenv("CYODA_API_KEY"))
 API_KEY = decoded_bytes_cyoda_api_key.decode("utf-8")

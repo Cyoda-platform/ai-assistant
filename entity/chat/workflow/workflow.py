@@ -15,6 +15,7 @@ from common.config.conts import WORKFLOW_STACK, \
 from common.util.utils import read_file, get_project_file_name, parse_json
 from entity.chat.data.data import PUSHED_CHANGES_NOTIFICATION, BRANCH_READY_NOTIFICATION
 from entity.chat.workflow.gen_and_validation.api_generator import generate_api_code
+from entity.chat.workflow.gen_and_validation.entities_design_enricher import add_related_secondary_entities
 from entity.chat.workflow.gen_and_validation.entities_design_generator import extract_endpoints, generate_spec
 from entity.chat.workflow.gen_and_validation.workflow_generator import generate_workflow_code
 from entity.chat.workflow.helper_functions import _save_file, _sort_entities, _send_notification, \
@@ -420,8 +421,8 @@ async def register_workflow_with_app(token, _event, chat):
     for entity in entities_data["primary_entities"]:
         event_copy = deepcopy(_event)
         entity_name = entity.get('entity_name')
-
-        suggested_workflow = entity.get("suggested_workflow")
+        #todo - 1 entity can have mult workflows, e.g. user: signup/login
+        suggested_workflow = entity.get("endpoints").get("POST")[0].get("suggested_workflow")
 
         await generate_cyoda_workflow(token=token, entity_name=entity_name, entity_workflow=suggested_workflow,
                                       chat_id=chat["chat_id"], file_name=f"entity/{entity_name}/workflow.json")
@@ -478,6 +479,7 @@ async def generate_entities_design(token, _event, chat):
     prototype_content = await read_file(get_project_file_name(chat_id=chat['chat_id'], file_name="entity/prototype.py"))
     endpoints = extract_endpoints(prototype_content)
     entities_design_spec = generate_spec(endpoints)
+    entities_design_spec = add_related_secondary_entities(entities_design_spec)
     await _save_file(chat_id=chat["chat_id"],
                      _data=json.dumps(entities_design_spec),
                      item=f"entity/entities_design.json")
