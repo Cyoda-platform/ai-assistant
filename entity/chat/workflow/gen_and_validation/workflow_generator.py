@@ -2,7 +2,81 @@ import re
 import inflect
 
 
-def generate_workflow_code(schema, entity_name):
+def remove_invalid_entity_service_statements(code_text: str, allowed_entities: list) -> str:
+    """
+    Scans through the code (as text) and removes any statement that includes an
+    entity_service call (add_item or get_item) with an entity_model not in allowed_entities.
+
+    This function attempts to remove the entire statement containing the call, including
+    any assignment (e.g. "created_item = await ..."). It handles multi-line calls by counting
+    parentheses. Finally, if there are no entity_service calls left, it removes the
+    import line "from app_init.app_init import entity_service".
+
+    Parameters:
+      code_text (str): The full source code.
+      allowed_entities (list): List of allowed entity_model values.
+
+    Returns:
+      str: The code text with disallowed entity_service calls removed and possibly the import line.
+    """
+    lines = code_text.splitlines(keepends=True)
+    output_lines = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        # Check if the line contains an awaited call to entity_service.add_item or get_item
+        if 'await entity_service.add_item(' in line or 'await entity_service.get_item(' in line:
+            # Collect all lines that form this statement.
+            stmt_lines = []
+            paren_count = 0
+            call_started = False
+
+            # We assume the statement starts on the current line.
+            while i < len(lines):
+                current_line = lines[i]
+                stmt_lines.append(current_line)
+                if not call_started and ('await entity_service.add_item(' in current_line or
+                                         'await entity_service.get_item(' in current_line):
+                    call_started = True
+                # Update parenthesis count for this line.
+                # (This simple count does not account for parentheses inside string literals.)
+                paren_count += current_line.count('(')
+                paren_count -= current_line.count(')')
+                i += 1
+                # If the call started and parentheses are balanced (or overbalanced), assume statement is complete.
+                if call_started and paren_count <= 0:
+                    break
+
+            # Join the statement into one string for analysis.
+            stmt_text = ''.join(stmt_lines)
+            # Look for the entity_model parameter as a string literal.
+            m = re.search(r'entity_model\s*=\s*["\']([^"\']+)["\']', stmt_text)
+            if m:
+                model = m.group(1)
+                if model not in allowed_entities:
+                    # Skip the entire statement (do not add it to the output).
+                    continue
+            # If no entity_model is found or it's allowed, include the statement.
+            output_lines.extend(stmt_lines)
+        else:
+            # No awaited entity_service call in this line; keep it.
+            output_lines.append(line)
+            i += 1
+
+    filtered_code = ''.join(output_lines)
+
+    # If no allowed entity_service calls remain, remove the import line.
+    if not re.search(r'entity_service\.(?:add_item|get_item)\s*\(', filtered_code):
+        filtered_code = re.sub(
+            r'^\s*from\s+app_init\.app_init\s+import\s+entity_service\s*\n',
+            '',
+            filtered_code,
+            flags=re.MULTILINE
+        )
+    return filtered_code
+
+
+def generate_workflow_code(schema, entity_name, all_entities):
     """
     Generates Python code based on the provided schema and the following rules:
       - Includes fixed import statements and logging setup.
@@ -118,7 +192,9 @@ def generate_workflow_code(schema, entity_name):
         lines.append("")  # Blank line after function
 
     # Return the generated code as a single string
-    return "\n".join(lines)
+    code = "\n".join(lines)
+    code = remove_invalid_entity_service_statements(code, all_entities)
+    return code
 
 
 # -------------------------------------
@@ -136,7 +212,7 @@ if __name__ == "__main__":
     validate_article(data)
     created_item = await entity_service.add_item(
         token=token,
-        entity_model="article",  # or "articles" for plural usage
+        entity_model="article", 
         entity_version=ENTITY_VERSION,
         entity=data
     )
@@ -148,8 +224,9 @@ if __name__ == "__main__":
     ]
 
     # Generate the code based on the provided schema
-    entity_name = 'articlehs'
-    generated_code = generate_workflow_code(example_schema, entity_name)
+    entity_name = 'articlehh'
+    entities = ["report", "articles"]
+    generated_code = generate_workflow_code(example_schema, entity_name, entities)
 
     # For demonstration purposes, print the generated code
     print(generated_code)

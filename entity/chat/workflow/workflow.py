@@ -419,16 +419,22 @@ async def register_workflow_with_app(token, _event, chat):
         entities_data = json.loads(entities_text)
     except Exception as e:
         logger.exception(e)
+    all_entities = []
+    for entity in entities_data["primary_entities"]:
+        all_entities.append(entity.get('entity_name'))
+    for entity in entities_data["secondary_entities"]:
+        all_entities.append(entity.get('entity_name'))
     for entity in entities_data["primary_entities"]:
         event_copy = deepcopy(_event)
         entity_name = entity.get('entity_name')
         #todo - 1 entity can have mult workflows, e.g. user: signup/login
         suggested_workflow = entity.get("endpoints").get("POST")[0].get("suggested_workflow")
 
+
         await generate_cyoda_workflow(token=token, entity_name=entity_name, entity_workflow=suggested_workflow,
                                       chat_id=chat["chat_id"], file_name=f"entity/{entity_name}/workflow.json")
 
-        workflow_template_content = generate_workflow_code(schema=suggested_workflow, entity_name=entity_name)
+        workflow_template_content = generate_workflow_code(schema=suggested_workflow, entity_name=entity_name, all_entities=all_entities)
 
         prototype = "entity/prototype.py"
         try:
@@ -439,9 +445,52 @@ async def register_workflow_with_app(token, _event, chat):
                 prototype_content = await f.read()
         except Exception as e:
             logger.exception(e)
+
+        this_entity_data_path = f"entity/{entity_name}/{entity_name}.json"
+        try:
+            this_entity_data_path = get_project_file_name(chat["chat_id"], this_entity_data_path)
+            # Open the file asynchronously
+            async with aiofiles.open(this_entity_data_path, 'r') as f:
+                # Read the content of the file
+                this_entity_data = await f.read()
+        except Exception as e:
+            logger.exception(e)
+        secondary_entities_data = []
+        secondary_entities = []
+        if entity is not None:
+            endpoints = entity.get("endpoints")
+            if endpoints is not None:
+                post = endpoints.get("POST")
+                if post is not None and isinstance(post, list) and len(post) > 0:
+                    first_post = post[0]
+                    if first_post is not None:
+                        suggested_workflow = first_post.get("suggested_workflow")
+                        if suggested_workflow is not None and isinstance(suggested_workflow, list) and len(
+                                suggested_workflow) > 0:
+                            first_workflow = suggested_workflow[0]
+                            if first_workflow is not None:
+                                secondary_entities = first_workflow.get("related_secondary_entities", [])
+
+        for secondary_entity in secondary_entities:
+            secondary_entity_path = f"entity/{secondary_entity}/{secondary_entity}.json"
+            try:
+                secondary_entity_path = get_project_file_name(chat["chat_id"], secondary_entity_path)
+                # Open the file asynchronously
+                async with aiofiles.open(secondary_entity_path, 'r') as f:
+                    # Read the content of the file
+                    secondary_entity_data = await f.read()
+                    secondary_entities_data.append({f"{secondary_entity}": secondary_entity_data})
+            except Exception as e:
+                logger.exception(e)
+
         additional_functions_code = extract_non_endpoint_functions_code(prototype_content)
         event_copy["function"]["prompt"]["text"] = event_copy["function"]["prompt"]["text"].format(
-            entity_name=entity_name, workflow_code_template=workflow_template_content, additional_functions_code=additional_functions_code)
+            entity_name=entity_name,
+            workflow_code_template=workflow_template_content,
+            additional_functions_code=additional_functions_code,
+            this_entity_data=this_entity_data,
+            secondary_entity_data=json.dumps(secondary_entities_data)
+        )
         result = await run_chat(chat=chat, _event=event_copy, token=token,
                                 ai_endpoint=CYODA_AI_API if not event_copy.get("function").get(
                                     "model_api") else event_copy.get("function").get("model_api"),
