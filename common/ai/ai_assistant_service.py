@@ -17,6 +17,7 @@ API_V_WORKFLOWS_ = "api/v1/workflows"
 API_V_RANDOM_ = "api/v1/random"
 OPEN_AI = "gpt-4o-mini"
 OPEN_AI_4o = "gpt-4o"
+OPEN_AI_o3 = "o3-mini"
 DEEPSEEK_CHAT = "deepseek-chat"
 logger = logging.getLogger(__name__)
 conversation_history = {}
@@ -148,6 +149,11 @@ class AiAssistantService:
                 model=model.get("model", OPEN_AI),
                 messages=conversation_history[chat_id]
             )
+        elif model.get("model", OPEN_AI) == OPEN_AI_o3:
+            completion = await client.chat.completions.create(
+                model=model.get("model", OPEN_AI),
+                messages=conversation_history[chat_id]
+            )
         else:
             completion = await client.chat.completions.create(
                 model=model.get("model", OPEN_AI),
@@ -164,7 +170,6 @@ class AiAssistantService:
         add_to_conversation_history(chat_id, {"role": "assistant", "content": assistant_response})
         logger.info(assistant_response)
         return assistant_response
-
 
     async def chat_workflow(self, token, chat_id, ai_question):
         if ai_question and len(str(ai_question).encode('utf-8')) > MAX_TEXT_SIZE:

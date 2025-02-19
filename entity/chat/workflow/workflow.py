@@ -14,6 +14,7 @@ from common.config.conts import WORKFLOW_STACK, \
     TRANSACTIONAL_PULL_BASED_RAW_DATA
 from common.util.utils import read_file, get_project_file_name, parse_json
 from entity.chat.data.data import PUSHED_CHANGES_NOTIFICATION, BRANCH_READY_NOTIFICATION
+from entity.chat.workflow.gen_and_validation.additional_code_extractor import extract_non_endpoint_functions_code
 from entity.chat.workflow.gen_and_validation.api_generator import generate_api_code
 from entity.chat.workflow.gen_and_validation.entities_design_enricher import add_related_secondary_entities
 from entity.chat.workflow.gen_and_validation.entities_design_generator import extract_endpoints, generate_spec
@@ -427,10 +428,20 @@ async def register_workflow_with_app(token, _event, chat):
         await generate_cyoda_workflow(token=token, entity_name=entity_name, entity_workflow=suggested_workflow,
                                       chat_id=chat["chat_id"], file_name=f"entity/{entity_name}/workflow.json")
 
-        workflow_template_content = generate_workflow_code(schema=suggested_workflow)
+        workflow_template_content = generate_workflow_code(schema=suggested_workflow, entity_name=entity_name)
 
+        prototype = "entity/prototype.py"
+        try:
+            file_path = get_project_file_name(chat["chat_id"], prototype)
+            # Open the file asynchronously
+            async with aiofiles.open(file_path, 'r') as f:
+                # Read the content of the file
+                prototype_content = await f.read()
+        except Exception as e:
+            logger.exception(e)
+        additional_functions_code = extract_non_endpoint_functions_code(prototype_content)
         event_copy["function"]["prompt"]["text"] = event_copy["function"]["prompt"]["text"].format(
-            entity_name=entity_name, workflow_code_template=workflow_template_content)
+            entity_name=entity_name, workflow_code_template=workflow_template_content, additional_functions_code=additional_functions_code)
         result = await run_chat(chat=chat, _event=event_copy, token=token,
                                 ai_endpoint=CYODA_AI_API if not event_copy.get("function").get(
                                     "model_api") else event_copy.get("function").get("model_api"),
@@ -454,12 +465,12 @@ one simple assertion is enough
         event_copy["function"]["prompt"]["attached_files"] = None
         event_copy["function"]["prompt"]["api"] = {"model": DEEPSEEK_CHAT, "temperature": 0.7, "max_tokens": 10000}
         event_copy["function"]["model_api"] = {"model": DEEPSEEK_CHAT, "temperature": 0.7, "max_tokens": 10000}
-        result = await run_chat(chat=chat, _event=event_copy, token=token,
-                                ai_endpoint = event_copy.get("function").get("model_api"),
-                                chat_id=chat["chat_id"])
-        await _save_file(chat_id=chat["chat_id"],
-                         _data=json.dumps(result),
-                         item=f"entity/{entity_name}/workflow_test.py")
+        # result = await run_chat(chat=chat, _event=event_copy, token=token,
+        #                         ai_endpoint = event_copy.get("function").get("model_api"),
+        #                         chat_id=chat["chat_id"])
+        # await _save_file(chat_id=chat["chat_id"],
+        #                  _data=json.dumps(result),
+        #                  item=f"entity/{entity_name}/workflow_test.py")
 
         # Send notification after all tasks are completed
         await _send_notification(chat=chat, event=_event, notification_text=_event.get("notification_text"))
@@ -476,7 +487,7 @@ async def verify_cyoda_doc(token, _event, chat):
     await save_result_to_file(chat=chat, _data=json.dumps(result), _event=_event)
 
 async def generate_entities_design(token, _event, chat):
-    prototype_content = await read_file(get_project_file_name(chat_id=chat['chat_id'], file_name="entity/prototype.py"))
+    prototype_content = await read_file(get_project_file_name(chat_id=chat['chat_id'], file_name="entity/prototype_cyoda.py"))
     endpoints = extract_endpoints(prototype_content)
     entities_design_spec = generate_spec(endpoints)
     entities_design_spec = add_related_secondary_entities(entities_design_spec)

@@ -1,0 +1,50 @@
+= Payment Gateway API Documentation
+:author: Payment Systems
+:version: 1.0
+:doctype: article
+
+== Overview
+This API processes payments, handles refunds, and manages transactions for online purchases.
+
+== Base URL
+`https://api.paymentgateway.com/v1`
+
+== Authentication
+Authenticate using your API key:
+`Authorization: Bearer <api_key>`
+
+== Endpoints
+
+=== Transactions
+* **GET** `/transactions`
+  Retrieve a list of transactions.
+
+* **GET** `/transactions/{transactionId}`
+  Retrieve details for a specific transaction.
+
+* **POST** `/transactions`
+  Initiate a new transaction.
+  [source,json]
+  ----
+  {
+    "amount": 99.99,
+    "currency": "USD",
+    "paymentMethod": "credit_card",
+    "customerId": "cust001"
+  }
+  ----
+
+=== Refunds
+* **POST** `/transactions/{transactionId}/refund`
+  Process a refund for a transaction.
+  [source,json]
+  ----
+  {
+    "amount": 99.99,
+    "reason": "Customer request"
+  }
+  ----
+
+=== Payment Methods
+* **GET** `/payment-methods`
+  Retrieve supported payment methods.

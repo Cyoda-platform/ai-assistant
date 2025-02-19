@@ -1,0 +1,96 @@
+= Social Media API Documentation
+:author: Social Platform Team
+:version: 1.0
+:doctype: article
+
+== Overview
+This API enables management of users, posts, comments, and likes for a social media platform.
+
+== Base URL
+`https://api.socialmedia.com/v1`
+
+== Authentication
+Authenticate via OAuth2 or use an API key in the header.
+
+== Endpoints
+
+=== Users
+* **GET** `/users`
+  Retrieve a list of user profiles.
+
+* **GET** `/users/{userId}`
+  Retrieve details for a specific user.
+
+* **POST** `/users`
+  Register a new user.
+  [source,json]
+  ----
+  {
+    "username": "newuser",
+    "email": "user@example.com",
+    "password": "securepassword",
+    "displayName": "New User"
+  }
+  ----
+
+* **PUT** `/users/{userId}`
+  Update a user's profile.
+
+* **DELETE** `/users/{userId}`
+  Delete a user account.
+
+=== Posts
+* **GET** `/posts`
+  Retrieve all posts.
+  _Query Parameters:_ `userId`, `tag`, `page`, `limit`.
+
+* **GET** `/posts/{postId}`
+  Retrieve details of a specific post.
+
+* **POST** `/posts`
+  Create a new post.
+  [source,json]
+  ----
+  {
+    "userId": "user123",
+    "content": "Excited to share my latest adventure!",
+    "mediaUrl": "https://example.com/photo.jpg",
+    "tags": ["travel", "adventure"]
+  }
+  ----
+
+* **PUT** `/posts/{postId}`
+  Update a post.
+
+* **DELETE** `/posts/{postId}`
+  Delete a post.
+
+=== Comments
+* **GET** `/posts/{postId}/comments`
+  List all comments for a post.
+
+* **POST** `/posts/{postId}/comments`
+  Add a comment to a post.
+  [source,json]
+  ----
+  {
+    "userId": "user456",
+    "content": "Amazing post, really enjoyed it!"
+  }
+  ----
+
+* **DELETE** `/posts/{postId}/comments/{commentId}`
+  Delete a comment.
+
+=== Likes
+* **POST** `/posts/{postId}/likes`
+  Like a post.
+  [source,json]
+  ----
+  {
+    "userId": "user789"
+  }
+  ----
+
+* **DELETE** `/posts/{postId}/likes/{userId}`
+  Remove a like.

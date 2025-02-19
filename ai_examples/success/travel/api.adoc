@@ -1,0 +1,52 @@
+= Travel Booking API Documentation
+:author: TravelTech
+:version: 1.0
+:doctype: article
+
+== Overview
+This API enables management of travel bookings including flights, hotels, and car rentals.
+
+== Base URL
+`https://api.travelbooking.com/v1`
+
+== Authentication
+Authenticate with your API key:
+`Authorization: Bearer <api_key>`
+
+== Endpoints
+
+=== Flights
+* **GET** `/flights`
+  Retrieve available flights.
+  _Query Parameters:_ `origin`, `destination`, `date`.
+
+* **GET** `/flights/{flightId}`
+  Retrieve flight details.
+
+* **POST** `/flights/bookings`
+  Book a flight.
+  [source,json]
+  ----
+  {
+    "flightId": "flight123",
+    "userId": "user001",
+    "seatClass": "economy"
+  }
+  ----
+
+=== Hotels
+* **GET** `/hotels`
+  Retrieve available hotels.
+
+* **GET** `/hotels/{hotelId}`
+  Retrieve hotel details.
+
+* **POST** `/hotels/bookings`
+  Book a hotel room.
+
+=== Car Rentals
+* **GET** `/cars`
+  Retrieve available rental cars.
+
+* **POST** `/cars/bookings`
+  Book a rental car.

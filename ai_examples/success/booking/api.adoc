@@ -1,0 +1,63 @@
+= Event Booking API Documentation
+:author: Events Team
+:version: 1.0
+:doctype: article
+
+== Overview
+This API manages events, bookings, and ticketing for conferences, concerts, and other events.
+
+== Base URL
+`https://api.eventbooking.com/v1`
+
+== Authentication
+Use OAuth2 or an API key in the header:
+`Authorization: Bearer <token>`
+
+== Endpoints
+
+=== Events
+* **GET** `/events`
+  Retrieve a list of events.
+  _Query Parameters:_ `location`, `date`, `category`.
+
+* **GET** `/events/{eventId}`
+  Retrieve details for a specific event.
+
+* **POST** `/events`
+  Create a new event.
+  [source,json]
+  ----
+  {
+    "title": "Tech Conference 2025",
+    "description": "Annual technology conference",
+    "date": "2025-06-15",
+    "location": "Convention Center"
+  }
+  ----
+
+* **PUT** `/events/{eventId}`
+  Update event details.
+
+* **DELETE** `/events/{eventId}`
+  Cancel an event.
+
+=== Bookings
+* **GET** `/bookings`
+  Retrieve all bookings.
+
+* **GET** `/bookings/{bookingId}`
+  Retrieve details for a specific booking.
+
+* **POST** `/events/{eventId}/bookings`
+  Create a booking for an event.
+  [source,json]
+  ----
+  {
+    "userId": "user123",
+    "tickets": 2,
+    "bookingDate": "2025-05-01"
+  }
+  ----
+
+* **DELETE** `/bookings/{bookingId}`
+  Cancel a booking.

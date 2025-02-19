@@ -2,6 +2,11 @@ import re
 import json
 import sys
 import inflect
+import nltk
+from nltk.corpus import wordnet as wn
+
+# Ensure WordNet is downloaded (only needed once)
+nltk.download('wordnet', quiet=True)
 
 from entity.chat.workflow.gen_and_validation.entities_design_enricher import add_related_secondary_entities
 
@@ -73,31 +78,46 @@ def normalize_resource_name(resource):
         return resource
 
 
+def is_noun_segment(word):
+    """
+    Use WordNet synset counts as a heuristic:
+      - If the number of noun synsets is greater than or equal to verb synsets,
+        consider the word to be noun-like.
+      - If the word is not found in WordNet, assume it is a noun.
+    """
+    noun_syns = wn.synsets(word, pos=wn.NOUN)
+    verb_syns = wn.synsets(word, pos=wn.VERB)
+    if not noun_syns and not verb_syns:
+        return True
+    return len(noun_syns) >= len(verb_syns)
+
+
 def get_endpoint_group_key(endpoint):
     """
-    Determine a grouping key for an endpoint in a general way:
+    Determine a grouping key for an endpoint by selecting the last segment that is likely a noun.
 
+    Steps:
       1. Split the path into segments.
-      2. Remove any segments that are parameters (e.g. "<post_id>") or in the exclusions set.
+      2. Remove segments that are parameters (e.g. "<post_id>") or in the exclusions set.
          Exclusions include: "api", "v1", "v2", "v3", "v4", "deploy".
-      3. If at least two static segments remain, return:
-             normalize_resource_name(second_last_segment) + "_" + normalize_resource_name(last_segment)
-         Otherwise, return the single remaining segment (normalized).
+      3. Iterate over the remaining segments in reverse order and select the first segment
+         that is likely a noun (using WordNet synset counts).
+      4. If no segment qualifies as a noun, fall back to the last segment.
 
     Examples:
-      /deploy/cyoda-env              -> "cyoda_env"
-      /posts/<post_id>/vote          -> "post_vote"
-      /posts/<post_id>/comments/<cid>/vote -> "comment_vote"
-      /api/hydrometric-collection    -> "hydrometric_collection"
+      /user/login -> returns "user" because "login" is considered more verb-like.
+      /courses/<id>/enrollments -> returns "enrollment"
+      /api/hydrometric-collection -> returns "hydrometric_collection"
     """
     exclusions = {"api", "v1", "v2", "v3", "v4", "deploy"}
     segments = [seg.replace("-", "_") for seg in endpoint.strip("/").split("/")
                 if seg and not re.match(r"<.*>", seg) and seg.lower() not in exclusions]
-    if len(segments) >= 2:
-        parent = normalize_resource_name(segments[-2])
-        child = normalize_resource_name(segments[-1])
-        return f"{parent}_{child}"
-    elif segments:
+    if segments:
+        # Iterate in reverse to find the first segment that is likely a noun.
+        for seg in reversed(segments):
+            if is_noun_segment(seg):
+                return normalize_resource_name(seg)
+        # Fallback if none qualify
         return normalize_resource_name(segments[-1])
     return ""
 
@@ -105,6 +125,7 @@ def get_endpoint_group_key(endpoint):
 def generate_spec(endpoints):
     """
     Build a JSON spec based on the endpoints:
+
       - Endpoints with POST (even nested ones) are grouped as primary.
       - If an entity has any POST endpoints, all endpoints (including GET ones)
         for that entity are merged into primary.
@@ -112,13 +133,20 @@ def generate_spec(endpoints):
       - Each POST endpoint carries its own suggested workflow.
       - Finally, if a secondary (GET-only) endpoint's code references a primary entity,
         its name is added to that primary entity's related secondary entities.
+
+    This version tracks added endpoint URLs per method to avoid duplicates.
     """
     primary_entities = {}
     secondary_entities = {}
 
+    # For deduplication: track added endpoints for each entity and method.
+    primary_endpoints_set = {}
+    secondary_endpoints_set = {}
+
     for ep in endpoints:
         methods = ep["methods"]
         new_key = get_endpoint_group_key(ep["endpoint"])
+        # If any POST method exists, treat the entity as primary.
         if "POST" in methods:
             key = new_key
             if key not in primary_entities:
@@ -126,67 +154,90 @@ def generate_spec(endpoints):
                     "entity_name": key,
                     "endpoints": {"POST": [], "GET": []}
                 }
+                primary_endpoints_set[key] = {"POST": set(), "GET": set()}
+            # Process each method for this endpoint.
             for method in methods:
                 if method == "POST":
-                    workflow_entry = [{
-                        "start_state": f"{key}_not_created",
-                        "end_state": f"{key}_created",
-                        "action": ep["function_name"],
-                        "complete_code_for_action_derived_from_the_prototype": ep["code"],
-                        "description": f"Create a new {key}.",
-                        "related_secondary_entities": []
-                    }]
-                    primary_entities[key]["endpoints"]["POST"].append({
-                        "endpoint": ep["endpoint"],
-                        "description": f"Create a new {key}.",
-                        "complete_code_for_action_derived_from_the_prototype": ep["code"],
-                        "action": ep["function_name"],
-                        "suggested_workflow": workflow_entry
-                    })
+                    if ep["endpoint"] not in primary_endpoints_set[key]["POST"]:
+                        workflow_entry = [{
+                            "start_state": f"{key}_not_created",
+                            "end_state": f"{key}_created",
+                            "action": ep["function_name"],
+                            "complete_code_for_action_derived_from_the_prototype": ep["code"],
+                            "description": f"Create a new {key}.",
+                            "related_secondary_entities": []
+                        }]
+                        primary_entities[key]["endpoints"]["POST"].append({
+                            "endpoint": ep["endpoint"],
+                            "description": f"Create a new {key}.",
+                            "complete_code_for_action_derived_from_the_prototype": ep["code"],
+                            "action": ep["function_name"],
+                            "suggested_workflow": workflow_entry
+                        })
+                        primary_endpoints_set[key]["POST"].add(ep["endpoint"])
                 elif method == "GET":
+                    if ep["endpoint"] not in primary_endpoints_set[key]["GET"]:
+                        primary_entities[key]["endpoints"]["GET"].append({
+                            "endpoint": ep["endpoint"],
+                            "description": f"Retrieve {key} information.",
+                            "complete_code_for_action_derived_from_the_prototype": ep["code"]
+                        })
+                        primary_endpoints_set[key]["GET"].add(ep["endpoint"])
+            # Merge any secondary endpoints for this entity into primary (deduplicating as well)
+            if key in secondary_entities:
+                for ge in secondary_entities[key]["endpoints"].get("GET", []):
+                    if ge["endpoint"] not in primary_endpoints_set[key]["GET"]:
+                        primary_entities[key]["endpoints"]["GET"].append(ge)
+                        primary_endpoints_set[key]["GET"].add(ge["endpoint"])
+                del secondary_entities[key]
+                if key in secondary_endpoints_set:
+                    del secondary_endpoints_set[key]
+        else:
+            # For endpoints that are not POST, treat as secondary if a primary hasn't been defined.
+            key = new_key
+            if key in primary_entities:
+                if ep["endpoint"] not in primary_endpoints_set[key]["GET"]:
                     primary_entities[key]["endpoints"]["GET"].append({
                         "endpoint": ep["endpoint"],
                         "description": f"Retrieve {key} information.",
                         "complete_code_for_action_derived_from_the_prototype": ep["code"]
                     })
-            if key in secondary_entities:
-                for ge in secondary_entities[key]["endpoints"].get("GET", []):
-                    primary_entities[key]["endpoints"]["GET"].append(ge)
-                del secondary_entities[key]
-        else:
-            key = get_endpoint_group_key(ep["endpoint"])
-            if key in primary_entities:
-                primary_entities[key]["endpoints"]["GET"].append({
-                    "endpoint": ep["endpoint"],
-                    "description": f"Retrieve {key} information.",
-                    "complete_code_for_action_derived_from_the_prototype": ep["code"]
-                })
+                    primary_endpoints_set[key]["GET"].add(ep["endpoint"])
             else:
                 if key not in secondary_entities:
                     secondary_entities[key] = {
                         "entity_name": key,
                         "endpoints": {"GET": []}
                     }
-                secondary_entities[key]["endpoints"]["GET"].append({
-                    "endpoint": ep["endpoint"],
-                    "description": f"Retrieve {key} information.",
-                    "complete_code_for_action_derived_from_the_prototype": ep["code"]
-                })
+                    secondary_endpoints_set[key] = {"GET": set()}
+                if ep["endpoint"] not in secondary_endpoints_set[key]["GET"]:
+                    secondary_entities[key]["endpoints"]["GET"].append({
+                        "endpoint": ep["endpoint"],
+                        "description": f"Retrieve {key} information.",
+                        "complete_code_for_action_derived_from_the_prototype": ep["code"]
+                    })
+                    secondary_endpoints_set[key]["GET"].add(ep["endpoint"])
 
     # Auto-generate default GET endpoints for primary entities if none exist.
     for key, entity in primary_entities.items():
         if not entity["endpoints"]["GET"]:
-            entity["endpoints"]["GET"].append({
+            default_get1 = {
                 "endpoint": f"/{key}/<id>",
                 "description": f"Retrieve a {key} by ID.",
                 "complete_code_for_action_derived_from_the_prototype": ""
-            })
+            }
+            if default_get1["endpoint"] not in primary_endpoints_set[key]["GET"]:
+                entity["endpoints"]["GET"].append(default_get1)
+                primary_endpoints_set[key]["GET"].add(default_get1["endpoint"])
             entity_plural = p.plural(key)
-            entity["endpoints"]["GET"].append({
+            default_get2 = {
                 "endpoint": f"/{entity_plural}",
                 "description": f"Retrieve all {entity_plural} entries.",
                 "complete_code_for_action_derived_from_the_prototype": ""
-            })
+            }
+            if default_get2["endpoint"] not in primary_endpoints_set[key]["GET"]:
+                entity["endpoints"]["GET"].append(default_get2)
+                primary_endpoints_set[key]["GET"].add(default_get2["endpoint"])
 
     # Relate secondary GET-only entities to primary entities if their code references the primary entity name.
     for sec_key, sec_entity in secondary_entities.items():
@@ -210,159 +261,129 @@ def generate_spec(endpoints):
 def main():
     content = """
 
-# Here is a prototype implementation of the `prototype.py` file using Quart for your backend application. The code includes the API endpoints as specified and uses `aiohttp.ClientSession` for HTTP requests. I've incorporated placeholders and TODO comments where necessary.
-# 
-# ```python
-from quart import Quart, request, jsonify
-from quart_schema import QuartSchema
-import aiohttp
+from quart import Quart, jsonify, request, abort
+import httpx
 
 app = Quart(__name__)
-QuartSchema(app)
 
-# In-memory data storage for demonstration purposes
-users = {}
-posts = {}
-comments = {}
-images = {}
-votes = {}
+# In‑memory “database”
+articles = {}
+sources = {}
+topics = {}
 
-@app.route('/users/create', methods=['POST'])
-async def create_user():
-    data = await request.json
-    username = data.get('username')
-    password = data.get('password')
-    # TODO: Add password hashing and validation logic
-    users[username] = {'password': password}
-    return jsonify({"message": "User created successfully."}), 201
+article_id_counter = 1
+source_id_counter = 1
+topic_id_counter = 1
 
-@app.route('/users/login', methods=['POST'])
-async def login_user():
-    data = await request.json
-    username = data.get('username')
-    password = data.get('password')
-    # TODO: Add validation for username and password
-    if username in users and users[username]['password'] == password:
-        # TODO: Generate JWT token
-        return jsonify({"token": "your_jwt_token"}), 200
-    return jsonify({"message": "Invalid credentials."}), 401
+async def call_mock_service(operation, resource, data=None):
+    url = f"https://jsonplaceholder.typicode.com/{resource}"
+    async with httpx.AsyncClient() as client:
+        if operation == "GET":
+            response = await client.get(url)
+        elif operation == "POST":
+            response = await client.post(url, json=data)
+        else:
+            response = None
+    return response.json() if response is not None else {}
 
-@app.route('/posts', methods=['POST'])
-async def create_post():
-    data = await request.json
-    post_id = str(len(posts) + 1)
-    posts[post_id] = {
-        "post_id": post_id,
-        "title": data.get('title'),
-        "topics": data.get('topics'),
-        "body": data.get('body'),
-        "upvotes": 0,
-        "downvotes": 0
-    }
-    return jsonify({"post_id": post_id, "message": "Post created successfully."}), 201
+def validate_article(data):
+    if 'title' not in data or 'content' not in data:
+        abort(400, description="Article must have 'title' and 'content'")
+    return data
 
-@app.route('/posts', methods=['GET'])
-async def get_posts():
-    limit = request.args.get('limit', default=20, type=int)
-    offset = request.args.get('offset', default=0, type=int)
-    # TODO: Implement pagination and sorting by popularity
-    return jsonify({"posts": list(posts.values())[offset:offset + limit]}), 200
+def validate_source(data):
+    if 'name' not in data:
+        abort(400, description="Source must have 'name'")
+    return data
 
-@app.route('/posts/<post_id>', methods=['GET'])
-async def get_post(post_id):
-    post = posts.get(post_id)
-    if post:
-        return jsonify(post), 200
-    return jsonify({"message": "Post not found."}), 404
+def validate_topic(data):
+    if 'name' not in data:
+        abort(400, description="Topic must have 'name'")
+    return data
 
-@app.route('/posts/<post_id>', methods=['DELETE'])
-async def delete_post(post_id):
-    if post_id in posts:
-        del posts[post_id]
-        return jsonify({"message": "Post deleted successfully."}), 200
-    return jsonify({"message": "Post not found."}), 404
+# Articles endpoints
+@app.route('/articles', methods=['GET'])
+async def get_articles():
+    await call_mock_service("GET", "posts")
+    return jsonify(list(articles.values()))
 
-@app.route('/posts/<post_id>/comments', methods=['POST'])
-async def add_comment(post_id):
-    data = await request.json
-    comment_id = str(len(comments) + 1)
-    comments[comment_id] = {
-        "comment_id": comment_id,
-        "body": data.get('body'),
-        "post_id": post_id,
-        "upvotes": 0,
-        "downvotes": 0
-    }
-    return jsonify({"comment_id": comment_id, "message": "Comment added successfully."}), 201
+@app.route('/articles/<string:articleId>', methods=['GET'])
+async def get_article(articleId):
+    article = articles.get(articleId)
+    if not article:
+        abort(404, description="Article not found")
+    return jsonify(article)
 
-@app.route('/posts/<post_id>/comments', methods=['GET'])
-async def get_comments(post_id):
-    post_comments = [comment for comment in comments.values() if comment['post_id'] == post_id]
-    return jsonify({"comments": post_comments}), 200
+@app.route('/articles', methods=['POST'])
+async def create_article():
+    global article_id_counter
+    data = await request.get_json()
+    validate_article(data)
+    new_id = str(article_id_counter)
+    article_id_counter += 1
+    data['id'] = new_id
+    articles[new_id] = data
+    await call_mock_service("POST", "posts", data)
+    return jsonify(data), 201
 
-@app.route('/posts/<post_id>/comments/<comment_id>', methods=['DELETE'])
-async def delete_comment(post_id, comment_id):
-    if comment_id in comments and comments[comment_id]['post_id'] == post_id:
-        del comments[comment_id]
-        return jsonify({"message": "Comment deleted successfully."}), 200
-    return jsonify({"message": "Comment not found."}), 404
+@app.route('/articles/<string:articleId>', methods=['PUT'])
+async def update_article(articleId):
+    if articleId not in articles:
+        abort(404, description="Article not found")
+    data = await request.get_json()
+    validate_article(data)
+    data['id'] = articleId
+    articles[articleId] = data
+    return jsonify(data)
 
-@app.route('/posts/<post_id>/images', methods=['POST'])
-async def upload_image(post_id):
-    # TODO: Implement image upload logic (e.g., save to filesystem or cloud storage)
-    image_id = str(len(images) + 1)
-    images[image_id] = {"post_id": post_id, "image_data": "mock_image_data"}
-    return jsonify({"image_id": image_id, "message": "Image uploaded successfully."}), 201
+@app.route('/articles/<string:articleId>', methods=['DELETE'])
+async def delete_article(articleId):
+    if articleId not in articles:
+        abort(404, description="Article not found")
+    del articles[articleId]
+    return '', 204
 
-@app.route('/posts/<post_id>/images/<image_id>', methods=['GET'])
-async def get_image(post_id, image_id):
-    # TODO: Implement logic to retrieve actual image data
-    if image_id in images and images[image_id]['post_id'] == post_id:
-        return jsonify(images[image_id]), 200
-    return jsonify({"message": "Image not found."}), 404
+# Sources endpoints
+@app.route('/sources', methods=['GET'])
+async def get_sources():
+    await call_mock_service("GET", "users")
+    return jsonify(list(sources.values()))
 
-@app.route('/posts/<post_id>/vote', methods=['POST'])
-async def vote_post(post_id):
-    data = await request.json
-    vote = data.get('vote')
-    # TODO: Implement vote counting logic
-    if vote not in ['up', 'down']:
-        return jsonify({"message": "Invalid vote."}), 400
-    # Mock vote update
-    if vote == 'up':
-        posts[post_id]['upvotes'] += 1
-    else:
-        posts[post_id]['downvotes'] += 1
-    return jsonify({"message": "Vote recorded."}), 200
+@app.route('/sources', methods=['POST'])
+async def create_source():
+    global source_id_counter
+    data = await request.get_json()
+    validate_source(data)
+    new_id = str(source_id_counter)
+    source_id_counter += 1
+    data['id'] = new_id
+    sources[new_id] = data
+    await call_mock_service("POST", "users", data)
+    return jsonify(data), 201
 
-@app.route('/posts/<post_id>/comments/<comment_id>/vote', methods=['POST'])
-async def vote_comment(post_id, comment_id):
-    data = await request.json
-    vote = data.get('vote')
-    # TODO: Implement vote counting logic for comments
-    if vote not in ['up', 'down']:
-        return jsonify({"message": "Invalid vote."}), 400
-    # Mock vote update
-    if vote == 'up':
-        comments[comment_id]['upvotes'] += 1
-    else:
-        comments[comment_id]['downvotes'] += 1
-    return jsonify({"message": "Vote recorded."}), 200
+# Topics endpoints
+@app.route('/topics', methods=['GET'])
+async def get_topics():
+    await call_mock_service("GET", "posts")
+    return jsonify(list(topics.values()))
+
+@app.route('/topics', methods=['POST'])
+async def create_topic():
+    global topic_id_counter
+    data = await request.get_json()
+    validate_topic(data)
+    new_id = str(topic_id_counter)
+    topic_id_counter += 1
+    data['id'] = new_id
+    topics[new_id] = data
+    await call_mock_service("POST", "posts", data)
+    return jsonify(data), 201
 
 if __name__ == '__main__':
-    app.run(use_reloader=False, debug=True, host='0.0.0.0', port=8000, threaded=True)
-# ```
-# 
-# ### Important Notes
-# - The prototype uses in-memory data structures (`users`, `posts`, `comments`, `images`, `votes`) for demonstration purposes. In a production application, you would typically use a database.
-# - TODO comments have been added to indicate areas that require further implementation or clarification.
-# - The JWT token generation and user validation logic are placeholders and need to be implemented for security.
-# - Error handling and validation are minimal in this prototype to keep it focused on the core functionality.
-# 
-# Feel free to expand on this prototype or ask for further modifications based on your needs!
+    app.run()
 
-  
-   """
+
+ """
     endpoints = extract_endpoints(content)
     spec = generate_spec(endpoints)
     spec = add_related_secondary_entities(spec)

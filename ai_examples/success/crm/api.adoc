@@ -1,0 +1,70 @@
+= CRM API Documentation
+:author: CRM Solutions
+:version: 1.0
+:doctype: article
+
+== Overview
+This API handles customer relationship management, including contacts, leads, and opportunities.
+
+== Base URL
+`https://api.crmexample.com/v1`
+
+== Authentication
+Include your API token:
+`Authorization: Bearer <token>`
+
+== Endpoints
+
+=== Contacts
+* **GET** `/contacts`
+  Retrieve a list of contacts.
+
+* **GET** `/contacts/{contactId}`
+  Retrieve details for a specific contact.
+
+* **POST** `/contacts`
+  Create a new contact.
+  [source,json]
+  ----
+  {
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "phone": "123-456-7890"
+  }
+  ----
+
+* **PUT** `/contacts/{contactId}`
+  Update contact details.
+
+* **DELETE** `/contacts/{contactId}`
+  Delete a contact.
+
+=== Leads
+* **GET** `/leads`
+  Retrieve a list of leads.
+
+* **GET** `/leads/{leadId}`
+  Retrieve details for a specific lead.
+
+* **POST** `/leads`
+  Create a new lead.
+
+* **PUT** `/leads/{leadId}`
+  Update lead details.
+
+* **DELETE** `/leads/{leadId}`
+  Remove a lead.
+
+=== Opportunities
+* **GET** `/opportunities`
+  Retrieve sales opportunities.
+
+* **GET** `/opportunities/{oppId}`
+  Retrieve details for a specific opportunity.
+
+* **POST** `/opportunities`
+  Create a new opportunity.
+
+* **PUT** `/opportunities/{oppId}`
+  Update opportunity details.
