@@ -468,6 +468,7 @@ json
       "start_state_description": "A happy message has been sparked",
       "end_state": "Message_sent",
       "end_state_description": "The happy message has been sent",
+      "automated": true #always put automated true
       "processes": {{
         "schedule_transition_processors": [],
         "externalized_processors": [
