@@ -21,3 +21,4 @@ PyMuPDF==1.25.3
 beautifulsoup4==4.13.3
 inflect==7.5.0
 nltk==3.9.1
+libcst==1.6.0

@@ -1,0 +1,176 @@
+{
+  "name": "process_companies_workflow",
+  "description": "Workflow for processing companies, checking search terms, building URLs, fetching data, enriching, and finalizing entities.",
+  "workflow_criteria": {
+    "externalized_criteria": [],
+    "condition_criteria": []
+  },
+  "transitions": [
+    {
+      "name": "check_search_term",
+      "description": "Check if the search term is valid",
+      "start_state": "None",
+      "start_state_description": "Initial state",
+      "end_state": "search_term_checked",
+      "end_state_description": "Search term checked",
+      "automated": true,
+      "transition_criteria": {
+        "externalized_criteria": [],
+        "condition_criteria": []
+      },
+      "processes": {
+        "schedule_transition_processors": [],
+        "externalized_processors": [
+          {
+            "calculation_nodes_tags": "8412c544-ed99-11ef-8f66-7eb0dc4e02b5",
+            "attach_entity": true,
+            "calculation_response_timeout_ms": "120000",
+            "retry_policy": "NONE",
+            "name": "process_check_search_term",
+            "description": "Function to check if the search term is valid",
+            "sync_process": true,
+            "new_transaction_for_async": false,
+            "none_transactional_for_async": false,
+            "processor_criteria": {
+              "externalized_criteria": [],
+              "condition_criteria": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "build_url",
+      "description": "Build the URL for fetching company data",
+      "start_state": "search_term_checked",
+      "start_state_description": "Search term has been validated",
+      "end_state": "url_built",
+      "end_state_description": "URL has been built",
+      "automated": true,
+      "transition_criteria": {
+        "externalized_criteria": [],
+        "condition_criteria": []
+      },
+      "processes": {
+        "schedule_transition_processors": [],
+        "externalized_processors": [
+          {
+            "calculation_nodes_tags": "8412c544-ed99-11ef-8f66-7eb0dc4e02b5",
+            "attach_entity": true,
+            "calculation_response_timeout_ms": "120000",
+            "retry_policy": "NONE",
+            "name": "process_build_url",
+            "description": "Function to build the URL for fetching company data",
+            "sync_process": true,
+            "new_transaction_for_async": false,
+            "none_transactional_for_async": false,
+            "processor_criteria": {
+              "externalized_criteria": [],
+              "condition_criteria": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "fetch_companies_data",
+      "description": "Fetch companies data from the built URL",
+      "start_state": "url_built",
+      "start_state_description": "URL has been built",
+      "end_state": "companies_data_fetched",
+      "end_state_description": "Companies data has been fetched",
+      "automated": true,
+      "transition_criteria": {
+        "externalized_criteria": [],
+        "condition_criteria": []
+      },
+      "processes": {
+        "schedule_transition_processors": [],
+        "externalized_processors": [
+          {
+            "calculation_nodes_tags": "8412c544-ed99-11ef-8f66-7eb0dc4e02b5",
+            "attach_entity": true,
+            "calculation_response_timeout_ms": "120000",
+            "retry_policy": "NONE",
+            "name": "process_fetch_companies_data",
+            "description": "Function to fetch companies data from the built URL",
+            "sync_process": true,
+            "new_transaction_for_async": false,
+            "none_transactional_for_async": false,
+            "processor_criteria": {
+              "externalized_criteria": [],
+              "condition_criteria": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "enrich_company_data",
+      "description": "Enrich the fetched company data",
+      "start_state": "companies_data_fetched",
+      "start_state_description": "Companies data has been fetched",
+      "end_state": "company_data_enriched",
+      "end_state_description": "Company data has been enriched",
+      "automated": true,
+      "transition_criteria": {
+        "externalized_criteria": [],
+        "condition_criteria": []
+      },
+      "processes": {
+        "schedule_transition_processors": [],
+        "externalized_processors": [
+          {
+
+            "calculation_nodes_tags": "8412c544-ed99-11ef-8f66-7eb0dc4e02b5",
+            "attach_entity": true,
+            "calculation_response_timeout_ms": "120000",
+            "retry_policy": "NONE",
+            "name": "process_enrich_company_data",
+            "description": "Function to enrich the fetched company data",
+            "sync_process": true,
+            "new_transaction_for_async": false,
+            "none_transactional_for_async": false,
+            "processor_criteria": {
+              "externalized_criteria": [],
+              "condition_criteria": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "finalize_entity",
+      "description": "Finalize the entity after enrichment",
+      "start_state": "company_data_enriched",
+      "start_state_description": "Company data has been enriched",
+      "end_state": "entity_finalized",
+      "end_state_description": "Entity has been finalized",
+      "automated": true,
+      "transition_criteria": {
+        "externalized_criteria": [],
+        "condition_criteria": []
+      },
+      "processes": {
+        "schedule_transition_processors": [],
+        "externalized_processors": [
+          {
+            "calculation_nodes_tags": "8412c544-ed99-11ef-8f66-7eb0dc4e02b5",
+            "attach_entity": true,
+            "calculation_response_timeout_ms": "120000",
+            "retry_policy": "NONE",
+            "name": "process_finalize_entity",
+            "description": "Function to finalize the enriched entity",
+            "sync_process": true,
+            "new_transaction_for_async": false,
+            "none_transactional_for_async": false,
+            "processor_criteria": {
+              "externalized_criteria": [],
+              "condition_criteria": []
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

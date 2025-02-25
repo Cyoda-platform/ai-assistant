@@ -31,7 +31,7 @@ def find_and_import_workflows():
                     if not name.startswith("_"):
                         process_dispatch[name] = func
         except Exception as e:
-            print(f"Error importing module {module_name}: {e}")
+            logger.exception(e)
 
 # Run the function to populate process_dispatch
 find_and_import_workflows()

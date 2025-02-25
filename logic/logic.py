@@ -2,8 +2,9 @@ import copy
 import logging
 from typing import Dict, Any
 
-from common.config.config import CYODA_AI_API, ENTITY_VERSION, MAX_ITERATION
+from common.config.config import CYODA_AI_API, ENTITY_VERSION, MAX_ITERATION, VALIDATION_MAX_RETRIES
 from common.config.conts import NOTIFICATION, QUESTION, FUNCTION, PROMPT, CAN_PROCEED, INFO
+from entity.chat.workflow.gen_and_validation.result_validator import validate_ai_result
 from entity.workflow import dispatch_function
 from entity.chat.workflow.helper_functions import get_event_template, save_result_to_file, run_chat, _process_question, \
     git_pull
@@ -32,6 +33,23 @@ async def process_answer(token, _event: Dict[str, Any], chat) -> None:
         result = await run_chat(chat=chat, _event=_event, token=token,
                       ai_endpoint=_event.get("prompt", {}).get("api", CYODA_AI_API),
                       chat_id=chat["chat_id"])
+        is_valid, formatted_result = validate_ai_result(result, _event.get("file_name"))
+        if is_valid:
+            result = formatted_result
+        else:
+            retry = VALIDATION_MAX_RETRIES
+            while retry > 0:
+                retry_event = copy.deepcopy(_event)
+                retry_event["prompt"]["text"] = formatted_result
+                result = await run_chat(chat=chat, _event=retry_event, token=token,
+                                        ai_endpoint=_event.get("prompt", {}).get("api", CYODA_AI_API),
+                                        chat_id=chat["chat_id"])
+                is_valid, formatted_result = validate_ai_result(result, _event.get("file_name"))
+                if is_valid:
+                    result = formatted_result
+                    retry = -1
+                else:
+                    retry -= 1
 
         if repeat_iteration(_event, result):
             if not _event.get("additional_questions", []):

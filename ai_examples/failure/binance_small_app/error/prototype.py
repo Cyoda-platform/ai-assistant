@@ -3,6 +3,8 @@
 # ### `prototype.py`
 # 
 # ```python
+import uuid
+
 from quart import Quart, request, jsonify
 from quart_schema import QuartSchema
 import aiohttp
@@ -18,7 +20,7 @@ QuartSchema(app)
 
 # Mock database for storing reports
 reports_db = {}
-
+jobs = {}
 # Real API URL to fetch Bitcoin conversion rates
 CRYPTO_API_URL = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,eur"
 
@@ -40,7 +42,7 @@ async def fetch_conversion_rates():
 async def create_report():
     data = await request.get_json()
     email = data.get('email')  # Extract user email from request data
-
+    jobs[uuid.uuid1()] = data
     conversion_rates = await fetch_conversion_rates()
 
     if conversion_rates is None:

@@ -76,7 +76,3 @@ Example data rows:
 * The analysis includes computation of key statistics and visualizations.
 * A report is generated and saved to disk in the agreed format.
 * The system handles errors and logs issues as specified.
-
-API:
-POST /report-job
-GET /report by id

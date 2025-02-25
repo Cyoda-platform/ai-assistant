@@ -13,6 +13,8 @@ from common.config.config import MOCK_AI, VALIDATION_MAX_RETRIES, PROJECT_DIR, R
 from common.config.enums import TextType
 from common.util.utils import parse_json, get_project_file_name, read_file, format_json_if_needed, parse_workflow_json
 from entity.chat.data.data import PUSHED_CHANGES_NOTIFICATION
+from entity.chat.workflow.gen_and_validation.json_extractor import extract_and_validate_json
+from entity.chat.workflow.gen_and_validation.python_code_extractor import extract_and_validate_code
 from logic.init import ai_service
 
 # Configure logging
@@ -193,7 +195,7 @@ async def _save_file(chat_id, _data, item, folder_name=None) -> str:
                 await output.write(file_data)  # Now you can await the write operation
         else:
             # Process and save as text or binary
-            output_data = _process_data(_data)
+            output_data = _data
             write_mode = 'w' if isinstance(output_data, str) else 'wb'
             async with aiofiles.open(file_path, write_mode) as output:
                 await output.write(output_data)
@@ -257,7 +259,7 @@ def hello_world():
 
 
 # Function to process the data
-def _process_data(_data):
+def _process_data_v1(_data):
     # If _data is binary, then return as is
     if isinstance(_data, (bytes, bytearray)):
         return _data
