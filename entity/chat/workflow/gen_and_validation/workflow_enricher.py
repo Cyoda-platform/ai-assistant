@@ -90,6 +90,8 @@ def enrich_workflow(workflow):
         # Update the processes back into the transition (if modified)
         transition["processes"] = processes
 
+    workflow['name'] = f"{workflow['name']}:ENTITY_MODEL_VAR:ENTITY_VERSION_VAR:CHAT_ID_VAR"
+
     return workflow
 
 
@@ -156,6 +158,6 @@ not_complete_json = {
 if __name__ == "__main__":
     # Update the not complete JSON
     updated_workflow = enrich_workflow(not_complete_json)
-
+    updated_workflow['name'] = f"{updated_workflow['name']}:ENTITY_MODEL_VAR:ENTITY_VERSION_VAR:CHAT_ID_VAR"
     # Print the updated workflow as a pretty-formatted JSON
     print(json.dumps(updated_workflow, indent=4))

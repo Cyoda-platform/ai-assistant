@@ -425,7 +425,7 @@ For any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re he
                                     "prompt": {
                                         "text": """
 Which workflow would you recommend for this code?  
-Could you split this code into functions, each function should have name starting with 'process_'.
+Could you split this code into functions, each function should have name starting with 'process_'. These functions are async (example: async process_{{entity_name}}(entity: dict): )
 It can take only one argument entity data and can modify this entity data state, so please also remove any unnecessary entity_service.update(this entity) calls = as you can do it by changing entity attributes directly, e.g. entity['attribute'] = new_value.
 No more additional arguments can be passed.
 Also, all workflow orchestration should be inside {workflow_function}. {workflow_function} should have only workflow orchestration code and no business logic. no other function can have workflow orchestration code.
@@ -529,6 +529,7 @@ Please return only compiled python code without additional information. If you'd
 What do you think, can we move any logic from the endpoint inside newly added functions (workflow=process_{entity_name}) that will be invoked right before persisting entity.
 It will make our code more robust and will 'free' the controllers from excessive logic.
 Any async task (including fire and forget functions) is definitely a candidate to be replaced with process_{entity_name} function as workflow function supports asynchronous code and is a direct alternative for such tasks. It is the right approach - this is required.
+Please do your best to move all the async functions to workflow=process_{entity_name} functions.
 Workflow function applied to the entity asynchronously before persistence. this function takes this entity data as the only argument. You can change entity state inside this function e.g. entity['attribute'] = new_value
 You can get and add secondary/supplementary/raw data entities of a different entity_model
 You cannot apply entity_service.add/update/delete on the current entity! if you need to change this entity state - modify directly  e.g. entity['attribute'].  The new state will be persisted.                        
@@ -553,8 +554,9 @@ entity_id = await entity_service.add_item(
         entity_model="{entity_name}",
         entity_version=ENTITY_VERSION,  # always use this constant
         entity=data,  # the validated data object
-        workflow=process_{entity_name} # Workflow function applied to the entity asynchronously before persistence. this function takes this entity data as the only argument. You can change entity state inside this function, get and add entities with a different entity_model (but cannot add/update/delete entity of the same entity_model - it will cause infinite recursion) 
+        workflow=process_{entity_name} # Workflow function applied to the entity asynchronously before persistence. this function takes this entity data as the only argument. You can change entity state inside this function, get and add entities with a different entity_model (but cannot add/update/delete entity of the same entity_model - it will cause infinite recursion)  
     )
+workflow=process_{entity_name}, this function should have a prefix 'process_' which is followed by the entity name.
 could you please update this code: add workflow function as a parameter and implement it. Return complete code.
 Please return only compiled python code without additional information. If you'd like to add any comments please use # comment
                            """,
@@ -740,6 +742,7 @@ await entity_service.update_item(
     entity_model="{entity_name}",
     entity_version=ENTITY_VERSION,  # always use this constant
     entity=data,
+    technical_id=id,
     meta={}
 )
 4.
@@ -747,7 +750,7 @@ await entity_service.delete_item(
     token=cyoda_token,
     entity_model="{entity_name}",
     entity_version=ENTITY_VERSION,  # always use this constant
-    entity=data,
+    technical_id=id,
     meta={}
 )
 use 'from common.config.config import ENTITY_VERSION' to import ENTITY_VERSION
@@ -1006,7 +1009,7 @@ The implementation should be a working prototype rather than a fully robust solu
 Incorporate any details I’ve already specified—such as external APIs, models, or specific calculations—and use mocks or placeholders only where requirements are unclear or incomplete. 
 Wherever you introduce a mock or placeholder, include a TODO comment to indicate the missing or uncertain parts. 
 The goal is to verify the user experience (UX) and identify any gaps in the requirements before we proceed with a more thorough implementation.
-Please double-check you are using all the information provided earlier. Use aiohttp.ClientSession for http requests, and Quart api. 
+Please double-check you are using all the information provided earlier. Use httpx.AsyncClient for http requests, and Quart api. 
 Use QuartSchema(app) but do not add any @validate_request as our data is dynamic, just add QuartSchema(app) one line.
 Use this entry point: if __name__ == '__main__':app.run(use_reloader=False, debug=True, host='0.0.0.0', port=8000, threaded=True).
 Mock any persistence, do not use any particular implementation, just local cache (e.g. you cannot use sqlalchemy in the prototype or any external implementation for persistence or cache).
