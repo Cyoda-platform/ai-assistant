@@ -766,6 +766,11 @@ Preserve the endpoint routes and any other essential business logic.
 Please make sure you keep all the necessary business logic, like data ingestion, calling any external apis , mocks, calculations etc
 Please return only compiled python code without additional information. If you'd like to add any comments please use # comment
 
+Please use correct logging, e.g.:
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.exception(e)
                            """,
                            "api": {"model": OPEN_AI_o3, "temperature": 0.7, "max_tokens": 10000},
                            "attached_files": ["entity/prototype.py"]
@@ -1017,6 +1022,12 @@ You are most welcome to use such pattern where it is reasonable:
 entity_job[job_id] = {"status": "processing", "requestedAt": requested_at}
 # Fire and forget the processing task.
 await asyncio.create_task(process_entity(entity_job, data.__dict__))
+
+please use correct logging, e.g.:
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.exception(e)
 
 """,
 
