@@ -49,7 +49,7 @@ class CancelUserAppRequest:
 class CancelUserAppResponse:
     message: str
 
-TEAMCITY_URL = "https://teamcity.cyoda.org/app/rest/buildQueue"
+TEAMCITY_URL = "https://teamcity.test/app/rest/buildQueue"
 
 @app.route('/auth', methods=['POST'])
 @validate_request(AuthRequest)

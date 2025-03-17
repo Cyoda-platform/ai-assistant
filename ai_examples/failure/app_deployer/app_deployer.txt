@@ -13,7 +13,7 @@ add endpoint POST /deploy/cyoda-env
 Request only user name and trigger the following action:
 
 Action:
-POST https://teamcity.cyoda.org/app/rest/buildQueue
+POST https://teamcity.test/app/rest/buildQueue
 {
     "buildType": {
         "id": "KubernetesPipeline_CyodaSaas"
@@ -42,7 +42,7 @@ Add endpoint POST /deploy/user_app, request useer reopsitory link
 }
 
 Implement Action:
-POST https://teamcity.cyoda.org/app/rest/buildQueue
+POST https://teamcity.test/app/rest/buildQueue
 {
     "buildType": {
         "id": "KubernetesPipeline_CyodaSaasUserEnv"
@@ -65,27 +65,27 @@ it will return build id
 3. Get cyoda env deployment status
 Add endpoint GET /deploy/cyoda-env/status/$build_id (this is build id you received in post request)
 Action:
-GET https://teamcity.cyoda.org/app/rest/buildQueue/id:build_id
+GET https://teamcity.test/app/rest/buildQueue/id:build_id
 
 4. Get cyoda env deployment stats
 GET /deploy/cyoda-env/statistics/$build_id
 Action:
-GET https://teamcity.cyoda.org/app/rest/builds/id:build_id/statistics/
+GET https://teamcity.test/app/rest/builds/id:build_id/statistics/
 
 Same for user deployment
 5. GET /deploy/user_app/status/$build_id
 Action:
-GET https://teamcity.cyoda.org/app/rest/buildQueue/id:build_id
+GET https://teamcity.test/app/rest/buildQueue/id:build_id
 
 
 6. GET /deploy/user_app/statistics/$id
-GET https://teamcity.cyoda.org/app/rest/builds/id:build_id/statistics/
+GET https://teamcity.test/app/rest/builds/id:build_id/statistics/
 
 
 7. Cancel user app deployment :
 POST /deploy/cancel/user_app/$build_id
 Action:
-POST https://teamcity.cyoda.org/app/rest/builds/id:build_id
+POST https://teamcity.test/app/rest/builds/id:build_id
 {
     "comment": "Canceling a queued build",
     "readdIntoQueue": false
