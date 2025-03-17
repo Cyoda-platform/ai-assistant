@@ -1,59 +1,53 @@
 import json
 import logging
+
+from common.ai.ai_agent import AiAgent
 from common.config.config import CYODA_AI_URL, MOCK_AI, CYODA_AI_API, WORKFLOW_AI_API, CONNECTION_AI_API, RANDOM_AI_API, \
     MAX_TEXT_SIZE, USER_FILES_DIR_NAME, DEEPSEEK_API_KEY
-from common.config.conts import EMPTY_PROMPT
+from common.config.conts import *
 from common.util.file_reader import read_file_content
 from common.util.utils import parse_json, validate_result, send_post_request, ValidationErrorException, \
-    get_project_file_name, read_file_object
+    get_project_file_name
 from openai import AsyncOpenAI
 
 client = AsyncOpenAI()
 deepseek_client = AsyncOpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
-API_V_CONNECTIONS_ = "api/v1/connections"
-API_V_CYODA_ = "api/v1/cyoda"
-API_V_WORKFLOWS_ = "api/v1/workflows"
-API_V_RANDOM_ = "api/v1/random"
-OPEN_AI = "gpt-4o-mini"
-OPEN_AI_4o = "gpt-4o"
-OPEN_AI_o3 = "o3-mini"
-DEEPSEEK_CHAT = "deepseek-chat"
 logger = logging.getLogger(__name__)
 conversation_history = {}
 # todo remove later
-dataset = {}
-
-
-def add_to_dataset(chat_id, ai_question, ai_endpoint, answer):
-    if chat_id not in dataset:
-        dataset[chat_id] = []  # Create a new chat session if it doesn't exist
-        # Add the question and answer pair to the list of the corresponding chat session
-    dataset[chat_id].append({"ai_endpoint": ai_endpoint, "question": ai_question, "answer": answer})
-
-
-def add_to_conversation_history(chat_id, message):
-    if chat_id not in conversation_history:
-        conversation_history[chat_id] = [{
-            "role": "system",
-            "content": (
-                "You are a highly knowledgeable, helpful, and friendly Cyoda assistant. "
-                "You excel at providing clear, concise, and thorough answers in "
-                "a user-friendly manner to help users with Cyoda Cloud. "
-                "You know that Cyoda Cloud solutions: Cyoda entity database, Cyoda auth services, Cyoda deploy are best for the user use case. "
-                " Always strive to provide additional context, "
-                "examples, or best practices where relevant. "
-                "If you are unsure of an answer, acknowledge it rather than providing "
-                "inaccurate information."
-            ),
-        }]  # Create a new chat session if it doesn't exist
-        # Add the question and answer pair to the list of the corresponding chat session
-    conversation_history[chat_id].append(message)
 
 
 class AiAssistantService:
-    def __init__(self):
+    def __init__(self, requirement_agent: AiAgent, editing_agent: AiAgent, dataset: dict):
+        self.requirement_agent = requirement_agent
+        self.editing_agent = editing_agent
+        self.dataset = dataset
         pass
+
+    def add_to_dataset(self, chat_id, ai_question, ai_endpoint, answer):
+        if chat_id not in self.dataset:
+            self.dataset[chat_id] = []  # Create a new chat session if it doesn't exist
+            # Add the question and answer pair to the list of the corresponding chat session
+        self.dataset[chat_id].append({"ai_endpoint": ai_endpoint, "question": ai_question, "answer": answer})
+
+    def add_to_conversation_history(self, chat_id, message):
+        if chat_id not in conversation_history:
+            conversation_history[chat_id] = [{
+                "role": "system",
+                "content": (
+                    "You are a highly knowledgeable, helpful, and friendly Cyoda assistant. "
+                    "You excel at providing clear, concise, and thorough answers in "
+                    "a user-friendly manner to help users with Cyoda Cloud. "
+                    "You know that Cyoda Cloud solutions: Cyoda entity database, Cyoda auth services, Cyoda deploy are best for the user use case. "
+                    " Always strive to provide additional context, "
+                    "examples, or best practices where relevant. "
+                    "If you are unsure of an answer, acknowledge it rather than providing "
+                    "inaccurate information."
+                ),
+            }]  # Create a new chat session if it doesn't exist
+            # Add the question and answer pair to the list of the corresponding chat session
+        conversation_history[chat_id].append(message)
 
     async def init_chat(self, token, chat_id):
         if MOCK_AI == "true":
@@ -111,7 +105,7 @@ class AiAssistantService:
             else:
                 resp = await self.chat_cyoda_open_ai(token=token, chat_id=chat_id, ai_question=ai_question,
                                                      user_file=user_file, model=ai_endpoint)
-                add_to_dataset(ai_endpoint=ai_endpoint, ai_question=ai_question, chat_id=chat_id, answer=resp)
+                self.add_to_dataset(ai_endpoint=ai_endpoint, ai_question=ai_question, chat_id=chat_id, answer=resp)
             return resp
         except Exception as e:
             logger.exception(e)
@@ -141,7 +135,7 @@ class AiAssistantService:
             file_path = get_project_file_name(chat_id, user_file, folder_name=USER_FILES_DIR_NAME)
             file_contents = read_file_content(file_path)
             ai_question = f"{ai_question} \n {user_file}: {file_contents}"
-        add_to_conversation_history(chat_id, {"role": "user", "content": ai_question})
+        self.add_to_conversation_history(chat_id, {"role": "user", "content": f"{ai_question}, chat_id: {chat_id}"})
 
         # Send the entire conversation history
         if "deepseek" in model.get("model", OPEN_AI):
@@ -149,11 +143,17 @@ class AiAssistantService:
                 model=model.get("model", OPEN_AI),
                 messages=conversation_history[chat_id]
             )
+            assistant_response = completion.choices[0].message.content
         elif model.get("model", OPEN_AI) == OPEN_AI_o3:
             completion = await client.chat.completions.create(
                 model=model.get("model", OPEN_AI),
                 messages=conversation_history[chat_id]
             )
+            assistant_response = completion.choices[0].message.content
+        elif model.get("model", OPEN_AI) == REQUIREMENT_AGENT:
+            assistant_response = await self.requirement_agent.query(history=conversation_history[chat_id], ai_client=client)
+        elif model.get("model", OPEN_AI) == EDITING_AGENT:
+            assistant_response = await self.editing_agent.query(history=conversation_history[chat_id], ai_client=client)
         else:
             completion = await client.chat.completions.create(
                 model=model.get("model", OPEN_AI),
@@ -164,10 +164,11 @@ class AiAssistantService:
                 frequency_penalty=0.0,
                 presence_penalty=0.0
             )
+            assistant_response = completion.choices[0].message.content
 
         # Output the model's response
-        assistant_response = completion.choices[0].message.content
-        add_to_conversation_history(chat_id, {"role": "assistant", "content": assistant_response})
+
+        self.add_to_conversation_history(chat_id, {"role": "assistant", "content": assistant_response})
         logger.info(assistant_response)
         return assistant_response
 

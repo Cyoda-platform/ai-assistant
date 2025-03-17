@@ -1,6 +1,4 @@
-import copy
-
-from common.ai.ai_assistant_service import OPEN_AI, OPEN_AI, OPEN_AI_o3
+from common.config.conts import *
 from common.config.config import MAX_ITERATION
 from common.config.conts import EMPTY_PROMPT
 
@@ -329,24 +327,7 @@ ENTITY_WORKFLOW = {
 }
 
 # Finished
-app_building_stack = [{"question": None,
-                       "prompt": {
-                           "text": EMPTY_PROMPT,
-                           "api": {"model": OPEN_AI, "temperature": 0.7},
-                       },
-                       "answer": None,
-                       "approve": False,
-                       "function": None,
-                       "iteration": 0,
-                       "flow_step": GATHERING_REQUIREMENTS_STR,
-                       "max_iteration": MAX_ITERATION * 10,
-                       "additional_questions": [
-                           {
-                               "question": "Feel free to ask any questions or discuss the design in the chat 💬💬",
-                               "approve": True}],
-                       "stack": APP_BUILDING_STACK_KEY,
-                       "publish": True},
-                      {"question": "Your application is finished! Thank you for collaboration!",
+app_building_stack = [{"question": "Your application is finished! Thank you! Please let me know if I can help!",
                        "prompt": {},
                        "answer": None,
                        "function": None,
@@ -639,55 +620,55 @@ Please return only compiled python code without additional information. If you'd
                           "max_iteration": 0,
                           "stack": APP_BUILDING_STACK_KEY},
                       # ================================================
-#                       {"question": None,
-#                        "prompt": {
-#                            "text": "Please return fully functioning prototype_cyoda.py code taking into account user suggestions if any. Please return only compiled python code without additional information. If you'd like to add any comments please use # comment",
-#                            "api": {"model": OPEN_AI_o3, "temperature": 0.7, "max_tokens": 10000},
-#                            "attached_files": ["entity/prototype_cyoda.py"]
-#                        },
-#                        "file_name": "entity/prototype_cyoda.py",
-#                        "answer": None,
-#                        "function": None,
-#                        "iteration": 0,
-#                        "flow_step": GATHERING_REQUIREMENTS_STR,
-#                        "max_iteration": MAX_ITERATION,
-#                        "additional_questions": [
-#                            {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
-#                        "stack": APP_BUILDING_STACK_KEY,
-#                        "publish": False},
-#                       {
-#                           "question": """Prototype with persistence to Cyoda Entity Database is  Ready for Validation
-#
-# We have completed the first prototype for your functional requirements.
-#
-# To validate the API, please follow the steps below:
-#
-# **1. Run the Application**
-#
-# Execute the following command to start the application:
-#
-# ```python
-# python entity/prototype_cyoda.py
-# ```
-#
-# 2. Validate the API
-# Once the application is running, open your browser and navigate to:
-# ```
-# http://localhost:8000/docs
-# ```
-# Request and response examples are available in entity/functional_requirement.md
-#
-# This will allow you to validate the API response.
-# """,
-#                           "prompt": None,
-#                           "answer": None,
-#                           "function": None,
-#                           "iteration": 0,
-#                           "flow_step": GATHERING_REQUIREMENTS_STR,
-#                           "max_iteration": 0,
-#                           "approve": True,
-#                           "stack": APP_BUILDING_STACK_KEY,
-#                           "publish": False},
+                      #                       {"question": None,
+                      #                        "prompt": {
+                      #                            "text": "Please return fully functioning prototype_cyoda.py code taking into account user suggestions if any. Please return only compiled python code without additional information. If you'd like to add any comments please use # comment",
+                      #                            "api": {"model": OPEN_AI_o3, "temperature": 0.7, "max_tokens": 10000},
+                      #                            "attached_files": ["entity/prototype_cyoda.py"]
+                      #                        },
+                      #                        "file_name": "entity/prototype_cyoda.py",
+                      #                        "answer": None,
+                      #                        "function": None,
+                      #                        "iteration": 0,
+                      #                        "flow_step": GATHERING_REQUIREMENTS_STR,
+                      #                        "max_iteration": MAX_ITERATION,
+                      #                        "additional_questions": [
+                      #                            {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
+                      #                        "stack": APP_BUILDING_STACK_KEY,
+                      #                        "publish": False},
+                      #                       {
+                      #                           "question": """Prototype with persistence to Cyoda Entity Database is  Ready for Validation
+                      #
+                      # We have completed the first prototype for your functional requirements.
+                      #
+                      # To validate the API, please follow the steps below:
+                      #
+                      # **1. Run the Application**
+                      #
+                      # Execute the following command to start the application:
+                      #
+                      # ```python
+                      # python entity/prototype_cyoda.py
+                      # ```
+                      #
+                      # 2. Validate the API
+                      # Once the application is running, open your browser and navigate to:
+                      # ```
+                      # http://localhost:8000/docs
+                      # ```
+                      # Request and response examples are available in entity/functional_requirement.md
+                      #
+                      # This will allow you to validate the API response.
+                      # """,
+                      #                           "prompt": None,
+                      #                           "answer": None,
+                      #                           "function": None,
+                      #                           "iteration": 0,
+                      #                           "flow_step": GATHERING_REQUIREMENTS_STR,
+                      #                           "max_iteration": 0,
+                      #                           "approve": True,
+                      #                           "stack": APP_BUILDING_STACK_KEY,
+                      #                           "publish": False},
 
                       # {"question": None,
                       #  "prompt": {
@@ -742,7 +723,7 @@ await entity_service.update_item(
     entity_model="{entity_name}",
     entity_version=ENTITY_VERSION,  # always use this constant
     entity=data,
-    technical_id=id,
+    technical_id=id, #technical_id is required
     meta={}
 )
 4.
@@ -888,7 +869,9 @@ Just give me a thumbs up! 👍
                           "max_iteration": MAX_ITERATION,
                           "stack": APP_BUILDING_STACK_KEY,
                           "approve": True,
-                          "publish": True},
+                          "publish": True,
+                          "allow_anonymous_users": True
+                      },
                       {"question": None,
                        "prompt": {
                            "text": "Please return fully functioning prototype.py code taking into account user suggestions if any. You cannot use sqlalchemy in the prototype or any external implementation for persistence or cache, only local cache. if the user made any changes they take precedence.",
@@ -904,7 +887,9 @@ Just give me a thumbs up! 👍
                        "additional_questions": [
                            {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
                        "stack": APP_BUILDING_STACK_KEY,
-                       "publish": True},
+                       "publish": True,
+                       "allow_anonymous_users": True
+                       },
                       {
                           "question": """First Prototype Ready for Validation
 
@@ -937,7 +922,9 @@ This will allow you to validate the API response.
                           "max_iteration": 0,
                           "approve": True,
                           "stack": APP_BUILDING_STACK_KEY,
-                          "publish": True},
+                          "publish": True,
+                          "allow_anonymous_users": True
+                      },
                       # =============================================
 
                       {"question": None,
@@ -1004,7 +991,9 @@ Please return only compiled python code without additional information. If you'd
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY,
                        "file_name": "entity/prototype.py",
-                       "publish": True},
+                       "publish": True,
+                       "allow_anonymous_users": True
+                       },
 
                       {"question": None,
                        "prompt": {
@@ -1012,12 +1001,13 @@ Please return only compiled python code without additional information. If you'd
 Now that we’ve finalized the API design, please provide the code for the prototype.py file.
 The implementation should be a working prototype rather than a fully robust solution. 
 Incorporate any details I’ve already specified—such as external APIs, models, or specific calculations—and use mocks or placeholders only where requirements are unclear or incomplete. 
-Wherever you introduce a mock or placeholder, include a TODO comment to indicate the missing or uncertain parts. 
+Please use real APIs. Wherever you introduce a mock or placeholder, include a TODO comment to indicate the missing or uncertain parts. 
 The goal is to verify the user experience (UX) and identify any gaps in the requirements before we proceed with a more thorough implementation.
 Please double-check you are using all the information provided earlier. Use httpx.AsyncClient for http requests, and Quart api. 
 Use QuartSchema(app) but do not add any @validate_request as our data is dynamic, just add QuartSchema(app) one line.
 Use this entry point: if __name__ == '__main__':app.run(use_reloader=False, debug=True, host='0.0.0.0', port=8000, threaded=True).
 Mock any persistence, do not use any particular implementation, just local cache (e.g. you cannot use sqlalchemy in the prototype or any external implementation for persistence or cache).
+Please use real APIs.
 You are most welcome to use such pattern where it is reasonable:
 entity_job[job_id] = {"status": "processing", "requestedAt": requested_at}
 # Fire and forget the processing task.
@@ -1040,7 +1030,9 @@ logger.exception(e)
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY,
                        "file_name": "entity/prototype.py",
-                       "publish": False},
+                       "publish": False,
+                       "allow_anonymous_users": True
+                       },
                       {
                           "notification": "Let's proceed to generating the fist prototype. Please, give me a moment to think everything over",
                           "prompt": None,
@@ -1052,7 +1044,9 @@ logger.exception(e)
                           "max_iteration": MAX_ITERATION,
                           "stack": APP_BUILDING_STACK_KEY,
                           "approve": True,
-                          "publish": True},
+                          "publish": True,
+                          "allow_anonymous_users": True
+                      },
                       {"question": None,
                        "prompt": {
                            "text": """Please return well-formatted final functional requirements.""",
@@ -1066,7 +1060,9 @@ logger.exception(e)
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY,
                        "file_name": "entity/functional_requirement.md",
-                       "publish": False},
+                       "publish": False,
+                       "allow_anonymous_users": True
+                       },
                       {"question": None,
                        "prompt": {
                            "text": "Please answer the question and return the full functional requirement. User says: ",
@@ -1081,7 +1077,9 @@ logger.exception(e)
                        "additional_questions": [
                            {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
                        "stack": APP_BUILDING_STACK_KEY,
-                       "publish": True},
+                       "publish": True,
+                       "allow_anonymous_users": True
+                       },
                       {
                           "question": """Let's discuss the API for your application together. What would you recommend?
 """,
@@ -1093,7 +1091,9 @@ logger.exception(e)
                           "max_iteration": 0,
                           "approve": True,
                           "stack": APP_BUILDING_STACK_KEY,
-                          "publish": True},
+                          "publish": True,
+                          "allow_anonymous_users": True
+                      },
                       {"question": None,
                        "prompt": {
                            "text": """Please, help me define the functional requirements for my project.
@@ -1102,7 +1102,7 @@ including details on request/response formats. Additionally, provide a visual re
 Please return markdown document without any additional information. 
 Each diagram should be wrapped into ```mermaid ...```
 """,
-                           "api": {"model": OPEN_AI_o3, "temperature": 0.7}
+                           "api": {"model": OPEN_AI, "temperature": 0.7}
                        },
                        # "file_name": "entity/app_design.json",
                        "answer": None,
@@ -1112,11 +1112,13 @@ Each diagram should be wrapped into ```mermaid ...```
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY,
                        # "file_name": "entity/functional_requirement.md",
-                       "publish": True},
+                       "publish": True,
+                       "allow_anonymous_users": True
+                       },
                       {"question": None,
                        "prompt": {
                            "text": EMPTY_PROMPT,
-                           "api": {"model": OPEN_AI, "temperature": 0.7}
+                           "api": {"model": REQUIREMENT_AGENT, "temperature": 0.7}
                        },
                        # "file_name": "entity/app_design.json",
                        "answer": None,
@@ -1127,7 +1129,9 @@ Each diagram should be wrapped into ```mermaid ...```
                        "additional_questions": [
                            {"question": f"{APPROVAL_NOTIFICATION}", "approve": True}],
                        "stack": APP_BUILDING_STACK_KEY,
-                       "publish": True},
+                       "publish": True,
+                       "allow_anonymous_users": True
+                       },
                       {"question": None,
                        "prompt": {
                            "text": """Hello! You are a python quart developer.
@@ -1137,8 +1141,10 @@ Let's analyse this request for application building, and clarify any important f
 that necessary.
 Ask questions if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations. 
 Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. 
-Max tokens = 300. Here is my requirement: """,
-                           "api": {"model": OPEN_AI, "temperature": 0.7, "max_tokens": 10000}
+Max tokens = 300. If there are any links or action requests in my requirement,
+please first follow these links or do any requested action in order to get the full understanding,
+and only then proceed to answering the question. Here is my requirement: """,
+                           "api": {"model": REQUIREMENT_AGENT, "temperature": 0.7, "max_tokens": 10000}
                        },
                        # "file_name": "entity/app_design.json",
                        "answer": None,
@@ -1147,7 +1153,9 @@ Max tokens = 300. Here is my requirement: """,
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY,
-                       "publish": True},
+                       "publish": True,
+                       "allow_anonymous_users": True
+                       },
 
                       {
                           "question": "💡 What kind of application would you like to build? I'd love to hear your ideas! Feel free to share them with me! 😊",
@@ -1171,7 +1179,9 @@ Max tokens = 300. Here is my requirement: """,
                               Additionally, the data ingestion process should be scheduled to run **once a day** ⏰."""],
                           "max_iteration": 0,
                           "stack": APP_BUILDING_STACK_KEY,
-                          "publish": True},
+                          "publish": True,
+                          "allow_anonymous_users": True
+                      },
                       {"question": None,
                        "prompt": {},
                        "answer": None,
@@ -1180,6 +1190,8 @@ Max tokens = 300. Here is my requirement: """,
                        "iteration": 0,
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY,
+                       "allow_anonymous_users": True
+
                        },
                       {"question": None,
                        "prompt": {},
@@ -1189,7 +1201,9 @@ Max tokens = 300. Here is my requirement: """,
                        "flow_step": GATHERING_REQUIREMENTS_STR,
                        "max_iteration": 0,
                        "stack": APP_BUILDING_STACK_KEY,
-                       "publish": True
+                       "publish": True,
+                       "allow_anonymous_users": True
+
                        },
                       {
                           "notification": """
@@ -1211,7 +1225,8 @@ If something goes wrong, no worries—just roll back! 😬 Your app will be live
                           "file_name": "instruction.txt",
                           "max_iteration": 0,
                           "stack": APP_BUILDING_STACK_KEY,
-                          "publish": True
+                          "publish": True,
+                          "allow_anonymous_users": True
 
                       }
                       ]

@@ -3,11 +3,14 @@ Hello! i'd like to build an app that manages deployment and env configuration fo
 
 The application should have the following api:
 
-For all auth via Bearer token
-POST /deploy/cyoda-env
+For all auth via Bearer token, token will be provided by the client
+
+1. Deploying cyoda env
+add endpoint POST /deploy/cyoda-env
 {
     "user_name": "test"
 }
+Request only user name and trigger the following action:
 
 Action:
 POST https://teamcity.cyoda.org/app/rest/buildQueue
@@ -30,13 +33,15 @@ POST https://teamcity.cyoda.org/app/rest/buildQueue
 }
 it will return build id
 
-POST /deploy/user_app
+2. Deploying the user application by repositoty url
+Add endpoint POST /deploy/user_app, request useer reopsitory link
 {
     "repository_url": "http://....",
     "is_public": "true",
+    "user_name": "test"
 }
 
-Action:
+Implement Action:
 POST https://teamcity.cyoda.org/app/rest/buildQueue
 {
     "buildType": {
@@ -45,7 +50,7 @@ POST https://teamcity.cyoda.org/app/rest/buildQueue
     "properties": {
         "property": [
             {
-                "name": "user_defined_keyspace",
+                "name": "repository_url",
                 "value": user_name
             },
             {
@@ -57,62 +62,30 @@ POST https://teamcity.cyoda.org/app/rest/buildQueue
 }
 it will return build id
 
-GET /deploy/cyoda-env/status/$id
-{
-    "repository_url": "http://....",
-    "is_public": "true"
-}
+3. Get cyoda env deployment status
+Add endpoint GET /deploy/cyoda-env/status/$build_id (this is build id you received in post request)
+Action:
+GET https://teamcity.cyoda.org/app/rest/buildQueue/id:build_id
 
+4. Get cyoda env deployment stats
+GET /deploy/cyoda-env/statistics/$build_id
+Action:
+GET https://teamcity.cyoda.org/app/rest/builds/id:build_id/statistics/
+
+Same for user deployment
+5. GET /deploy/user_app/status/$build_id
 Action:
 GET https://teamcity.cyoda.org/app/rest/buildQueue/id:build_id
 
 
-GET /deploy/cyoda-env/statistics/$id
-{
-    "repository_url": "http://....",
-    "is_public": "true"
-}
-Action:
+6. GET /deploy/user_app/statistics/$id
 GET https://teamcity.cyoda.org/app/rest/builds/id:build_id/statistics/
 
 
-GET /deploy/user_app/status/$id
-{
-    "repository_url": "http://....",
-    "is_public": "true"
-}
-
+7. Cancel user app deployment :
+POST /deploy/cancel/user_app/$build_id
 Action:
-GET https://teamcity.cyoda.org/app/rest/buildQueue/id:build_id
-
-
-GET /deploy/user_app/statistics/$id
-{
-    "repository_url": "http://....",
-    "is_public": "true"
-}
-
-
-
-
-
-
-
-
-
-
-Action:
-GET https://teamcity.cyoda.org/app/rest/builds/id:build_id/statistics/
-
-POST /deploy/cancel/user_app/$id
-{
-    "repository_url": "http://....",
-    "is_public": "true",
-}
-
-
-Action:
-POST https://teamcity.cyoda.org/app/rest/builds/id:99405
+POST https://teamcity.cyoda.org/app/rest/builds/id:build_id
 {
     "comment": "Canceling a queued build",
     "readdIntoQueue": false

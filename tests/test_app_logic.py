@@ -1,12 +1,12 @@
 
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import sys
 
 # Assuming your app.py is in the parent directory
 sys.path.append("..")
 
-from logic.logic import (
+from entity.chat.workflow.logic import (
     question,
     process_answer,
     process_dialogue_script,

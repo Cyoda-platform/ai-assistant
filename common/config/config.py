@@ -3,15 +3,21 @@ import os
 import logging
 from dotenv import load_dotenv
 
+from common.config.conts import DEPLOY_CYODA_ENV, DEPLOY_USER_APP, DEPLOY_STATUS
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+get_env = lambda key: os.getenv(key) or (_ for _ in ()).throw(Exception(f"{key} not found"))
+
+CYODA_HOST = get_env("CYODA_HOST")
+CYODA_AI_URL = os.getenv("CYODA_AI_URL", f"https://{CYODA_HOST}/ai")
+CYODA_API_URL = os.getenv("CYODA_API_URL", f"https://{CYODA_HOST}/api")
+GRPC_ADDRESS = os.getenv("GRPC_ADDRESS", f"grpc-{CYODA_HOST}")
 # Load cyoda environment variables
 API_PREFIX = os.getenv("API_PREFIX", "/api/v1")
-CYODA_AI_URL = os.getenv("CYODA_AI_URL")
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 API_URL = os.getenv("CYODA_API_URL") + "/api"
 decoded_bytes_cyoda_api_key = base64.b64decode(os.getenv("CYODA_API_KEY"))
@@ -20,8 +26,7 @@ decoded_bytes_cyoda_api_secret = base64.b64decode(os.getenv("CYODA_API_SECRET"))
 API_SECRET = decoded_bytes_cyoda_api_secret.decode("utf-8")
 
 ENTITY_VERSION = os.getenv("ENTITY_VERSION", "1000")
-GRPC_ADDRESS = os.environ["GRPC_ADDRESS"]
-GRPC_PROCESSOR_TAG=os.getenv("GRPC_PROCESSOR_TAG", "elt")
+GRPC_PROCESSOR_TAG = os.getenv("GRPC_PROCESSOR_TAG", "elt")
 
 # Load ai assistant environment variables
 CLONE_REPO = os.getenv("CLONE_REPO")
@@ -34,11 +39,20 @@ CONNECTION_AI_API = os.getenv("CONNECTION_AI_API")
 RANDOM_AI_API = os.getenv("RANDOM_AI_API")
 VALIDATION_MAX_RETRIES = int(os.getenv("VALIDATION_MAX_RETRIES"))
 MAX_ITERATION = int(os.getenv("MAX_ITERATION"))
+MAX_GUEST_CHATS = int(os.getenv("MAX_GUEST_CHATS", 2))
+CHECK_DEPLOY_INTERVAL = int(os.getenv("CHECK_DEPLOY_INTERVAL", 60))
 NUM_MOCK_ARR_ITEMS = int(os.getenv("NUM_MOCK_ARR_ITEMS"))
 REPOSITORY_NAME = os.getenv("REPOSITORY_URL").split('/')[-1].replace('.git', '')
 CHAT_REPOSITORY = os.getenv("CHAT_REPOSITORY", "local")
 ENABLE_AUTH = os.getenv("ENABLE_AUTH", "true").lower() == "true"
-MAX_TEXT_SIZE = 50 * 1024 #limit text size to 50KB
-MAX_FILE_SIZE = 500 * 1024 #limit file size to 500KB
+MAX_TEXT_SIZE = 50 * 1024  # limit text size to 50KB
+MAX_FILE_SIZE = 500 * 1024  # limit file size to 500KB
 USER_FILES_DIR_NAME = "entity/user_files"
-RAW_REPOSITORY_URL=os.getenv("RAW_REPOSITORY_URL")
+RAW_REPOSITORY_URL = os.getenv("RAW_REPOSITORY_URL")
+GOOGLE_SEARCH_KEY = os.getenv("GOOGLE_SEARCH_KEY")
+GOOGLE_SEARCH_CX = os.getenv("GOOGLE_SEARCH_CX")
+CYODA_DEPLOY_DICT = {
+    DEPLOY_CYODA_ENV: os.getenv("DEPLOY_CYODA_ENV", f"https://infra-{CYODA_HOST}/deploy/cyoda-env"),
+    DEPLOY_USER_APP: os.getenv("DEPLOY_USER_APP", f"https://infra-{CYODA_HOST}/deploy/user_app"),
+    DEPLOY_STATUS: os.getenv("DEPLOY_STATUS", f"https://infra-{CYODA_HOST}/deploy/cyoda-env/status")
+}
