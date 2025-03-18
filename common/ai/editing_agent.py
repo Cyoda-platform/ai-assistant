@@ -131,18 +131,18 @@ class EditingAgent(AiAgent):
             result = f"Error during web scraping: {e}"
         return result
 
-    async def save_file(self, chat_id: str, data: str, file_name: str) -> str:
+    async def save_file(self, chat_id: str, new_content: str, filename: str) -> str:
         """
         Saves data to a file using the provided chat id and file name.
         """
         try:
-            data = self.parse_from_string(escaped_code=data)
-            await _save_file(chat_id=chat_id, _data=data, item=file_name)
+            new_content = self.parse_from_string(escaped_code=new_content)
+            await _save_file(chat_id=chat_id, _data=new_content, item=filename)
             return "File saved successfully"
         except Exception as e:
             return f"Error during saving file: {e}"
 
-    async def read_file(self, chat_id: str, file_name: str) -> str:
+    async def read_file(self, chat_id: str, filename: str) -> str:
         """
         Reads data from a file using the provided chat id and file name.
         """
@@ -150,7 +150,7 @@ class EditingAgent(AiAgent):
         await git_pull(chat_id=chat_id)
 
         target_dir = os.path.join(f"{PROJECT_DIR}/{chat_id}/{REPOSITORY_NAME}", "")
-        file_path = os.path.join(target_dir, file_name)
+        file_path = os.path.join(target_dir, filename)
         try:
             async with aiofiles.open(file_path, 'r') as file:
                 content = await file.read()
@@ -170,7 +170,7 @@ class EditingAgent(AiAgent):
                 technical_id=chat_id
             )
         else:
-            content = await self.read_file(chat_id=chat_id, file_name="entity/chat.json")
+            content = await self.read_file(chat_id=chat_id, filename="entity/chat.json")
             return json.loads(content)
 
     async def _update_chat(self, chat_id: str, chat: dict):
@@ -204,9 +204,9 @@ class EditingAgent(AiAgent):
         async def work(chat, stack):
             # Resolve entity name and read necessary files
             resolved_entity = self._resolve_entity_name(entity_name, chat_id)
-            workflow_json = await self.read_file(chat_id=chat_id, file_name=f"entity/{resolved_entity}/workflow.json")
+            workflow_json = await self.read_file(chat_id=chat_id, filename=f"entity/{resolved_entity}/workflow.json")
             entity_model = await self.read_file(chat_id=chat_id,
-                                                file_name=f"entity/{resolved_entity}/{resolved_entity}.json")
+                                                filename=f"entity/{resolved_entity}/{resolved_entity}.json")
             data_stack = copy.deepcopy(data_workflow_update_stack)
             stack.extend(data_stack(
                 workflow_json=workflow_json,
@@ -228,10 +228,10 @@ class EditingAgent(AiAgent):
     async def update_processors(self, user_prompt: str, entity_name: str, chat_id: str) -> str:
         async def work(chat, stack):
             resolved_entity = self._resolve_entity_name(entity_name, chat_id)
-            workflow_json = await self.read_file(chat_id=chat_id, file_name=f"entity/{resolved_entity}/workflow.json")
+            workflow_json = await self.read_file(chat_id=chat_id, filename=f"entity/{resolved_entity}/workflow.json")
             entity_model = await self.read_file(chat_id=chat_id,
-                                                file_name=f"entity/{resolved_entity}/{resolved_entity}.json")
-            workflow_code = await self.read_file(chat_id=chat_id, file_name=f"entity/{resolved_entity}/workflow.py")
+                                                filename=f"entity/{resolved_entity}/{resolved_entity}.json")
+            workflow_code = await self.read_file(chat_id=chat_id, filename=f"entity/{resolved_entity}/workflow.py")
             data_stack = copy.deepcopy(data_processors_update_stack)
             stack.extend(data_stack(
                 user_prompt=user_prompt,
@@ -265,10 +265,10 @@ class EditingAgent(AiAgent):
         async def work(chat, stack):
             # Clean up chat_id if needed
             clean_chat_id = chat_id.replace("chat_id: ", "")
-            app_api = await self.read_file(chat_id=clean_chat_id, file_name="app.py")
+            app_api = await self.read_file(chat_id=clean_chat_id, filename="app.py")
             entities_description = []
             for entity in self.get_entities_list(chat_id=clean_chat_id):
-                workflow_code = await self.read_file(chat_id=clean_chat_id, file_name=f"entity/{entity}/workflow.py")
+                workflow_code = await self.read_file(chat_id=clean_chat_id, filename=f"entity/{entity}/workflow.py")
                 entities_description.append({entity: workflow_code})
             data_stack = copy.deepcopy(data_update_stack)
             stack.extend(data_stack(
@@ -305,88 +305,229 @@ class EditingAgent(AiAgent):
         "web_search": {
             "function": web_search,
             "description": "Search the web using Google Custom Search API.",
-            "required_params": 1,
-            "example": "e.g. web_search: Python programming"
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string"}
+                },
+                "required": ["query"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. web_search: {"query": "Python programming"}'
         },
         "read_link": {
             "function": read_link,
             "description": "Read content from a URL.",
-            "required_params": 1,
-            "example": "e.g. read_link: https://example.com"
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string", "format": "uri"}
+                },
+                "required": ["url"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. read_link: {"url": "https://example.com"}'
         },
         "web_scrape": {
             "function": web_scrape,
             "description": "Scrape content from a webpage using a CSS selector.",
-            "required_params": 2,
-            "example": "e.g. web_scrape: https://example.com, div.article"
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string", "format": "uri"},
+                    "selector": {"type": "string"}
+                },
+                "required": ["url", "selector"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. web_scrape: {"url": "https://example.com", "selector": "div.article"}'
         },
         "save_file": {
             "function": save_file,
-            "description": ("Save data to a file using the provided chat id, file contents, and file name. "
-                            "Ensure you provide three parameters: chat_id, new file contents, and file_name."),
-            "required_params": 3,
-            "example": "e.g. save_file: chat_id, \"new file contents\", filename.py"
+            "description": (
+                "Save data to a file using the provided chat id, file contents, and file name. "
+                "Ensure you provide three parameters: chat_id, new file contents, and file_name."
+            ),
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "chat_id": {"type": "string"},
+                    "new_content": {"type": "string"},
+                    "filename": {"type": "string"}
+                },
+                "required": ["chat_id", "new_content", "filename"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. save_file: {"chat_id": "test", "new_content": "new file contents", "filename": "filename.py"}'
         },
         "read_file": {
             "function": read_file,
             "description": "Read data from a file using chat id and file name. Use only as a utility method.",
-            "required_params": 2,
-            "example": "e.g. read_file: chat_id, filename.py"
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "chat_id": {"type": "string"},
+                    "filename": {"type": "string"}
+                },
+                "required": ["chat_id", "filename"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. read_file: {"chat_id": "test", "filename": "filename.py"}'
         },
         "update_workflow": {
             "function": update_workflow,
-            "description": "Update entity workflow by user prompt, entity name and chat id. Use in case user explicitly asks to make changes/update/improve/edit/etc entity {entity_name} workflow",
-            "required_params": 3,
-            "example": "e.g. update_workflow: user_prompt, entity_name, chat_id"
+            "description": (
+                "Update entity workflow by user prompt, entity name and chat id. Use in case user explicitly asks "
+                "to make changes/update/improve/edit/etc entity {entity_name} workflow."
+            ),
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "user_prompt": {"type": "string"},
+                    "entity_name": {"type": "string"},
+                    "chat_id": {"type": "string"}
+                },
+                "required": ["user_prompt", "entity_name", "chat_id"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. update_workflow: {"user_prompt": "please..."", "entity_name": "some_entity", "chat_id": "please...""}'
         },
         "add_workflow": {
             "function": add_workflow,
-            "description": "Add entity workflow by user prompt, entity name and chat id. Use in case user explicitly asks to add workflow to entity {entity_name}. Here the user requires adding workflow configuration generation, not code. Provide complete user question as user_prompt without any modifications.",
-            "required_params": 3,
-            "example": "e.g. add_workflow: user_prompt, entity_name, chat_id"
+            "description": (
+                "Add entity workflow by user prompt, entity name and chat id. Use in case user explicitly asks to add "
+                "workflow to entity {entity_name}. Provide complete user question as user_prompt without any modifications."
+            ),
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "user_prompt": {"type": "string"},
+                    "entity_name": {"type": "string"},
+                    "chat_id": {"type": "string"}
+                },
+                "required": ["user_prompt", "entity_name", "chat_id"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. add_workflow: {"user_prompt": "please..."", "entity_name": "some_entity", "chat_id": "test"}'
         },
         "update_processors": {
             "function": update_processors,
-            "description": "Add/update existing processors (workflow code) for entity workflow by user prompt, entity name and chat id. Use in case user asks to add processors code for to entity {entity_name} workflow. Here the user requires code generation. Key words: processors, code. Provide complete user question as user_prompt without any modifications.",
-            "required_params": 3,
-            "example": "e.g. update_processors: user_prompt, entity_name, chat_id"
+            "description": (
+                "Add/update existing processors (workflow code) for entity workflow by user prompt, entity name and chat id. "
+                "Use in case user asks to add processors code for entity {entity_name} workflow. Provide complete user question "
+                "as user_prompt without any modifications."
+            ),
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "user_prompt": {"type": "string"},
+                    "entity_name": {"type": "string"},
+                    "chat_id": {"type": "string"}
+                },
+                "required": ["user_prompt", "entity_name", "chat_id"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. update_processors: {"user_prompt": "please..."", "entity_name": "some_entity", "chat_id": "test"}'
         },
         "add_entity": {
             "function": add_entity,
-            "description": "Add a new entity with {entity_name} specified by the user. Provide complete user question as user_prompt without any modifications.",
-            "required_params": 3,
-            "example": "e.g. add_entity: user_prompt, entity_name, chat_id"
+            "description": (
+                "Add a new entity with {entity_name} specified by the user. Provide complete user question as user_prompt "
+                "without any modifications."
+            ),
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "user_prompt": {"type": "string"},
+                    "entity_name": {"type": "string"},
+                    "chat_id": {"type": "string"}
+                },
+                "required": ["user_prompt", "entity_name", "chat_id"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. add_entity: {"user_prompt": "please..."", "entity_name": "some_entity", "chat_id": "test"}'
         },
         "update_api": {
             "function": update_api,
-            "description": "Update api according to the user requirement. Use this function to add new endpoints to app.py. Provide complete user question as user_prompt without any modifications.",
-            "required_params": 3,
-            "example": "e.g. update_api: user_prompt, entity_name, chat_id"
+            "description": (
+                "Update API according to the user requirement. Use this function to add new endpoints to app.py. Provide complete "
+                "user question as user_prompt without any modifications."
+            ),
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "user_prompt": {"type": "string"},
+                    "entity_name": {"type": "string"},
+                    "chat_id": {"type": "string"}
+                },
+                "required": ["user_prompt", "entity_name", "chat_id"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. update_api: {"user_prompt": "please..."", "entity_name": "some_entity", "chat_id": "test"}'
         },
         "analyse_feature_request": {
             "function": analyse_feature_request,
-            "description": "Analyse user feature request and return execution plan. Example usage: user wants to add a new feature like a introducing a new datasource, additional service or edit the existing logic. Use this action if the user requirement is broad and is not limited to the scope of other actions. Provide complete user question as user_prompt without any modifications.",
-            "required_params": 2,
-            "example": "e.g. analyse_feature_request: user_prompt, chat_id"
+            "description": (
+                "Analyse user feature request and return execution plan. Use this action if the user requirement is broad and is not "
+                "limited to the scope of other actions. Provide complete user question as user_prompt without any modifications."
+            ),
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "user_prompt": {"type": "string"},
+                    "chat_id": {"type": "string"}
+                },
+                "required": ["user_prompt", "chat_id"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. analyse_feature_request: {"user_prompt": "please..."", "chat_id": "test"}'
         },
         "refresh_context": {
             "function": refresh_context,
-            "description": "Use this action if the user wants to clear the chat/refresh chat context/clear the session history",
-            "required_params": 1,
-            "example": "e.g. refresh_context: chat_id"
+            "description": "Use this action if the user wants to clear the chat/refresh chat context/clear the session history.",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "chat_id": {"type": "string"}
+                },
+                "required": ["chat_id"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. refresh_context: {"chat_id": "test"}'
         },
         "deploy_app": {
             "function": deploy_app,
-            "description": "Use this action if the user wants to deploy cyoda environment or their application."
-                           " Choose deployment_type value from [\"cyoda_env\", \"user_app\"]. Choose cyoda_env value only if the user asks for cyoda environment (cyoda env, env) explicitly. Otherwise default to user_app.",
-            "required_params": 2,
-            "example": "e.g. deploy_app: chat_id, deployment_type"
+            "description": (
+                "Use this action if the user wants to deploy cyoda environment or their application. Choose deployment_type value "
+                "from [\"cyoda_env\", \"user_app\"]. Choose cyoda_env only if the user explicitly asks for cyoda environment; "
+                "otherwise default to user_app."
+            ),
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "chat_id": {"type": "string"},
+                    "deployment_type": {"type": "string", "enum": ["cyoda_env", "user_app"]}
+                },
+                "required": ["chat_id", "deployment_type"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. deploy_app: {"chat_id": "chat_id", "deployment_type": "user_app"}'
         },
         "answer_general_question": {
             "function": answer_general_question,
-            "description": "Use this action to answer random question that does not match any other tool. Use it as a last option if nothing else matches.",
-            "required_params": 2,
-            "example": "e.g. answer_general_question: chat_id, user_prompt"
+            "description": (
+                "Use this action to answer random questions that do not match any other tool. Use it as a last option if nothing else matches."
+            ),
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "chat_id": {"type": "string"},
+                    "user_prompt": {"type": "string"}
+                },
+                "required": ["chat_id", "user_prompt"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. answer_general_question: {"chat_id": "test", "user_prompt": "please..."}'
         }
     }
 

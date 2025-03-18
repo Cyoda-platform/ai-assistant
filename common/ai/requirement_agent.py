@@ -133,35 +133,56 @@ class RequirementAgent(AiAgent):
     TOOLS = {
         "web_search": {
             "function": web_search,
-            "description": "Search the web using Google Custom Search API.  Use this function when you need to formulate the questions/requirement for information that should be searched online. For example, the user wants to add dat asources for example api, but does not provide exact link or documentation",
-            "required_params": 1,
-            "example": "e.g. web_search: Python programming"
+            "description": (
+                "Search the web using Google Custom Search API. Use this function when you need to "
+                "formulate questions or requirements for information to be searched online. For example, "
+                "if the user wants to add data sources for an API but does not provide an exact link or documentation."
+            ),
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string"}
+                },
+                "required": ["query"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. web_search: {"query": "Python programming"}'
         },
         "read_link": {
             "function": read_link,
-            "description": "Read content from a URL. Use this function when you need to formulate the questions/requirement for information that should be fetched from a web resource. For example, the user wants to add data sources for example api and provides exact link. You should first read the link contents and only after that proceed to analysing the user question.",
-            "required_params": 1,
-            "example": "e.g. read_link: https://example.com"
+            "description": (
+                "Read content from a URL. Use this function when you need to fetch content from a web resource. "
+                "For example, if the user wants to add data sources for an API and provides an exact link, you "
+                "should first read the link contents before proceeding with analysis."
+            ),
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string", "format": "uri"}
+                },
+                "required": ["url"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. read_link: {"url": "https://example.com"}'
         },
         "web_scrape": {
             "function": web_scrape,
-            "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to formulate the questions/requirement for information that should be web scraped online. For example, the user wants to add data sources for example api and provides exact link to do web scraping. You should first web scrape the resource and only after that proceed to analysing the user question.",
-            "required_params": 2,
-            "example": "e.g. web_scrape: https://example.com, div.article"
+            "description": (
+                "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape "
+                "online content. For example, if the user wants to add data sources for an API and provides an exact "
+                "link for web scraping, you should scrape the resource before analyzing the question."
+            ),
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string", "format": "uri"},
+                    "selector": {"type": "string"}
+                },
+                "required": ["url", "selector"],
+                "additionalProperties": False
+            },
+            "example": 'e.g. web_scrape: {"url": "https://example.com", "selector": "div.article"}'
         }
-        # "save_file": {
-        #     "function": save_file,
-        #     "description": ("Save data to a file using the provided chat id, file contents, and file name. "
-        #                     "Ensure you provide three parameters: chat_id, new file contents, and file_name."),
-        #     "required_params": 3,
-        #     "example": "e.g. save_file: chat_id, \"new file contents\", filename.py"
-        # },
-        # "read_file": {
-        #     "function": read_file,
-        #     "description": "Read data from a file using chat id and file name. Use only as a utility method.",
-        #     "required_params": 2,
-        #     "example": "e.g. read_file: chat_id, filename.py"
-        # }
     }
 
 

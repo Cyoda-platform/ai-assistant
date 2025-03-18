@@ -1,5 +1,7 @@
 import logging
 import re
+import json
+from jsonschema import validate, ValidationError
 
 from common.config.config import MAX_ITERATION, VALIDATION_MAX_RETRIES
 from common.config.conts import OPEN_AI
@@ -45,7 +47,10 @@ class ChatBot:
             logger.exception("Error during completion: %s", e)
             return "Error: Could not get a response from the model."
 
+
+# Updated action pattern to capture JSON input after the action.
 action_re = re.compile(r'^Action: (\w+): (.+)$', re.MULTILINE)
+
 
 class AiAgent:
     def __init__(self, tools, mock=False, entity_service=None):
@@ -60,9 +65,9 @@ class AiAgent:
             Guidelines:
             1. Begin your response with "Thought:" to explain your reasoning.
             2. If you need to perform an action (such as reading a file, searching the web, scraping content, or saving changes), output exactly one line in the format:
-               "Action: <tool_name>: <input parameters>"
-               For example: "Action: read_file: chat_id, filename.py"
-            3. For the "example_function" action, you must always include three comma-separated parameters: chat_id, new file contents (in quotes if necessary), and file_name.
+               "Action: <tool_name>: <json parameters>"
+               For example: "Action: read_file: {{"chat_id": "1234", "filename": "app.py"}}"
+            3. For any action, include the required parameters as a JSON object.
             4. Wait for an "Observation:" response before proceeding to further reasoning or actions.
             5. If you can directly provide the final answer, begin your response with "Answer:" followed by your answer.
             6. Always end your final answer with "Answer:" followed by the resolved result or explanation.
@@ -80,11 +85,11 @@ class AiAgent:
             Example with actions:
             Question: Please fix the file app.py, chat id = 1234
             Thought: I need to read the file first.
-            Action: read_file: 1234, app.py
+            Action: read_file: {{"chat_id": "1234", "filename": "app.py"}}
             PAUSE
             [After receiving Observation:]
             Thought: I have analyzed the file. I will now generate the fix.
-            Action: save_file: 1234, "new fixed content", app.py
+            Action: save_file: {{"chat_id": "1234", "new_content": "new fixed content", "filename": "app.py"}}
             PAUSE
             [After receiving Observation:]
             Answer: The file app.py has been updated with the fix.
@@ -101,16 +106,32 @@ class AiAgent:
             descriptions.append(f"{name}: {tool['description']} {tool['example']}")
         return "\n".join(descriptions)
 
-    def parse_parameters(self, action_input: str) -> list:
+    def parse_parameters(self, action_input: str) -> dict:
         """
-        Splits the action input into parameters, treating text wrapped in double quotes
-        as a single parameter even if it contains commas.
+        Parses the action input as a JSON dictionary.
         """
-        # The regex splits on commas that are not inside double quotes.
-        fields = re.split(r',(?=(?:[^"]*"[^"]*")*[^"]*$)', action_input)
-        # Optionally, strip extra whitespace and any surrounding quotes.
-        params = [f.strip().strip('"') for f in fields]
-        return params
+        try:
+            params = json.loads(action_input)
+            return params
+        except json.JSONDecodeError as e:
+            logger.error("Error parsing JSON parameters: %s", e)
+            return {}
+
+    def validate_parameters(self, action: str, params: dict) -> bool:
+        """
+        Validates the parsed parameters against the tool's JSON schema.
+        """
+        tool = self.TOOLS[action]
+        if "schema" in tool:
+            schema = tool["schema"]
+            try:
+                validate(instance=params, schema=schema)
+                return True
+            except ValidationError as e:
+                logger.error("JSON schema validation error for %s: %s", action, e)
+                return False
+        # If no schema is provided, assume validation passes.
+        return True
 
     async def query(self, history: list, ai_client, max_turns: int = MAX_ITERATION):
         """
@@ -132,23 +153,20 @@ class AiAgent:
                     action, action_input = match.groups()
                     params = self.parse_parameters(action_input)
 
-                    # Generic parameter validation using the tools dictionary.
                     if action not in self.TOOLS:
                         print(f"Error: Unknown action '{action}'.")
                         next_prompt = f"Error: Unknown action '{action}'. Please use one of the available actions."
                         history.append({"role": "user", "content": f"Observation: {next_prompt}"})
                         continue
 
-                    required = self.TOOLS[action].get("required_params", 0)
-                    if len(params) != required:
-                        print(f"Error: '{action}' requires {required} parameters. Received: {params}")
-                        next_prompt = f"Error: Wrong parameters for {action}. Please provide all required parameters. Example: {self.TOOLS[action]['example']}"
+                    if not self.validate_parameters(action, params):
+                        print(f"Error: Parameters for '{action}' did not pass validation. Received: {params}")
+                        next_prompt = f"Error: Parameters for {action} are invalid. Please provide parameters matching the schema."
                         history.append({"role": "user", "content": f"Observation: {next_prompt}"})
                         continue
 
-                    print(f" -- Running action '{action}' with input: {action_input}")
-                    # self.refresh_context("test")
-                    observation = await self.TOOLS[action]["function"](self, *params)
+                    print(f" -- Running action '{action}' with input: {params}")
+                    observation = await self.TOOLS[action]["function"](self, **params)
                     print("Observation:", observation)
                     history.append({"role": "user", "content": f"Observation: {observation}"})
                 else:
@@ -156,7 +174,6 @@ class AiAgent:
                     return result
             print("Max invocation limit reached. Unable to produce a final answer.")
         finally:
-            # This block executes no matter what.
             try:
                 del history[bot.history_init_size]
                 print(f"Removed history element at index {bot.history_init_size}.")

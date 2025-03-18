@@ -410,24 +410,30 @@ async def _get_chat_for_user(auth_header, technical_id, request=None):
                                          technical_id=technical_id)
 
     if not chat and CHAT_REPOSITORY == "local":
+        #todo check here
+        async with chat_lock:
+            chat = await entity_service.get_item(token=auth_header,
+                                                 entity_model="chat",
+                                                 entity_version=ENTITY_VERSION,
+                                                 technical_id=technical_id)
+            if not chat:
+                await clone_repo(chat_id=technical_id)
 
-        await clone_repo(chat_id=technical_id)
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(f"{RAW_REPOSITORY_URL}/{technical_id}/entity/chat.json") as response:
+                        data = await response.text()
+                chat = json.loads(data)
+                if not chat:
+                    raise ChatNotFoundException()
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"{RAW_REPOSITORY_URL}/{technical_id}/entity/chat.json") as response:
-                data = await response.text()
-        chat = json.loads(data)
-        if not chat:
-            raise ChatNotFoundException()
-
-        await entity_service.add_item(token=auth_header,
-                                entity_model="chat",
-                                entity_version=ENTITY_VERSION,
-                                entity=chat)
+                await entity_service.add_item(token=auth_header,
+                                        entity_model="chat",
+                                        entity_version=ENTITY_VERSION,
+                                        entity=chat)
 
     elif not chat:
         raise ChatNotFoundException()
-
+#todo concurrent requests might override
     if chat["user_id"] != user_id:
         if chat["user_id"].startswith("guest.") and not user_id.startswith("guest."):
             chat["user_id"] = user_id
