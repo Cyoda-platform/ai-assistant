@@ -327,7 +327,31 @@ ENTITY_WORKFLOW = {
 }
 
 # Finished
-app_building_stack = [{"question": "Your application is finished! Thank you! Please let me know if I can help!",
+app_building_stack = [{"question": """Your application is now complete! Thank you!
+
+If you need any further assistance, please let me know.
+
+To proceed with your application, you can use the following prompt starters:
+Add a new feature
+Create a new entity with {entity_name}
+Update the API as per requirements
+
+Search the web
+Read content from a URL
+Scrape webpage content using a CSS selector
+Save data to a file (e.g. entity/entity_name/workflow.py, app.py)
+Read data from a file
+Update an entity workflow
+Add an entity workflow
+Modify existing processors
+
+Refresh the context
+Deploy the Cyoda environment or application
+
+Answer general questions
+
+Let me know how I can assist further! 🚀
+""",
                        "prompt": {},
                        "answer": None,
                        "function": None,

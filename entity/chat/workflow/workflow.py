@@ -286,6 +286,34 @@ class ChatWorkflow(Workflow):
         await self.workflow_helper_service._send_notification(chat=chat, event=_event,
                                                               notification_text=_event.get("notification_text"))
 
+    async def enrich_entity_workflow(self, token, _event, chat):
+        file_name = _event.get("file_name")
+        result = await read_file(get_project_file_name(chat["chat_id"], file_name))
+        is_valid, formatted_result = validate_ai_result(result, _event.get("file_name"))
+        if is_valid:
+            result = formatted_result
+        else:
+            retry = VALIDATION_MAX_RETRIES
+            while retry > 0:
+                retry_event = copy.deepcopy(_event)
+                retry_event["function"]["prompt"]["text"] = formatted_result
+                result = await self.workflow_helper_service.run_chat(chat=chat, _event=retry_event,
+                                                                     token=token,
+                                                                     ai_endpoint={"model": OPEN_AI, "temperature": 0.7, "max_tokens": 10000},
+                                                                     chat_id=chat["chat_id"])
+                is_valid, formatted_result = validate_ai_result(result, _event.get("file_name"))
+                if is_valid:
+                    result = formatted_result
+                    retry = -1
+                else:
+                    retry -= 1
+        workflow = enrich_workflow(result)
+        await _save_file(
+            chat_id=chat["chat_id"],
+            _data=json.dumps(workflow),
+            item=_event.get("file_name")
+        )
+
     async def deploy_app(self, token, _event, chat):
         chat_id = chat["chat_id"]
         data = json.dumps({
