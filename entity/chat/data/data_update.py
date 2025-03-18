@@ -22,7 +22,7 @@ Please let me know if I can help!
                   "temperature": 0.7,
                   "max_tokens": 10000},
       },
-      "answer": None,
+      "answer": user_prompt,
       "index": 0,
       "iteration": 0,
       "flow_step": LOGIC_CODE_DESIGN_STR,
