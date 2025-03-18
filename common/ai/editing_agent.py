@@ -40,6 +40,9 @@ class EditingAgent(AiAgent):
             if the user asks to do operations with workflow, entity, processors, api - look for a specific function first.
             Use 'minor' tools like save and read file only as supplementary.
             Most tools require chat_id: provide UUID only without any additional text
+            
+            If none of the tools matches the user request or it is just a general question please default to answer_general_question: chat_id, user_prompt.
+            Your should always return some action, if nothing matches then default to answer_general_question: chat_id, user_prompt
             """.strip()
 
     def get_entities_list(self, chat_id: str) -> list:
