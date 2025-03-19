@@ -9,7 +9,6 @@ from datetime import timedelta
 import jwt
 import aiohttp
 
-
 from quart import Quart, request, jsonify, send_from_directory, websocket
 from quart_cors import cors
 from quart_rate_limiter import RateLimiter, rate_limit
@@ -22,7 +21,6 @@ from common.util.utils import clean_formatting, send_get_request, current_timest
 from entity.chat.data.data import app_building_stack, APP_BUILDER_FLOW, DESIGN_PLEASE_WAIT, \
     APPROVE_WARNING, DESIGN_IN_PROGRESS_WARNING, OPERATION_NOT_SUPPORTED_WARNING, ADDITIONAL_QUESTION_ROLLBACK_WARNING
 from logic.init import BeanFactory
-
 
 PUSH_NOTIFICATION = "push_notification"
 APPROVE = "approved"
@@ -37,6 +35,7 @@ ai_service = factory.get_services()["ai_service"]
 entity_service = factory.get_services()["entity_service"]
 flow_processor = factory.get_services()["flow_processor"]
 chat_lock = factory.get_services()["chat_lock"]
+
 
 @app.before_serving
 async def add_cors_headers():
@@ -77,9 +76,11 @@ def auth_required(func):
             if not auth_header:
                 raise InvalidTokenException("Invalid token")
 
-            token = auth_header.split(" ")[1]
+            user_id = _get_user_id(auth_header=auth_header)
+            if user_id.startswith('guest.'):
+                return jsonify({"error": "This action is not available. Please sign in to proceed"}), 403
 
-            # Call external service to validate the token
+            token = auth_header.split(" ")[1]
             response = await send_get_request(token, API_URL, "v1")
             # todo
             if not response or (response.get("status") and response.get("status") == 401):
@@ -124,7 +125,6 @@ def auth_required_to_proceed(func):
         return await func(*args, **kwargs)
 
     return wrapper
-
 
 
 def _get_user_token(auth_header):
@@ -189,7 +189,7 @@ async def get_chat(technical_id):
 
 
 @app.route(API_PREFIX + '/get_guest_token', methods=['GET'])
-#todo !!! @rate_limit(limit=3, period=timedelta(days=1))
+# todo !!! @rate_limit(limit=3, period=timedelta(days=1))
 async def get_guest_token():
     session_id = uuid.uuid4()
     payload = {
@@ -204,7 +204,7 @@ async def get_guest_token():
 
 
 @app.route(API_PREFIX + '/chats/<technical_id>', methods=['DELETE'])
-#todo !! @auth_required
+# todo !! @auth_required
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def delete_chat(technical_id):
     auth_header = request.headers.get('Authorization')
@@ -400,6 +400,7 @@ async def submit_answer(technical_id):
         return {"error": f"File size exceeds {MAX_FILE_SIZE} limit"}
     return await _submit_answer_helper(technical_id, answer, auth_header, chat, user_file)
 
+
 async def _get_chat_for_user(auth_header, technical_id, request=None):
     user_id = _get_user_id(auth_header=auth_header)
     if not user_id:
@@ -411,7 +412,7 @@ async def _get_chat_for_user(auth_header, technical_id, request=None):
                                          technical_id=technical_id)
 
     if not chat and CHAT_REPOSITORY == "local":
-        #todo check here
+        # todo check here
         async with chat_lock:
             chat = await entity_service.get_item(token=auth_header,
                                                  entity_model="chat",
@@ -428,13 +429,13 @@ async def _get_chat_for_user(auth_header, technical_id, request=None):
                     raise ChatNotFoundException()
 
                 await entity_service.add_item(token=auth_header,
-                                        entity_model="chat",
-                                        entity_version=ENTITY_VERSION,
-                                        entity=chat)
+                                              entity_model="chat",
+                                              entity_version=ENTITY_VERSION,
+                                              entity=chat)
 
     elif not chat:
         raise ChatNotFoundException()
-#todo concurrent requests might override
+    # todo concurrent requests might override
     if chat["user_id"] != user_id:
         if chat["user_id"].startswith("guest.") and not user_id.startswith("guest."):
             chat["user_id"] = user_id
@@ -463,6 +464,7 @@ def _get_user_id(auth_header):
         return user_id
     except jwt.InvalidTokenError:
         return None
+
 
 async def _get_chats_by_user_name(auth_header, user_id):
     return await entity_service.get_items_by_condition(token=auth_header,
@@ -564,7 +566,6 @@ async def _submit_answer_helper(technical_id, answer, auth_header, chat, user_fi
     if not answer and user_file:
         answer = "please, consider the contents of this file"
 
-
     wait_notification = {"notification": f"Thank you for your answer! {DESIGN_PLEASE_WAIT}",
                          "prompt": {},
                          "answer": None,
@@ -578,15 +579,16 @@ async def _submit_answer_helper(technical_id, answer, auth_header, chat, user_fi
         current_stack = chat["chat_flow"]["current_flow"]
         finished_stack = chat["chat_flow"].get("finished_flow", [])
         if not current_stack:
-            #todo
-            await ai_service.ai_chat(token=auth_header, chat_id=technical_id, ai_endpoint={"model": EDITING_AGENT}, ai_question=answer)
+            # todo
+            await ai_service.ai_chat(token=auth_header, chat_id=technical_id, ai_endpoint={"model": EDITING_AGENT},
+                                     ai_question=answer)
             asyncio.create_task(flow_processor.process_dialogue_script(auth_header, technical_id))
             return jsonify({"message": "in progress"}), 200
         # question_queue.append(wait_notification)
         if not finished_stack[-1].get("question"):
             retry_notification = {"notification": DESIGN_IN_PROGRESS_WARNING}
             question_queue.append(retry_notification)
-            #todo
+            # todo
             if chat.get("mode", APP_BUILDER_MODE) == APP_BUILDER_MODE:
                 return jsonify({
                     "message": DESIGN_IN_PROGRESS_WARNING}), 400
@@ -608,7 +610,7 @@ async def _submit_answer_helper(technical_id, answer, auth_header, chat, user_fi
             next_event["answer"] = APPROVE
         else:
             next_event["answer"] = clean_formatting(answer)
-    #todo might not be reached, need to refactor
+    # todo might not be reached, need to refactor
     if user_file:
         file_name = user_file.filename
         folder_name = USER_FILES_DIR_NAME
