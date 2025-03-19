@@ -81,9 +81,9 @@ class AiAssistantService:
     async def refresh_open_ai_chat(self, token, chat_id):
         conversation_history[chat_id].clear()
 
-    async def ai_chat(self, token, chat_id, ai_endpoint, ai_question, user_file=None):
+    async def ai_chat(self, token, chat_id, ai_endpoint: dict, ai_question, user_file=None):
         try:
-            model = ai_endpoint.get("model")
+            model = ai_endpoint.get("model", OPEN_AI) if isinstance(ai_endpoint, dict) else ai_endpoint
             if ai_question == EMPTY_PROMPT:
                 return ""
             if ai_question and len(str(ai_question).encode('utf-8')) > MAX_TEXT_SIZE:

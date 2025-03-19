@@ -34,7 +34,7 @@ class BeanFactory:
 
             # Externalize dataset creation; can later be replaced with a loader if needed.
             self.dataset = {}
-
+            self.device_sessions = {}
             # Set up the AI assistant service with its dependencies.
             self.ai_service = AiAssistantService(
                 requirement_agent=self.requirement_agent,
@@ -103,6 +103,7 @@ class BeanFactory:
             "workflow_dispatcher": self.workflow_dispatcher,
             "flow_processor": self.flow_processor,
             "dataset": self.dataset,
+            "device_sessions": self.device_sessions,
         }
 
 

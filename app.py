@@ -1,10 +1,12 @@
 import asyncio
 import copy
+import datetime
 import functools
 import json
 import logging
+import uuid
 from datetime import timedelta
-
+import jwt
 import aiohttp
 
 
@@ -12,11 +14,11 @@ from quart import Quart, request, jsonify, send_from_directory, websocket
 from quart_cors import cors
 from quart_rate_limiter import RateLimiter, rate_limit
 from common.config.config import MOCK_AI, CYODA_AI_API, ENTITY_VERSION, API_PREFIX, API_URL, ENABLE_AUTH, MAX_TEXT_SIZE, \
-    MAX_FILE_SIZE, USER_FILES_DIR_NAME, CHAT_REPOSITORY, RAW_REPOSITORY_URL, MAX_GUEST_CHATS
+    MAX_FILE_SIZE, USER_FILES_DIR_NAME, CHAT_REPOSITORY, RAW_REPOSITORY_URL, MAX_GUEST_CHATS, AUTH_SECRET_KEY
 from common.config.conts import EDITING_AGENT, APP_BUILDER_MODE
-from common.exception.exceptions import ChatNotFoundException, UnauthorizedAccessException
+from common.exception.exceptions import ChatNotFoundException, InvalidTokenException
 from common.util.utils import clean_formatting, send_get_request, current_timestamp, _save_file, clone_repo, \
-    _get_user_id
+    validate_token
 from entity.chat.data.data import app_building_stack, APP_BUILDER_FLOW, DESIGN_PLEASE_WAIT, \
     APPROVE_WARNING, DESIGN_IN_PROGRESS_WARNING, OPERATION_NOT_SUPPORTED_WARNING, ADDITIONAL_QUESTION_ROLLBACK_WARNING
 from logic.init import BeanFactory
@@ -48,7 +50,7 @@ async def add_cors_headers():
         return response
 
 
-@app.errorhandler(UnauthorizedAccessException)
+@app.errorhandler(InvalidTokenException)
 async def handle_unauthorized_exception(error):
     return jsonify({"error": str(error)}), 401
 
@@ -73,7 +75,7 @@ def auth_required(func):
             # Check for Authorization header
             auth_header = websocket.headers.get('Authorization') if websocket else request.headers.get('Authorization')
             if not auth_header:
-                return jsonify({"error": "Missing Authorization header"}), 401
+                raise InvalidTokenException("Invalid token")
 
             token = auth_header.split(" ")[1]
 
@@ -81,7 +83,7 @@ def auth_required(func):
             response = await send_get_request(token, API_URL, "v1")
             # todo
             if not response or (response.get("status") and response.get("status") == 401):
-                raise UnauthorizedAccessException("Invalid token")
+                raise InvalidTokenException("Invalid token")
 
         # If the token is valid, proceed to the requested route
         return await func(*args, **kwargs)
@@ -89,6 +91,7 @@ def auth_required(func):
     return wrapper
 
 
+# Decorator to enforce authorization
 def auth_required_to_proceed(func):
     @functools.wraps(func)  # This ensures the original function's name and metadata are preserved
     async def wrapper(*args, **kwargs):
@@ -97,27 +100,31 @@ def auth_required_to_proceed(func):
             # Check for Authorization header
             auth_header = websocket.headers.get('Authorization') if websocket else request.headers.get('Authorization')
             if not auth_header:
-                chat = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=request.view_args.get("technical_id"))
+                raise InvalidTokenException("Invalid token")
+
+            user_id = _get_user_id(auth_header=auth_header)
+            if user_id.startswith('guest.'):
+                chat = await _get_chat_for_user(request=request, auth_header=auth_header,
+                                                technical_id=request.view_args.get("technical_id"))
                 current_stack = chat["chat_flow"]["current_flow"]
                 if not current_stack:
                     return jsonify({"error": "Max iteration reached, please sign in to proceed"}), 403
                 next_event = current_stack[-1]
                 if not next_event.get("allow_anonymous_users", False):
                     return jsonify({"error": "Max iteration reached, please sign in to proceed"}), 403
-
             else:
                 token = auth_header.split(" ")[1]
-
                 # Call external service to validate the token
                 response = await send_get_request(token, API_URL, "v1")
                 # todo
                 if not response or (response.get("status") and response.get("status") == 401):
-                    raise UnauthorizedAccessException("Invalid token")
+                    raise InvalidTokenException("Invalid token")
 
         # If the token is valid, proceed to the requested route
         return await func(*args, **kwargs)
 
     return wrapper
+
 
 
 def _get_user_token(auth_header):
@@ -128,25 +135,23 @@ def _get_user_token(auth_header):
 
 
 @app.route('/')
-#@rate_limit(RATE_LIMIT, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def index():
     # Ensure that 'index.html' is located in the 'static' folder
     return await send_from_directory(app.static_folder, 'index.html')
 
 
 @app.route(API_PREFIX + '/chat-flow', methods=['GET'])
-@auth_required
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def get_chat_flow():
     return jsonify(APP_BUILDER_FLOW)
 
 
 @app.route(API_PREFIX + '/chats', methods=['GET'])
-@auth_required
-#@rate_limit(RATE_LIMIT, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def get_chats():
     auth_header = request.headers.get('Authorization')
-    user_id = _get_user_id(auth_header)
+    user_id = _get_user_id(auth_header=auth_header)
     if not user_id:
         return jsonify({"error": "Invalid token"}), 401
     chats = await _get_chats_by_user_name(auth_header, user_id)
@@ -161,26 +166,8 @@ async def get_chats():
     return jsonify({"chats": chats_view})
 
 
-async def _get_chats_by_user_name(auth_header, user_id):
-    return await entity_service.get_items_by_condition(token=auth_header,
-                                                       entity_model="chat",
-                                                       entity_version=ENTITY_VERSION,
-                                                       condition={"cyoda": {
-                                                           "operator": "AND",
-                                                           "conditions": [
-                                                               {
-                                                                   "jsonPath": "$.user_id",
-                                                                   "operatorType": "EQUALS",
-                                                                   "value": user_id,
-                                                                   "type": "simple"
-                                                               }
-                                                           ],
-                                                           "type": "group"
-                                                       },
-                                                           "local": {"key": "user_id", "value": user_id}})
-
-
 @app.route(API_PREFIX + '/chats/<technical_id>', methods=['GET'])
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def get_chat(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
@@ -201,8 +188,23 @@ async def get_chat(technical_id):
     return jsonify({"chat_body": chats_view})
 
 
+@app.route(API_PREFIX + '/get_guest_token', methods=['GET'])
+#todo !!! @rate_limit(limit=3, period=timedelta(days=1))
+async def get_guest_token():
+    session_id = uuid.uuid4()
+    payload = {
+        "sub": f"guest.{session_id}",
+        "iat": datetime.datetime.utcnow(),
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Token valid for 1 hour
+    }
+
+    # Generate the token using HS256 algorithm
+    token = jwt.encode(payload, AUTH_SECRET_KEY, algorithm="HS256")
+    return jsonify({"access_token": token})
+
+
 @app.route(API_PREFIX + '/chats/<technical_id>', methods=['DELETE'])
-@auth_required
+#todo !! @auth_required
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def delete_chat(technical_id):
     auth_header = request.headers.get('Authorization')
@@ -220,7 +222,7 @@ async def delete_chat(technical_id):
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def add_chat():
     auth_header = request.headers.get('Authorization')
-    user_id = _get_user_id(request=request, auth_header=auth_header)
+    user_id = _get_user_id(auth_header=auth_header)
     if not user_id:
         return jsonify({"error": "Invalid token"}), 401
     if user_id.startswith('guest.'):
@@ -267,8 +269,7 @@ async def add_chat():
 
 # polling for new questions here
 @app.route(API_PREFIX + '/chats/<technical_id>/questions', methods=['GET'])
-@auth_required
-#@rate_limit(RATE_LIMIT, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(seconds=10))
 async def get_question(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
@@ -307,7 +308,7 @@ async def edit_file(technical_id):
 
 @app.route(API_PREFIX + '/chats/<technical_id>/text-questions', methods=['POST'])
 @auth_required
-@rate_limit(RATE_LIMIT, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(days=1))
 async def submit_question_text(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
@@ -320,7 +321,7 @@ async def submit_question_text(technical_id):
 
 @app.route(API_PREFIX + '/chats/<technical_id>/questions', methods=['POST'])
 @auth_required
-@rate_limit(RATE_LIMIT, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(days=1))
 async def submit_question(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
@@ -338,7 +339,7 @@ async def submit_question(technical_id):
 
 @app.route(API_PREFIX + '/chats/<technical_id>/push-notify', methods=['POST'])
 @auth_required
-#@rate_limit(RATE_LIMIT, timedelta(minutes=1))
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def push_notify(technical_id):
     return jsonify({"error": OPERATION_NOT_SUPPORTED_WARNING}), 400
     # auth_header = request.headers.get('Authorization')
@@ -400,9 +401,9 @@ async def submit_answer(technical_id):
     return await _submit_answer_helper(technical_id, answer, auth_header, chat, user_file)
 
 async def _get_chat_for_user(auth_header, technical_id, request=None):
-    user_id = _get_user_id(request=request, auth_header=auth_header)
+    user_id = _get_user_id(auth_header=auth_header)
     if not user_id:
-        raise UnauthorizedAccessException()
+        raise InvalidTokenException()
 
     chat = await entity_service.get_item(token=auth_header,
                                          entity_model="chat",
@@ -444,9 +445,42 @@ async def _get_chat_for_user(auth_header, technical_id, request=None):
                                              entity=chat,
                                              meta={})
         else:
-            raise UnauthorizedAccessException()
+            raise InvalidTokenException()
 
     return chat
+
+
+def _get_user_id(auth_header):
+    try:
+        token = auth_header.split(" ")[1]
+        # Decode the JWT without verifying the signature
+        # The `verify=False` option ensures that we do not verify the signature
+        # This is useful for extracting the payload only.
+        decoded = jwt.decode(token, options={"verify_signature": False})
+        user_id = decoded.get("sub")
+        if user_id.startswith('guest.'):
+            validate_token(token)
+        return user_id
+    except jwt.InvalidTokenError:
+        return None
+
+async def _get_chats_by_user_name(auth_header, user_id):
+    return await entity_service.get_items_by_condition(token=auth_header,
+                                                       entity_model="chat",
+                                                       entity_version=ENTITY_VERSION,
+                                                       condition={"cyoda": {
+                                                           "operator": "AND",
+                                                           "conditions": [
+                                                               {
+                                                                   "jsonPath": "$.user_id",
+                                                                   "operatorType": "EQUALS",
+                                                                   "value": user_id,
+                                                                   "type": "simple"
+                                                               }
+                                                           ],
+                                                           "type": "group"
+                                                       },
+                                                           "local": {"key": "user_id", "value": user_id}})
 
 
 async def _submit_question_helper(auth_header, chat, question, user_file=None):

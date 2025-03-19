@@ -10,14 +10,17 @@ from zoneinfo import ZoneInfo
 
 import aiofiles
 from typing import Optional, Any
-import uuid
 import json
 
 import aiohttp
 import jsonschema
 from jsonschema import validate
-
-from common.config.config import PROJECT_DIR, REPOSITORY_NAME, MAX_FILE_SIZE, CLONE_REPO, REPOSITORY_URL
+import hashlib
+import hmac
+import uuid
+from common.config.config import PROJECT_DIR, REPOSITORY_NAME, MAX_FILE_SIZE, CLONE_REPO, REPOSITORY_URL, \
+    AUTH_SECRET_KEY, MAX_IPS_PER_DEVICE_BEFORE_BLOCK, MAX_IPS_PER_DEVICE_BEFORE_ALARM, MAX_SESSIONS_PER_IP
+from common.exception.exceptions import RequestLimitExceededException, InvalidTokenException
 
 logger = logging.getLogger(__name__)
 
@@ -824,9 +827,11 @@ async def _git_push(chat_id, file_paths: list, commit_message: str):
         logger.error(f"Unexpected error during git push: {e}")
         logger.exception(e)
 
+
 async def repo_exists(path: str) -> bool:
     # Run the blocking os.path.exists in a separate thread
     return await asyncio.to_thread(os.path.exists, path)
+
 
 async def run_git_config_command():
     process = await asyncio.create_subprocess_exec(
@@ -855,6 +860,7 @@ async def set_upstream_tracking(chat_id):
         print(f"Error setting upstream: {stderr.decode().strip()}")
     else:
         print(f"Successfully set upstream tracking for branch {branch}.")
+
 
 async def clone_repo(chat_id: str):
     """
@@ -904,18 +910,11 @@ async def clone_repo(chat_id: str):
     await run_git_config_command()
 
 
-def _get_user_id(auth_header, request=None):
+def validate_token(token):
     try:
-        if not auth_header:
-            user_ip = request.remote_addr
-            user_agent = request.headers.get('User-Agent', '')
-            return f'guest.{user_ip}.{user_agent}'
-        token = auth_header.split(" ")[1]
-        # Decode the JWT without verifying the signature
-        # The `verify=False` option ensures that we do not verify the signature
-        # This is useful for extracting the payload only.
-        decoded = jwt.decode(token, options={"verify_signature": False})
-        user_id = decoded.get("sub")  # todo change to userId when ready
-        return user_id
+        payload = jwt.decode(token, AUTH_SECRET_KEY, algorithms=["HS256"])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise InvalidTokenException()
     except jwt.InvalidTokenError:
-        return None
+        raise InvalidTokenException()
