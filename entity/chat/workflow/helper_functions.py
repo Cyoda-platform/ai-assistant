@@ -149,7 +149,7 @@ class WorkflowHelperService:
             "file_name": file_name if file_name else event.get('file_name', ''),
             "context": event.get('context', {}),
             "approve": True,
-            "editable": editable,
+            "editable": False,#editable todo
             "publish": publish if publish else event.get('publish', {})
         }
         exclusion_values = ['stack']  # Values to be excluded from the final JSON
