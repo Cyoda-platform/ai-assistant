@@ -4,7 +4,7 @@ from nltk.corpus import wordnet as wn
 #todo blocking code!
 
 # Uncomment if running for the first time to download WordNet data.
-# nltk.download('wordnet')
+nltk.download('wordnet')
 
 def get_most_similar_entity(target, entity_list):
     # Try to get synsets for the full target.
