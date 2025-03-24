@@ -39,26 +39,26 @@ This structured approach ensures a systematic transition from requirement gather
 ```mermaid
 stateDiagram-v2
     [*] --> none
-    none --> greeting_sent : welcome_user / process_event
-    greeting_sent --> repository_cloned : clone_repo / process_event
-    repository_cloned --> chats_established : init_chats / process_event
-    chats_established --> app_requirements_requested : request_application_requirements / process_event
-    app_requirements_requested --> app_requirements_requested : process_application_requirement (manual) / process_event
+    none --> greeting_sent : welcome_user / notification
+    greeting_sent --> repository_cloned : clone_repo / function
+    repository_cloned --> chats_established : init_chats / function
+    chats_established --> app_requirements_requested : request_application_requirements / question
+    app_requirements_requested --> app_requirements_requested : process_application_requirement (manual) / agent
     app_requirements_requested --> app_requirements_finalized : process_application_requirement_success [is_stage_completed]
-    app_requirements_finalized --> proceeded_to_functional_requirements : ask_about_api / process_event
-    proceeded_to_functional_requirements --> functional_requirements_specified : define_functional_requirements / process_event
-    functional_requirements_specified --> api_inquired : ask_about_api / process_event
-    api_inquired --> api_inquired : discuss_api (manual) / process_event
+    app_requirements_finalized --> proceeded_to_functional_requirements : ask_about_api / notification
+    proceeded_to_functional_requirements --> functional_requirements_specified : define_functional_requirements / prompt
+    functional_requirements_specified --> api_inquired : ask_about_api / question
+    api_inquired --> api_inquired : discuss_api (manual) / agent
     api_inquired --> api_discussion_completed : transition_to_asked_about_api_success [is_stage_completed]
-    api_discussion_completed --> prototype_generation_notified : welcome_user / process_event
-    prototype_generation_notified --> functional_requirements_generated : generate_functional_requirements / process_event
-    functional_requirements_generated --> prototype_sketch_generated : generate_prototype_sketch / process_event
-    prototype_sketch_generated --> prototype_completed : generate_prototype / process_event
-    prototype_completed --> prototype_discussion_requested : ask_to_discuss_prototype / process_event
-    prototype_discussion_requested --> prototype_discussion_requested : discuss_prototype (manual) / process_event
+    api_discussion_completed --> prototype_generation_notified : welcome_user / notification
+    prototype_generation_notified --> functional_requirements_generated : generate_functional_requirements / prompt
+    functional_requirements_generated --> prototype_sketch_generated : generate_prototype_sketch / prompt
+    prototype_sketch_generated --> prototype_completed : generate_prototype / prompt
+    prototype_completed --> prototype_discussion_requested : ask_to_discuss_prototype / question
+    prototype_discussion_requested --> prototype_discussion_requested : discuss_prototype (manual) / agent
     prototype_discussion_requested --> prototype_discussion_completed : transition_to_asked_about_api_success [is_stage_completed]
-    prototype_discussion_completed --> migration_confirmation_requested : ask_to_confirm_migration / process_event
-    migration_confirmation_requested --> migration_confirmation_notified : notify_confirmed_migration (manual) / process_event
+    prototype_discussion_completed --> migration_confirmation_requested : ask_to_confirm_migration / question
+    migration_confirmation_requested --> migration_confirmation_notified : notify_confirmed_migration (manual) / notification
 ```
 
 
