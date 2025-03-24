@@ -271,7 +271,7 @@ No transitions (final state).
 === Summary
 The FSM efficiently collects user input, fetches weather data via API tools, and provides responses before concluding the session.
 
-video::assets/workflow.mp4[]
+video::assets/workflow_introduction_example.mp4[]
 
 
 == Application Builder: Automate Workflow Creation
