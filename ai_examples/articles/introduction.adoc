@@ -79,7 +79,11 @@ Agent-specific implementations, such as reasoning logic, memory management, and 
 
 == Example Use Case
 
-Consider a workflow requesting a city from the user and providing weather information via an agent:
+Consider a workflow requesting a city from the user and providing weather information via an agent. 
+
+Example Workflow Description
+
+In this example workflow, a user is first greeted by a weather assistant that prompts them to specify a city. Once the user provides a city name, an AI agent automatically retrieves the current weather and humidity information using the defined Python functions (get_weather and get_humidity). Finally, the agent communicates this information back to the user through a notification. This demonstrates the FSM-based JSON architecture's simplicity, clarity, and flexibility, allowing seamless integration of agent-driven logic and external tools.
 
 [source,json]
 ----
