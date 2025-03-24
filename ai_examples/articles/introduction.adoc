@@ -190,15 +190,33 @@ Consider a workflow requesting a city from the user and providing weather inform
 
 ----
 
-[mermaid]
-----
+
+
+```mermaid
 stateDiagram-v2
     [*] --> none
-    none --> ask_city : greet_user\n(process_event: ask question)
-    ask_city --> weather_provided : get_weather_info (manual)\n(process_event: agent action)
-    weather_provided --> end : farewell\n(process_event: notify user)
-    end --> [*]
----
+    none --> ask_city : greet_user / process_event
+    ask_city --> weather_provided : get_weather_info (manual) / process_event
+    weather_provided --> end : farewell / process_event
+```
+
+[source,python]
+----
+async def get_weather(self, technical_id, entity, **params):
+    # Example implementation; replace with actual API integration
+    return {
+        "city": params.get("city"),
+        "temperature": "18°C",
+        "condition": "Sunny"
+    }
+
+async def get_humidity(self, technical_id, entity, **params):
+    # Example implementation; replace with actual API integration
+    return {
+        "city": params.get("city"),
+        "humidity": "55%"
+    }
+----
 
 
 
