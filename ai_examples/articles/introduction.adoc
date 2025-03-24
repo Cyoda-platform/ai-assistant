@@ -81,8 +81,6 @@ Agent-specific implementations, such as reasoning logic, memory management, and 
 
 Consider a workflow requesting a city from the user and providing weather information via an agent. 
 
-Example Workflow Description
-
 In this example workflow, a user is first greeted by a weather assistant that prompts them to specify a city. Once the user provides a city name, an AI agent automatically retrieves the current weather and humidity information using the defined Python functions (get_weather and get_humidity). Finally, the agent communicates this information back to the user through a notification. This demonstrates the FSM-based JSON architecture's simplicity, clarity, and flexibility, allowing seamless integration of agent-driven logic and external tools.
 
 [source,json]
@@ -222,6 +220,58 @@ async def get_humidity(self, technical_id, entity, **params):
     }
 ----
 
+== Agentic FSM for Weather Assistant
+
+This FSM guides user interactions for weather retrieval.
+
+=== Attributes
+
+State: Represents the bot's condition at any moment.
+
+Transitions: Define how the bot moves between states.
+
+Action: Specifies what happens during a transition.
+
+Type: Describes the action’s function (e.g., question, agent, notification).
+
+Manual: Requires explicit user input before transitioning.
+
+=== States & Transitions
+
+==== none (Initial State)
+
+Transition: greet_user → ask_city
+
+Action: question
+
+Prompts user for a city name.
+
+==== ask_city
+
+Transition: get_weather_info → weather_provided
+
+Action: agent
+
+Uses AI (gpt-4o-mini) and tools (get_weather, get_humidity).
+
+Manual: true (User must input city name).
+
+==== weather_provided
+
+Transition: farewell → end
+
+Action: notification
+
+Displays weather summary.
+
+==== end
+
+No transitions (final state).
+
+=== Summary
+The FSM efficiently collects user input, fetches weather data via API tools, and provides responses before concluding the session.
+
+video::assets/workflow.mp4[]
 
 
 == Application Builder: Automate Workflow Creation
