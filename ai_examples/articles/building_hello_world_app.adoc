@@ -4,6 +4,8 @@
 :toclevels: 2
 :date: 2025-03-24
 
+video::assets/building_hello_world_app.mp4.mp4[]
+
 Now let's take a look at a different flow that outlines the structured process for gathering requirements, discussing APIs, generating prototypes, and confirming migration in an application development cycle.
 
 1. **Initial State**: The process begins in the `none` state.
