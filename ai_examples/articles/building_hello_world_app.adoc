@@ -22,7 +22,6 @@ Now let's take a look at a different flow that outlines the structured process f
    - API discussions occur (`discuss_api`), which require manual intervention.
    - Once the API discussions are completed successfully (`transition_to_asked_about_api_success`), the process advances.
 7. **Prototype Generation**:
-   - A notification is sent to inform users about prototype generation (`welcome_user`).
    - Functional requirements are transformed into a functional design (`generate_functional_requirements`).
    - A prototype sketch is created (`generate_prototype_sketch`).
    - The full prototype is generated (`generate_prototype`).
