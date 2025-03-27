@@ -99,16 +99,27 @@ When writing a state diagram for a workflow involving a question state branching
 
 This approach offers a clear visual representation of how feedback flows, when humans intervene, and how automation proceeds, all within a concise Mermaid diagram.
 
-Here is an example state diagram for agentic app workflow. 
-source sstate --> next state : transition name (manual - optional) /action[question, notification, agent, function, prompt]  [additional information about action in arbitrary format, for agents and functions it makes sense to specify tool names or function name that can be used with a list of parameters]. : is a reserved symbol — do not use it inside the brackets or values]
+Here is an example state diagram for agentic app workflow.
+
+source state --> next state : transition name (manual - optional) /action[question, notification, agent, function, prompt]  [additional information about action in arbitrary format, for agents and functions it makes sense to specify tool names or function name that can be used with a list of parameters]. : is a reserved symbol — do not use it inside the brackets or values]
+
 Human-in-the-loop Pattern Notice:
+
 To implement a human-in-the-loop, first use a question action. Then, from the same source state, define two transitions:
+
 A manual agent transition using the set_additional_question_flag tool.
 
 A condition transition using is_stage_completed.
+
+[source,mermaid]
+----
+stateDiagram-v2
 state0 --> state1 : transition1 /question
 state1 --> state1 : transition2 (manual) /agent  [tools[set_additional_question_flag(transition="discuss_feedback", require_additional_question_flag=true)]] (loop here)
 state1 --> state3 : transition3 /condition [is_stage_completed(transition="discuss_feedback")] 
+----
+
+Example:
 
 [source,mermaid]
 ----
