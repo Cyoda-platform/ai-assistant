@@ -11,7 +11,6 @@ import black
 from common.config.config import MOCK_AI, VALIDATION_MAX_RETRIES, PROJECT_DIR, REPOSITORY_NAME, REPOSITORY_URL, \
     WORKFLOW_AI_API, ENTITY_VERSION
 from common.config.conts import SCHEDULER_ENTITY
-from common.repository.cyoda.cyoda_repository import cyoda_token
 from common.util.chat_util_functions import add_answer_to_finished_flow
 from common.util.utils import get_project_file_name, read_file, format_json_if_needed, parse_workflow_json, \
     _save_file, current_timestamp
@@ -25,8 +24,9 @@ logger = logging.getLogger(__name__)
 
 
 class WorkflowHelperService:
-    def __init__(self, mock=False):
+    def __init__(self, cyoda_token, mock=False):
         self.mock = mock
+        self.cyoda_token=cyoda_token
 
     if MOCK_AI == "true":
         # generate_mock_data()
@@ -456,8 +456,9 @@ class WorkflowHelperService:
         if user_request:
             await add_answer_to_finished_flow(entity_service=entity_service,
                                               answer=user_request,
-                                              chat=child_entity)
-        child_technical_id = await entity_service.add_item(token=cyoda_token,
+                                              chat=child_entity,
+                                              cyoda_token=self.cyoda_token)
+        child_technical_id = await entity_service.add_item(token=self.cyoda_token,
                                                            entity_model=entity_model,
                                                            entity_version=ENTITY_VERSION,
                                                            entity=child_entity)
@@ -477,7 +478,7 @@ class WorkflowHelperService:
             "triggered_entity_id": triggered_entity_id
         })
 
-        child_technical_id = await entity_service.add_item(token=cyoda_token,
+        child_technical_id = await entity_service.add_item(token=self.cyoda_token,
                                                            entity_model=SCHEDULER_ENTITY,
                                                            entity_version=ENTITY_VERSION,
                                                            entity=child_entity)

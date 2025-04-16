@@ -23,7 +23,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "user": "CYODA",
         "attach_entity": "true",
         "calculation_response_timeout_ms": "900000",
-        "retry_policy": "NONE",
+        "retry_policy": "FIXED",#NONE
         "sync_process": "false",
         "new_transaction_for_async": "true",
         "none_transactional_for_async": "false",
@@ -416,7 +416,11 @@ def generate_ext_criteria(criteria, criteria_id, criteria_params, class_name):
 
 
 if __name__ == "__main__":
-    model_name = "generating_gen_app_workflow"
+    #chat
+    #build_general_application
+    #generating_gen_app_workflow
+
+    model_name = "build_general_application"
     input_file = f"{model_name}.json"
     output_file = f"outputs/{input_file}"
     calculation_nodes_tags="ai_assistant"

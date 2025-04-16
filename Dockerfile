@@ -20,8 +20,11 @@ RUN apt-get update && \
 # Set GitHub credentials as build arguments (to avoid hardcoding)
 ARG GITHUB_TOKEN
 ARG GITHUB_USERNAME
+ARG AI_ASSISTANT_WORKERS_NUM
+
 ENV GITHUB_TOKEN=${GITHUB_TOKEN}
 ENV GITHUB_USERNAME=${GITHUB_USERNAME}
+ENV AI_ASSISTANT_WORKERS_NUM=${AI_ASSISTANT_WORKERS_NUM}
 
 # Configure Git to use the Personal Access Token in a global .git-credentials file
 RUN git config --global credential.helper store && \
@@ -33,4 +36,4 @@ RUN git config --global credential.helper store && \
 EXPOSE 5000
 
 # Run Django's development server
-CMD ["hypercorn", "app:app", "--bind", "0.0.0.0:5000"]
+CMD ["hypercorn", "app:app", "--bind", "0.0.0.0:5000", "--workers", "${AI_ASSISTANT_WORKERS_NUM}"]

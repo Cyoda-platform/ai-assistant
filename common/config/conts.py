@@ -48,6 +48,6 @@ LOCKED_CHAT = "locked_chat"
 FINISH_WORKFLOW = "finish_workflow"
 
 PUSH_NOTIFICATION = "push_notification"
-APPROVE = "approved, let's proceed to the next iteration immediately: set require additional questions to False and finish the discussion."
+APPROVE = "let's proceed to the next iteration immediately: set require additional questions to False and finish the discussion."
 RATE_LIMIT = 300
-SCHEDULER_CHECK_INTERVAL=300
+SCHEDULER_CHECK_INTERVAL=60

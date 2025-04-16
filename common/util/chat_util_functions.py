@@ -1,19 +1,18 @@
 from common.config.config import ENTITY_VERSION, CYODA_ENTITY_TYPE_EDGE_MESSAGE
 from common.config.conts import LOCKED_CHAT, CHAT_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME
-from common.repository.cyoda.cyoda_repository import cyoda_token
 from common.util.file_reader import read_file_content
 from entity.chat.model.chat import ChatEntity
 from entity.model.model import FlowEdgeMessage
 
 
-async def trigger_manual_transition(entity_service, chat: ChatEntity, answer, user_file=None, request=None):
-    user_answer = await get_user_message(request = request, message=answer, user_file=user_file) if user_file else answer
+async def trigger_manual_transition(entity_service, chat: ChatEntity, answer, cyoda_token, user_file=None):
+    user_answer = await get_user_message(message=answer, user_file=user_file) if user_file else answer
 
     # Helper to process a chat entity: add answer, increment iteration, and launch transition.
     async def process_entity(entity: ChatEntity, technical_id: str):
-        await add_answer_to_finished_flow(entity_service=entity_service, answer=user_answer, chat=entity)
+        await add_answer_to_finished_flow(entity_service=entity_service, answer=user_answer, chat=entity, cyoda_token=cyoda_token)
         _increment_iteration(chat=entity, answer=user_answer)
-        await _launch_transition(entity=entity, technical_id=technical_id, entity_service=entity_service)
+        await _launch_transition(entity=entity, technical_id=technical_id, entity_service=entity_service, cyoda_token=cyoda_token)
 
     # If the chat is locked, try processing its child entities.
     if chat.child_entities and chat.current_state == LOCKED_CHAT:
@@ -40,7 +39,7 @@ async def trigger_manual_transition(entity_service, chat: ChatEntity, answer, us
             # unlock
             #todo refactor workflow, remove next line, dont pass entity to update
             chat.locked=False
-            await _launch_transition(entity=chat, technical_id=chat.technical_id, entity_service=entity_service)
+            await _launch_transition(entity=chat, technical_id=chat.technical_id, entity_service=entity_service, cyoda_token=cyoda_token)
 
             await process_entity(entity=chat, technical_id=chat.technical_id)
     else:
@@ -48,7 +47,7 @@ async def trigger_manual_transition(entity_service, chat: ChatEntity, answer, us
         await process_entity(chat, chat.technical_id)
 
 
-async def add_answer_to_finished_flow(entity_service, answer: str, chat: ChatEntity):
+async def add_answer_to_finished_flow(entity_service, answer: str, chat: ChatEntity, cyoda_token):
     finished_flow = chat.chat_flow.finished_flow
     flow_message_content = {
         "type": "answer",
@@ -67,12 +66,10 @@ async def add_answer_to_finished_flow(entity_service, answer: str, chat: ChatEnt
                                          user_id=chat.user_id))
 
 
-async def get_user_message(request, message, user_file):
+async def get_user_message(message, user_file):
     if user_file:
-        file = (await request.files).get('file')
-        if file:
-            file_contents = read_file_content(file)
-            message = f"{message}: {file_contents}" if message else file_contents
+        file_contents = read_file_content(user_file)
+        message = f"{message}: {file_contents}" if message else file_contents
     return message
 
 
@@ -85,7 +82,7 @@ def _increment_iteration(chat, answer):
         # chat.transitions_memory.get("current_iteration")[transition] = MAX_ITERATION + 1
 
 
-async def _launch_transition(entity_service, technical_id, entity=None):
+async def _launch_transition(entity_service, technical_id, cyoda_token, entity=None):
     next_transitions = await entity_service.get_transitions(token=cyoda_token,
                                                             meta={},
                                                             technical_id=technical_id)

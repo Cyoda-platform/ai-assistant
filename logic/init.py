@@ -3,6 +3,7 @@ import os
 
 from common.ai.ai_agent import OpenAiAgent
 from common.ai.clients.openai_client import AsyncOpenAIClient
+from common.auth.auth import login_and_get_refresh_token, get_access_token
 from common.config.config import CHAT_REPOSITORY
 from common.config.conts import FSM_CYODA
 from common.grpc_client.grpc_client import GrpcClient
@@ -30,18 +31,22 @@ class BeanFactory:
 
         try:
             # Create the repository based on configuration.
+            refresh_token = login_and_get_refresh_token()
+            self.cyoda_token = get_access_token(refresh_token=refresh_token)
             self.dataset = {}
             self.device_sessions = {}
-            self.workflow_helper_service = WorkflowHelperService()
+            self.workflow_helper_service = WorkflowHelperService(cyoda_token=self.cyoda_token)
             self.workflow = Workflow()
-            self.entity_repository = self._create_repository(CHAT_REPOSITORY)
+
+            self.entity_repository = self._create_repository(repo_type=CHAT_REPOSITORY, cyoda_token=self.cyoda_token)
             self.entity_service = EntityServiceImpl(repository=self.entity_repository, model_registry=model_registry)
-            self.scheduler = Scheduler(entity_service=self.entity_service)
+            self.scheduler = Scheduler(entity_service=self.entity_service, cyoda_token=self.cyoda_token)
             self.chat_workflow = ChatWorkflow(
                 dataset=self.dataset,
                 workflow_helper_service=self.workflow_helper_service,
                 entity_service=self.entity_service,
-                scheduler = self.scheduler
+                scheduler = self.scheduler,
+                cyoda_token=self.cyoda_token
             )
             self.openai_client = AsyncOpenAIClient()
             self.ai_agent = OpenAiAgent(client=self.openai_client)
@@ -50,12 +55,15 @@ class BeanFactory:
                 cls=ChatWorkflow,
                 cls_instance=self.chat_workflow,
                 ai_agent=self.ai_agent,
-                entity_service = self.entity_service
+                entity_service = self.entity_service,
+                cyoda_token=self.cyoda_token
             )
             self.flow_processor = FlowProcessor(
                 workflow_dispatcher=self.workflow_dispatcher
             )
             self.grpc_client = GrpcClient(workflow_dispatcher=self.workflow_dispatcher)
+
+
 
 
 
@@ -72,12 +80,12 @@ class BeanFactory:
             "CHAT_REPOSITORY": os.getenv("CHAT_REPOSITORY", "inmemory")
         }
 
-    def _create_repository(self, repo_type):
+    def _create_repository(self, repo_type, cyoda_token):
         """
         Create the appropriate repository based on configuration.
         """
         if repo_type.lower() == "cyoda":
-            return CyodaRepository()
+            return CyodaRepository(cyoda_token=cyoda_token)
         else:
             return InMemoryRepository()
 
@@ -105,6 +113,7 @@ class BeanFactory:
             "flow_processor": self.flow_processor,
             "dataset": self.dataset,
             "device_sessions": self.device_sessions,
+            "cyoda_token": self.cyoda_token,
         }
 
 

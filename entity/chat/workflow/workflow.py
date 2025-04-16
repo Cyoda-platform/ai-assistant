@@ -1,22 +1,19 @@
-import copy
 import json
 import asyncio
 import logging
 import os
-from copy import deepcopy
 import httpx
 import aiofiles
 from bs4 import BeautifulSoup
 
 from typing import Any
 from common.config.conts import *
-from common.config.config import MOCK_AI, CYODA_AI_API, \
-    REPOSITORY_URL, VALIDATION_MAX_RETRIES, CYODA_DEPLOY_DICT, CHECK_DEPLOY_INTERVAL, ENTITY_VERSION, GOOGLE_SEARCH_KEY, \
+from common.config.config import MOCK_AI, \
+    REPOSITORY_URL, CYODA_DEPLOY_DICT, CHECK_DEPLOY_INTERVAL, ENTITY_VERSION, GOOGLE_SEARCH_KEY, \
     GOOGLE_SEARCH_CX, PROJECT_DIR, REPOSITORY_NAME, MAX_ITERATION, CYODA_ENTITY_TYPE_EDGE_MESSAGE
-from common.repository.cyoda.cyoda_repository import cyoda_token, edge_messages_cache
 from common.util.chat_util_functions import _launch_transition
 from common.util.utils import get_project_file_name, git_pull, _git_push, _save_file, clone_repo, \
-    send_post_request, send_get_request, parse_from_string, current_timestamp
+    send_post_request, send_get_request, parse_from_string
 from entity.chat.data.data import BRANCH_READY_NOTIFICATION
 from entity.chat.data.workflow_prototype.batch_converter import convert_state_diagram_to_jsonl_dataset
 from entity.chat.data.workflow_prototype.batch_parallel_code import build_workflow_from_jsonl
@@ -39,19 +36,16 @@ entry_point_to_stack = {
 
 
 class ChatWorkflow(Workflow):
-    def __init__(self, dataset, workflow_helper_service, entity_service, scheduler, mock=False):
+    def __init__(self, dataset, workflow_helper_service, entity_service, scheduler, cyoda_token, mock=False):
         self.dataset = dataset
         self.workflow_helper_service = workflow_helper_service
         self.entity_service = entity_service
         self.mock = mock
         self.scheduler = scheduler
+        self.cyoda_token=cyoda_token
 
     async def finish_app_generation_flow(self, technical_id, entity: ChatEntity, **params):
-        await _save_file(chat_id=technical_id, _data=json.dumps(entity), item=params.get("filename"))
-        # todo remove later
-        await _save_file(chat_id=technical_id, _data=json.dumps(self.dataset.get(technical_id)),
-                         item=f"entity/dataset_{technical_id}.json")
-        del self.dataset[technical_id]
+        pass
 
     async def save_env_file(self, technical_id, entity: ChatEntity, **params):
         file_name = get_project_file_name(chat_id=technical_id, file_name=params.get("filename"))
@@ -396,7 +390,7 @@ class ChatWorkflow(Workflow):
                     'workflow_function': entity_value.get("workflow_function"),  # f"process_{entity_name}",
                     'entity_name': entity_name
                 }
-                edge_message_id = await self.entity_service.add_item(token=cyoda_token,
+                edge_message_id = await self.entity_service.add_item(token=self.cyoda_token,
                                                                      entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                                      entity_version=ENTITY_VERSION,
                                                                      entity=entity_value.get("code"),
@@ -423,7 +417,7 @@ class ChatWorkflow(Workflow):
 
     async def validate_workflow_design(self, technical_id, entity: AgenticFlowEntity, **params):
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
-        result = await self.entity_service.get_item(token=cyoda_token,
+        result = await self.entity_service.get_item(token=self.cyoda_token,
                                                     entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                     entity_version=ENTITY_VERSION,
                                                     technical_id=edge_message_id,
@@ -436,7 +430,7 @@ class ChatWorkflow(Workflow):
     async def has_workflow_code_validation_succeeded(self, technical_id: str, entity: AgenticFlowEntity,
                                                      **params: Any) -> bool:
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
-        result = await self.entity_service.get_item(token=cyoda_token,
+        result = await self.entity_service.get_item(token=self.cyoda_token,
                                                     entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                     entity_version=ENTITY_VERSION,
                                                     technical_id=edge_message_id,
@@ -446,7 +440,7 @@ class ChatWorkflow(Workflow):
     async def has_workflow_code_validation_failed(self, technical_id: str, entity: AgenticFlowEntity,
                                                   **params: Any) -> bool:
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
-        result = await self.entity_service.get_item(token=cyoda_token,
+        result = await self.entity_service.get_item(token=self.cyoda_token,
                                                     entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                     entity_version=ENTITY_VERSION,
                                                     technical_id=edge_message_id,
@@ -455,7 +449,7 @@ class ChatWorkflow(Workflow):
 
     async def save_extracted_workflow_code(self, technical_id, entity: AgenticFlowEntity, **params):
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
-        source = await self.entity_service.get_item(token=cyoda_token,
+        source = await self.entity_service.get_item(token=self.cyoda_token,
                                                     entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                     entity_version=ENTITY_VERSION,
                                                     technical_id=edge_message_id,
@@ -466,7 +460,7 @@ class ChatWorkflow(Workflow):
             function_name=entity.workflow_cache.get("workflow_function"))
         logger.info(extracted_function)
         await _save_file(
-            chat_id=technical_id,
+            chat_id=entity.parent_id,
             _data=code_without_function,
             item=f"entity/{entity.workflow_cache.get("entity_name")}/workflow.py"
         )
@@ -475,7 +469,7 @@ class ChatWorkflow(Workflow):
     async def save_workflow_configuration(self, technical_id, entity: AgenticFlowEntity, **params):
         "design_workflow_from_code"
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
-        message_content = await self.entity_service.get_item(token=cyoda_token,
+        message_content = await self.entity_service.get_item(token=self.cyoda_token,
                                                              entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                              entity_version=ENTITY_VERSION,
                                                              technical_id=edge_message_id,
@@ -483,9 +477,9 @@ class ChatWorkflow(Workflow):
         workflow_json = json.loads(message_content)
         workflow = enrich_workflow(workflow_json)
         await _save_file(
-            chat_id=technical_id,
-            _data=json.dumps(workflow),
-            item=f"entity/{entity.workflow_cache.get("entity_name")}/workflow.json"
+            chat_id=entity.parent_id,
+            _data=json.dumps(workflow, indent=4, sort_keys=True),  # Prettified JSON
+            item=f"entity/{entity.workflow_cache.get('entity_name')}/workflow.json"
         )
 
 # =================================== generating_gen_app_workflow end =============================

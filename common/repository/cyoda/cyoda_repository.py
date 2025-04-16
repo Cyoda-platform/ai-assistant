@@ -1,30 +1,28 @@
 import threading
 from typing import List
 
-from common.auth.auth import authenticate_util
 from common.config.config import CYODA_API_URL, CYODA_ENTITY_TYPE_TREE, CYODA_ENTITY_TYPE_EDGE_MESSAGE
 from common.config.conts import EDGE_MESSAGE_CLASS, TREE_NODE_ENTITY_CLASS, UPDATE_TRANSITION
 from common.repository.crud_repository import CrudRepository
 from common.util.utils import *
 
 logger = logging.getLogger('quart')
-# todo auth
-cyoda_token = authenticate_util()
 edge_messages_cache = {}
 
 class CyodaRepository(CrudRepository):
     _instance = None
     _lock = threading.Lock()  # Lock for thread safety
 
-    def __new__(cls):
+    def __new__(cls, cyoda_token):
         logger.info("initializing CyodaService")
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
                     cls._instance = super(CyodaRepository, cls).__new__(cls)
+                    cls._cyoda_token = cyoda_token
         return cls._instance
 
-    def __init__(self):
+    def __init__(self, cyoda_token):
         pass
 
     async def get_meta(self, token, entity_model, entity_version):
@@ -108,14 +106,14 @@ class CyodaRepository(CrudRepository):
                 logger.exception(f"Unexpected res while updating entity {technical_id}: {res}")
                 raise Exception(f"Unexpected res while updating entity {technical_id}: {res}")
             return res
-        res = await self._update_entity(meta=meta, _id=technical_id, entity=entity)
+        res = await self._update_entity(meta=meta, _id=technical_id, entity=entity, cyoda_token=self._cyoda_token)
         if not isinstance(res, dict) or not res.get('entityIds'):
             logger.exception(f"Unexpected res while updating entity {technical_id}: {res}")
             raise Exception(f"Unexpected res while updating entity {technical_id}: {res}")
         return res['entityIds'][0]
 
     async def update_all(self, meta, entities: List[Any]) -> List[Any]:
-        res = await self._update_entities(meta, entities)
+        res = await self._update_entities(meta=meta, entities=entities, cyoda_token=self._cyoda_token)
         return res
 
     async def get_transitions(self, meta, technical_id):
@@ -124,7 +122,7 @@ class CyodaRepository(CrudRepository):
     async def _search_entities(self, meta, condition):
         # Create a snapshot search
         snapshot_response = await self._create_snapshot_search(
-            token=cyoda_token,
+            token=self._cyoda_token,
             model_name=meta["entity_model"],
             model_version=meta["entity_version"],
             condition=condition
@@ -136,7 +134,7 @@ class CyodaRepository(CrudRepository):
 
         # Wait for the search to complete
         await self._wait_for_search_completion(
-            token=cyoda_token,
+            token=self._cyoda_token,
             snapshot_id=snapshot_id,
             timeout=60,  # Adjust timeout as needed
             interval=300  # Adjust interval (in milliseconds) as needed
@@ -144,7 +142,7 @@ class CyodaRepository(CrudRepository):
 
         # Retrieve search results
         search_result = await self._get_search_result(
-            token=cyoda_token,
+            token=self._cyoda_token,
             snapshot_id=snapshot_id,
             page_size=100,  # Adjust page size as needed
             page_number=1  # Starting with the first page
@@ -207,7 +205,7 @@ class CyodaRepository(CrudRepository):
             entities_data = json.dumps(payload, default=custom_serializer)
             resp = await self._save_new_entity(
                 type=meta.get("type", CYODA_ENTITY_TYPE_TREE),
-                token=cyoda_token,
+                token=self._cyoda_token,
                 model=meta["entity_model"],
                 version=meta["entity_version"],
                 data=entities_data
@@ -377,7 +375,7 @@ class CyodaRepository(CrudRepository):
             raise Exception(f"Get search result failed: {response}")
 
     @staticmethod
-    async def _update_entities(meta, entities: List[Any]) -> List[Any]:
+    async def _update_entities(meta, entities: List[Any], cyoda_token) -> List[Any]:
         path = "entity/JSON"
         payload = []
         for entity in entities:
@@ -389,7 +387,7 @@ class CyodaRepository(CrudRepository):
                 "payload": payload_json
             })
             data = json.dumps(payload)
-            response = await send_put_request(cyoda_token, CYODA_API_URL, path, data=data)
+            response = await send_put_request(token=cyoda_token, api_url=CYODA_API_URL, path=path, data=data)
             if response:
                 return entities
             else:
@@ -398,7 +396,7 @@ class CyodaRepository(CrudRepository):
         return entities
 
     @staticmethod
-    async def _update_entity(meta, _id, entity: Any) -> List[Any]:
+    async def _update_entity(meta, _id, entity: Any, cyoda_token) -> List[Any]:
         transactional = "?transactional=true&waitForConsistencyAfter=true"
         path = f"entity/JSON/{_id}/{meta[UPDATE_TRANSITION]}{transactional}"
 
@@ -441,7 +439,7 @@ class CyodaRepository(CrudRepository):
             path = f"message/get/{_uuid}"
         else:
             path = f"entity/{_uuid}"
-        response = await send_get_request(cyoda_token, CYODA_API_URL, path=path)
+        response = await send_get_request(self._cyoda_token, CYODA_API_URL, path=path)
         logger.info(response)
         if meta and meta.get("type", CYODA_ENTITY_TYPE_TREE) == CYODA_ENTITY_TYPE_EDGE_MESSAGE:
             resp = json.loads(response.get('json').get('content'))
@@ -456,7 +454,7 @@ class CyodaRepository(CrudRepository):
 
     async def _get_all_entities(self, meta):
         path = f"entity/{meta["entity_model"]}/{meta["entity_version"]}"
-        response = await send_get_request(cyoda_token, CYODA_API_URL, path=path)
+        response = await send_get_request(self._cyoda_token, CYODA_API_URL, path=path)
         logger.info(response)
         return response.get('json')
 
@@ -466,7 +464,7 @@ class CyodaRepository(CrudRepository):
         else:
             entity_class = TREE_NODE_ENTITY_CLASS
         path = f"platform-api/entity/transition?entityId={meta["technical_id"]}&entityClass={entity_class}&transitionName={meta["update_transition"]}"
-        response = await send_put_request(token=cyoda_token, api_url=CYODA_API_URL, path=path)
+        response = await send_put_request(token=self._cyoda_token, api_url=CYODA_API_URL, path=path)
         return response.get('json')
 
     async def _get_transitions(self, meta, technical_id):
@@ -476,5 +474,5 @@ class CyodaRepository(CrudRepository):
             entity_class = TREE_NODE_ENTITY_CLASS
 
         path = f"platform-api/entity/fetch/transitions?entityClass={entity_class}&entityId={technical_id}"
-        response = await send_get_request(token=cyoda_token, api_url=CYODA_API_URL, path=path)
+        response = await send_get_request(token=self._cyoda_token, api_url=CYODA_API_URL, path=path)
         return response.get('json')

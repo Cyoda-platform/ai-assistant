@@ -12,7 +12,6 @@ from common.config.config import GENERAL_MEMORY_TAG, PROJECT_DIR, REPOSITORY_NAM
     CYODA_ENTITY_TYPE_EDGE_MESSAGE
 from common.config.conts import OPEN_AI, QUESTIONS_QUEUE_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME, \
     AI_MEMORY_EDGE_MESSAGE_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, EDGE_MESSAGE_STORE_MODEL_NAME
-from common.repository.cyoda.cyoda_repository import cyoda_token
 from common.util.utils import _save_file
 from entity.chat.data.workflow_prototype.batch_parallel_code import batch_process_file
 from entity.chat.model.chat import AgenticFlowEntity
@@ -23,12 +22,13 @@ logger = logging.getLogger(__name__)
 
 
 class WorkflowDispatcher:
-    def __init__(self, cls, cls_instance, ai_agent, entity_service, mock=False):
+    def __init__(self, cls, cls_instance, ai_agent, entity_service, cyoda_token, mock=False):
         self.cls = cls
         self.cls_instance = cls_instance
         self.methods_dict = self._collect_subclass_methods()
         self.ai_agent = ai_agent
         self.entity_service = entity_service
+        self.cyoda_token=cyoda_token
 
     def _collect_subclass_methods(self):
 
@@ -107,7 +107,7 @@ class WorkflowDispatcher:
                                                                            entity=entity,
                                                                            **params)
         elif config_type in ("prompt", "agent", "batch"):
-            chat_memory: ChatMemory = await self.entity_service.get_item(token=cyoda_token,
+            chat_memory: ChatMemory = await self.entity_service.get_item(token=self.cyoda_token,
                                                                          entity_model=MEMORY_MODEL_NAME,
                                                                          entity_version=ENTITY_VERSION,
                                                                          technical_id=entity.memory_id)
@@ -120,7 +120,7 @@ class WorkflowDispatcher:
                 technical_id=technical_id
             )
 
-            await self.entity_service.update_item(token=cyoda_token,
+            await self.entity_service.update_item(token=self.cyoda_token,
                                                   entity_model=MEMORY_MODEL_NAME,
                                                   entity_version=ENTITY_VERSION,
                                                   technical_id=entity.memory_id,
@@ -168,7 +168,7 @@ class WorkflowDispatcher:
             config_messages: List[AIMessage] = []
             for config_message in config.get("messages"):
                 config_message = await self.enrich_config_message(entity=entity, config_message=config_message)
-                edge_message_id = await self.entity_service.add_item(token=cyoda_token,
+                edge_message_id = await self.entity_service.add_item(token=self.cyoda_token,
                                                                      entity_model=AI_MEMORY_EDGE_MESSAGE_MODEL_NAME,
                                                                      entity_version=ENTITY_VERSION,
                                                                      entity=config_message,
@@ -182,14 +182,14 @@ class WorkflowDispatcher:
                 None
             )
             if latest_message and latest_message.type == "answer" and not latest_message.consumed:
-                message_content = await self.entity_service.get_item(token=cyoda_token,
+                message_content = await self.entity_service.get_item(token=self.cyoda_token,
                                                                      entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
                                                                      entity_version=ENTITY_VERSION,
                                                                      technical_id=latest_message.edge_message_id,
                                                                      meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
                 answer_content = message_content.get("answer")
                 for memory_tag in memory_tags:
-                    edge_message_id = await self.entity_service.add_item(token=cyoda_token,
+                    edge_message_id = await self.entity_service.add_item(token=self.cyoda_token,
                                                                          entity_model=AI_MEMORY_EDGE_MESSAGE_MODEL_NAME,
                                                                          entity_version=ENTITY_VERSION,
                                                                          entity={"role": "user",
@@ -217,7 +217,7 @@ class WorkflowDispatcher:
             messages=messages,
             response_format=config.get("response_format")
         )
-        edge_message_id = await self.entity_service.add_item(token=cyoda_token,
+        edge_message_id = await self.entity_service.add_item(token=self.cyoda_token,
                                                              entity_model=AI_MEMORY_EDGE_MESSAGE_MODEL_NAME,
                                                              entity_version=ENTITY_VERSION,
                                                              entity={"role": "assistant", "content": ai_agent_resp},
@@ -233,7 +233,7 @@ class WorkflowDispatcher:
         for memory_tag in memory_tags:
             entity_messages: List[AIMessage] = memory.messages.get(memory_tag)
             for entity_message in entity_messages:
-                message_content = await self.entity_service.get_item(token=cyoda_token,
+                message_content = await self.entity_service.get_item(token=self.cyoda_token,
                                                                      entity_model=AI_MEMORY_EDGE_MESSAGE_MODEL_NAME,
                                                                      entity_version=ENTITY_VERSION,
                                                                      technical_id=entity_message.edge_message_id,
@@ -272,9 +272,9 @@ class WorkflowDispatcher:
                 notification = {
                     "allow_anonymous_users": config.get("allow_anonymous_users", False),
                     "publish": config.get("publish", False),
-                    "notification": f"{response}",
+                    "question": f"{response}",
                     "approve": config.get("approve", False),
-                    "type": "notification",
+                    "type": "question",
                 }
                 flow_edge_message = await self.add_edge_message(message=notification,
                                                                 flow=finished_flow,
@@ -292,7 +292,7 @@ class WorkflowDispatcher:
                                         user_id=entity.user_id)
 
     async def add_edge_message(self, message: dict, flow: List[FlowEdgeMessage], user_id) -> FlowEdgeMessage:
-        edge_message_id = await self.entity_service.add_item(token=cyoda_token,
+        edge_message_id = await self.entity_service.add_item(token=self.cyoda_token,
                                                              entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
                                                              entity_version=ENTITY_VERSION,
                                                              entity=message,
@@ -308,13 +308,13 @@ class WorkflowDispatcher:
         questions_queue_id = entity.questions_queue_id
         # todo timeout exception
         await self.lock_questions_queue(questions_queue_id)
-        questions_queue: QuestionsQueue = await self.entity_service.get_item(token=cyoda_token,
+        questions_queue: QuestionsQueue = await self.entity_service.get_item(token=self.cyoda_token,
                                                                              entity_model=QUESTIONS_QUEUE_MODEL_NAME,
                                                                              entity_version=ENTITY_VERSION,
                                                                              technical_id=questions_queue_id)
         if questions_queue.current_state == 'enqueue_locked':
             questions_queue.new_questions.append(message)
-            await self.entity_service.update_item(token=cyoda_token,
+            await self.entity_service.update_item(token=self.cyoda_token,
                                                   entity_model=QUESTIONS_QUEUE_MODEL_NAME,
                                                   entity_version=ENTITY_VERSION,
                                                   technical_id=questions_queue_id,
@@ -325,7 +325,7 @@ class WorkflowDispatcher:
         while True:
             try:
                 result = await self.entity_service.update_item(
-                    token=cyoda_token,
+                    token=self.cyoda_token,
                     entity_model=QUESTIONS_QUEUE_MODEL_NAME,
                     entity_version=ENTITY_VERSION,
                     technical_id=questions_queue_id,
@@ -357,7 +357,7 @@ class WorkflowDispatcher:
             if config.get("output").get("cyoda_edge_message"):
                 edge_messages = config.get("output").get("cyoda_edge_message")
                 for edge_message in edge_messages:
-                    edge_message_id = await self.entity_service.add_item(token=cyoda_token,
+                    edge_message_id = await self.entity_service.add_item(token=self.cyoda_token,
                                                                          entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                                          entity_version=ENTITY_VERSION,
                                                                          entity=response,
@@ -393,7 +393,7 @@ class WorkflowDispatcher:
                     # Schedule the asynchronous call to get the edge message content.
                     tasks[key] = asyncio.create_task(
                         self.entity_service.get_item(
-                            token=cyoda_token,
+                            token=self.cyoda_token,
                             entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                             entity_version=ENTITY_VERSION,
                             technical_id=edge_message_id,

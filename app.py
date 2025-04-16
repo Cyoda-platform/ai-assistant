@@ -16,14 +16,12 @@ from quart import Quart, request, jsonify, send_from_directory, websocket
 from quart_cors import cors
 from quart_rate_limiter import RateLimiter, rate_limit
 
-from common.auth.auth import authenticate_util
 from common.config.config import MOCK_AI, ENTITY_VERSION, API_PREFIX, ENABLE_AUTH, MAX_TEXT_SIZE, \
     MAX_FILE_SIZE, CHAT_REPOSITORY, RAW_REPOSITORY_URL, MAX_GUEST_CHATS, AUTH_SECRET_KEY, CYODA_API_URL, \
     CYODA_ENTITY_TYPE_EDGE_MESSAGE
 from common.config.conts import OPEN_AI, QUESTIONS_QUEUE_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME, \
     CHAT_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, RATE_LIMIT, APPROVE
 from common.exception.exceptions import ChatNotFoundException, InvalidTokenException
-from common.repository.cyoda.cyoda_repository import cyoda_token
 from common.service.entity_service_interface import EntityService
 from common.util.chat_util_functions import trigger_manual_transition, get_user_message, add_answer_to_finished_flow
 from common.util.utils import send_get_request, current_timestamp, clone_repo, \
@@ -46,6 +44,7 @@ flow_processor = factory.get_services()["flow_processor"]
 chat_lock = factory.get_services()["chat_lock"]
 fsm_implementation = factory.get_services()["fsm"]
 grpc_client = factory.get_services()["grpc_client"]
+cyoda_token = factory.get_services()["cyoda_token"]
 
 
 async def load_fsm():
@@ -85,26 +84,26 @@ async def add_cors_headers():
         response.headers['Access-Control-Allow-Credentials'] = 'true'  # Allow credentials
         return response
 
-    # todo auth!
-    cyoda_token = authenticate_util()
     # await init_cyoda(cyoda_token)
     logger.info("Starting gRPC stream on a dedicated background thread.")
 
     # Schedule the asynchronous gRPC stream on the background event loop.
     # This returns a concurrent.futures.Future which you can later cancel or inspect.
     app.background_task = asyncio.run_coroutine_threadsafe(
-        grpc_client.grpc_stream(cyoda_token),
+        grpc_client.grpc_stream(token=cyoda_token),
         grpc_loop
     )
 
 
 @app.errorhandler(InvalidTokenException)
 async def handle_unauthorized_exception(error):
+    logger.exception(error)
     return jsonify({"error": str(error)}), 401
 
 
 @app.errorhandler(ChatNotFoundException)
 async def handle_chat_not_found_exception(error):
+    logger.exception(error)
     return jsonify({"error": str(error)}), 404
 
 
@@ -118,22 +117,21 @@ async def handle_any_exception(error):
 def auth_required(func):
     @functools.wraps(func)  # This ensures the original function's name and metadata are preserved
     async def wrapper(*args, **kwargs):
-
-        if ENABLE_AUTH:
-            # Check for Authorization header
-            auth_header = websocket.headers.get('Authorization') if websocket else request.headers.get('Authorization')
-            if not auth_header:
-                raise InvalidTokenException("Invalid token")
-
-            user_id = _get_user_id(auth_header=auth_header)
-            if user_id.startswith('guest.'):
-                return jsonify({"error": "This action is not available. Please sign in to proceed"}), 403
-
-            token = auth_header.split(" ")[1]
-            response = await send_get_request(token, CYODA_API_URL, "v1")
-            # todo
-            if not response or (response.get("status") and response.get("status") == 401):
-                raise InvalidTokenException("Invalid token")
+        # if ENABLE_AUTH:
+        #     # Check for Authorization header
+        #     auth_header = websocket.headers.get('Authorization') if websocket else request.headers.get('Authorization')
+        #     if not auth_header:
+        #         raise InvalidTokenException("Invalid token")
+        #
+        #     user_id = _get_user_id(auth_header=auth_header)
+        #     if user_id.startswith('guest.'):
+        #         return jsonify({"error": "This action is not available. Please sign in to proceed"}), 403
+        #
+        #     token = auth_header.split(" ")[1]
+        #     response = await send_get_request(token, CYODA_API_URL, "v1")
+        #     # todo
+        #     if not response or (response.get("status") and response.get("status") == 401):
+        #         raise InvalidTokenException("Invalid token")
 
         # If the token is valid, proceed to the requested route
         return await func(*args, **kwargs)
@@ -145,30 +143,30 @@ def auth_required(func):
 def auth_required_to_proceed(func):
     @functools.wraps(func)  # This ensures the original function's name and metadata are preserved
     async def wrapper(*args, **kwargs):
-
-        if ENABLE_AUTH:
-            # Check for Authorization header
-            auth_header = websocket.headers.get('Authorization') if websocket else request.headers.get('Authorization')
-            if not auth_header:
-                raise InvalidTokenException("Invalid token")
-            # todo!!
-            user_id = _get_user_id(auth_header=auth_header)
-            if user_id.startswith('guest.'):
-                chat: ChatEntity = await _get_chat_for_user(request=request, auth_header=auth_header,
-                                                            technical_id=request.view_args.get("technical_id"))
-                current_stack = chat.chat_flow.current_flow
-                if not current_stack:
-                    return jsonify({"error": "Max iteration reached, please sign in to proceed"}), 403
-                next_event = current_stack[-1]
-                if not next_event.get("allow_anonymous_users", False):
-                    return jsonify({"error": "Max iteration reached, please sign in to proceed"}), 403
-            else:
-                token = auth_header.split(" ")[1]
-                # Call external service to validate the token
-                response = await send_get_request(token, CYODA_API_URL, "v1")
-                # todo
-                if not response or (response.get("status") and response.get("status") == 401):
-                    raise InvalidTokenException("Invalid token")
+        # todo auth!!!
+        # if ENABLE_AUTH:
+        #     # Check for Authorization header
+        #     auth_header = websocket.headers.get('Authorization') if websocket else request.headers.get('Authorization')
+        #     if not auth_header:
+        #         raise InvalidTokenException("Invalid token")
+        #     # todo!!
+        #     user_id = _get_user_id(auth_header=auth_header)
+        #     if user_id.startswith('guest.'):
+        #         chat: ChatEntity = await _get_chat_for_user(request=request, auth_header=auth_header,
+        #                                                     technical_id=request.view_args.get("technical_id"))
+        #         current_stack = chat.chat_flow.current_flow
+        #         if not current_stack:
+        #             return jsonify({"error": "Max iteration reached, please sign in to proceed"}), 403
+        #         next_event = current_stack[-1]
+        #         if not next_event.get("allow_anonymous_users", False):
+        #             return jsonify({"error": "Max iteration reached, please sign in to proceed"}), 403
+        #     else:
+        #         token = auth_header.split(" ")[1]
+        #         # Call external service to validate the token
+        #         response = await send_get_request(token, CYODA_API_URL, "v1")
+        #         # todo
+        #         if not response or (response.get("status") and response.get("status") == 401):
+        #             raise InvalidTokenException("Invalid token")
 
         # If the token is valid, proceed to the requested route
         return await func(*args, **kwargs)
@@ -341,7 +339,8 @@ async def add_chat():
 
     await add_answer_to_finished_flow(entity_service=entity_service,
                                       answer=init_question,
-                                      chat=chat_entity)
+                                      chat=chat_entity,
+                                      cyoda_token=cyoda_token)
 
     chat_entity.chat_flow.finished_flow.append(greeting_edge_message)
 
@@ -470,6 +469,7 @@ async def submit_answer(technical_id):
     # Check if a file has been uploaded
     file = await request.files
     user_file = file.get('file')
+    answer = await get_user_message(message=answer, user_file=user_file)
     if user_file.content_length > MAX_FILE_SIZE:
         return {"error": f"File size exceeds {MAX_FILE_SIZE} limit"}
     return await _submit_answer_helper(technical_id, answer, auth_header, chat, user_file)
@@ -572,7 +572,7 @@ async def _submit_question_helper(auth_header, technical_id, chat, question, use
 
     # Process file if provided
     if user_file:
-        question = await get_user_message(request=request, message=question, user_file=user_file)
+        question = await get_user_message(message=question, user_file=user_file)
 
     # Call AI service with the file
     result = await ai_agent.run(
@@ -606,7 +606,7 @@ async def _submit_answer_helper(technical_id, answer, auth_header, chat, user_fi
                                     chat=chat,
                                     answer=validated_answer,
                                     user_file=user_file,
-                                    request=request)
+                                    cyoda_token=cyoda_token)
     return jsonify({"message": "Answer received"}), 200
 
 

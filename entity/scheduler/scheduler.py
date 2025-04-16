@@ -2,9 +2,7 @@ import asyncio
 
 from common.config.config import ENTITY_VERSION
 from common.config.conts import SCHEDULER_CHECK_INTERVAL, LOCKED_CHAT
-from common.repository.cyoda.cyoda_repository import cyoda_token
 from common.util.chat_util_functions import _launch_transition
-from entity.model.model import SchedulerEntity
 
 
 class WorkflowTask:
@@ -13,10 +11,11 @@ class WorkflowTask:
     When all entities are 'locked', it triggers a transition.
     """
 
-    def __init__(self, technical_id, awaited_entity_ids, entity_service):
+    def __init__(self, technical_id, awaited_entity_ids, entity_service, cyoda_token):
         self.technical_id = technical_id
         self.awaited_entity_ids = awaited_entity_ids
         self.entity_service = entity_service
+        self.cyoda_token=cyoda_token
 
     async def run(self, CHECK_INTERVAL=SCHEDULER_CHECK_INTERVAL):
         """
@@ -26,7 +25,7 @@ class WorkflowTask:
         while True:
             tasks = [
                 self.entity_service.get_item(
-                    token=cyoda_token,
+                    token=self.cyoda_token,
                     entity_model=None,
                     entity_version=ENTITY_VERSION,
                     technical_id=awaited_id
@@ -36,7 +35,8 @@ class WorkflowTask:
             child_entities = await asyncio.gather(*tasks)
             if all(child.get("current_state") == LOCKED_CHAT for child in child_entities):
                 await _launch_transition(entity_service=self.entity_service,
-                                         technical_id=self.technical_id)
+                                         technical_id=self.technical_id,
+                                         cyoda_token=self.cyoda_token)
                 break
             else:
                 await asyncio.sleep(CHECK_INTERVAL)
@@ -47,9 +47,10 @@ class Scheduler:
     Manages workflow tasks: it registers them and keeps track of running tasks.
     """
 
-    def __init__(self, entity_service):
+    def __init__(self, entity_service, cyoda_token):
         self.entity_service = entity_service
         self.tasks = []  # List to hold asyncio.Task objects.
+        self.cyoda_token = cyoda_token
 
     def schedule_workflow_task(self, technical_id, awaited_entity_ids):
         """
@@ -57,7 +58,8 @@ class Scheduler:
         Returns "ok" immediately after scheduling the task in the background.
         """
         workflow_task = WorkflowTask(technical_id=technical_id, awaited_entity_ids=awaited_entity_ids,
-                                     entity_service=self.entity_service)
+                                     entity_service=self.entity_service,
+                                     cyoda_token=self.cyoda_token)
         task = asyncio.create_task(workflow_task.run())
         self.tasks.append(task)
         return "ok"
