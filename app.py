@@ -282,10 +282,11 @@ async def delete_chat(technical_id):
 async def add_chat():
     auth_header = request.headers.get('Authorization')
     user_id = _get_user_id(auth_header=auth_header)
-    if user_id.startswith('guest.'):
-        user_chats = await _get_chats_by_user_name(auth_header, user_id)
-        if len(user_chats) >= MAX_GUEST_CHATS:
-            return jsonify({"error": "Max guest chats limit reached, please sign in to proceed"}), 403
+    #todo!!
+    # if user_id.startswith('guest.'):
+    #     user_chats = await _get_chats_by_user_name(auth_header, user_id)
+    #     if len(user_chats) >= MAX_GUEST_CHATS:
+    #         return jsonify({"error": "Max guest chats limit reached, please sign in to proceed"}), 403
     req_data = await request.get_json()
 
     edge_message_id = await entity_service.add_item(token=cyoda_token,
