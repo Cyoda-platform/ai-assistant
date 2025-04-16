@@ -17,9 +17,6 @@
             "config": {
               "type": "prompt",
               "model": {
-                "name": "OPEN_AI",
-                "temperature": 0.7,
-                "max_tokens": 10000
               },
               "messages": [
                 {
@@ -57,7 +54,7 @@
     "user_notification": {
       "transitions": {
         "done": {
-          "next": "none",
+          "next": "locked_chat",
           "action": {
             "name": "notify_user",
             "config": {

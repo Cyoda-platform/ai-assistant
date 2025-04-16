@@ -494,4 +494,6 @@ class ChatWorkflow(Workflow):
     async def trigger_parent_entity(self, technical_id, entity: SchedulerEntity, **params):
         "design_workflow_from_code"
         await _launch_transition(entity_service=self.entity_service,
-                                 technical_id=entity.triggered_entity_id)
+                                 technical_id=entity.triggered_entity_id,
+                                 cyoda_token=self.cyoda_token)
+

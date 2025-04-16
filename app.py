@@ -282,7 +282,7 @@ async def delete_chat(technical_id):
 async def add_chat():
     auth_header = request.headers.get('Authorization')
     user_id = _get_user_id(auth_header=auth_header)
-    #todo!!
+    #todo auth!!
     # if user_id.startswith('guest.'):
     #     user_chats = await _get_chats_by_user_name(auth_header, user_id)
     #     if len(user_chats) >= MAX_GUEST_CHATS:
