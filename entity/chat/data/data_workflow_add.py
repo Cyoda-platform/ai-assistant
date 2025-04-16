@@ -15,33 +15,9 @@ data_workflow_add_stack = lambda user_prompt, entity_name: \
       "file_name": "entity/chat.json",
       "max_iteration": 0,
       "stack": APP_BUILDING_STACK_KEY,
-      "publish": True},  # {"question": None,
-     #  "function": {"name": "validate_workflow"},
-     #  "file_name": f"entity/{entity_name}/workflow.json",
-     #  "answer": None,
-     #  "index": 0,
-     #  "iteration": 0,
-     #  "flow_step": LOGIC_CODE_DESIGN_STR,
-     #  "max_iteration": 0,
-     #  "stack": API_REQUEST_STACK_KEY,
-     #  "publish": True},
+      "publish": True},
+
      {"question": None,
-      #       "function": {"name": "update_workflow_code",
-      #                    "model_api": {
-      #                        "model": OPEN_AI,
-      #                        "temperature": 0.7,
-      #                        "max_tokens": 10000},
-      #                    "prompt": {
-      #                        "text": """
-      # Please generate processors functions {workflow_processors} and add them to the entity workflow {entity_workflow_code}.
-      # Processes should have name starting with 'process_' and take only one argument entity.
-      # entity data example {entity_model}
-      # """,
-      #                        "api": {"model": OPEN_AI,
-      #                                "temperature": 0.7,
-      #                                "max_tokens": 10000},
-      #                    },
-      #                    },
       "prompt": {
           "text": f""" # Please implement processors for the newly generated workflow according to the user requirement {user_prompt}.
 If the requirement is not specific enough just add a template with example code.

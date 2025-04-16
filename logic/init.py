@@ -1,16 +1,19 @@
 import asyncio
 import os
 
-from common.ai.ai_assistant_service import AiAssistantService
-from common.ai.editing_agent import EditingAgent
-from common.ai.requirement_agent import RequirementAgent
+from common.ai.ai_agent import OpenAiAgent
+from common.ai.clients.openai_client import AsyncOpenAIClient
 from common.config.config import CHAT_REPOSITORY
+from common.config.conts import FSM_CYODA
+from common.grpc_client.grpc_client import GrpcClient
 from common.repository.cyoda.cyoda_repository import CyodaRepository
 from common.repository.in_memory_db import InMemoryRepository
 from common.service.service import EntityServiceImpl
 from entity.chat.workflow.helper_functions import WorkflowHelperService
-from entity.chat.workflow.flow_processor import FlowProcessor
+from entity.flow_processor import FlowProcessor
 from entity.chat.workflow.workflow import ChatWorkflow
+from entity.model.model_registry import model_registry
+from entity.scheduler.scheduler import Scheduler
 from entity.workflow import Workflow
 from entity.workflow_dispatcher import WorkflowDispatcher
 
@@ -27,37 +30,35 @@ class BeanFactory:
 
         try:
             # Create the repository based on configuration.
-            self.entity_repository = self._create_repository(CHAT_REPOSITORY)
-            self.entity_service = EntityServiceImpl(self.entity_repository)
-            self.editing_agent = EditingAgent(self.entity_service)
-            self.requirement_agent = RequirementAgent()
-
-            # Externalize dataset creation; can later be replaced with a loader if needed.
             self.dataset = {}
             self.device_sessions = {}
-            # Set up the AI assistant service with its dependencies.
-            self.ai_service = AiAssistantService(
-                requirement_agent=self.requirement_agent,
-                editing_agent=self.editing_agent,
-                dataset=self.dataset
-            )
-            self.workflow_helper_service = WorkflowHelperService(ai_service=self.ai_service)
+            self.workflow_helper_service = WorkflowHelperService()
             self.workflow = Workflow()
+            self.entity_repository = self._create_repository(CHAT_REPOSITORY)
+            self.entity_service = EntityServiceImpl(repository=self.entity_repository, model_registry=model_registry)
+            self.scheduler = Scheduler(entity_service=self.entity_service)
             self.chat_workflow = ChatWorkflow(
-                ai_service=self.ai_service,
                 dataset=self.dataset,
                 workflow_helper_service=self.workflow_helper_service,
-                entity_service=self.entity_service
+                entity_service=self.entity_service,
+                scheduler = self.scheduler
             )
+            self.openai_client = AsyncOpenAIClient()
+            self.ai_agent = OpenAiAgent(client=self.openai_client)
+
             self.workflow_dispatcher = WorkflowDispatcher(
                 cls=ChatWorkflow,
-                cls_instance=self.chat_workflow
+                cls_instance=self.chat_workflow,
+                ai_agent=self.ai_agent,
+                entity_service = self.entity_service
             )
             self.flow_processor = FlowProcessor(
-                entity_service=self.entity_service,
-                helper_functions=self.workflow_helper_service,
                 workflow_dispatcher=self.workflow_dispatcher
             )
+            self.grpc_client = GrpcClient(workflow_dispatcher=self.workflow_dispatcher)
+
+
+
         except Exception as e:
             # Replace print with a proper logging framework in production.
             print("Error during BeanFactory initialization:", e)
@@ -91,12 +92,12 @@ class BeanFactory:
         Retrieve a dictionary of all managed services for further use.
         """
         return {
+            "fsm": FSM_CYODA,
+            "grpc_client": self.grpc_client,
             "chat_lock": self.chat_lock,
             "entity_repository": self.entity_repository,
             "entity_service": self.entity_service,
-            "editing_agent": self.editing_agent,
-            "requirement_agent": self.requirement_agent,
-            "ai_service": self.ai_service,
+            "ai_agent": self.ai_agent,
             "workflow_helper_service": self.workflow_helper_service,
             "workflow": self.workflow,
             "chat_workflow": self.chat_workflow,

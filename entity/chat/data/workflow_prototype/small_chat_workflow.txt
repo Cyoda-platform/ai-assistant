@@ -1,0 +1,69 @@
+                      {"question": None,
+                       "function": {"name": "register_workflow_with_app",
+                                    "model_api": {"model": OPEN_AI_o3, "temperature": 0.7, "max_tokens": 10000},
+                                    "prompt": {
+                                        "text": """
+Which workflow would you recommend for this code?
+Could you split this code into functions, each function should have name starting with 'process_'. These functions are async (example: async process_{{entity_name}}(entity: dict): )
+It can take only one argument entity data and can modify this entity data state, so please also remove any unnecessary entity_service.update(this entity) calls = as you can do it by changing entity attributes directly, e.g. entity['attribute'] = new_value.
+No more additional arguments can be passed.
+Also, all workflow orchestration should be inside {workflow_function}. {workflow_function} should have only workflow orchestration code and no business logic. no other function can have workflow orchestration code.
+
+{code}
+
+You cannot apply entity_service.add/update/delete on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity['attribute'].  The new state will be persisted. Do not any test/extra code.
+Please return only compiled python code without additional information. If you'd like to add any comments please use # comment
+""",
+                                        "api": {"model": OPEN_AI_o3, "temperature": 0.7, "max_tokens": 10000},
+                                    },
+                                    "workflow_prompt": """Please construct workflow json from this code using a typical finite-state machine (FSM) model.
+The FSM consists of states and transitions between them, which can be represented as a directed graph where states are nodes, and transitions are edges.
+Each transition may have processes. You need to add them if the user explicitly specifies them. Currently there can be only one transition coming from a single state.
+Each state, except for the initial state (None), should be reachable from exactly one transition, ensuring that there are no isolated (disconnected) states in the workflow. Additionally, each transition must have both a start state and an end state.
+
+Begin with an initial state labeled "None", which serves as the origin point.
+Define transitions between states, with each state being an endpoint (i.e., target) of exactly one transition.
+Ensure that all states (except "None") serve as the destination for exactly one transition to guarantee the graph remains fully connected.
+
+JSON Example of the Workflow:
+json
+{{
+  "name": "specify_name_that_describes_the_workflow",
+  "description": "describe_the_workflow",
+  "transitions": [
+    {{
+      "name": "spark_happy_message",
+      "description": "Spark the happy message",
+      "start_state": "None",
+      "start_state_description": "Initial state",
+      "end_state": "Happy_message_sparked",
+      "end_state_description": "A happy message has been sparked",
+      "automated": true
+    }},
+    {{
+      "name": "send_happy_message",
+      "description": "Send the happy message",
+      "start_state": "Happy_message_sparked",
+      "start_state_description": "A happy message has been sparked",
+      "end_state": "Message_sent",
+      "end_state_description": "The happy message has been sent",
+      "automated": true #always put automated true
+      "processes": {{
+        "schedule_transition_processors": [],
+        "externalized_processors": [
+          {{
+            "name": "process_example",
+            "description": ""
+          }}
+        ]
+      }}
+    }}
+  ]
+}}
+Please ensure that each process function is referenced in processes.externalized_processors
+
+{code}
+
+Please return only valid json without any additional information.
+"""
+                                    },

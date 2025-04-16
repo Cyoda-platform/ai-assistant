@@ -1,0 +1,895 @@
+{
+  "initial_state": "none",
+  "states": {
+    "none": {
+      "transitions": {
+        "welcome_user": {
+          "next": "greeting_sent",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "\uD83D\uDC4B Welcome to Cyoda Application Builder! We’re excited to build something amazing with you! \uD83D\uDE04  \n\nWe’re here to help with building and deploying on Cyoda Cloud! Reach out anytime! \uD83C\uDF1F Your branch will be ready soon, and I’ll notify you when I push changes. If you have suggestions, message me or use Canvas! \uD83D\uDE0A  \n\nIn Canvas, you can code, edit, and improve around the main app build flow! It’s a great way to collaborate and make changes! \uD83D\uDCBB  \n\nIf you’re happy with the progress or want me to pull your changes, just give me a thumbs up! \uD83D\uDC4D  (currently approve button in the top panel)\n\nIf something goes wrong, no worries—just roll back! \uD83D\uDE2C Your app will be live on Cyoda Platform GitHub soon! \uD83D\uDE80 Let’s build your branch together! \uD83C\uDF3F",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "greeting_sent": {
+      "transitions": {
+        "clone_repo": {
+          "next": "repository_cloned",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "clone_repo",
+                "description": "Clones template repository"
+              },
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "repository_cloned": {
+      "transitions": {
+        "init_chats": {
+          "next": "chats_established",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "init_chats",
+                "description": "Initialises ai service"
+              },
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "chats_established": {
+      "transitions": {
+        "request_application_requirements": {
+          "next": "app_requirements_requested",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "question",
+              "question": "💡 What kind of application would you like to build? I'd love to hear your ideas! Feel free to share them with me! 😊",
+              "example_answers": [
+                "Hello, I would like to download the following data: [London Houses Data](https://raw.githubusercontent.com/Cyoda-platform/cyoda-ai/refs/heads/ai-2.x/data/test-inputs/v1/connections/london_houses.csv), analyze it using **pandas**, and save a report. 📊"
+              ],
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_requested": {
+      "transitions": {
+        "process_application_requirement": {
+          "next": "app_requirements_requested",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_application_requirement"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "require_additional_question_flag",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Hello! You are a python quart developer.",
+                    " You're building a backend application.",
+                    " Currently you are focusing on functional requirements, and will cover any non-functional requirement later.",
+                    " Let's analyse this request for application building, and clarify any important functional requirements that necessary.",
+                    " Ask questions if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations.",
+                    " Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. Max tokens = 300.",
+                    " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
+                    " Here is my requirement: "
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        },
+        "process_application_requirement_success": {
+          "next": "app_requirements_finalized",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "description": "Clones template repository",
+                "parameters": {
+                  "transition": "process_application_requirement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_finalized": {
+      "transitions": {
+        "request_workflow_state_diagram": {
+          "next": "workflow_state_question",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "question",
+              "question": "Kindly share the specifications or requirements needed for the FSM.",
+              "example_answers": [
+                "Example answer 1",
+                "Example answer 2"
+              ],
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "workflow_state_question": {
+      "transitions": {
+        "discuss_workflow_state": {
+          "next": "workflow_state_question",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Set true if the discussion with the user is not complete and the user has additional questions/requirements, set false if the user asks to proceed or if the user is satisfied with the current result (e.g. says it is correct, valid, works for them). If set to false notify the user you're going to proceed with generation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "discuss_workflow_state"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "transition",
+                        "require_additional_question_flag"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_file",
+                    "description": "Read the contents of entity/chat/workflow/workflow.md file.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "filename": {
+                          "type": "string",
+                          "enum": [
+                            "entity/chat/workflow/workflow.md"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "filename"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "save_file",
+                    "description": "Save changes to entity/chat/workflow/workflow.md to the repository so that the user can view the changes to the entity/chat/workflow/workflow.md. Apply this function if you make changes to entity/chat/workflow/workflow.md (fix issues, make improvements, adjustments according to the user request). No need to apply this function if the code does not require changes and you're answering a general question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "new_content": {
+                          "type": "string"
+                        },
+                        "filename": {
+                          "type": "string",
+                          "enum": [
+                            "entity/chat/workflow/workflow.md"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "new_content",
+                        "filename"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Please generate mermaid state diagram for the application taking into consideration user requirement. Adjust if necessary. Save to entity/chat/workflow/workflow.md. For the subsequent operations read file first to update the context.",
+                    "Remember the rules of writing state diagram for workflow:",
+                    "Here is an example state diagram for agentic app workflow. \nsource state --> next state : transition name (manual - optional) /action[question, notification, agent, function, prompt]  [additional information about action in arbitrary format, for agents and functions it makes sense to specify tool names or function name that can be used with a list of parameters]. : is a reserved symbol — do not use it inside the brackets or values]\nHuman-in-the-loop Pattern Notice:\nTo implement a human-in-the-loop, first use a question action. Then, from the same source state, define two transitions:\nA manual agent transition using the set_additional_question_flag tool.\n\nA condition transition using is_stage_completed.\nstate0 --> state1 : transition1 /question\nstate1 --> state1 : transition2 (manual) /agent  [tools[set_additional_question_flag(transition=\"discuss_feedback\", require_additional_question_flag=true)]] (loop here)\nstate1 --> state3 : transition3 /condition [is_stage_completed(transition=\"discuss_feedback\")] \n\n```mermaid\nstateDiagram-v2\n    [*] --> start\n    start --> feedback_question : notify_start /notification [\"hello!\"]\n    feedback_question --> feedback_received : collect_feedback /question [\"please let me know what feedback can i collect\"]\n    feedback_received --> feedback_received : discuss_feedback (manual) /agent [tools [read_link(url=\"\")], [web_search(query=\"\"], [set_additional_question_flag(transition=\"discuss_feedback\", require_additional_question_flag=true)]]\n    feedback_received --> transition_to_feedback_processing_success : finish_processing /condition [is_stage_completed(transition=\"discuss_feedback\")] \n    transition_to_feedback_processing_success --> workflow_completed : save_feedback /prompt [\"please generate summary\"]\n    workflow_completed --> end : notify_completion /notification [\"finished execution]\n    end --> [*]\n```"
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 10,
+              "approve": true
+            }
+          }
+        },
+        "workflow_state_diagram_finalized": {
+          "next": "workflow_state_finalized",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "description": "Verifies stage is complete",
+                "parameters": {
+                  "transition": "discuss_workflow_state"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "workflow_state_finalized": {
+      "transitions": {
+        "generate_workflow_json": {
+          "next": "converted_diagram_to_dataset",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "convert_diagram_to_dataset",
+                "description": "Generates a JSON representation of the finalized workflow.",
+                "strict": true,
+                "parameters": {
+                  "input_file_path": "entity/chat/workflow/workflow.md",
+                  "output_file_path": "entity/chat/workflow/workflow_dataset.jsonl"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "converted_diagram_to_dataset": {
+      "transitions": {
+        "process_workflow_dataset": {
+          "next": "workflow_dataset_processed",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "batch",
+              "parallel": true,
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "input": {
+                "local_fs": [
+                  "entity/chat/workflow/workflow_dataset.jsonl"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "entity/chat/workflow/workflow_batch_processed.json"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "workflow_dataset_processed": {
+      "transitions": {
+        "generate_workflow_json": {
+          "next": "workflow_json_generated",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "convert_workflow_processed_dataset_to_json",
+                "description": "Generates a JSON representation of the finalized workflow.",
+                "strict": true,
+                "parameters": {
+                  "input_file_path": "entity/chat/workflow/workflow_batch_processed.json",
+                  "output_file_path": "entity/chat/workflow/workflow.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "workflow_json_generated": {
+      "transitions": {
+        "generate_workflow_json": {
+          "next": "workflow_json_description_generated",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "publish": true,
+              "function": {
+                "name": "convert_workflow_json_to_state_diagram",
+                "description": "Generates a JSON representation of the finalized workflow.",
+                "strict": true,
+                "publish": true,
+                "parameters": {
+                  "input_file_path": "entity/chat/workflow/workflow.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "workflow_json_description_generated": {
+      "transitions": {
+        "request_workflow_function_generation": {
+          "next": "workflow_function_requirement_received",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "question",
+              "question": "Could you please provide the requirements for the functions?",
+              "example_answers": [],
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "workflow_function_requirement_received": {
+      "transitions": {
+        "discuss_workflow_functions": {
+          "next": "workflow_function_requirement_received",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_file",
+                    "description": "Read the contents of workflow.py file.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "filename": {
+                          "type": "string",
+                          "enum": [
+                            "entity/chat/workflow/workflow.py",
+                            "entity/chat/workflow/workflow.json",
+                            "entity/chat/workflow/workflow.md"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "filename"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "save_file",
+                    "description": "Save changes to entity/chat/workflow/workflow.py to the repository so that the user can view the changes to the entity/chat/workflow/workflow.py. Apply this function if you make changes to entity/chat/workflow/workflow.py (fix issues, make improvements, adjustments according to the user request). No need to apply this function if the code does not require changes and you're answering a general question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "new_content": {
+                          "type": "string"
+                        },
+                        "filename": {
+                          "type": "string",
+                          "enum": [
+                            "entity/chat/workflow/workflow.py"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "new_content",
+                        "filename"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "discuss_workflow_functions"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "require_additional_question_flag",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "First read entity/chat/workflow/workflow.py file to get existing functions.",
+                    "Then, please, help the user generate workflow functions according to their requirement and entity/chat/workflow/workflow.md design",
+                    "We require functions for each agent tool and function",
+                    "Example function: ",
+                    " async def get_weather(self, technical_id, entity, **params):\n        # Example implementation; replace with actual API integration\n        return {\n            \"city\": params.get(\"city\"),\n            \"temperature\": \"18°C\",\n            \"condition\": \"Sunny\"\n        }",
+                    "\n\n",
+                    " Each function has the same arguments set: self, technical_id, entity, **params. Extract custom parameters from **params.",
+                    "Append newly generated functions to the existing functions. Do not completely ovewrite existing file, only add functions in a correct manner (so that the project compiles)."
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 10,
+              "approve": true
+            }
+          }
+        },
+        "workflow_functions_generated": {
+          "next": "workflow_functions_generated",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "description": "Verifies stage is complete",
+                "parameters": {
+                  "transition": "discuss_workflow_functions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "workflow_functions_generated": {
+      "transitions": {
+        "request_general_questions": {
+          "next": "started_general_discussion",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "question",
+              "question": "Please don't hesitate to ask me any questions you may have.",
+              "example_answers": [
+                "Example answer 1",
+                "Example answer 2"
+              ],
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "started_general_discussion": {
+      "transitions": {
+        "process_question": {
+          "next": "started_general_discussion",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_file",
+                    "description": "Read the contents of workflow.py file.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "filename": {
+                          "type": "string",
+                          "enum": [
+                            "entity/chat/workflow/workflow.py"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "filename"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "save_file",
+                    "description": "Save changes to a file in the repository so that the user can view the changes to the file. Apply this function if you make changes to the file contents (fix issues, make improvements, adjustments according to the user request). No need to apply this function if the code does not require changes and you're answering a general question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "new_content": {
+                          "type": "string"
+                        },
+                        "filename": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "new_content",
+                        "filename"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "You are a helpful assistant"
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 10,
+              "approve": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

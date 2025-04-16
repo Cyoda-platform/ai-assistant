@@ -1,0 +1,120 @@
+{
+  "initial_state": "none",
+  "states": {
+    "none": {
+      "transitions": {
+        "start_data_processors_update": {
+          "next": "update_processors_functions"
+        }
+      }
+    },
+    "update_processors_functions": {
+      "transitions": {
+        "user_approved_update": {
+          "next": "awaiting_approval",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+                "name": "OPEN_AI",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "# Please update processors functions according the new requirement \"{user_prompt}\".",
+                    "Generate new process functions if necessary or update existing functions according to the user requirement.",
+                    "Processes should have name starting with 'process_' and take only one argument entity.",
+                    "===============",
+                    "Entity data example",
+                    "{entity_model}",
+                    "",
+                    "===============",
+                    "Workflow configuration",
+                    "{workflow_json}",
+                    "",
+                    "===============",
+                    "Current processors code:",
+                    "{workflow_code}",
+                    "",
+                    "Example:",
+                    "async def process_some_name(entity: dict):",
+                    "    final_result = do_some_user_request(...)",
+                    "    entity[\"final_result\"] = final_result",
+                    "    entity[\"workflowProcessed\"] = True"
+                  ]
+                }
+              ],
+              "file_name": "entity/{entity_name}/workflow.py",
+              "flow_step": "LOGIC_CODE_DESIGN_STR",
+              "stack": "API_REQUEST_STACK_KEY",
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "awaiting_approval": {
+      "transitions": {
+        "gather_workflow_requirements": {
+          "next": "generate_workflow_code",
+          "action": {
+            "name": "confirm_user",
+            "config": {
+              "type": "question",
+              "question": "The new version of the workflow code is ready. Would you like to make any changes? Please approve to proceed to the next step.",
+              "approve": true,
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "generate_workflow_code": {
+      "transitions": {
+        "initial_notification": {
+          "next": "user_notification",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+                "name": "OPEN_AI",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Please return fully functioning workflow.py code taking into account user suggestions if any."
+                  ]
+                }
+              ],
+              "publish": true
+
+            }
+          }
+        }
+      }
+    },
+    "user_notification": {
+      "transitions": {
+        "end": {
+          "next": "none",
+          "action": {
+            "name": "notify_user",
+            "config": {
+              "type": "question",
+              "question": "Please let me know if I can help!",
+              "publish": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

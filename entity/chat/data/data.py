@@ -45,8 +45,7 @@ This repository is a **starter template** for your app and has two main modules:
 - **Entity Module**: This is where your business logic and custom files will go. We'll add your files here, and you can track your progress. 📈 Feel free to **add or edit** anything in the Entity module. I’ll be pulling changes now and then, so just push your updates to let me know! 🚀
 
 You can ask **questions in the chat** or in your project files anytime. When I make changes, I’ll let you know, and you can simply **pull** to sync with me! 🔄💬
-
-Happy coding! 😄🎉"""
+"""
 
 PUSHED_CHANGES_NOTIFICATION = """
 

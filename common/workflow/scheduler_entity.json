@@ -1,0 +1,60 @@
+{
+  "initial_state": "none",
+  "states": {
+    "uninitialized": {
+      "transitions": {
+        "schedule_task": {
+          "next": "scheduled",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "schedule_workflow_tasks",
+                "description": "",
+                "parameters": {
+                }
+              },
+              "publish": false
+            }
+          }
+        }
+      }
+    },
+    "scheduled": {
+      "transitions": {
+        "wait": {
+          "next": "waiting"
+        }
+      }
+    },
+    "waiting": {
+      "transitions": {
+        "trigger_parent_entity": {
+          "next": "unlocked_parent_entity",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "trigger_parent_entity",
+                "description": "",
+                "parameters": {
+                }
+              },
+              "publish": false
+            }
+          }
+        }
+      }
+    },
+    "unlocked_parent_entity": {
+      "transitions": {
+        "finish": {
+          "next": "finished"
+        }
+      }
+    }
+  }
+}

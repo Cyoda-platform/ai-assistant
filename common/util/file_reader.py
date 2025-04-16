@@ -1,3 +1,4 @@
+import io
 import os
 import json
 import csv
@@ -6,7 +7,62 @@ import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
 
 
-def read_file_content(file_path):
+def read_file_content(file):
+    """
+    Reads the contents of an uploaded file based on its extension and returns the content.
+    Supports .txt, .json, .csv, .pdf, .drawio, .xml, .html, .java, .kt, .py extensions.
+
+    :param file: A file-like object (e.g. from Quart's request.files) with a .filename attribute.
+    :return: The file's contents in an appropriate format.
+    """
+    ext = os.path.splitext(file.filename)[1].lower()
+
+    # Ensure the file pointer is at the beginning
+    file.seek(0)
+
+    if ext == '.txt':
+        # Read bytes and decode to a string
+        content = file.read()
+        return content.decode('utf-8') if isinstance(content, bytes) else content
+
+    elif ext == '.json':
+        # Read and decode before parsing JSON
+        file.seek(0)
+        content = file.read().decode('utf-8')
+        return json.loads(content)
+
+    elif ext == '.csv':
+        # Read as text then use io.StringIO for csv.reader
+        file.seek(0)
+        content = file.read().decode('utf-8')
+        file_like = io.StringIO(content)
+        reader = csv.reader(file_like)
+        return "\n".join([", ".join(row) for row in reader])
+
+    elif ext == '.pdf':
+        file.seek(0)
+        return read_pdf(file)  # Ensure read_pdf handles file-like objects
+
+    elif ext == '.drawio':
+        file.seek(0)
+        return read_drawio(file)
+
+    elif ext == '.xml':
+        file.seek(0)
+        return read_xml(file)
+
+    elif ext == '.html':
+        file.seek(0)
+        return read_html(file)
+
+    elif ext in {'.java', '.kt', '.py'}:
+        file.seek(0)
+        return read_code_file(file)
+
+    else:
+        raise ValueError(f"Unsupported file extension: {ext}")
+
+def read_file_content_by_file_path(file_path):
     """
     Reads the contents of a file based on its extension and returns the content.
     Supports .txt, .json, .csv, .pdf, .drawio, .xml, .html, .java, .kt, .py extensions.

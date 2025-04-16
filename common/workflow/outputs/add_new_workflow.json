@@ -1,0 +1,808 @@
+{
+    "@bean": "com.cyoda.core.model.stateMachine.dto.FullWorkflowContainerDto",
+    "workflow": [
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a148af9-1a12-11f0-aced-40c2ba0ac9eb",
+            "name": "add_new_workflow:1000",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": "",
+            "entityShortClassName": "TreeNodeEntity",
+            "transitionIds": [
+                "9a15e51b-1a12-11f0-9d88-40c2ba0ac9eb",
+                "9a15e66f-1a12-11f0-b4aa-40c2ba0ac9eb",
+                "9a15ec2b-1a12-11f0-9794-40c2ba0ac9eb",
+                "9a15f115-1a12-11f0-a33d-40c2ba0ac9eb",
+                "9a15f627-1a12-11f0-bb72-40c2ba0ac9eb"
+            ],
+            "criteriaIds": [
+                "9a15e3b0-1a12-11f0-9d23-40c2ba0ac9eb"
+            ],
+            "stateIds": [
+                "noneState"
+            ],
+            "active": true,
+            "useDecisionTree": false,
+            "decisionTrees": [],
+            "metaData": {
+                "documentLink": ""
+            }
+        }
+    ],
+    "transitions": [
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15e51b-1a12-11f0-9d88-40c2ba0ac9eb",
+            "name": "start_workflow_add",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": "",
+            "startStateId": "noneState",
+            "endStateId": "9a15e56a-1a12-11f0-a5e7-40c2ba0ac9eb",
+            "workflowId": "9a148af9-1a12-11f0-aced-40c2ba0ac9eb",
+            "criteriaIds": [],
+            "endProcessesIds": [],
+            "active": true,
+            "automated": true,
+            "logActivity": false
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15e66f-1a12-11f0-b4aa-40c2ba0ac9eb",
+            "name": "enrich_workflow",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": "",
+            "startStateId": "9a15e56a-1a12-11f0-a5e7-40c2ba0ac9eb",
+            "endStateId": "9a15e6b0-1a12-11f0-89d0-40c2ba0ac9eb",
+            "workflowId": "9a148af9-1a12-11f0-aced-40c2ba0ac9eb",
+            "criteriaIds": [],
+            "endProcessesIds": [
+                {
+                    "persisted": true,
+                    "persistedId": "9a15e790-1a12-11f0-af27-40c2ba0ac9eb",
+                    "runtimeId": 0
+                }
+            ],
+            "active": true,
+            "automated": true,
+            "logActivity": false
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15ec2b-1a12-11f0-9794-40c2ba0ac9eb",
+            "name": "generate_processors_code",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": "",
+            "startStateId": "9a15e6b0-1a12-11f0-89d0-40c2ba0ac9eb",
+            "endStateId": "9a15ec8e-1a12-11f0-b7ad-40c2ba0ac9eb",
+            "workflowId": "9a148af9-1a12-11f0-aced-40c2ba0ac9eb",
+            "criteriaIds": [],
+            "endProcessesIds": [
+                {
+                    "persisted": true,
+                    "persistedId": "9a15ed80-1a12-11f0-b978-40c2ba0ac9eb",
+                    "runtimeId": 0
+                }
+            ],
+            "active": true,
+            "automated": true,
+            "logActivity": false
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15f115-1a12-11f0-a33d-40c2ba0ac9eb",
+            "name": "notify_user",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": "",
+            "startStateId": "9a15ec8e-1a12-11f0-b7ad-40c2ba0ac9eb",
+            "endStateId": "9a15f146-1a12-11f0-8c7c-40c2ba0ac9eb",
+            "workflowId": "9a148af9-1a12-11f0-aced-40c2ba0ac9eb",
+            "criteriaIds": [],
+            "endProcessesIds": [
+                {
+                    "persisted": true,
+                    "persistedId": "9a15f215-1a12-11f0-a831-40c2ba0ac9eb",
+                    "runtimeId": 0
+                }
+            ],
+            "active": true,
+            "automated": true,
+            "logActivity": false
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15f627-1a12-11f0-bb72-40c2ba0ac9eb",
+            "name": "done",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": "",
+            "startStateId": "9a15f146-1a12-11f0-8c7c-40c2ba0ac9eb",
+            "endStateId": "noneState",
+            "workflowId": "9a148af9-1a12-11f0-aced-40c2ba0ac9eb",
+            "criteriaIds": [],
+            "endProcessesIds": [
+                {
+                    "persisted": true,
+                    "persistedId": "9a15f6cd-1a12-11f0-a855-40c2ba0ac9eb",
+                    "runtimeId": 0
+                }
+            ],
+            "active": true,
+            "automated": true,
+            "logActivity": false
+        }
+    ],
+    "criterias": [
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15e3b0-1a12-11f0-9d23-40c2ba0ac9eb",
+            "name": "add_new_workflow:1000",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": "Workflow criteria",
+            "condition": {
+                "@bean": "com.cyoda.core.conditions.GroupCondition",
+                "operator": "AND",
+                "conditions": [
+                    {
+                        "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
+                        "fieldName": "entityModelName",
+                        "operation": "IEQUALS",
+                        "rangeField": "false",
+                        "value": "add_new_workflow"
+                    },
+                    {
+                        "@bean": "com.cyoda.core.conditions.queryable.Equals",
+                        "fieldName": "entityModelVersion",
+                        "operation": "EQUALS",
+                        "rangeField": "false",
+                        "value": 1000,
+                        "queryable": true
+                    }
+                ]
+            },
+            "aliasDefs": [],
+            "parameters": [],
+            "criteriaChecker": "ConditionCriteriaChecker",
+            "user": "CYODA"
+        }
+    ],
+    "processes": [
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": {
+                "@bean": "com.cyoda.core.model.stateMachine.dto.ProcessIdDto",
+                "persisted": true,
+                "persistedId": "9a15e790-1a12-11f0-af27-40c2ba0ac9eb",
+                "runtimeId": 0
+            },
+            "name": "process_event",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": "",
+            "processorClassName": "net.cyoda.saas.externalize.processor.ExternalizedProcessor",
+            "parameters": [
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15e837-1a12-11f0-8380-40c2ba0ac9eb",
+                    "name": "Tags for filtering calculation nodes (separated by ',' or ';')",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "ai_assistant"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15e8c4-1a12-11f0-b9b8-40c2ba0ac9eb",
+                    "name": "Attach entity",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "true"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15e948-1a12-11f0-be48-40c2ba0ac9eb",
+                    "name": "Calculation response timeout (ms)",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "INTEGER",
+                    "value": {
+                        "@type": "String",
+                        "value": "180000"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15e9bd-1a12-11f0-9a18-40c2ba0ac9eb",
+                    "name": "Retry policy",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "NONE"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15ea30-1a12-11f0-bebf-40c2ba0ac9eb",
+                    "name": "Parameter 'context'",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "{\"type\": \"prompt\", \"model\": {\"name\": \"OPEN_AI\", \"temperature\": 0.7, \"max_tokens\": 10000}, \"messages\": [{\"role\": \"user\", \"content\": [\"Please construct workflow json from this description/code/flow chart {user_prompt} using a typical finite-state machine (FSM) model.\", \"The FSM consists of states and transitions between them, represented as a directed graph.\", \"Each transition may have processes. Each process starts with 'process_' prefix.\", \"Ideally, there should be one process per transition. If user doesn't specify, derive from transition name.\", \"Each state except the initial ('None') must be reached by exactly one transition.\", \"Each transition must have both start and end state.\", \"Always start from an initial state 'None'.\", \"\", \"JSON Example of the Workflow:\", \"\", \"{\", \"  \\\"name\\\": \\\"specify_name_that_describes_the_workflow\\\",\", \"  \\\"description\\\": \\\"describe_the_workflow\\\",\", \"  \\\"transitions\\\": [\", \"    {\", \"      \\\"name\\\": \\\"spark_happy_message\\\",\", \"      \\\"description\\\": \\\"Spark the happy message\\\",\", \"      \\\"start_state\\\": \\\"None\\\",\", \"      \\\"start_state_description\\\": \\\"Initial state\\\",\", \"      \\\"end_state\\\": \\\"Happy_message_sparked\\\",\", \"      \\\"end_state_description\\\": \\\"A happy message has been sparked\\\",\", \"      \\\"automated\\\": true\", \"    },\", \"    {\", \"      \\\"name\\\": \\\"send_happy_message\\\",\", \"      \\\"description\\\": \\\"Send the happy message\\\",\", \"      \\\"start_state\\\": \\\"Happy_message_sparked\\\",\", \"      \\\"start_state_description\\\": \\\"A happy message has been sparked\\\",\", \"      \\\"end_state\\\": \\\"Message_sent\\\",\", \"      \\\"end_state_description\\\": \\\"The happy message has been sent\\\",\", \"      \\\"automated\\\": true,\", \"      \\\"processes\\\": {\", \"        \\\"schedule_transition_processors\\\": [],\", \"        \\\"externalized_processors\\\": [\", \"          {\", \"            \\\"name\\\": \\\"process_example\\\",\", \"            \\\"description\\\": \\\"\\\"\", \"          }\", \"        ]\", \"      }\", \"    }\", \"  ]\", \"}\", \"\", \"Please ensure each function is listed under processes.externalized_processors.\", \"Return only valid JSON without any extra text.\"]}], \"file_name\": \"entity/{entity_name}/workflow.json\", \"flow_step\": \"GATHERING_REQUIREMENTS_STR\", \"stack\": \"APP_BUILDING_STACK_KEY\", \"publish\": true}"
+                    }
+                }
+            ],
+            "fields": [],
+            "syncProcess": "false",
+            "newTransactionForAsync": "true",
+            "noneTransactionalForAsync": "false",
+            "isTemplate": false,
+            "criteriaIds": [],
+            "user": "CYODA"
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": {
+                "@bean": "com.cyoda.core.model.stateMachine.dto.ProcessIdDto",
+                "persisted": true,
+                "persistedId": "9a15ed80-1a12-11f0-b978-40c2ba0ac9eb",
+                "runtimeId": 0
+            },
+            "name": "enrich_entity_workflow",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": "",
+            "processorClassName": "net.cyoda.saas.externalize.processor.ExternalizedProcessor",
+            "parameters": [
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15ee17-1a12-11f0-bbcd-40c2ba0ac9eb",
+                    "name": "Tags for filtering calculation nodes (separated by ',' or ';')",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "ai_assistant"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15ee96-1a12-11f0-b564-40c2ba0ac9eb",
+                    "name": "Attach entity",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "true"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15ef30-1a12-11f0-90b2-40c2ba0ac9eb",
+                    "name": "Calculation response timeout (ms)",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "INTEGER",
+                    "value": {
+                        "@type": "String",
+                        "value": "180000"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15efb0-1a12-11f0-90f5-40c2ba0ac9eb",
+                    "name": "Retry policy",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "NONE"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15f025-1a12-11f0-95eb-40c2ba0ac9eb",
+                    "name": "Parameter 'context'",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "{\"type\": \"function\", \"function\": \"enrich_entity_workflow\", \"parameters\": {}}"
+                    }
+                }
+            ],
+            "fields": [],
+            "syncProcess": "false",
+            "newTransactionForAsync": "true",
+            "noneTransactionalForAsync": "false",
+            "isTemplate": false,
+            "criteriaIds": [],
+            "user": "CYODA"
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": {
+                "@bean": "com.cyoda.core.model.stateMachine.dto.ProcessIdDto",
+                "persisted": true,
+                "persistedId": "9a15f215-1a12-11f0-a831-40c2ba0ac9eb",
+                "runtimeId": 0
+            },
+            "name": "process_event",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": "",
+            "processorClassName": "net.cyoda.saas.externalize.processor.ExternalizedProcessor",
+            "parameters": [
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15f2b2-1a12-11f0-8d15-40c2ba0ac9eb",
+                    "name": "Tags for filtering calculation nodes (separated by ',' or ';')",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "ai_assistant"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15f348-1a12-11f0-a950-40c2ba0ac9eb",
+                    "name": "Attach entity",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "true"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15f3d6-1a12-11f0-b06e-40c2ba0ac9eb",
+                    "name": "Calculation response timeout (ms)",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "INTEGER",
+                    "value": {
+                        "@type": "String",
+                        "value": "180000"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15f489-1a12-11f0-a174-40c2ba0ac9eb",
+                    "name": "Retry policy",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "NONE"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15f51e-1a12-11f0-94f7-40c2ba0ac9eb",
+                    "name": "Parameter 'context'",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "{\"type\": \"prompt\", \"model\": {\"name\": \"OPEN_AI\", \"temperature\": 0.7, \"max_tokens\": 10000}, \"messages\": [{\"role\": \"user\", \"content\": [\"# Please implement processors for the newly generated workflow according to the user requirement {user_prompt}.\", \"If the requirement is not specific enough just add a template with example code.\", \"Generate new process functions if necessary or update existing functions according to the user requirement.\", \"Processes should have name starting with 'process_' and take only one argument entity.\", \"\", \"Example:\", \"async def process_some_name(entity: dict):\", \"    final_result = do_some_user_request(...)\", \"    entity[\\\"final_result\\\"] = final_result\", \"    entity[\\\"workflowProcessed\\\"] = True\"]}], \"publish\": true}"
+                    }
+                }
+            ],
+            "fields": [],
+            "syncProcess": "false",
+            "newTransactionForAsync": "true",
+            "noneTransactionalForAsync": "false",
+            "isTemplate": false,
+            "criteriaIds": [],
+            "user": "CYODA"
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": {
+                "@bean": "com.cyoda.core.model.stateMachine.dto.ProcessIdDto",
+                "persisted": true,
+                "persistedId": "9a15f6cd-1a12-11f0-a855-40c2ba0ac9eb",
+                "runtimeId": 0
+            },
+            "name": "notify_user",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": "",
+            "processorClassName": "net.cyoda.saas.externalize.processor.ExternalizedProcessor",
+            "parameters": [
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15f768-1a12-11f0-8209-40c2ba0ac9eb",
+                    "name": "Tags for filtering calculation nodes (separated by ',' or ';')",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "ai_assistant"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15f7f6-1a12-11f0-8855-40c2ba0ac9eb",
+                    "name": "Attach entity",
+                    "creationDate": "2025-04-15T15:59:24.534+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "true"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15f888-1a12-11f0-9c6c-40c2ba0ac9eb",
+                    "name": "Calculation response timeout (ms)",
+                    "creationDate": "2025-04-15T15:59:24.535+00:00",
+                    "valueType": "INTEGER",
+                    "value": {
+                        "@type": "String",
+                        "value": "180000"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15f93a-1a12-11f0-9285-40c2ba0ac9eb",
+                    "name": "Retry policy",
+                    "creationDate": "2025-04-15T15:59:24.535+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "NONE"
+                    }
+                },
+                {
+                    "persisted": true,
+                    "owner": "CYODA",
+                    "id": "9a15f9c4-1a12-11f0-b276-40c2ba0ac9eb",
+                    "name": "Parameter 'context'",
+                    "creationDate": "2025-04-15T15:59:24.535+00:00",
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": "{\"type\": \"question\", \"question\": \"Please let me know if I can help!\", \"publish\": true}"
+                    }
+                }
+            ],
+            "fields": [],
+            "syncProcess": "false",
+            "newTransactionForAsync": "true",
+            "noneTransactionalForAsync": "false",
+            "isTemplate": false,
+            "criteriaIds": [],
+            "user": "CYODA"
+        }
+    ],
+    "states": [
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "noneState",
+            "name": "none",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": ""
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15e56a-1a12-11f0-a5e7-40c2ba0ac9eb",
+            "name": "generate_workflow_json",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": ""
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15e6b0-1a12-11f0-89d0-40c2ba0ac9eb",
+            "name": "enrich_entity_workflow_state",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": ""
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15ec8e-1a12-11f0-b7ad-40c2ba0ac9eb",
+            "name": "generate_workflow_processors",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": ""
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15f146-1a12-11f0-8c7c-40c2ba0ac9eb",
+            "name": "user_notification",
+            "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "description": ""
+        }
+    ],
+    "processParams": [
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15e837-1a12-11f0-8380-40c2ba0ac9eb",
+            "name": "Tags for filtering calculation nodes (separated by ',' or ';')",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "ai_assistant"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15e8c4-1a12-11f0-b9b8-40c2ba0ac9eb",
+            "name": "Attach entity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "true"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15e948-1a12-11f0-be48-40c2ba0ac9eb",
+            "name": "Calculation response timeout (ms)",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "INTEGER",
+            "value": {
+                "@type": "String",
+                "value": "180000"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15e9bd-1a12-11f0-9a18-40c2ba0ac9eb",
+            "name": "Retry policy",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "NONE"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15ea30-1a12-11f0-bebf-40c2ba0ac9eb",
+            "name": "Parameter 'context'",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "{\"type\": \"prompt\", \"model\": {\"name\": \"OPEN_AI\", \"temperature\": 0.7, \"max_tokens\": 10000}, \"messages\": [{\"role\": \"user\", \"content\": [\"Please construct workflow json from this description/code/flow chart {user_prompt} using a typical finite-state machine (FSM) model.\", \"The FSM consists of states and transitions between them, represented as a directed graph.\", \"Each transition may have processes. Each process starts with 'process_' prefix.\", \"Ideally, there should be one process per transition. If user doesn't specify, derive from transition name.\", \"Each state except the initial ('None') must be reached by exactly one transition.\", \"Each transition must have both start and end state.\", \"Always start from an initial state 'None'.\", \"\", \"JSON Example of the Workflow:\", \"\", \"{\", \"  \\\"name\\\": \\\"specify_name_that_describes_the_workflow\\\",\", \"  \\\"description\\\": \\\"describe_the_workflow\\\",\", \"  \\\"transitions\\\": [\", \"    {\", \"      \\\"name\\\": \\\"spark_happy_message\\\",\", \"      \\\"description\\\": \\\"Spark the happy message\\\",\", \"      \\\"start_state\\\": \\\"None\\\",\", \"      \\\"start_state_description\\\": \\\"Initial state\\\",\", \"      \\\"end_state\\\": \\\"Happy_message_sparked\\\",\", \"      \\\"end_state_description\\\": \\\"A happy message has been sparked\\\",\", \"      \\\"automated\\\": true\", \"    },\", \"    {\", \"      \\\"name\\\": \\\"send_happy_message\\\",\", \"      \\\"description\\\": \\\"Send the happy message\\\",\", \"      \\\"start_state\\\": \\\"Happy_message_sparked\\\",\", \"      \\\"start_state_description\\\": \\\"A happy message has been sparked\\\",\", \"      \\\"end_state\\\": \\\"Message_sent\\\",\", \"      \\\"end_state_description\\\": \\\"The happy message has been sent\\\",\", \"      \\\"automated\\\": true,\", \"      \\\"processes\\\": {\", \"        \\\"schedule_transition_processors\\\": [],\", \"        \\\"externalized_processors\\\": [\", \"          {\", \"            \\\"name\\\": \\\"process_example\\\",\", \"            \\\"description\\\": \\\"\\\"\", \"          }\", \"        ]\", \"      }\", \"    }\", \"  ]\", \"}\", \"\", \"Please ensure each function is listed under processes.externalized_processors.\", \"Return only valid JSON without any extra text.\"]}], \"file_name\": \"entity/{entity_name}/workflow.json\", \"flow_step\": \"GATHERING_REQUIREMENTS_STR\", \"stack\": \"APP_BUILDING_STACK_KEY\", \"publish\": true}"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15ee17-1a12-11f0-bbcd-40c2ba0ac9eb",
+            "name": "Tags for filtering calculation nodes (separated by ',' or ';')",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "ai_assistant"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15ee96-1a12-11f0-b564-40c2ba0ac9eb",
+            "name": "Attach entity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "true"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15ef30-1a12-11f0-90b2-40c2ba0ac9eb",
+            "name": "Calculation response timeout (ms)",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "INTEGER",
+            "value": {
+                "@type": "String",
+                "value": "180000"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15efb0-1a12-11f0-90f5-40c2ba0ac9eb",
+            "name": "Retry policy",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "NONE"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15f025-1a12-11f0-95eb-40c2ba0ac9eb",
+            "name": "Parameter 'context'",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "{\"type\": \"function\", \"function\": \"enrich_entity_workflow\", \"parameters\": {}}"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15f2b2-1a12-11f0-8d15-40c2ba0ac9eb",
+            "name": "Tags for filtering calculation nodes (separated by ',' or ';')",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "ai_assistant"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15f348-1a12-11f0-a950-40c2ba0ac9eb",
+            "name": "Attach entity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "true"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15f3d6-1a12-11f0-b06e-40c2ba0ac9eb",
+            "name": "Calculation response timeout (ms)",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "INTEGER",
+            "value": {
+                "@type": "String",
+                "value": "180000"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15f489-1a12-11f0-a174-40c2ba0ac9eb",
+            "name": "Retry policy",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "NONE"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15f51e-1a12-11f0-94f7-40c2ba0ac9eb",
+            "name": "Parameter 'context'",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "{\"type\": \"prompt\", \"model\": {\"name\": \"OPEN_AI\", \"temperature\": 0.7, \"max_tokens\": 10000}, \"messages\": [{\"role\": \"user\", \"content\": [\"# Please implement processors for the newly generated workflow according to the user requirement {user_prompt}.\", \"If the requirement is not specific enough just add a template with example code.\", \"Generate new process functions if necessary or update existing functions according to the user requirement.\", \"Processes should have name starting with 'process_' and take only one argument entity.\", \"\", \"Example:\", \"async def process_some_name(entity: dict):\", \"    final_result = do_some_user_request(...)\", \"    entity[\\\"final_result\\\"] = final_result\", \"    entity[\\\"workflowProcessed\\\"] = True\"]}], \"publish\": true}"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15f768-1a12-11f0-8209-40c2ba0ac9eb",
+            "name": "Tags for filtering calculation nodes (separated by ',' or ';')",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "ai_assistant"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15f7f6-1a12-11f0-8855-40c2ba0ac9eb",
+            "name": "Attach entity",
+            "creationDate": "2025-04-15T15:59:24.534+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "true"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15f888-1a12-11f0-9c6c-40c2ba0ac9eb",
+            "name": "Calculation response timeout (ms)",
+            "creationDate": "2025-04-15T15:59:24.535+00:00",
+            "valueType": "INTEGER",
+            "value": {
+                "@type": "String",
+                "value": "180000"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15f93a-1a12-11f0-9285-40c2ba0ac9eb",
+            "name": "Retry policy",
+            "creationDate": "2025-04-15T15:59:24.535+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "NONE"
+            }
+        },
+        {
+            "persisted": true,
+            "owner": "CYODA",
+            "id": "9a15f9c4-1a12-11f0-b276-40c2ba0ac9eb",
+            "name": "Parameter 'context'",
+            "creationDate": "2025-04-15T15:59:24.535+00:00",
+            "valueType": "STRING",
+            "value": {
+                "@type": "String",
+                "value": "{\"type\": \"question\", \"question\": \"Please let me know if I can help!\", \"publish\": true}"
+            }
+        }
+    ]
+}

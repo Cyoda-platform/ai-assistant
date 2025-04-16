@@ -1,0 +1,266 @@
+{
+  "initial_state": "none",
+  "states": {
+    "none": {
+      "transitions": {
+        "start_workflow_generation": {
+          "next": "started_workflow_generation"
+        }
+      }
+    },
+    "started_workflow_generation": {
+      "transitions": {
+        "design_workflow_from_code": {
+          "next": "designed_workflow_from_code",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": false,
+              "model": {},
+              "input": {},
+              "output": {
+                "cyoda_edge_message": [
+                  "design_workflow_from_code"
+                ]
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Which workflow would you recommend for this code?",
+                    "Could you split this code into functions, each function should have name starting with 'process_'. These functions are async (example: async process_{entity_name}(entity: dict): )",
+                    "It can take only one argument entity data and can modify this entity data state, so please also remove any unnecessary entity_service.update(this entity) calls = as you can do it by changing entity attributes directly, e.g. entity['attribute'] = new_value.",
+                    "No more additional arguments can be passed.",
+                    "Also, all workflow orchestration should be inside {workflow_function}. {workflow_function} should have only workflow orchestration code and no business logic. no other function can have workflow orchestration code.",
+                    "{code}",
+                    "You cannot apply entity_service.add/update/delete on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity['attribute'].  The new state will be persisted. Do not any test/extra code.",
+                    "Please return only compiled python code without additional information. If you'd like to add any comments please use # comment"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "designed_workflow_from_code": {
+      "transitions": {
+        "validate_workflow_design": {
+          "next": "validated_workflow_design",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "validate_workflow_design",
+                "description": "",
+                "parameters": {
+                  "transition": "design_workflow_from_code"
+                }
+              },
+              "output": {
+                "cyoda_edge_message": [
+                  "validate_workflow_design"
+                ]
+              },
+              "publish": false
+            }
+          }
+        }
+      }
+    },
+    "validated_workflow_design": {
+      "transitions": {
+        "fail_validation": {
+          "next": "validation_failed",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "has_workflow_code_validation_failed",
+                "description": "",
+                "parameters": {
+                  "transition": "validate_workflow_design"
+                }
+              }
+            }
+          }
+        },
+        "succeed_validation": {
+          "next": "validation_succeeds",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "has_workflow_code_validation_succeeded",
+                "description": "",
+                "parameters": {
+                  "transition": "validate_workflow_design"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "validation_failed": {
+      "transitions": {
+        "retry_workflow_code_design": {
+          "next": "started_workflow_generation"
+        }
+      }
+    },
+    "validation_succeeds": {
+      "transitions": {
+        "save_extracted_workflow_code": {
+          "next": "saved_extracted_workflow_code",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "save_extracted_workflow_code",
+                "description": "",
+                "parameters": {
+                  "transition": "validate_workflow_design"
+                }
+              },
+              "output": {
+                "cyoda_edge_message": [
+                  "extracted_function"
+                ]
+              },
+              "publish": false
+            }
+          }
+        }
+      }
+    },
+    "saved_extracted_workflow_code": {
+      "transitions": {
+        "design_workflow_from_code": {
+          "next": "generated_workflow_configuration",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": false,
+              "model": {},
+              "input": {},
+              "output": {
+                "cyoda_edge_message": [
+                  "design_workflow_from_code"
+                ]
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Please construct workflow json from this code using a typical finite-state machine (FSM) model.\nThe FSM consists of states and transitions between them, which can be represented as a directed graph where states are nodes, and transitions are edges.\nEach transition may have processes. You need to add them if the user explicitly specifies them. Currently there can be only one transition coming from a single state.\nEach state, except for the initial state (None), should be reachable from exactly one transition, ensuring that there are no isolated (disconnected) states in the workflow. Additionally, each transition must have both a start state and an end state.\n\nBegin with an initial state labeled \"None\", which serves as the origin point.\nDefine transitions between states, with each state being an endpoint (i.e., target) of exactly one transition.\nEnsure that all states (except \"None\") serve as the destination for exactly one transition to guarantee the graph remains fully connected.\n\nJSON Example of the Workflow:\njson\n{{\n  \"name\": \"specify_name_that_describes_the_workflow\",\n  \"description\": \"describe_the_workflow\",\n  \"transitions\": [\n    {{\n      \"name\": \"spark_happy_message\",\n      \"description\": \"Spark the happy message\",\n      \"start_state\": \"None\",\n      \"start_state_description\": \"Initial state\",\n      \"end_state\": \"Happy_message_sparked\",\n      \"end_state_description\": \"A happy message has been sparked\",\n      \"automated\": true\n    }},\n    {{\n      \"name\": \"send_happy_message\",\n      \"description\": \"Send the happy message\",\n      \"start_state\": \"Happy_message_sparked\",\n      \"start_state_description\": \"A happy message has been sparked\",\n      \"end_state\": \"Message_sent\",\n      \"end_state_description\": \"The happy message has been sent\",\n      \"automated\": true #always put automated true\n      \"processes\": {{\n        \"schedule_transition_processors\": [],\n        \"externalized_processors\": [\n          {{\n            \"name\": \"process_example\",\n            \"description\": \"\"\n          }}\n        ]\n      }}\n    }}\n  ]\n}}\nPlease ensure that each process function is referenced in processes.externalized_processors \n\n{code}\n\nPlease return only valid json without any additional information."
+                  ]
+                }
+              ],
+              "response_format": {
+                "name": "workflow_design_schema",
+                "description": "workflow design schema",
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "transitions"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "transitions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "start_state",
+                          "end_state",
+                          "automated"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "start_state": {
+                            "type": "string"
+                          },
+                          "end_state": {
+                            "type": "string"
+                          },
+                          "automated": {
+                            "type": "boolean"
+                          },
+                          "processes": {
+                            "type": "object",
+                            "properties": {
+                              "schedule_transition_processors": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {}
+                                }
+                              },
+                              "externalized_processors": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "required": [
+                                    "name"
+                                  ],
+                                  "properties": {
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "generated_workflow_configuration": {
+      "transitions": {
+        "save_workflow_configuration": {
+          "next": "saved_workflow_configuration",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "save_workflow_configuration",
+                "description": "",
+                "parameters": {
+                  "transition": "design_workflow_from_code"
+                }
+              },
+              "publish": false
+            }
+          }
+        }
+      }
+    },
+    "saved_workflow_configuration": {
+      "transitions": {
+        "lock_chat": {
+          "next": "locked_chat"
+        }
+      }
+    }
+  }
+}

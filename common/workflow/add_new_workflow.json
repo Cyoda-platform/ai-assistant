@@ -1,0 +1,155 @@
+{
+  "initial_state": "none",
+  "states": {
+    "none": {
+      "transitions": {
+        "start_workflow_add": {
+          "next": "generate_workflow_json"
+        }
+      }
+    },
+    "generate_workflow_json": {
+      "transitions": {
+        "enrich_workflow": {
+          "next": "enrich_entity_workflow_state",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+                "name": "OPEN_AI",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Please construct workflow json from this description/code/flow chart {user_prompt} using a typical finite-state machine (FSM) model.",
+                    "The FSM consists of states and transitions between them, represented as a directed graph.",
+                    "Each transition may have processes. Each process starts with 'process_' prefix.",
+                    "Ideally, there should be one process per transition. If user doesn't specify, derive from transition name.",
+                    "Each state except the initial ('None') must be reached by exactly one transition.",
+                    "Each transition must have both start and end state.",
+                    "Always start from an initial state 'None'.",
+                    "",
+                    "JSON Example of the Workflow:",
+                    "",
+                    "{",
+                    "  \"name\": \"specify_name_that_describes_the_workflow\",",
+                    "  \"description\": \"describe_the_workflow\",",
+                    "  \"transitions\": [",
+                    "    {",
+                    "      \"name\": \"spark_happy_message\",",
+                    "      \"description\": \"Spark the happy message\",",
+                    "      \"start_state\": \"None\",",
+                    "      \"start_state_description\": \"Initial state\",",
+                    "      \"end_state\": \"Happy_message_sparked\",",
+                    "      \"end_state_description\": \"A happy message has been sparked\",",
+                    "      \"automated\": true",
+                    "    },",
+                    "    {",
+                    "      \"name\": \"send_happy_message\",",
+                    "      \"description\": \"Send the happy message\",",
+                    "      \"start_state\": \"Happy_message_sparked\",",
+                    "      \"start_state_description\": \"A happy message has been sparked\",",
+                    "      \"end_state\": \"Message_sent\",",
+                    "      \"end_state_description\": \"The happy message has been sent\",",
+                    "      \"automated\": true,",
+                    "      \"processes\": {",
+                    "        \"schedule_transition_processors\": [],",
+                    "        \"externalized_processors\": [",
+                    "          {",
+                    "            \"name\": \"process_example\",",
+                    "            \"description\": \"\"",
+                    "          }",
+                    "        ]",
+                    "      }",
+                    "    }",
+                    "  ]",
+                    "}",
+                    "",
+                    "Please ensure each function is listed under processes.externalized_processors.",
+                    "Return only valid JSON without any extra text."
+                  ]
+                }
+              ],
+              "file_name": "entity/{entity_name}/workflow.json",
+              "flow_step": "GATHERING_REQUIREMENTS_STR",
+              "stack": "APP_BUILDING_STACK_KEY",
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "enrich_entity_workflow_state": {
+      "transitions": {
+        "generate_processors_code": {
+          "next": "generate_workflow_processors",
+          "action": {
+            "name": "enrich_entity_workflow",
+            "config": {
+              "type": "function",
+              "function": "enrich_entity_workflow",
+              "parameters": {
+
+              }
+            }
+          }
+        }
+      }
+    },
+    "generate_workflow_processors": {
+      "transitions": {
+        "notify_user": {
+          "next": "user_notification",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+                "name": "OPEN_AI",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "# Please implement processors for the newly generated workflow according to the user requirement {user_prompt}.",
+                    "If the requirement is not specific enough just add a template with example code.",
+                    "Generate new process functions if necessary or update existing functions according to the user requirement.",
+                    "Processes should have name starting with 'process_' and take only one argument entity.",
+                    "",
+                    "Example:",
+                    "async def process_some_name(entity: dict):",
+                    "    final_result = do_some_user_request(...)",
+                    "    entity[\"final_result\"] = final_result",
+                    "    entity[\"workflowProcessed\"] = True"
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "user_notification": {
+      "transitions": {
+        "done": {
+          "next": "none",
+          "action": {
+            "name": "notify_user",
+            "config": {
+              "type": "question",
+              "question": "Please let me know if I can help!",
+              "publish": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

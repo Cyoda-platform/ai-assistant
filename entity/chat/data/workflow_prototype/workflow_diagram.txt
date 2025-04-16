@@ -1,0 +1,22 @@
+stateDiagram-v2
+    [*] --> none
+    none --> user_greeted : welcome_user / process_event
+    user_greeted --> repository_ready : clone_repo / process_event
+    repository_ready --> chats_initialized : init_chats / process_event
+    chats_initialized --> application_requirement_requested : request_application_requirements / process_event
+    application_requirement_requested --> application_requirement_analysed : process_application_requirement (manual) / process_event
+    application_requirement_analysed --> application_requirement_analysed : analyse_application_requirement [has_additional_questions] (manual) / process_event
+    application_requirement_analysed --> application_requirement_processed : process_application_requirement_success [application_requirement_processed]
+    application_requirement_processed --> functional_requirements_defined : define_functional_requirements (manual) / process_event
+    functional_requirements_defined --> asked_about_api : ask_about_api / process_event
+    asked_about_api --> asked_about_api : discuss_api [has_additional_questions] (manual) / process_event
+    asked_about_api --> asked_about_api_success : transition_to_asked_about_api_success [!has_additional_questions]
+    asked_about_api_success --> notified_prototype_generation : welcome_user / process_event
+    notified_prototype_generation --> generated_functional_requirements : generate_functional_requirements / process_event
+    generated_functional_requirements --> generated_prototype_sketch : generate_prototype_sketch / process_event
+    generated_prototype_sketch --> prototype_generated : generate_prototype / process_event
+    prototype_generated --> asked_to_discuss_prototype : ask_to_discuss_prototype / process_event
+    asked_to_discuss_prototype --> asked_to_discuss_prototype : discuss_api [has_additional_questions] (manual) / process_event
+    asked_to_discuss_prototype --> asked_to_discuss_prototype_success : transition_to_asked_about_api_success [!has_additional_questions]
+    asked_to_discuss_prototype_success --> asked_to_confirm_migration : ask_to_confirm_migration / process_event
+    asked_to_confirm_migration --> notified_confirmed_migration : notify_confirmed_migration / process_event

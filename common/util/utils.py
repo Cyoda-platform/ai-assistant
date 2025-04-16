@@ -10,17 +10,16 @@ from zoneinfo import ZoneInfo
 
 import aiofiles
 from typing import Optional, Any
+import uuid
 import json
 
-import aiohttp
+import httpx
 import jsonschema
 from jsonschema import validate
-import hashlib
-import hmac
-import uuid
-from common.config.config import PROJECT_DIR, REPOSITORY_NAME, MAX_FILE_SIZE, CLONE_REPO, REPOSITORY_URL, \
-    AUTH_SECRET_KEY, MAX_IPS_PER_DEVICE_BEFORE_BLOCK, MAX_IPS_PER_DEVICE_BEFORE_ALARM, MAX_SESSIONS_PER_IP
-from common.exception.exceptions import RequestLimitExceededException, InvalidTokenException
+
+from common.config.config import PROJECT_DIR, REPOSITORY_NAME, AUTH_SECRET_KEY, MAX_FILE_SIZE, CLONE_REPO, \
+    REPOSITORY_URL
+from common.exception.exceptions import InvalidTokenException
 
 logger = logging.getLogger(__name__)
 
@@ -342,7 +341,7 @@ async def validate_result(data: str, file_path: str, schema: Optional[str]) -> s
         return normalized_json_data
     except jsonschema.exceptions.ValidationError as err:
         logger.error(f"JSON schema validation failed: {err.message}")
-        raise ValidationErrorException(message=f"JSON schema validation failed: {err}, {err.message}")
+        raise ValidationErrorException(message = f"JSON schema validation failed: {err}, {err.message}")
     except json.JSONDecodeError as err:
         logger.error(f"Failed to decode JSON: {err}")
         try:
@@ -439,9 +438,8 @@ async def read_json_file(file_path: str):
         logger.error(f"An unexpected error occurred while reading the file {file_path}: {e}")
         raise
 
-
-async def send_get_request(token: str, api_url: str, path: str = None) -> Optional[Any]:
-    url = f"{api_url}/{path}" if path else f"{api_url}"
+async def send_get_request(token: str, api_url: str, path: str) -> Optional[Any]:
+    url = f"{api_url}/{path}"
     token = f"Bearer {token}" if not token.startswith('Bearer') else token
     headers = {
         "Content-Type": "application/json",
@@ -457,64 +455,43 @@ async def send_get_request(token: str, api_url: str, path: str = None) -> Option
         raise
 
 
-async def send_request(headers, url, method, data, json, files=None):
-    async with aiohttp.ClientSession() as session:
-        try:
-            if method == 'GET':
-                async with session.get(url, headers=headers) as response:
-                    if response and (response.status == 200 or response.status == 404):
-                        return await response.json()
-            elif method == 'POST':
-                if not files:
-                    async with session.post(url, headers=headers, data=data, json=json) as response:
-                        if response:
-                            data = await response.json()
-                            return data
-                form = aiohttp.FormData()
-                async with aiofiles.open(files, 'rb') as f:
-                    file_content = await f.read()
+async def send_request(headers, url, method, data=None, json=None):
+    async with httpx.AsyncClient(timeout=150.0) as client:
+        method = method.upper()
+        if method == 'GET':
+            response = await client.get(url, headers=headers)
+            # Only process GET responses with status 200 or 404 as in your original code
+            if response.status_code in (200, 404):
+                content = response.json() if 'application/json' in response.headers.get('Content-Type', '') else response.text
+            else:
+                content = None
+        elif method == 'POST':
+            response = await client.post(url, headers=headers, data=data, json=json)
+            content = response.json() if 'application/json' in response.headers.get('Content-Type', '') else response.text
+        elif method == 'PUT':
+            response = await client.put(url, headers=headers, data=data, json=json)
+            content = response.json() if 'application/json' in response.headers.get('Content-Type', '') else response.text
+        elif method == 'DELETE':
+            response = await client.delete(url, headers=headers)
+            content = response.json() if 'application/json' in response.headers.get('Content-Type', '') else response.text
+        else:
+            raise ValueError("Unsupported HTTP method")
 
-                async with aiofiles.open(files, 'rb') as f:
-                    form.add_field('file', file_content, filename=files, content_type='application/json')
-
-                # Add additional form data (key-value pairs)
-                for key, value in data.items():
-                    form.add_field(key, value)
-
-                # Send the POST request
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(url, headers=headers, data=form) as response:
-                        if response.status == 200:
-                            return await response.json()
-                        else:
-                            print(f"Request failed with status code {response.status}")
-                            return None
-            elif method == 'PUT':
-                async with session.put(url, headers=headers, data=data, json=json) as response:
-                    if response:
-                        return await response.json()
-            elif method == 'DELETE':
-                async with session.delete(url, headers=headers) as response:
-                    if response:
-                        return await response.json()
-
-        except Exception as e:
-            logger.exception(e)
-            raise
-
-
-async def send_post_request(token: str, api_url: str, path: str, data=None, json=None, user_file=None) -> Optional[Any]:
-    url = f"{api_url}/{path}" if path else f"{api_url}"
-    token = f"Bearer {token}" if not token.startswith('Bearer') else token
-    try:
-        headers = {
-            "Authorization": f"{token}",
-        } if user_file else {
-            "Content-Type": "application/json",
-            "Authorization": f"{token}",
+        return {
+            "status": response.status_code,
+            "json": content
         }
-        # Remove Content-Type from headers as it will be set automatically in multipart
-        response = await send_request(headers=headers, url=url, method='POST', data=data, json=json, files=user_file)
+
+
+async def send_post_request(token: str, api_url: str, path: str, data=None, json=None) -> Optional[Any]:
+    url = f"{api_url}/{path}"
+    token = f"Bearer {token}" if not token.startswith('Bearer') else token
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"{token}",
+    }
+    try:
+        response = await send_request(headers, url, 'POST', data, json)
         return response
     except Exception as err:
         logger.error(f"Error during POST request to {url}: {err}")
@@ -522,7 +499,7 @@ async def send_post_request(token: str, api_url: str, path: str, data=None, json
 
 
 async def send_put_request(token: str, api_url: str, path: str, data=None, json=None) -> Optional[Any]:
-    url = f"{api_url}/{path}" if path else f"{api_url}"
+    url = f"{api_url}/{path}"
     token = f"Bearer {token}" if not token.startswith('Bearer') else token
     headers = {
         "Content-Type": "application/json",
@@ -538,7 +515,7 @@ async def send_put_request(token: str, api_url: str, path: str, data=None, json=
 
 
 async def send_delete_request(token: str, api_url: str, path: str) -> Optional[Any]:
-    url = f"{api_url}/{path}" if path else f"{api_url}"
+    url = f"{api_url}/{path}"
     token = f"Bearer {token}" if not token.startswith('Bearer') else token
     headers = {
         "Content-Type": "application/json",
@@ -565,15 +542,12 @@ def now():
 def timestamp_before(seconds: int) -> int:
     return int((time.time() - seconds) * 1000.0)
 
-
 def clean_formatting(text):
     """
     Convert multi-line text into a single line, preserving all other content.
     """
     # Replace any sequence of newlines (and carriage returns) with a single space
     return re.sub(r'[\r\n]+', ' ', text)
-
-
 # def clean_formatting(text):
 #     """
 #     This function simulates the behavior of text pasted into Google search:
@@ -612,6 +586,9 @@ def custom_serializer(obj):
     if isinstance(obj, queue.Queue):
         # Convert queue to list
         return list(obj.queue)
+    if not isinstance(obj, dict):
+        # Convert the object to a dictionary. Customize as needed.
+        return obj.__dict__
     raise TypeError(f"Type {type(obj)} not serializable")
 
 
@@ -918,3 +895,30 @@ def validate_token(token):
         raise InvalidTokenException()
     except jwt.InvalidTokenError:
         raise InvalidTokenException()
+
+def parse_from_string(escaped_code: str) -> str:
+    """
+    Convert a string containing escape sequences into its normal representation.
+
+    Args:
+        escaped_code: A string with literal escape characters (e.g. "\\n").
+
+    Returns:
+        A string with actual newlines and other escape sequences interpreted.
+    """
+    # Using the 'unicode_escape' decoding to process the escape sequences
+    return escaped_code.encode("utf-8").decode("unicode_escape")
+
+
+def parse_entity(model_cls, resp: Any) -> Any:
+    if isinstance(resp, list):
+
+        return [model_cls.model_validate(item) for item in resp]
+
+    else:
+        if not isinstance(resp, model_cls):
+            return model_cls.model_validate(resp)
+        return resp
+
+
+

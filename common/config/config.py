@@ -1,16 +1,18 @@
-import base64
 import os
-import logging
+import base64
 from dotenv import load_dotenv
 
 from common.config.conts import DEPLOY_CYODA_ENV, DEPLOY_USER_APP, DEPLOY_STATUS
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+load_dotenv()  # Loads the .env file automatically from the current working directory
 
-load_dotenv()
-get_env = lambda key: os.getenv(key) or (_ for _ in ()).throw(Exception(f"{key} not found"))
+def get_env(key, default=None):
+    """Get the environment variable for 'key'.
+    If not found and no default is provided, raise an Exception."""
+    value = os.getenv(key, default)
+    if value is None:
+        raise Exception(f"{key} not found")
+    return value
 
 CYODA_HOST = get_env("CYODA_HOST")
 CYODA_AI_URL = os.getenv("CYODA_AI_URL", f"https://{CYODA_HOST}/ai")
@@ -19,15 +21,13 @@ GRPC_ADDRESS = os.getenv("GRPC_ADDRESS", f"grpc-{CYODA_HOST}")
 # Load cyoda environment variables
 API_PREFIX = os.getenv("API_PREFIX", "/api/v1")
 DEEPSEEK_API_KEY = get_env("DEEPSEEK_API_KEY")
-API_URL = os.getenv("CYODA_API_URL") + "/api"
 decoded_bytes_cyoda_api_key = base64.b64decode(os.getenv("CYODA_API_KEY"))
 API_KEY = decoded_bytes_cyoda_api_key.decode("utf-8")
 decoded_bytes_cyoda_api_secret = base64.b64decode(os.getenv("CYODA_API_SECRET"))
 API_SECRET = decoded_bytes_cyoda_api_secret.decode("utf-8")
-
 ENTITY_VERSION = os.getenv("ENTITY_VERSION", "1000")
-GRPC_PROCESSOR_TAG = os.getenv("GRPC_PROCESSOR_TAG", "elt")
-
+CHAT_ID = os.getenv("CHAT_ID")
+GRPC_PROCESSOR_TAG = os.getenv("GRPC_PROCESSOR_TAG", CHAT_ID)
 # Load ai assistant environment variables
 CLONE_REPO = get_env("CLONE_REPO")
 MOCK_AI = get_env("MOCK_AI")
@@ -38,7 +38,8 @@ WORKFLOW_AI_API = get_env("WORKFLOW_AI_API")
 CONNECTION_AI_API = get_env("CONNECTION_AI_API")
 RANDOM_AI_API = get_env("RANDOM_AI_API")
 VALIDATION_MAX_RETRIES = int(get_env("VALIDATION_MAX_RETRIES"))
-MAX_ITERATION = int(get_env("MAX_ITERATION"))
+MAX_ITERATION = int(os.getenv("MAX_ITERATION", 30))
+MAX_AI_AGENT_ITERATIONS = int(os.getenv("MAX_AI_AGENT_ITERATIONS", 20))
 MAX_GUEST_CHATS = int(os.getenv("MAX_GUEST_CHATS", 2))
 CHECK_DEPLOY_INTERVAL = int(os.getenv("CHECK_DEPLOY_INTERVAL", 60))
 NUM_MOCK_ARR_ITEMS = int(get_env("NUM_MOCK_ARR_ITEMS"))
@@ -60,3 +61,6 @@ CYODA_DEPLOY_DICT = {
 MAX_IPS_PER_DEVICE_BEFORE_BLOCK=int(os.getenv("MAX_IPS_PER_DEVICE_BEFORE_BLOCK", 300))
 MAX_IPS_PER_DEVICE_BEFORE_ALARM=int(os.getenv("MAX_IPS_PER_DEVICE_BEFORE_ALARM", 100))
 MAX_SESSIONS_PER_IP=int(os.getenv("MAX_SESSIONS_PER_IP", 100))
+GENERAL_MEMORY_TAG="general_memory_tag"
+CYODA_ENTITY_TYPE_TREE="TREE"
+CYODA_ENTITY_TYPE_EDGE_MESSAGE="EDGE_MESSAGE"

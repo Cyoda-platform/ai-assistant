@@ -1,40 +1,77 @@
 import asyncio
-import copy
 import datetime
 import functools
 import json
 import logging
+import threading
 import uuid
 from datetime import timedelta
+from typing import List
+
 import jwt
 import aiohttp
+import aiofiles
 
 from quart import Quart, request, jsonify, send_from_directory, websocket
 from quart_cors import cors
 from quart_rate_limiter import RateLimiter, rate_limit
-from common.config.config import MOCK_AI, CYODA_AI_API, ENTITY_VERSION, API_PREFIX, API_URL, ENABLE_AUTH, MAX_TEXT_SIZE, \
-    MAX_FILE_SIZE, USER_FILES_DIR_NAME, CHAT_REPOSITORY, RAW_REPOSITORY_URL, MAX_GUEST_CHATS, AUTH_SECRET_KEY
-from common.config.conts import EDITING_AGENT, APP_BUILDER_MODE
+
+from common.auth.auth import authenticate_util
+from common.config.config import MOCK_AI, ENTITY_VERSION, API_PREFIX, ENABLE_AUTH, MAX_TEXT_SIZE, \
+    MAX_FILE_SIZE, CHAT_REPOSITORY, RAW_REPOSITORY_URL, MAX_GUEST_CHATS, AUTH_SECRET_KEY, CYODA_API_URL, \
+    CYODA_ENTITY_TYPE_EDGE_MESSAGE
+from common.config.conts import OPEN_AI, QUESTIONS_QUEUE_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME, \
+    CHAT_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, RATE_LIMIT, APPROVE
 from common.exception.exceptions import ChatNotFoundException, InvalidTokenException
-from common.util.utils import clean_formatting, send_get_request, current_timestamp, _save_file, clone_repo, \
+from common.repository.cyoda.cyoda_repository import cyoda_token
+from common.service.entity_service_interface import EntityService
+from common.util.chat_util_functions import trigger_manual_transition, get_user_message, add_answer_to_finished_flow
+from common.util.utils import send_get_request, current_timestamp, clone_repo, \
     validate_token
-from entity.chat.data.data import app_building_stack, APP_BUILDER_FLOW, DESIGN_PLEASE_WAIT, \
-    APPROVE_WARNING, DESIGN_IN_PROGRESS_WARNING, OPERATION_NOT_SUPPORTED_WARNING, ADDITIONAL_QUESTION_ROLLBACK_WARNING
+from entity.chat.data.data import APP_BUILDER_FLOW, DESIGN_PLEASE_WAIT, \
+    OPERATION_NOT_SUPPORTED_WARNING, ADDITIONAL_QUESTION_ROLLBACK_WARNING
+from entity.chat.model.chat import ChatEntity
+from entity.model.model import QuestionsQueue, FlowEdgeMessage, ChatMemory
 from logic.init import BeanFactory
 
-PUSH_NOTIFICATION = "push_notification"
-APPROVE = "approved"
-RATE_LIMIT = 300
 logger = logging.getLogger('django')
 
 app = Quart(__name__, static_folder='static', static_url_path='')
 app = cors(app, allow_origin="*")
 rate_limiter = RateLimiter(app)
 factory = BeanFactory(config={"CHAT_REPOSITORY": "cyoda"})
-ai_service = factory.get_services()["ai_service"]
-entity_service = factory.get_services()["entity_service"]
+ai_agent = factory.get_services()["ai_agent"]
+entity_service: EntityService = factory.get_services()["entity_service"]
 flow_processor = factory.get_services()["flow_processor"]
 chat_lock = factory.get_services()["chat_lock"]
+fsm_implementation = factory.get_services()["fsm"]
+grpc_client = factory.get_services()["grpc_client"]
+
+
+async def load_fsm():
+    try:
+        FILENAME = "/home/kseniia/PycharmProjects/ai_assistant/entity/chat/data/workflow_prototype/workflow.json"
+        async with aiofiles.open(FILENAME, "r") as f:
+            data = await f.read()
+        fsm = json.loads(data)
+        return fsm
+    except Exception as e:
+        logger.exception(f"Error reading JSON file: {e}")
+        return None
+
+
+def start_background_loop(loop):
+    """
+    Set and run the event loop in a separate thread.
+    """
+    asyncio.set_event_loop(loop)
+    loop.run_forever()
+
+
+# Create a new event loop for the gRPC streaming task.
+grpc_loop = asyncio.new_event_loop()
+grpc_thread = threading.Thread(target=start_background_loop, args=(grpc_loop,), daemon=True)
+grpc_thread.start()
 
 
 @app.before_serving
@@ -47,6 +84,18 @@ async def add_cors_headers():
         response.headers['Access-Control-Allow-Headers'] = '*'  # Allow these headers
         response.headers['Access-Control-Allow-Credentials'] = 'true'  # Allow credentials
         return response
+
+    # todo auth!
+    cyoda_token = authenticate_util()
+    # await init_cyoda(cyoda_token)
+    logger.info("Starting gRPC stream on a dedicated background thread.")
+
+    # Schedule the asynchronous gRPC stream on the background event loop.
+    # This returns a concurrent.futures.Future which you can later cancel or inspect.
+    app.background_task = asyncio.run_coroutine_threadsafe(
+        grpc_client.grpc_stream(cyoda_token),
+        grpc_loop
+    )
 
 
 @app.errorhandler(InvalidTokenException)
@@ -81,7 +130,7 @@ def auth_required(func):
                 return jsonify({"error": "This action is not available. Please sign in to proceed"}), 403
 
             token = auth_header.split(" ")[1]
-            response = await send_get_request(token, API_URL, "v1")
+            response = await send_get_request(token, CYODA_API_URL, "v1")
             # todo
             if not response or (response.get("status") and response.get("status") == 401):
                 raise InvalidTokenException("Invalid token")
@@ -102,12 +151,12 @@ def auth_required_to_proceed(func):
             auth_header = websocket.headers.get('Authorization') if websocket else request.headers.get('Authorization')
             if not auth_header:
                 raise InvalidTokenException("Invalid token")
-
+            # todo!!
             user_id = _get_user_id(auth_header=auth_header)
             if user_id.startswith('guest.'):
-                chat = await _get_chat_for_user(request=request, auth_header=auth_header,
-                                                technical_id=request.view_args.get("technical_id"))
-                current_stack = chat["chat_flow"]["current_flow"]
+                chat: ChatEntity = await _get_chat_for_user(request=request, auth_header=auth_header,
+                                                            technical_id=request.view_args.get("technical_id"))
+                current_stack = chat.chat_flow.current_flow
                 if not current_stack:
                     return jsonify({"error": "Max iteration reached, please sign in to proceed"}), 403
                 next_event = current_stack[-1]
@@ -116,7 +165,7 @@ def auth_required_to_proceed(func):
             else:
                 token = auth_header.split(" ")[1]
                 # Call external service to validate the token
-                response = await send_get_request(token, API_URL, "v1")
+                response = await send_get_request(token, CYODA_API_URL, "v1")
                 # todo
                 if not response or (response.get("status") and response.get("status") == 401):
                     raise InvalidTokenException("Invalid token")
@@ -132,6 +181,22 @@ def _get_user_token(auth_header):
         return None
     token = auth_header.split(" ")[1]
     return token
+
+
+@app.after_serving
+async def shutdown():
+    app.background_task.cancel()
+    await app.background_task
+    logger.info("Shutting down background gRPC stream.")
+
+    # Cancel the gRPC stream task if it exists.
+    if hasattr(app, 'background_task'):
+        app.background_task.cancel()
+
+    # Stop the background event loop.
+    grpc_loop.call_soon_threadsafe(grpc_loop.stop)
+    # Wait for the background thread to complete.
+    grpc_thread.join()
 
 
 @app.route('/')
@@ -154,12 +219,11 @@ async def get_chats():
     user_id = _get_user_id(auth_header=auth_header)
     if not user_id:
         return jsonify({"error": "Invalid token"}), 401
-    chats = await _get_chats_by_user_name(auth_header, user_id)
+    chats: List[ChatEntity] = await _get_chats_by_user_name(auth_header, user_id)
     chats_view = [{
-        'technical_id': chat['technical_id'],
-        'chat_id': chat['chat_id'],
-        'name': chat['name'],
-        'description': chat['description'],
+        'technical_id': chat.technical_id,
+        'name': chat.name,
+        'description': chat.description,
         'date': "2025-01-30T23:48:21.073+00:00"
     } for chat in chats]
 
@@ -170,19 +234,16 @@ async def get_chats():
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def get_chat(technical_id):
     auth_header = request.headers.get('Authorization')
-    chat = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
+    chat: ChatEntity = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
+    dialogue = await process_message(finished_flow=chat.chat_flow.finished_flow,
+                                     dialogue=[],
+                                     auth_header=auth_header)
 
-    dialogue = []
-    if "finished_flow" in chat.get("chat_flow", {}):
-        for item in chat["chat_flow"]["finished_flow"]:
-            if ((item.get("question") or item.get("notification")) and item.get("publish")) or item.get("answer"):
-                dialogue.append(item)
     chats_view = {
         'technical_id': technical_id,
-        'chat_id': chat['chat_id'],
-        'name': chat['name'],
-        'description': chat['description'],
-        'date': chat['date'],
+        'name': chat.name,
+        'description': chat.description,
+        'date': chat.description,
         'dialogue': dialogue
     }
     return jsonify({"chat_body": chats_view})
@@ -210,7 +271,7 @@ async def delete_chat(technical_id):
     auth_header = request.headers.get('Authorization')
     await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
     entity_service.delete_item(token=auth_header,
-                               entity_model="chat",
+                               entity_model=CHAT_MODEL_NAME,
                                entity_version=ENTITY_VERSION,
                                technical_id=technical_id,
                                meta={})
@@ -223,47 +284,82 @@ async def delete_chat(technical_id):
 async def add_chat():
     auth_header = request.headers.get('Authorization')
     user_id = _get_user_id(auth_header=auth_header)
-    if not user_id:
-        return jsonify({"error": "Invalid token"}), 401
     if user_id.startswith('guest.'):
         user_chats = await _get_chats_by_user_name(auth_header, user_id)
         if len(user_chats) >= MAX_GUEST_CHATS:
             return jsonify({"error": "Max guest chats limit reached, please sign in to proceed"}), 403
     req_data = await request.get_json()
-    name = req_data.get('name')
-    description = req_data.get('description')
-    if not name:
-        return jsonify({"message": "Invalid chat name"}), 400
-    # Here, handle the answer (e.g., store it, process it, etc.)
-    # todo use tech id as chat id
 
-    # new_questions = []
-    # questions_stack = copy.deepcopy(new_questions_stack)
-    # while questions_stack:
-    #     new_questions.append(questions_stack.pop())
-    chat = {
-        "mode": APP_BUILDER_MODE,
+    edge_message_id = await entity_service.add_item(token=cyoda_token,
+                                                    entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
+                                                    entity_version=ENTITY_VERSION,
+                                                    entity={
+                                                        "technical_id": "",
+                                                        "current_transition": "",
+                                                        "current_state": "",
+                                                        "type": "notification",
+                                                        "publish": True,
+                                                        "consumed": True,
+                                                        "notification": "Hi! I'm Cyoda 🧚. Let me take a look at your question. I'll be right back! ✨"
+                                                    },
+                                                    meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+
+    greeting_edge_message = FlowEdgeMessage(user_id=user_id, type="notification", publish=True,
+                                            edge_message_id=edge_message_id)
+    questions_queue = QuestionsQueue(new_questions=[greeting_edge_message],
+                                     user_id=user_id)
+
+    questions_queue_id = await entity_service.add_item(token=auth_header,
+                                                       entity_model=QUESTIONS_QUEUE_MODEL_NAME,
+                                                       entity_version=ENTITY_VERSION,
+                                                       entity=questions_queue)
+
+    memory_id = await entity_service.add_item(token=auth_header,
+                                              entity_model=MEMORY_MODEL_NAME,
+                                              entity_version=ENTITY_VERSION,
+                                              entity=ChatMemory.model_validate({"messages": {}}))
+    init_question = req_data.get('name')
+    if init_question and len(str(init_question).encode('utf-8')) > MAX_TEXT_SIZE:
+        return jsonify({"error": "Answer size exceeds 1MB limit"}), 400
+    chat_entity = ChatEntity.model_validate({
         "user_id": user_id,
+        "chat_id": "",
         "date": current_timestamp(),
-        "questions_queue": {"new_questions": [], "asked_questions": []},
-        "chat_flow": {"current_flow": copy.deepcopy(app_building_stack), "finished_flow": []},
-        "name": name,
-        "description": description
-    }
+        "questions_queue_id": str(questions_queue_id),
+        "name": init_question[:25] + '...' if len(init_question) > 25 else init_question,
+        "description": req_data.get('description'),
+        "chat_flow": {"current_flow": [], "finished_flow": []},
+        "current_transition": "",
+        "current_state": "",
+        "transitions_memory": {
+            "conditions": {},
+            "current_iteration": {},
+            "max_iteration": {}
+        },
+        "memory_id": memory_id,
+    })
+
+    await add_answer_to_finished_flow(entity_service=entity_service,
+                                      answer=init_question,
+                                      chat=chat_entity)
+
+    chat_entity.chat_flow.finished_flow.append(greeting_edge_message)
+
     technical_id = await entity_service.add_item(token=auth_header,
-                                                 entity_model="chat",
+                                                 entity_model=CHAT_MODEL_NAME,
                                                  entity_version=ENTITY_VERSION,
-                                                 entity=chat)
-    chat = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
-    chat["chat_id"] = technical_id
-    await entity_service.update_item(token=auth_header,
-                                     entity_model="chat",
-                                     entity_version=ENTITY_VERSION,
-                                     technical_id=technical_id,
-                                     entity=chat,
-                                     meta={})
-    logger.info("chat_id=" + str(chat["chat_id"]))
-    asyncio.create_task(flow_processor.process_dialogue_script(auth_header, technical_id))
+                                                 entity=chat_entity)
+    # if CHAT_REPOSITORY == "local":
+    #     # --- Simulation 1: Successful Weather Fetch Workflow ---
+    #     logger.info("=== Simulation: Successful Weather Fetch Workflow ===")
+    #     # Launch the workflow from the initial state and run automatic transitions.
+    #     fsm = await load_fsm()
+    #     current_state = asyncio.create_task(
+    #         flow_processor.run_workflow(fsm=fsm, technical_id=technical_id, entity=chat_entity))
+    #
+    #     logger.info(f"Workflow stopped at state: {current_state}")
+    #     #####todo
+
     return jsonify({"message": "Chat created", "technical_id": technical_id}), 200
 
 
@@ -272,38 +368,10 @@ async def add_chat():
 @rate_limit(RATE_LIMIT, timedelta(seconds=10))
 async def get_question(technical_id):
     auth_header = request.headers.get('Authorization')
-    chat = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
-    questions_queue = chat.get("questions_queue", {}).get("new_questions", [])
-    return await poll_questions(auth_header, chat, questions_queue, technical_id)
-
-
-@app.route(API_PREFIX + '/chats/<technical_id>/notification', methods=['PUT'])
-@auth_required
-@rate_limit(RATE_LIMIT, timedelta(minutes=1))
-async def edit_file(technical_id):
-    auth_header = request.headers.get('Authorization')
-    chat = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
-    req_data = await request.get_json()
-    # todo
-    data = req_data.get('notification')
-    if data and len(str(data).encode('utf-8')) > MAX_TEXT_SIZE:
-        return jsonify({"error": "Answer size exceeds 1MB limit"}), 400
-    await _save_file(chat_id=chat["chat_id"], _data=data, item=req_data.get('file_name'))
-    finished_flow = chat["chat_flow"].get("finished_flow", [])
-    for i in range(len(finished_flow) - 1, -1, -1):  # Start from the end
-        if finished_flow[i].get("file_name") and finished_flow[i].get("file_name") == req_data.get('file_name'):
-            # Insert a new element after the found element
-            req_data["answer"] = data
-            req_data["notification"] = None
-            finished_flow.insert(i + 1, req_data)
-            break
-    await entity_service.update_item(token=auth_header,
-                                     entity_model="chat",
-                                     entity_version=ENTITY_VERSION,
-                                     technical_id=technical_id,
-                                     entity=chat,
-                                     meta={})
-    return jsonify({"questions": []}), 200
+    chat: ChatEntity = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
+    questions_queue_id = chat.questions_queue_id
+    return await poll_questions(chat=chat,
+                                questions_queue_id=questions_queue_id)
 
 
 @app.route(API_PREFIX + '/chats/<technical_id>/text-questions', methods=['POST'])
@@ -315,7 +383,8 @@ async def submit_question_text(technical_id):
 
     req_data = await request.get_json()
     question = req_data.get('question')
-    res = await _submit_question_helper(auth_header, chat, question)
+    res = await _submit_question_helper(auth_header=auth_header, chat=chat, question=question,
+                                        technical_id=technical_id)
     return res
 
 
@@ -333,12 +402,17 @@ async def submit_question(technical_id):
     user_file = file.get('file')
     if user_file.content_length > MAX_FILE_SIZE:
         return {"error": f"File size exceeds {MAX_FILE_SIZE} limit"}
-    res = await _submit_question_helper(chat, question, user_file)
+    res = await _submit_question_helper(auth_header=auth_header,
+                                        chat=chat,
+                                        question=question,
+                                        technical_id=technical_id,
+                                        user_file=user_file)
     return res
 
 
 @app.route(API_PREFIX + '/chats/<technical_id>/push-notify', methods=['POST'])
 @auth_required
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def push_notify(technical_id):
     return jsonify({"error": OPERATION_NOT_SUPPORTED_WARNING}), 400
@@ -406,41 +480,41 @@ async def _get_chat_for_user(auth_header, technical_id, request=None):
     if not user_id:
         raise InvalidTokenException()
 
-    chat = await entity_service.get_item(token=auth_header,
-                                         entity_model="chat",
-                                         entity_version=ENTITY_VERSION,
-                                         technical_id=technical_id)
+    chat: ChatEntity = await entity_service.get_item(token=auth_header,
+                                                     entity_model=CHAT_MODEL_NAME,
+                                                     entity_version=ENTITY_VERSION,
+                                                     technical_id=technical_id)
 
     if not chat and CHAT_REPOSITORY == "local":
         # todo check here
         async with chat_lock:
-            chat = await entity_service.get_item(token=auth_header,
-                                                 entity_model="chat",
-                                                 entity_version=ENTITY_VERSION,
-                                                 technical_id=technical_id)
+            chat: ChatEntity = await entity_service.get_item(token=auth_header,
+                                                             entity_model=CHAT_MODEL_NAME,
+                                                             entity_version=ENTITY_VERSION,
+                                                             technical_id=technical_id)
             if not chat:
                 await clone_repo(chat_id=technical_id)
 
                 async with aiohttp.ClientSession() as session:
                     async with session.get(f"{RAW_REPOSITORY_URL}/{technical_id}/entity/chat.json") as response:
                         data = await response.text()
-                chat = json.loads(data)
+                chat = ChatEntity.model_validate(json.loads(data))
                 if not chat:
                     raise ChatNotFoundException()
 
                 await entity_service.add_item(token=auth_header,
-                                              entity_model="chat",
+                                              entity_model=CHAT_MODEL_NAME,
                                               entity_version=ENTITY_VERSION,
                                               entity=chat)
 
     elif not chat:
         raise ChatNotFoundException()
     # todo concurrent requests might override
-    if chat["user_id"] != user_id:
-        if chat["user_id"].startswith("guest.") and not user_id.startswith("guest."):
-            chat["user_id"] = user_id
+    if chat.user_id != user_id:
+        if chat.user_id.startswith("guest.") and not user_id.startswith("guest."):
+            chat.user_id = user_id
             await entity_service.update_item(token=auth_header,
-                                             entity_model="chat",
+                                             entity_model=CHAT_MODEL_NAME,
                                              entity_version=ENTITY_VERSION,
                                              technical_id=technical_id,
                                              entity=chat,
@@ -468,7 +542,7 @@ def _get_user_id(auth_header):
 
 async def _get_chats_by_user_name(auth_header, user_id):
     return await entity_service.get_items_by_condition(token=auth_header,
-                                                       entity_model="chat",
+                                                       entity_model=CHAT_MODEL_NAME,
                                                        entity_version=ENTITY_VERSION,
                                                        condition={"cyoda": {
                                                            "operator": "AND",
@@ -485,7 +559,7 @@ async def _get_chats_by_user_name(auth_header, user_id):
                                                            "local": {"key": "user_id", "value": user_id}})
 
 
-async def _submit_question_helper(auth_header, chat, question, user_file=None):
+async def _submit_question_helper(auth_header, technical_id, chat, question, user_file=None):
     # Check if a file has been uploaded
 
     # Validate input
@@ -498,152 +572,164 @@ async def _submit_question_helper(auth_header, chat, question, user_file=None):
 
     # Process file if provided
     if user_file:
-        file_name = user_file.filename
-        folder_name = USER_FILES_DIR_NAME
-        # Save the uploaded file asynchronously
-        await _save_file(chat_id=chat["chat_id"], _data=user_file, item=file_name, folder_name=folder_name)
-        # Call AI service with the file
-        result = await ai_service.ai_chat(
-            token=auth_header,
-            chat_id=chat["chat_id"],
-            ai_endpoint=CYODA_AI_API,
-            ai_question=question,
-            user_file=file_name
-        )
-    else:
-        # Call AI service without a file
-        result = await ai_service.ai_chat(
-            token=auth_header,
-            chat_id=chat["chat_id"],
-            ai_endpoint=CYODA_AI_API,
-            ai_question=question
-        )
+        question = await get_user_message(request=request, message=question, user_file=user_file)
 
-    # Return the result from the AI service
+    # Call AI service with the file
+    result = await ai_agent.run(
+        methods_dict=None,
+        cls_instance=None,
+        entity=chat,
+        technical_id=technical_id,
+        tools=None,
+        model=OPEN_AI,
+        tool_choice=None,
+        messages=[{"role": "user", "content": question}]
+    )
+
     return jsonify({"message": result}), 200
 
 
-async def rollback_dialogue_script(technical_id, auth_header, chat, question):
-    current_flow = chat["chat_flow"]["current_flow"]
-    if "finished_flow" not in chat["chat_flow"]:
-        chat["chat_flow"]["finished_flow"] = []
-    finished_flow = chat["chat_flow"]["finished_flow"]
-    if not finished_flow[-1].get("question"):
-        return jsonify({
-            "message": DESIGN_IN_PROGRESS_WARNING}), 400
-    if not question:
-        return jsonify({
-            "message": OPERATION_NOT_SUPPORTED_WARNING}), 400
-    event = finished_flow.pop()
-    while finished_flow and (not event.get("question") or event.get("question") != question):
-        if event.get("stack") and (
-                not event.get('iteration') or (event.get('iteration') and event.get('iteration') < 2)):
-            new_event = copy.deepcopy(event)
-            new_event['iteration'] = 0
-            current_flow.append(new_event)
-        event = finished_flow.pop()
-    finished_flow.append(event)
-    await entity_service.update_item(token=auth_header,
-                                     entity_model="chat",
-                                     entity_version=ENTITY_VERSION,
-                                     technical_id=technical_id,
-                                     entity=chat,
-                                     meta={})
+async def _submit_answer_helper(technical_id, answer, auth_header, chat, user_file=None):
+    # todo
+    # question_queue = chat.questions_queue.new_questions
+    #
+    # if question_queue:
+    #     return jsonify({
+    #         "message": "Could you please have a look at a couple of more questions before submitting your answer?"
+    #     }), 400
+
+    is_valid, validated_answer = _validate_answer(answer=answer, user_file=user_file)
+    if not is_valid:
+        return jsonify({"message": validated_answer}), 400
+    # todo
+    await trigger_manual_transition(entity_service=entity_service,
+                                    chat=chat,
+                                    answer=validated_answer,
+                                    user_file=user_file,
+                                    request=request)
     return jsonify({"message": "Answer received"}), 200
 
 
-async def _submit_answer_helper(technical_id, answer, auth_header, chat, user_file=None):
-    if "questions_queue" not in chat:
-        chat["questions_queue"] = {}
-    if "new_questions" not in chat["questions_queue"]:
-        chat["questions_queue"]["new_questions"] = []
-    question_queue = chat["questions_queue"]["new_questions"]
-    if len(question_queue) > 0:
-        return jsonify({
-            "message": "Could you please have a look at a couple of more questions before submitting your answer?"}), 400
-    if not answer and not user_file:
-        return jsonify({"message": "Invalid entity"}), 400
-    if not answer and user_file:
-        answer = "please, consider the contents of this file"
+async def rollback_dialogue_script(technical_id, auth_header, chat: ChatEntity, question):
+    pass
 
-    wait_notification = {"notification": f"Thank you for your answer! {DESIGN_PLEASE_WAIT}",
-                         "prompt": {},
-                         "answer": None,
-                         "function": None,
-                         "iteration": 0,
-                         "max_iteration": 0
-                         }
+
+async def _initialize_question_queue(chat):
+    pass
+
+
+def _validate_answer(answer, user_file):
+    if not answer:
+        if not user_file:
+            return False, "Invalid entity"
+        return True, "please, consider the contents of this file"
+    return True, answer
+
+
+def _append_wait_notification(question_queue):
+    wait_notification = {
+        "notification": f"Thank you for your answer! {DESIGN_PLEASE_WAIT}",
+        "prompt": {},
+        "answer": None,
+        "function": None,
+        "iteration": 0,
+        "max_iteration": 0
+    }
     question_queue.append(wait_notification)
 
-    async with chat_lock:
-        current_stack = chat["chat_flow"]["current_flow"]
-        finished_stack = chat["chat_flow"].get("finished_flow", [])
-        if not current_stack:
-            # todo
-            await ai_service.ai_chat(token=auth_header, chat_id=technical_id, ai_endpoint={"model": EDITING_AGENT},
-                                     ai_question=answer)
-            asyncio.create_task(flow_processor.process_dialogue_script(auth_header, technical_id))
-            return jsonify({"message": "in progress"}), 200
-        # question_queue.append(wait_notification)
-        if not finished_stack[-1].get("question"):
-            retry_notification = {"notification": DESIGN_IN_PROGRESS_WARNING}
-            question_queue.append(retry_notification)
-            # todo
-            if chat.get("mode", APP_BUILDER_MODE) == APP_BUILDER_MODE:
-                return jsonify({
-                    "message": DESIGN_IN_PROGRESS_WARNING}), 400
-        if answer == APPROVE and finished_stack[-1].get("question") and not finished_stack[-1].get("approve"):
-            retry_notification = {"notification": APPROVE_WARNING}
-            question_queue.append(retry_notification)
-            return jsonify({
-                "message": APPROVE_WARNING}), 400
-        next_event = current_stack[-1]
-        while next_event.get("notification"):
-            next_event_notification = current_stack.pop()
-            question_queue.append(next_event_notification)
-            next_event = current_stack[-1]
-        # if answer == PUSH_NOTIFICATION:
-        #     next_event["answer"] = clean_formatting(
-        #         await read_file(get_project_file_name(chat['chat_id'], next_event["file_name"])))
-        if answer == APPROVE:
-            next_event["max_iteration"] = -1
-            next_event["answer"] = APPROVE
-        else:
-            next_event["answer"] = clean_formatting(answer)
-    # todo might not be reached, need to refactor
-    if user_file:
-        file_name = user_file.filename
-        folder_name = USER_FILES_DIR_NAME
-        await _save_file(chat_id=chat["chat_id"], _data=user_file, item=file_name, folder_name=folder_name)
-        next_event["user_file"] = file_name
-        next_event["user_file_processed"] = False
-    await entity_service.update_item(token=auth_header,
-                                     entity_model="chat",
-                                     entity_version=ENTITY_VERSION,
-                                     technical_id=technical_id,
-                                     entity=chat,
-                                     meta={})
-    asyncio.create_task(flow_processor.process_dialogue_script(auth_header, technical_id))
-    return jsonify({"message": "Answer received"}), 200
 
-
-async def poll_questions(auth_header, chat, questions_queue, technical_id):
+async def poll_questions(chat, questions_queue_id):
     try:
+        questions_queue: QuestionsQueue = await entity_service.get_item(token=cyoda_token,
+                                                                        entity_model=QUESTIONS_QUEUE_MODEL_NAME,
+                                                                        entity_version=ENTITY_VERSION,
+                                                                        technical_id=questions_queue_id)
         questions_to_user = []
-        while questions_queue:
-            _event = questions_queue.pop(0)
-            questions_to_user.append(_event)
-        if len(questions_to_user) > 0:
-            await entity_service.update_item(token=auth_header,
-                                             entity_model="chat",
+
+        if questions_queue.new_questions and questions_queue.current_state == 'idle':
+
+            await lock_questions_queue(questions_queue_id)
+
+            questions_queue: QuestionsQueue = await entity_service.get_item(token=cyoda_token,
+                                                                            entity_model=QUESTIONS_QUEUE_MODEL_NAME,
+                                                                            entity_version=ENTITY_VERSION,
+                                                                            technical_id=questions_queue_id)
+
+            while questions_queue.new_questions:
+                message: FlowEdgeMessage = questions_queue.new_questions.pop(0)
+
+                message_content = await entity_service.get_item(token=cyoda_token,
+                                                                entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
+                                                                entity_version=ENTITY_VERSION,
+                                                                technical_id=message.edge_message_id,
+                                                                meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+
+                questions_to_user.append(message_content)
+                questions_queue.asked_questions.append(message)
+
+            await entity_service.update_item(token=cyoda_token,
+                                             entity_model=QUESTIONS_QUEUE_MODEL_NAME,
                                              entity_version=ENTITY_VERSION,
-                                             technical_id=technical_id,
-                                             entity=chat,
-                                             meta={})
+                                             technical_id=questions_queue_id,
+                                             entity=questions_queue,
+                                             meta={UPDATE_TRANSITION: "dequeue_message"})
+
         return jsonify({"questions": questions_to_user}), 200
     except Exception as e:
         logger.exception(e)
         return jsonify({"questions": []}), 200  # No Content
+
+
+async def lock_questions_queue(questions_queue_id):
+    while True:
+        try:
+            result = await entity_service.update_item(token=cyoda_token,
+                                                      entity_model=QUESTIONS_QUEUE_MODEL_NAME,
+                                                      entity_version=ENTITY_VERSION,
+                                                      technical_id=questions_queue_id,
+                                                      entity=None,
+                                                      meta={UPDATE_TRANSITION: "lock_for_dequeue"})
+            return result
+        except Exception as e:
+            logging.exception("failed_transition_to_lock_for_dequeue_entity_questions_queue...")
+            # Delay before retrying to prevent tight looping
+            await asyncio.sleep(1)
+
+
+async def process_message(finished_flow: List[FlowEdgeMessage], auth_header, dialogue: list) -> list:
+    for message in finished_flow:
+        if ((message.type in ["question", "notification"] and getattr(message, "publish", False))
+                or message.type == "answer"):
+            message_content = await entity_service.get_item(
+                token=auth_header,
+                entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
+                entity_version=ENTITY_VERSION,
+                technical_id=message.edge_message_id,
+                meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+            )
+            dialogue.append(message_content)
+
+        # If the message contains child entities, retrieve and process each child recursively
+        if message.type == "child_entities":
+            message_content = await entity_service.get_item(
+                token=auth_header,
+                entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
+                entity_version=ENTITY_VERSION,
+                technical_id=message.edge_message_id,
+                meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+            )
+            child_entities = message_content.get("child_entities", [])
+            for child_entity_id in child_entities:
+                child_entity: ChatEntity = await entity_service.get_item(
+                    token=auth_header,
+                    entity_model=CHAT_MODEL_NAME,
+                    entity_version=ENTITY_VERSION,
+                    technical_id=child_entity_id
+                )
+                child_entity_finished_flow = child_entity.chat_flow.finished_flow
+                await process_message(finished_flow=child_entity_finished_flow, auth_header=auth_header,
+                                      dialogue=dialogue)
+    return dialogue
 
 
 if __name__ == '__main__':

@@ -1,0 +1,48 @@
+{
+  "initial_state": "none",
+  "states": {
+    "none": {
+      "transitions": {
+        "start_deployment": {
+          "next": "trigger_deployment_function"
+        }
+      }
+    },
+    "trigger_deployment_function": {
+      "transitions": {
+        "notify_deployment_started": {
+          "next": "deployment_scheduled",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "deploy_app",
+                "description": "Deploys the app based on the type selected",
+                "parameters": {
+                  "deployment_type": "{deployment_type}"
+                }
+              },
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "deployment_scheduled": {
+      "transitions": {
+        "done": {
+          "next": "none",
+          "action": {
+            "name": "notify_user",
+            "config": {
+              "type": "question",
+              "question": "The env deployment has been scheduled successfully, we'll let you know when it is ready",
+              "publish": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

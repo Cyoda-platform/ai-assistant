@@ -1,0 +1,136 @@
+{
+  "initial_state": "none",
+  "states": {
+    "none": {
+      "transitions": {
+        "start_api_update_workflow": {
+          "next": "api_code_design"
+        }
+      }
+    },
+    "api_code_design": {
+      "transitions": {
+        "user_approved_app": {
+          "next": "awaiting_approval",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+                "name": "OPEN_AI_o3",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "input": {
+                "attached_files": [
+                  "app.py"
+                ]
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "You are provided with code that implements a REST API (using a framework Quart).",
+                    "Please update it according to the user request: {user_prompt}",
+                    "",
+                    "Reference:",
+                    "entity_service (from app_init.app_init import entity_service).",
+                    "You can use only these functions for replacement - if this is not enough just skip and leave as is.",
+                    "",
+                    "1. Add:",
+                    "id = await entity_service.add_item(",
+                    "    token=cyoda_token,",
+                    "    entity_model=\"{entity_name}\",",
+                    "    entity_version=ENTITY_VERSION,  # always use this constant",
+                    "    entity=data  # the validated data object",
+                    ")",
+                    "Just return id in the response - do not retrieve result immediately.",
+                    "",
+                    "2. Retrieve:",
+                    "await entity_service.get_item(...)",
+                    "await entity_service.get_items(...)",
+                    "await entity_service.get_items_by_condition(...)",
+                    "",
+                    "3. Update:",
+                    "await entity_service.update_item(...)",
+                    "",
+                    "4. Delete:",
+                    "await entity_service.delete_item(...)"
+                  ]
+                }
+              ],
+              "output": {
+                "cyoda_edge_message": [
+                  "api_update_result"
+                ]
+              },
+              "file_name": "app.py",
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "awaiting_approval": {
+      "transitions": {
+        "gather_app_py_requirements": {
+          "next": "initial_prompt",
+          "action": {
+            "name": "confirm_user",
+            "config": {
+              "type": "question",
+              "question": "The new version of the api is ready. Would you like to make any changes? Please approve to proceed to the next step.",
+              "approve": true,
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "initial_prompt": {
+      "transitions": {
+        "start_data_api_update": {
+          "next": "initial_notification",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+                "name": "OPEN_AI",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "messages": {
+                "role": "user",
+                "content": [
+                  "Please return complete app.py taking into account user suggestions if any."
+                ]
+              },
+              "output": {
+                "cyoda_edge_message": [
+                  "app_py_response"
+                ]
+              },
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "initial_notification": {
+      "transitions": {
+        "none_to_initial_notification": {
+          "next": "none",
+          "action": {
+            "name": "notify_user",
+            "config": {
+              "type": "question",
+              "question": "Please let me know if I can help!",
+              "publish": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "initial_state": "none",
+  "states": {
+    "none": {
+      "transitions": {
+        "start_data_entity_add": {
+          "next": "generate_data_model"
+        }
+      }
+    },
+    "generate_data_model": {
+      "transitions": {
+        "initial_notification": {
+          "next": "user_notification",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+                "name": "REQUIREMENT_AGENT",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Please add data model example for the {entity_name} according to the user requirement: {user_prompt}.",
+                    "Please return raw data example and not schema."
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "user_notification": {
+      "transitions": {
+        "finish": {
+          "next": "none",
+          "action": {
+            "name": "notify_user",
+            "config": {
+              "type": "question",
+              "question": "Please let me know if I can help!",
+              "publish": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

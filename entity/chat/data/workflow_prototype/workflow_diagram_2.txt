@@ -1,0 +1,22 @@
+stateDiagram-v2
+    [*] --> idle
+    idle --> greeting_sent : send_welcome_message / process_event
+    greeting_sent --> repository_cloned : clone_repository / process_event
+    repository_cloned --> chats_established : initialize_chats / process_event
+    chats_established --> app_requirements_requested : request_app_requirements / process_event
+    app_requirements_requested --> app_requirements_reviewed : review_app_requirement (manual) / process_event
+    app_requirements_reviewed --> app_requirements_reviewed : reassess_app_requirement [has_additional_questions] (manual) / process_event
+    app_requirements_reviewed --> app_requirements_finalized : complete_app_requirement [!has_additional_questions]
+    app_requirements_finalized --> functional_requirements_specified : specify_functional_requirements (manual) / process_event
+    functional_requirements_specified --> api_inquired : inquire_about_api / process_event
+    api_inquired --> api_inquired : continue_api_discussion [has_additional_questions] (manual) / process_event
+    api_inquired --> api_discussion_completed : complete_api_discussion [!has_additional_questions]
+    api_discussion_completed --> prototype_generation_notified : inform_prototype_generation / process_event
+    prototype_generation_notified --> functional_requirements_generated : generate_functional_requirements / process_event
+    functional_requirements_generated --> prototype_sketch_generated : create_prototype_sketch / process_event
+    prototype_sketch_generated --> prototype_completed : build_prototype / process_event
+    prototype_completed --> prototype_discussion_requested : invite_prototype_discussion / process_event
+    prototype_discussion_requested --> prototype_discussion_requested : continue_prototype_discussion [has_additional_questions] (manual) / process_event
+    prototype_discussion_requested --> prototype_discussion_completed : complete_prototype_discussion [!has_additional_questions]
+    prototype_discussion_completed --> migration_confirmation_requested : request_migration_confirmation / process_event
+    migration_confirmation_requested --> migration_confirmation_notified : confirm_migration / process_event

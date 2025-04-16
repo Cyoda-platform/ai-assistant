@@ -8,15 +8,15 @@ from entity.chat.data.data import GATHERING_REQUIREMENTS_STR, APPROVAL_NOTIFICAT
 
 data_processors_update_stack = lambda workflow_json, user_prompt, entity_name, entity_model, workflow_code: \
     [{"question": "Please let me know if I can help!",
-                       "prompt": {},
-                       "answer": None,
-                       "function": None,
-                       "index": 2,
-                       "iteration": 0,
-                       "file_name": "entity/chat.json",
-                       "max_iteration": 0,
-                       "stack": APP_BUILDING_STACK_KEY,
-                       "publish": True},
+      "prompt": {},
+      "answer": None,
+      "function": None,
+      "index": 2,
+      "iteration": 0,
+      "file_name": "entity/chat.json",
+      "max_iteration": 0,
+      "stack": APP_BUILDING_STACK_KEY,
+      "publish": True},
      {"question": None,
       "prompt": {
           "text": "Please return fully functioning workflow.py code taking into account user suggestions if any.",
@@ -50,22 +50,6 @@ data_processors_update_stack = lambda workflow_json, user_prompt, entity_name, e
          "stack": APP_BUILDING_STACK_KEY,
          "publish": True},
      {"question": None,
-#       "function": {"name": "update_workflow_code",
-#                    "model_api": {
-#                        "model": OPEN_AI,
-#                        "temperature": 0.7,
-#                        "max_tokens": 10000},
-#                    "prompt": {
-#                        "text": """
-# Please generate processors functions {workflow_processors} and add them to the entity workflow {entity_workflow_code}.
-# Processes should have name starting with 'process_' and take only one argument entity.
-# entity data example {entity_model}
-# """,
-#                        "api": {"model": OPEN_AI,
-#                                "temperature": 0.7,
-#                                "max_tokens": 10000},
-#                    },
-#                    },
       "prompt": {
           "text": f""" # Please update processors functions according the new requirement "{user_prompt}".
 Generate new process functions if necessary or update existing functions according to the user requirement.     

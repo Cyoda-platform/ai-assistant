@@ -1,0 +1,329 @@
+{
+  "initial_state": "none",
+  "states": {
+    "none": {
+      "transitions": {
+        "initialize_chat": {
+          "next": "initialized_chat"
+        }
+      }
+    },
+    "initialized_chat": {
+      "transitions": {
+        "submit_chat_question": {
+          "next": "submitted_workflow_question",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "launch_workflow",
+                    "description": "Launches workflow that is necessary to address the user's request. Pass workflow name that satisfies the user request best. E.g. if the user wants to order pizza, choose order_pizza and pass workflow name and user request 'as a user i want to order pizza'",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow": {
+                          "type": "string",
+                          "enum": [
+                            "build_general_application",
+                            "build_agentic_application",
+                            "edit_general_application",
+                            "deploy_application"
+                          ]
+                        },
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "workflow",
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Hello! You are a very helpful robot who knows best how to do what the human wants.",
+                    " Please use your general knowledge if it’s sufficient, but if not, feel free to use any of the useful tools provided to you.",
+                    " launch_workflow is an orchestration tool - you can use it to delegate some complex requests execution to the relevant workflows",
+                    " In order to do it - choose launch_workflow function and pass the most relevant workflow name as a parameter. ",
+                    " If you're unsure, don't hesitate to ask the human for more information.",
+                    " Here is the user's request:"
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        }
+      }
+    },
+    "submitted_workflow_question": {
+      "transitions": {
+        "process_question": {
+          "next": "processed_question",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "launch_workflow",
+                    "description": "Launches workflow that is necessary to address the user's request. Pass workflow name that satisfies the user request best. E.g. if the user wants to order pizza, choose order_pizza and pass workflow name and user request 'as a user i want to order pizza'",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow": {
+                          "type": "string",
+                          "enum": [
+                            "build_general_application",
+                            "build_agentic_application",
+                            "edit_general_application",
+                            "deploy_application"
+                          ]
+                        },
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "workflow",
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Hello! You are a very helpful robot who knows best how to do what the human wants.",
+                    " Please use your general knowledge if it’s sufficient, but if not, feel free to use any of the useful tools provided to you.",
+                    " launch_workflow is an orchestration tool - you can use it to delegate some complex requests execution to the relevant workflows",
+                    " In order to do it - choose launch_workflow function and pass the most relevant workflow name as a parameter. ",
+                    " If you're unsure, don't hesitate to ask the human for more information.",
+                    " Here is the user's request:"
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        },
+        "lock_chat": {
+          "next": "locked_chat",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_chat_locked",
+                "description": "Verifies if the chat is locked"
+              }
+            }
+          }
+        }
+      }
+    },
+    "processed_question": {
+      "transitions": {
+        "lock_chat": {
+          "next": "locked_chat",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_chat_locked",
+                "description": "Verifies if the chat is locked"
+              }
+            }
+          }
+        },
+        "unlock_chat": {
+          "next": "submitted_workflow_question",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_chat_unlocked",
+                "description": "Verifies if the chat is unlocked"
+              }
+            }
+          }
+        }
+      }
+    },
+    "locked_chat": {
+      "transitions": {
+        "unlock_chat": {
+          "next": "submitted_workflow_question",
+          "manual": true,
+          "config": {
+            "type": "function",
+            "publish": true,
+            "allow_anonymous_users": true,
+            "function": {
+              "name": "unlock_chat",
+              "description": "",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

@@ -8,18 +8,24 @@ import os
 import aiofiles
 import black
 
-from common.config.config import MOCK_AI, VALIDATION_MAX_RETRIES, PROJECT_DIR, REPOSITORY_NAME, REPOSITORY_URL, WORKFLOW_AI_API
+from common.config.config import MOCK_AI, VALIDATION_MAX_RETRIES, PROJECT_DIR, REPOSITORY_NAME, REPOSITORY_URL, \
+    WORKFLOW_AI_API, ENTITY_VERSION
+from common.config.conts import SCHEDULER_ENTITY
+from common.repository.cyoda.cyoda_repository import cyoda_token
+from common.util.chat_util_functions import add_answer_to_finished_flow
 from common.util.utils import get_project_file_name, read_file, format_json_if_needed, parse_workflow_json, \
-    _save_file
+    _save_file, current_timestamp
 from entity.chat.data.data import PUSHED_CHANGES_NOTIFICATION
+from entity.chat.model.chat import ChatEntity
+from entity.model.model import SchedulerEntity
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class WorkflowHelperService:
-    def __init__(self, ai_service, mock=False):
-        self.ai_service = ai_service
+    def __init__(self, mock=False):
         self.mock = mock
 
     if MOCK_AI == "true":
@@ -36,19 +42,16 @@ class WorkflowHelperService:
             raise
         json_mock_data = json.loads(data)
 
-
-
     async def _get_valid_result(self, _data, schema, token, ai_endpoint, chat_id):
         if MOCK_AI == "true" and not isinstance(_data, dict):
             return _data
         result = await self.ai_service.validate_and_parse_json(token=token,
-                                                          ai_endpoint=ai_endpoint,
-                                                          chat_id=chat_id,
-                                                          data=_data,
-                                                          schema=schema,
-                                                          max_retries=VALIDATION_MAX_RETRIES)
+                                                               ai_endpoint=ai_endpoint,
+                                                               chat_id=chat_id,
+                                                               data=_data,
+                                                               schema=schema,
+                                                               max_retries=VALIDATION_MAX_RETRIES)
         return result
-
 
     async def run_chat(self, chat, _event, token, ai_endpoint, chat_id, additional_prompt=None):
         event_prompt, prompt = await self.build_prompt(_event, chat) if not additional_prompt else (
@@ -69,16 +72,15 @@ class WorkflowHelperService:
         if event_prompt.get("schema"):
             try:
                 result = await self._get_valid_result(_data=result,
-                                                 schema=event_prompt["schema"],
-                                                 token=token,
-                                                 ai_endpoint=ai_endpoint,
-                                                 chat_id=chat_id)
+                                                      schema=event_prompt["schema"],
+                                                      token=token,
+                                                      ai_endpoint=ai_endpoint,
+                                                      chat_id=chat_id)
             except Exception as e:
                 return {"success": "false", "error": str(e)}
         return result
 
-
-    async def build_prompt(self,_event, chat):
+    async def build_prompt(self, _event, chat):
         if _event.get("function") and _event["function"].get("prompt"):
             event_prompt = _event["function"]["prompt"]
         else:
@@ -89,7 +91,6 @@ class WorkflowHelperService:
         prompt = f'{prompt}. Use this json schema http://json-schema.org/draft-07/schema# to understand how to structure your answer: {event_prompt.get("schema", "")}. It will be validated against this schema. Return only json (python dictionary)' if event_prompt.get(
             "schema") else prompt
         return event_prompt, prompt
-
 
     async def _enrich_prompt_with_context(self, _event, chat, event_prompt):
         prompt_text = event_prompt.get("text", "")
@@ -118,21 +119,19 @@ class WorkflowHelperService:
                     prompt_text = prompt_text.replace(f'${prompt_context_item}', str(chat_context))
         return prompt_text
 
-
     async def _get_chat_response(self, prompt, token, ai_endpoint, chat_id, user_file=None):
         """Get chat response either from the AI service or mock entity."""
         if MOCK_AI == "true":
             return self._mock_ai(prompt)
         resp = await self.ai_service.ai_chat(token=token, ai_endpoint=ai_endpoint, chat_id=chat_id, ai_question=prompt,
-                                        user_file=user_file)
+                                             user_file=user_file)
         return resp
-
 
     def _mock_ai(self, prompt_text):
         return self.json_mock_data.get(prompt_text[:15], json.dumps({"entity": "some random text"}))
 
-
-    def get_event_template(self, event, question='', notification='', answer=None, prompt=None, file_name=None, editable=False,
+    def get_event_template(self, event, question='', notification='', answer=None, prompt=None, file_name=None,
+                           editable=False,
                            publish=False):
         # Predefined keys for the final JSON structure
         final_json = {
@@ -149,7 +148,7 @@ class WorkflowHelperService:
             "file_name": file_name if file_name else event.get('file_name', ''),
             "context": event.get('context', {}),
             "approve": True,
-            "editable": False,#editable todo
+            "editable": False,  # editable todo
             "publish": publish if publish else event.get('publish', {})
         }
         exclusion_values = ['stack']  # Values to be excluded from the final JSON
@@ -170,7 +169,6 @@ class WorkflowHelperService:
             print(f"Error formatting code: {e}")
             return code  # Return the original code if formatting fails
 
-
     async def _export_workflow_to_cyoda_ai(self, token, chat_id, _data):
         if MOCK_AI == "true":
             return
@@ -179,33 +177,22 @@ class WorkflowHelperService:
 
         await self.ai_service.export_workflow_to_cyoda_ai(token=token, chat_id=chat_id, data=_data)
 
-
     async def _send_notification(self, chat, event, notification_text, file_name=None, editable=False, publish=False):
         stack = chat["chat_flow"]["current_flow"]
-        notification_event = self.get_event_template(notification=notification_text,
-                                                event=event,
-                                                question='',
-                                                answer='',
-                                                prompt={},
-                                                file_name=file_name,
-                                                editable=editable,
-                                                publish=publish)
-        stack.append(notification_event)
+        stack.append({"notification": notification_text})
         return stack
-
 
     async def _send_notification_with_file(self, chat, event, notification_text, file_name, editable):
         stack = chat["chat_flow"]["current_flow"]
         notification_event = self.get_event_template(notification=notification_text,
-                                                event=event,
-                                                question='',
-                                                answer='',
-                                                prompt={},
-                                                file_name=file_name,
-                                                editable=editable)
+                                                     event=event,
+                                                     question='',
+                                                     answer='',
+                                                     prompt={},
+                                                     file_name=file_name,
+                                                     editable=editable)
         stack.append(notification_event)
         return stack
-
 
     async def _build_context_from_project_files(self, chat, files, excluded_files):
         contents = []
@@ -213,7 +200,8 @@ class WorkflowHelperService:
             root_path = get_project_file_name(chat["chat_id"], file_pattern)
             if "**" in root_path or os.path.isdir(root_path):
                 # Use glob to get all files matching the pattern (including files in subdirectories)
-                for file_path in glob.glob(root_path, recursive=True):  # recursive=True to include files in subdirectories
+                for file_path in glob.glob(root_path,
+                                           recursive=True):  # recursive=True to include files in subdirectories
                     try:
                         if os.path.isfile(file_path) and not any(
                                 file_path.endswith(excluded) for excluded in excluded_files):
@@ -232,34 +220,28 @@ class WorkflowHelperService:
                     logger.exception(e)
         return contents
 
-
-
     async def save_result_to_file(self, chat, _event, _data):
         file_name = _event.get("file_name")
         if file_name:
             await _save_file(chat_id=chat["chat_id"], _data=_data, item=file_name)
             notification_text = PUSHED_CHANGES_NOTIFICATION.format(file_name=file_name, repository_url=REPOSITORY_URL,
                                                                    chat_id=chat["chat_id"])
-            await self._send_notification(chat=chat, event=_event, notification_text=notification_text, file_name=file_name,
-                                     editable=True, publish=True)
-
-
+            await self._send_notification(chat=chat, event=_event, notification_text=notification_text,
+                                          file_name=file_name,
+                                          editable=True, publish=True)
 
     # Helper function to generate file name from template
     def get_file_name(self, template, entity_name):
         return template.format(entity_name=entity_name)
 
-
     # Helper function to construct file paths
     def get_file_path(self, target_dir, file_name):
         return os.path.join(target_dir, file_name)
-
 
     # Async function to read files concurrently
     async def read_files_concurrently(self, file_paths):
         file_contents = await asyncio.gather(*[read_file(file_path) for file_path in file_paths])
         return file_contents
-
 
     # Main function for getting resources
     async def _get_resources(self, entity, files_notifications, target_dir):
@@ -295,7 +277,6 @@ class WorkflowHelperService:
             entity_name  # Entity name
         )
 
-
     async def get_remote_branches(self, chat_id):
         clone_dir = f"{PROJECT_DIR}/{chat_id}/{REPOSITORY_NAME}"
 
@@ -324,7 +305,6 @@ class WorkflowHelperService:
             print(f"An error occurred: {e}")
             return []
 
-
     def comment_out_non_code(self, text):
         if '```python' in text:
             lines = text.splitlines()
@@ -351,7 +331,7 @@ class WorkflowHelperService:
         else:
             return text
 
-    #what workflow could you recommend for this sketch: class_name = com.cyoda.tdb.model.treenode.TreeNodeEntity, name = job, workflow transitions: [{"name": "create_report", "start_state": "initial", "end_state": "report_generated", "process": "create_report"}]. All transitions automated, no criteria needed, only externalized processors allowed, calculation node = 3fc5df73-e8db-11ef-81a1-40c2ba0ac9eb, calculation_response_timeout_ms = 120000, sync_process=false, new_transaction_for_async=true.  Return only json without any comments.
+    # what workflow could you recommend for this sketch: class_name = com.cyoda.tdb.model.treenode.TreeNodeEntity, name = job, workflow transitions: [{"name": "create_report", "start_state": "initial", "end_state": "report_generated", "process": "create_report"}]. All transitions automated, no criteria needed, only externalized processors allowed, calculation node = 3fc5df73-e8db-11ef-81a1-40c2ba0ac9eb, calculation_response_timeout_ms = 120000, sync_process=false, new_transaction_for_async=true.  Return only json without any comments.
     async def generate_cyoda_workflow(self, token, entity_name, entity_workflow, chat_id, file_name):
         # sourcery skip: use-named-expression
         if MOCK_AI == "true":
@@ -366,7 +346,7 @@ class WorkflowHelperService:
             } for item in entity_workflow]
             ai_question = f"what workflow could you recommend for this sketch: class_name = com.cyoda.tdb.model.treenode.TreeNodeEntity, name = {entity_name}, workflow transitions: {json.dumps(transitions)}. All transitions automated, no criteria needed, only externalized processors allowed, calculation node = {chat_id}, calculation_response_timeout_ms = 120000, sync_process=false, new_transaction_for_async=true.  Return only json without any comments."
             resp = await self.ai_service.ai_chat(token=token, chat_id=chat_id, ai_endpoint={"model": WORKFLOW_AI_API},
-                                            ai_question=ai_question)
+                                                 ai_question=ai_question)
             logger.info(resp)
             workflow = parse_workflow_json(resp)
             workflow_json = json.loads(workflow)
@@ -405,7 +385,6 @@ class WorkflowHelperService:
         except Exception as e:
             logger.error(f"Error generating workflow: {e}")
             logger.exception("Error generating workflow")
-
 
     def _process_question(self, question):
         if question.get("processed"):
@@ -446,3 +425,61 @@ class WorkflowHelperService:
         question["processed"] = True
         return question
 
+    # =============================
+    async def launch_agentic_workflow(self,
+                                      entity_service,
+                                      technical_id,
+                                      entity,
+                                      entity_model,
+                                      user_request=None,
+                                      workflow_cache=None,
+                                      edge_messages_store=None):
+
+        child_entity: ChatEntity = ChatEntity.model_validate({
+            "user_id": entity.user_id,
+            "chat_id": "",
+            "parent_id": technical_id,
+            "date": current_timestamp(),
+            "questions_queue_id": entity.questions_queue_id,
+            "memory_id": entity.memory_id,
+            "chat_flow": {"current_flow": [], "finished_flow": []},
+            "current_transition": "",
+            "current_state": "",
+            "workflow_cache": workflow_cache,
+            "edge_messages_store": edge_messages_store,
+            "transitions_memory": {
+                "conditions": {},
+                "current_iteration": {},
+                "max_iteration": {}
+            }
+        })
+        if user_request:
+            await add_answer_to_finished_flow(entity_service=entity_service,
+                                              answer=user_request,
+                                              chat=child_entity)
+        child_technical_id = await entity_service.add_item(token=cyoda_token,
+                                                           entity_model=entity_model,
+                                                           entity_version=ENTITY_VERSION,
+                                                           entity=child_entity)
+        # lock parent chat
+        entity.locked = True
+        entity.child_entities.append(child_technical_id)
+        return child_technical_id
+
+    async def launch_scheduled_workflow(self,
+                                        entity_service,
+                                        awaited_entity_ids,
+                                        triggered_entity_id):
+
+        child_entity: SchedulerEntity = SchedulerEntity.model_validate({
+            "user_id": "system",
+            "awaited_entity_ids": awaited_entity_ids,
+            "triggered_entity_id": triggered_entity_id
+        })
+
+        child_technical_id = await entity_service.add_item(token=cyoda_token,
+                                                           entity_model=SCHEDULER_ENTITY,
+                                                           entity_version=ENTITY_VERSION,
+                                                           entity=child_entity)
+
+        return child_technical_id

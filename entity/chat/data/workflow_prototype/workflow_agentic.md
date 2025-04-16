@@ -1,0 +1,20 @@
+stateDiagram
+  [*] --> none
+  none --> greeting_sent: welcome_user /notification [Welcome!]
+  greeting_sent --> repository_cloned: clone_repo /function [clone_repo]
+  repository_cloned --> chats_established: init_chats /function [init_chats]
+  chats_established --> app_requirements_requested: request_application_requirements /question [please tell me the requirements (improve)]
+  app_requirements_requested --> app_requirements_requested: process_application_requirement (manual) / agent [web_search(query="search_query")],[read_link(url="")], [web_scrape(url="<url>", selector="<css_selector>" )], [set_additional_question_flag(transition="process_application_requirement", require_additional_question_flag=true)]
+  app_requirements_requested --> app_requirements_finalized: process_application_requirement_success /condition [is_stage_completed(transition="process_application_requirement", require_additional_question_flag=false)]
+  app_requirements_finalized --> workflow_state_question: request_workflow_state_diagram /question [please tell me the requirements to fsm (improve)]
+  workflow_state_question --> workflow_state_question: discuss_workflow_state (manual) /agent [web_search(query="search_query")],[read_link(url="")], [web_scrape(url="<url>", selector="<css_selector>" )], [set_additional_question_flag(transition="discuss_workflow_state", require_additional_question_flag=true)]
+  workflow_state_question --> workflow_state_finalized: workflow_state_diagram_finalized /condition [is_stage_completed(transition="discuss_workflow_state", require_additional_question_flag=false)]
+  workflow_state_finalized --> workflow_json_generated: generate_workflow_json /function [generate_workflow_json]
+  workflow_json_generated --> workflow_function_requirement_received: request_workflow_function_generation /question [please tell me the requirements to functions (improve)]
+  workflow_function_requirement_received --> workflow_function_requirement_received: discuss_workflow_functions (manual) /agent [web_search(query="search_query")],[read_link(url="")], [web_scrape(url="<url>", selector="<css_selector>" )], [set_additional_question_flag(transition="discuss_workflow_functions", require_additional_question_flag=true)]
+  workflow_function_requirement_received --> workflow_functions_generated: workflow_functions_generated /condition [is_stage_completed(transition="discuss_workflow_functions", require_additional_question_flag=false)]
+  workflow_functions_generated --> started_general_discussion: request_general_questions /question [please ask me anything (improve)]
+  started_general_discussion --> started_general_discussion: process_question (manual) /agent [web_search(query="search_query")],[read_link(url="")], [web_scrape(url="<url>", selector="<css_selector>" )], [set_additional_question_flag(transition="process_question", require_additional_question_flag=true)]
+  started_general_discussion --> workflow_completed: process_question_success /condition [is_stage_completed(transition="process_question", require_additional_question_flag=false)]
+  workflow_completed --> end: finalize_workflow
+  end --> [*]

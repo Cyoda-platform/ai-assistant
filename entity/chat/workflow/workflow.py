@@ -2,22 +2,32 @@ import copy
 import json
 import asyncio
 import logging
+import os
 from copy import deepcopy
-
+import httpx
 import aiofiles
+from bs4 import BeautifulSoup
 
+from typing import Any
 from common.config.conts import *
 from common.config.config import MOCK_AI, CYODA_AI_API, \
-    REPOSITORY_URL, VALIDATION_MAX_RETRIES, CYODA_DEPLOY_DICT, CHECK_DEPLOY_INTERVAL, ENTITY_VERSION
-from common.util.utils import read_file, get_project_file_name, git_pull, _git_push, _save_file, clone_repo, \
-    send_post_request, send_get_request
+    REPOSITORY_URL, VALIDATION_MAX_RETRIES, CYODA_DEPLOY_DICT, CHECK_DEPLOY_INTERVAL, ENTITY_VERSION, GOOGLE_SEARCH_KEY, \
+    GOOGLE_SEARCH_CX, PROJECT_DIR, REPOSITORY_NAME, MAX_ITERATION, CYODA_ENTITY_TYPE_EDGE_MESSAGE
+from common.repository.cyoda.cyoda_repository import cyoda_token, edge_messages_cache
+from common.util.chat_util_functions import _launch_transition
+from common.util.utils import get_project_file_name, git_pull, _git_push, _save_file, clone_repo, \
+    send_post_request, send_get_request, parse_from_string, current_timestamp
 from entity.chat.data.data import BRANCH_READY_NOTIFICATION
+from entity.chat.data.workflow_prototype.batch_converter import convert_state_diagram_to_jsonl_dataset
+from entity.chat.data.workflow_prototype.batch_parallel_code import build_workflow_from_jsonl
+from entity.chat.data.workflow_prototype.workflow_to_state_diagram_converter import convert_to_mermaid
+from entity.chat.model.chat import ChatEntity
 from entity.chat.workflow.gen_and_validation.app_postprocessor import app_post_process
-from entity.chat.workflow.gen_and_validation.entity_names_extractor import extract_entity_names
 from entity.chat.workflow.gen_and_validation.function_extractor import extract_function
 from entity.chat.workflow.gen_and_validation.result_validator import validate_ai_result
 from entity.chat.workflow.gen_and_validation.workflow_enricher import enrich_workflow
 from entity.chat.workflow.gen_and_validation.workflow_extractor import analyze_code_with_libcst
+from entity.model.model import AgenticFlowEntity, SchedulerEntity
 from entity.workflow import Workflow
 
 # Configure logging
@@ -29,291 +39,34 @@ entry_point_to_stack = {
 
 
 class ChatWorkflow(Workflow):
-    def __init__(self, ai_service, dataset, workflow_helper_service, entity_service, mock=False):
-        self.ai_service = ai_service
+    def __init__(self, dataset, workflow_helper_service, entity_service, scheduler, mock=False):
         self.dataset = dataset
         self.workflow_helper_service = workflow_helper_service
         self.entity_service = entity_service
         self.mock = mock
+        self.scheduler = scheduler
 
-    async def init_chats(self, token, _event, chat):
-        if MOCK_AI == "true":
-            return
-        await self.ai_service.init_chat(token=token, chat_id=chat["chat_id"])
-
-    async def add_instruction(self, token, _event, chat):
-        file_name = _event["file_name"]
-        instruction_text = await read_file(get_project_file_name(chat["chat_id"], file_name))
-        _event.setdefault('function', {}).setdefault("prompt", {}).setdefault("text", instruction_text)
-        await self.workflow_helper_service.run_chat(chat=chat, _event=_event, token=token, ai_endpoint=CYODA_AI_API,
-                                                    chat_id=chat["chat_id"])
-
-    async def refresh_context(self, token, _event, chat):
-        # clean chat history and re-initialize
-        chat_id = chat["chat_id"]
-        await git_pull(chat_id)
-        if _event.get("function").get("model_api") and _event.get("function").get("model_api").get("model") == OPEN_AI:
-            await self.ai_service.refresh_open_ai_chat(token, chat_id)
-            return
-        await self.ai_service.init_cyoda_chat(token=token, chat_id=chat_id)
-        contents = {}
-        if _event["context"] and _event["context"]["files"]:
-            contents = await self.workflow_helper_service._build_context_from_project_files(chat=chat,
-                                                                                            files=_event["context"][
-                                                                                                "files"],
-                                                                                            excluded_files=_event[
-                                                                                                "context"].get(
-                                                                                                "excluded_files"))
-        _event.setdefault('function', {}).setdefault("prompt", {})
-        _event["function"]["prompt"][
-            "text"] = f"Please remember these files contents and reuse later: {json.dumps(contents)} . Do not do any mapping logic - it is not relevant. Just remember the code and the application design to reuse in your future application building. Return confirmation that you remembered everything"
-        await self.workflow_helper_service.run_chat(chat=chat, _event=_event, token=token, ai_endpoint=CYODA_AI_API,
-                                                    chat_id=chat_id)
-        if _event.get("file_name"):
-            await _save_file(chat_id=chat_id, _data=json.dumps(chat), item=_event["file_name"])
-
-    async def add_user_requirement(self, token, _event, chat):
-        file_name = _event["file_name"]
-        ai_question = _event["function"]["prompt"]
-        user_requirement = await self.ai_service.ai_chat(token=token, chat_id=chat["chat_id"], ai_endpoint=CYODA_AI_API,
-                                                         ai_question=ai_question)
-        await _save_file(chat_id=chat["chat_id"], _data=user_requirement, item=file_name)
-
-    async def clone_repo(self, token, _event, chat):
-        """
-        Clone the GitHub repository to the target directory.
-        If the repository should not be copied, it ensures the target directory exists.
-        """
-
-        chat_id = chat['chat_id']
-
-        await clone_repo(chat_id=chat_id)
-
-        # Call the async _save_file function
-        await _save_file(chat_id, chat_id, 'README.txt')
-
-        # Prepare the notification text
-        notification_text = BRANCH_READY_NOTIFICATION.format(chat_id=chat['chat_id'])
-
-        # Call the async _send_notification function
-        await self.workflow_helper_service._send_notification(chat=chat, event=_event,
-                                                              notification_text=notification_text)
-
-    async def generate_entities_template(self, token, _event, chat):
-        try:
-            file_path = get_project_file_name(chat["chat_id"], "entity/prototype_cyoda.py")
-            # Open the file asynchronously
-            async with aiofiles.open(file_path, 'r') as f:
-                # Read the content of the file
-                entities_text = await f.read()
-
-        except Exception as e:
-            logger.exception(e)
-        entities_list = extract_entity_names(entities_text)
-
-        event_copy = deepcopy(_event)
-        event_copy["function"]["prompt"]["text"] = event_copy["function"]["prompt"]["text"].format(
-            entities_list=json.dumps(entities_list))
-        entity_data_design = await self.workflow_helper_service.run_chat(chat=chat, _event=event_copy, token=token,
-                                                                         ai_endpoint=CYODA_AI_API if not event_copy.get(
-                                                                             "function").get(
-                                                                             "model_api") else event_copy.get(
-                                                                             "function").get("model_api"),
-                                                                         chat_id=chat["chat_id"])
-        is_valid, formatted_result = validate_ai_result(entity_data_design, "entity/entities_data_design.json")
-        if is_valid:
-            entity_data_design = formatted_result
-        else:
-            retry = VALIDATION_MAX_RETRIES
-            while retry > 0:
-                retry_event = copy.deepcopy(_event)
-                retry_event["function"]["prompt"]["text"] = formatted_result
-                result = await self.workflow_helper_service.run_chat(chat=chat, _event=retry_event, token=token,
-                                                                     ai_endpoint=CYODA_AI_API if not event_copy.get(
-                                                                         "function").get(
-                                                                         "model_api") else event_copy.get(
-                                                                         "function").get("model_api"),
-                                                                     chat_id=chat["chat_id"])
-                is_valid, formatted_result = validate_ai_result(result, _event.get("file_name"))
-                if is_valid:
-                    entity_data_design = formatted_result
-                    retry = -1
-                else:
-                    retry -= 1
-        await _save_file(chat_id=chat["chat_id"],
-                         _data=json.dumps(entity_data_design),
-                         item=f"entity/entities_data_design.json")
-
-        for entity in entity_data_design["entities"]:
-            if entity.get('entity_name') in entities_list:
-                await _save_file(chat_id=chat["chat_id"],
-                                 _data=json.dumps(entity.get('entity_data_example')),
-                                 item=f"entity/{entity.get('entity_name')}/{entity.get('entity_name')}.json")
-        # Send notification after all tasks are completed
-        await self.workflow_helper_service._send_notification(chat=chat, event=_event,
-                                                              notification_text=_event.get("notification_text"))
-
-    async def finish_flow(self, token, _event, chat):
-        chat_id = chat["chat_id"]
-        await _save_file(chat_id=chat_id, _data=json.dumps(chat), item=_event["file_name"])
-        await self.workflow_helper_service._send_notification(chat=chat, event=_event,
-                                                              notification_text=_event.get("notification_text"))
+    async def finish_app_generation_flow(self, technical_id, entity: ChatEntity, **params):
+        await _save_file(chat_id=technical_id, _data=json.dumps(entity), item=params.get("filename"))
         # todo remove later
-        await _save_file(chat_id=chat_id, _data=json.dumps(self.dataset.get(chat_id)),
-                         item=f"entity/dataset_{chat_id}.json")
-        del self.dataset[chat_id]
+        await _save_file(chat_id=technical_id, _data=json.dumps(self.dataset.get(technical_id)),
+                         item=f"entity/dataset_{technical_id}.json")
+        del self.dataset[technical_id]
 
-    async def save_env_file(self, token, _event, chat):
-        chat_id = chat["chat_id"]
-        file_name = get_project_file_name(chat_id=chat_id, file_name=_event["file_name"])
+    async def save_env_file(self, technical_id, entity: ChatEntity, **params):
+        file_name = get_project_file_name(chat_id=technical_id, file_name=params.get("filename"))
         async with aiofiles.open(file_name, 'r') as template_file:
             content = await template_file.read()
 
         # Replace CHAT_ID_VAR with $chat_id
-        updated_content = content.replace('CHAT_ID_VAR', chat_id)
+        updated_content = content.replace('CHAT_ID_VAR', technical_id)
 
         # Save the updated content to a new file
         async with aiofiles.open(file_name, 'w') as new_file:
             await new_file.write(updated_content)
-        await _git_push(chat_id, [file_name], "Added env file template")
-        await self.workflow_helper_service._send_notification(chat=chat, event=_event,
-                                                              notification_text=_event.get("notification_text"))
+        await _git_push(technical_id, [file_name], "Added env file template")
 
-    async def register_workflow_with_app(self, token, _event, chat):
-        file_pattern = "entity/prototype_cyoda_workflow.py"
-        code_without_workflow, workflow_json = "", {}
-        try:
-            file_path = get_project_file_name(chat["chat_id"], file_pattern)
-            # Open the file asynchronously
-            async with aiofiles.open(file_path, 'r') as f:
-                # Read the content of the file
-                input_code = await f.read()
-            try:
-                code_without_workflow, workflow_json = analyze_code_with_libcst(input_code)
-            except Exception as e:
-                # todo add retry here
-                logger.exception(e)
-
-        except Exception as e:
-            logger.exception(e)
-
-        await _save_file(chat_id=chat["chat_id"],
-                         _data=app_post_process(code_without_workflow),
-                         item=f"app.py")
-
-        # Iterate over each dictionary in the list
-        for item in workflow_json:
-            # For each key-value pair in the dictionary, where key is the entity name and value is the code snippet
-            for entity_name, entity_value in item.items():
-                event_copy = deepcopy(_event)
-                event_copy["function"]["prompt"]["text"] = event_copy["function"]["prompt"]["text"].format(
-                    code=entity_value.get("code"), workflow_function=f"process_{entity_name}")
-                result = await self.workflow_helper_service.run_chat(chat=chat, _event=event_copy, token=token,
-                                                                     ai_endpoint=event_copy["function"]["prompt"][
-                                                                         "api"],
-                                                                     chat_id=chat["chat_id"])
-
-                is_valid, formatted_result = validate_ai_result(result, "result.py")
-                if is_valid:
-                    result = formatted_result
-                else:
-                    retry = VALIDATION_MAX_RETRIES
-                    while retry > 0:
-                        retry_event = copy.deepcopy(_event)
-                        retry_event["function"]["prompt"]["text"] = formatted_result
-                        result = await self.workflow_helper_service.run_chat(chat=chat, _event=retry_event, token=token,
-                                                                             ai_endpoint=CYODA_AI_API if not event_copy.get(
-                                                                                 "function").get(
-                                                                                 "model_api") else event_copy.get(
-                                                                                 "function").get("model_api"),
-                                                                             chat_id=chat["chat_id"])
-                        is_valid, formatted_result = validate_ai_result(result, _event.get("file_name"))
-                        if is_valid:
-                            result = formatted_result
-                            retry = -1
-                        else:
-                            retry -= 1
-
-                code_without_function, extracted_function = "", ""
-                try:
-                    code_without_function, extracted_function = extract_function(result,
-                                                                                 entity_value.get("workflow_function"))
-                    logger.info(extracted_function)
-                    await _save_file(
-                        chat_id=chat["chat_id"],
-                        _data=code_without_function,
-                        item=f"entity/{entity_name}/workflow.py"
-                    )
-                    event_copy["function"]["prompt"]["text"] = event_copy["function"]["workflow_prompt"].format(
-                        code=extracted_function)
-                    result = await self.workflow_helper_service.run_chat(chat=chat, _event=event_copy, token=token,
-                                                                         ai_endpoint=event_copy["function"]["prompt"][
-                                                                             "api"],
-                                                                         chat_id=chat["chat_id"])
-                    is_valid, formatted_result = validate_ai_result(result, "result.json")
-                    if is_valid:
-                        result = formatted_result
-                    else:
-                        retry = VALIDATION_MAX_RETRIES
-                        while retry > 0:
-                            retry_event = copy.deepcopy(_event)
-                            retry_event["function"]["prompt"]["text"] = formatted_result
-                            result = await self.workflow_helper_service.run_chat(chat=chat, _event=retry_event,
-                                                                                 token=token,
-                                                                                 ai_endpoint=CYODA_AI_API if not event_copy.get(
-                                                                                     "function").get(
-                                                                                     "model_api") else event_copy.get(
-                                                                                     "function").get("model_api"),
-                                                                                 chat_id=chat["chat_id"])
-                            is_valid, formatted_result = validate_ai_result(result, _event.get("file_name"))
-                            if is_valid:
-                                result = formatted_result
-                                retry = -1
-                            else:
-                                retry -= 1
-                    workflow = enrich_workflow(result)
-                    await _save_file(
-                        chat_id=chat["chat_id"],
-                        _data=json.dumps(workflow),
-                        item=f"entity/{entity_name}/workflow.json"
-                    )
-
-
-                except Exception as e:
-                    # todo need retry here
-                    logger.exception(e)
-
-        await self.workflow_helper_service._send_notification(chat=chat, event=_event,
-                                                              notification_text=_event.get("notification_text"))
-
-    async def enrich_entity_workflow(self, token, _event, chat):
-        file_name = _event.get("file_name")
-        result = await read_file(get_project_file_name(chat["chat_id"], file_name))
-        is_valid, formatted_result = validate_ai_result(result, _event.get("file_name"))
-        if is_valid:
-            result = formatted_result
-        else:
-            retry = VALIDATION_MAX_RETRIES
-            while retry > 0:
-                retry_event = copy.deepcopy(_event)
-                retry_event["function"]["prompt"]["text"] = formatted_result
-                result = await self.workflow_helper_service.run_chat(chat=chat, _event=retry_event,
-                                                                     token=token,
-                                                                     ai_endpoint={"model": OPEN_AI, "temperature": 0.7, "max_tokens": 10000},
-                                                                     chat_id=chat["chat_id"])
-                is_valid, formatted_result = validate_ai_result(result, _event.get("file_name"))
-                if is_valid:
-                    result = formatted_result
-                    retry = -1
-                else:
-                    retry -= 1
-        workflow = enrich_workflow(result)
-        await _save_file(
-            chat_id=chat["chat_id"],
-            _data=json.dumps(workflow),
-            item=_event.get("file_name")
-        )
-
+    # todo!
     async def deploy_app(self, token, _event, chat):
         chat_id = chat["chat_id"]
         data = json.dumps({
@@ -337,6 +90,7 @@ class ChatWorkflow(Workflow):
         asyncio.create_task(self._check_status_and_notify(token, build_id, chat, _event))
         return build_id  # or any other immediate response you wish to send
 
+    # todo!
     async def _check_status_and_notify(self, token, build_id, chat, _event):
         while True:
             status_url = f"{CYODA_DEPLOY_DICT.get(DEPLOY_STATUS)}?build_id={build_id}"
@@ -360,14 +114,390 @@ class ChatWorkflow(Workflow):
                                                             question='',
                                                             answer='',
                                                             publish=True))
-        chat["questions_queue"]["new_questions"].append({
-            "notification": deployment_status,
-        })
+        # todo
+        # chat["questions_queue"]["new_questions"].append({
+        #     "notification": deployment_status,
+        # })
         chat_id = chat['chat_id']
         await self.entity_service.update_item(token=token,
-                                              entity_model="chat",
+                                              entity_model=CHAT_MODEL_NAME,
                                               entity_version=ENTITY_VERSION,
                                               technical_id=chat_id,
                                               entity=chat,
                                               meta={})
         await _save_file(chat_id=chat_id, _data=json.dumps(chat), item="entity/chat.json")
+
+    async def clone_repo(self, technical_id, entity: ChatEntity, **params):
+        """
+        Clone the GitHub repository to the target directory.
+        If the repository should not be copied, it ensures the target directory exists.
+        """
+
+        await clone_repo(chat_id=technical_id)
+
+        # Call the async _save_file function
+        await _save_file(technical_id, technical_id, 'README.txt')
+        # todo - need to get from memory
+        return BRANCH_READY_NOTIFICATION.format(chat_id=technical_id)
+
+    async def init_chats(self, technical_id, entity: ChatEntity, **params):
+        if MOCK_AI == "true":
+            return
+        pass
+
+    async def web_search(self, technical_id, entity: ChatEntity, **params) -> str:
+        """
+        Performs a Google Custom Search using API key and search engine ID from environment variables.
+        """
+        try:
+            url = "https://www.googleapis.com/customsearch/v1"
+            params = {
+                "key": GOOGLE_SEARCH_KEY,
+                "cx": GOOGLE_SEARCH_CX,
+                "q": params.get("query"),
+                "num": 1  # Retrieve only the first result
+            }
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+            if "items" in data and data["items"]:
+                first_item = data["items"][0]
+                snippet = first_item.get("snippet")
+                result = snippet if snippet else "No snippet available."
+            else:
+                result = "No results found."
+        except Exception as e:
+            result = f"Error during search: {e}"
+        return result
+
+    async def read_link(self, technical_id, entity: ChatEntity, **params) -> str:
+        """
+        Reads the content of a given URL and returns its textual content.
+        """
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(params.get("url"))
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, "html.parser")
+            paragraphs = soup.find_all("p")
+            if paragraphs:
+                content = "\n".join(p.get_text(strip=True) for p in paragraphs)
+                result = content
+            else:
+                result = soup.get_text(strip=True)
+        except Exception as e:
+            result = f"Error reading link: {e}"
+        return result
+
+    async def web_scrape(self, technical_id, entity: ChatEntity, **params) -> str:
+        """
+        Scrapes a webpage at the given URL using the provided CSS selector and returns the extracted text.
+        """
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(params.get("url"))
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, "html.parser")
+            elements = soup.select(params.get("selector"))
+            if elements:
+                content = "\n".join(element.get_text(separator=" ", strip=True) for element in elements)
+                result = content
+            else:
+                result = "No elements found for the given selector."
+        except Exception as e:
+            result = f"Error during web scraping: {e}"
+        return result
+
+    async def save_file(self, technical_id, entity: ChatEntity, **params) -> str:
+        """
+        Saves data to a file using the provided chat id and file name.
+        """
+        try:
+            new_content = parse_from_string(escaped_code=params.get("new_content"))
+            await _save_file(chat_id=technical_id, _data=new_content, item=params.get("filename"))
+            return "File saved successfully"
+        except Exception as e:
+            return f"Error during saving file: {e}"
+
+    async def read_file(self, technical_id, entity: ChatEntity, **params) -> str:
+        """
+        Reads data from a file using the provided chat id and file name.
+        """
+        # Await the asynchronous git_pull function.
+        await git_pull(chat_id=technical_id)
+
+        target_dir = os.path.join(f"{PROJECT_DIR}/{technical_id}/{REPOSITORY_NAME}", "")
+        file_path = os.path.join(target_dir, params.get("filename"))
+        try:
+            async with aiofiles.open(file_path, 'r') as file:
+                content = await file.read()
+            return content
+        except FileNotFoundError:
+            return ''
+        except Exception as e:
+            logger.exception("Error during reading file")
+            return f"Error during reading file: {e}"
+
+    async def set_additional_question_flag(self, technical_id: str, entity: ChatEntity, **params: Any) -> None:
+        transition = params.get("transition")
+        if transition is None:
+            raise ValueError("Missing required parameter: 'transition'")
+
+        additional_flag = params.get("require_additional_question_flag")
+
+        # Ensure the nested dictionary for conditions exists.
+        conditions = entity.transitions_memory.conditions
+
+        # Set the flag for the specified transition.
+        conditions.setdefault(transition, {})["require_additional_question"] = additional_flag
+
+    async def is_stage_completed(self, technical_id: str, entity: ChatEntity, **params: Any) -> bool:
+        transition = params.get("transition")
+        if transition is None:
+            raise ValueError("Missing required parameter: 'transition'")
+
+        transitions = entity.transitions_memory
+        current_iteration = transitions.current_iteration
+        max_iteration = transitions.max_iteration
+
+        if transition in current_iteration:
+            allowed_max = max_iteration.get(transition, MAX_ITERATION)
+            if current_iteration[transition] > allowed_max:
+                return True
+
+        conditions = transitions.conditions
+        # If the condition for the transition does not exist, assume stage is not completed.
+        if transition not in conditions:
+            return False
+
+        # Return the inverse of the require_additional_question flag.
+        return not conditions[transition].get("require_additional_question", True)
+
+    async def get_weather(self, technical_id, entity: ChatEntity, **params):
+        # Example implementation; replace with actual API integration
+        return {
+            "city": params.get("city"),
+            "temperature": "18°C",
+            "condition": "Sunny"
+        }
+
+    async def get_humidity(self, technical_id, entity: ChatEntity, **params):
+        # Example implementation; replace with actual API integration
+        return {
+            "city": params.get("city"),
+            "humidity": "55%"
+        }
+
+    async def convert_diagram_to_dataset(self, technical_id, entity: ChatEntity, **params):
+        input_file_path = params.get("input_file_path")
+        output_file_path = params.get("output_file_path")
+        convert_state_diagram_to_jsonl_dataset(input_file_path=input_file_path,
+                                               output_file_path=output_file_path)
+
+    async def convert_workflow_processed_dataset_to_json(self, technical_id, entity: ChatEntity, **params):
+        input_file_path = params.get("input_file_path")
+        output_file_path = params.get("output_file_path")
+        result = await build_workflow_from_jsonl(input_file_path=input_file_path)
+        await _save_file(chat_id=technical_id, _data=result, item=output_file_path)
+
+    async def convert_workflow_json_to_state_diagram(self, technical_id, entity: ChatEntity, **params):
+        input_file_path = params.get("input_file_path")
+        with open(input_file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        mermaid_diagram = convert_to_mermaid(data)
+        return mermaid_diagram
+
+    async def save_entity_templates(self, technical_id, entity: ChatEntity, **params):
+        file_path = get_project_file_name(technical_id, "entity/entities_data_design.json")
+
+        try:
+            async with aiofiles.open(file_path, 'r') as f:
+                file_contents = await f.read()
+            # Parse JSON contents from the file
+            entity_design_data = json.loads(file_contents)
+        except Exception as exc:
+            logger.exception(f"Failed to load or parse file {file_path}: {exc}")
+            return  # Exit early if file read or JSON parsing fails
+
+        # Retrieve list of entities, or use an empty list if key is missing
+        entities = entity_design_data.get("entities", [])
+
+        for entity_data in entities:
+            entity_name = entity_data.get('entity_name')
+            entity_data_example = entity_data.get('entity_data_example')
+
+            # Validate required data
+            if not entity_name:
+                logger.warning("Missing 'entity_name' in entity data: %s", entity_data)
+                continue
+
+            # Build the target file path for this entity's template
+            target_item = f"entity/{entity_name}/{entity_name}.json"
+            # Convert entity data to JSON string, using a default if None
+            data_str = json.dumps(entity_data_example, indent=4,
+                                  sort_keys=True) if entity_data_example is not None else "{}"
+
+            # Save the file asynchronously
+            await _save_file(chat_id=technical_id, _data=data_str, item=target_item)
+
+    async def is_chat_locked(self, technical_id: str, entity: ChatEntity, **params: Any) -> bool:
+        return entity.locked
+
+    async def is_chat_unlocked(self, technical_id: str, entity: ChatEntity, **params: Any) -> bool:
+        return not entity.locked
+
+    async def launch_workflow(self, technical_id: str, entity: ChatEntity, **params: Any):
+        entity_model = params.get("workflow")
+        user_request = params.get("user_request")
+        if not entity_model:
+            return "parameter workflow is required"
+        if not user_request:
+            return "parameter user_request is required"
+        child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
+            entity_service=self.entity_service,
+            technical_id=technical_id,
+            entity=entity,
+            entity_model=entity_model,
+            user_request=user_request,
+            workflow_cache=params)
+        return f"Workflow {entity_model} {child_technical_id} has been saved successfully"
+
+    async def unlock_chat(self, technical_id: str, entity: ChatEntity, **params: Any):
+        entity.locked = False
+
+    # =================================== generating_gen_app_workflow =============================
+
+    async def register_workflow_with_app(self, technical_id, entity: AgenticFlowEntity, **params):
+        filename = params.get("filename")
+        code_without_workflow, workflow_json = "", {}
+        try:
+            file_path = get_project_file_name(technical_id, filename)
+            async with aiofiles.open(file_path, 'r') as f:
+                input_code = await f.read()
+            try:
+                input_code = input_code.replace("```python", "")
+                input_code = input_code.replace("```", "")
+                code_without_workflow, workflow_json = analyze_code_with_libcst(input_code)
+            except Exception as e:
+                # todo add retry here
+                logger.exception(e)
+        except Exception as e:
+            logger.exception(e)
+
+        await _save_file(chat_id=technical_id,
+                         _data=app_post_process(code_without_workflow),
+                         item=f"app.py")
+        awaited_entity_ids = []
+        for item in workflow_json:
+            # For each key-value pair in the dictionary, where key is the entity name and value is the code snippet
+            for entity_name, entity_value in item.items():
+                workflow_cache = {
+                    'workflow_function': entity_value.get("workflow_function"),  # f"process_{entity_name}",
+                    'entity_name': entity_name
+                }
+                edge_message_id = await self.entity_service.add_item(token=cyoda_token,
+                                                                     entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                                     entity_version=ENTITY_VERSION,
+                                                                     entity=entity_value.get("code"),
+                                                                     meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                edge_messages_store = {
+                    'code': edge_message_id,
+                }
+
+                child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
+                    entity_service=self.entity_service,
+                    technical_id=technical_id,
+                    entity=entity,
+                    entity_model=GENERATING_GEN_APP_WORKFLOW,
+                    workflow_cache=workflow_cache,
+                    edge_messages_store=edge_messages_store)
+                awaited_entity_ids.append(child_technical_id)
+
+        if awaited_entity_ids:
+            scheduled_entity_id = await self.workflow_helper_service.launch_scheduled_workflow(
+                entity_service=self.entity_service,
+                awaited_entity_ids=awaited_entity_ids,
+                triggered_entity_id=technical_id)
+            entity.scheduled_entities.append(scheduled_entity_id)
+
+    async def validate_workflow_design(self, technical_id, entity: AgenticFlowEntity, **params):
+        edge_message_id = entity.edge_messages_store.get(params.get("transition"))
+        result = await self.entity_service.get_item(token=cyoda_token,
+                                                    entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                    entity_version=ENTITY_VERSION,
+                                                    technical_id=edge_message_id,
+                                                    meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+        is_valid, formatted_result = validate_ai_result(result, "result.py")
+        if is_valid:
+            return formatted_result
+        return None
+
+    async def has_workflow_code_validation_succeeded(self, technical_id: str, entity: AgenticFlowEntity,
+                                                     **params: Any) -> bool:
+        edge_message_id = entity.edge_messages_store.get(params.get("transition"))
+        result = await self.entity_service.get_item(token=cyoda_token,
+                                                    entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                    entity_version=ENTITY_VERSION,
+                                                    technical_id=edge_message_id,
+                                                    meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+        return result is not None
+
+    async def has_workflow_code_validation_failed(self, technical_id: str, entity: AgenticFlowEntity,
+                                                  **params: Any) -> bool:
+        edge_message_id = entity.edge_messages_store.get(params.get("transition"))
+        result = await self.entity_service.get_item(token=cyoda_token,
+                                                    entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                    entity_version=ENTITY_VERSION,
+                                                    technical_id=edge_message_id,
+                                                    meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+        return result is None
+
+    async def save_extracted_workflow_code(self, technical_id, entity: AgenticFlowEntity, **params):
+        edge_message_id = entity.edge_messages_store.get(params.get("transition"))
+        source = await self.entity_service.get_item(token=cyoda_token,
+                                                    entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                    entity_version=ENTITY_VERSION,
+                                                    technical_id=edge_message_id,
+                                                    meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+
+        code_without_function, extracted_function = extract_function(
+            source=source,
+            function_name=entity.workflow_cache.get("workflow_function"))
+        logger.info(extracted_function)
+        await _save_file(
+            chat_id=technical_id,
+            _data=code_without_function,
+            item=f"entity/{entity.workflow_cache.get("entity_name")}/workflow.py"
+        )
+        return extracted_function
+
+    async def save_workflow_configuration(self, technical_id, entity: AgenticFlowEntity, **params):
+        "design_workflow_from_code"
+        edge_message_id = entity.edge_messages_store.get(params.get("transition"))
+        message_content = await self.entity_service.get_item(token=cyoda_token,
+                                                             entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                             entity_version=ENTITY_VERSION,
+                                                             technical_id=edge_message_id,
+                                                             meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+        workflow_json = json.loads(message_content)
+        workflow = enrich_workflow(workflow_json)
+        await _save_file(
+            chat_id=technical_id,
+            _data=json.dumps(workflow),
+            item=f"entity/{entity.workflow_cache.get("entity_name")}/workflow.json"
+        )
+
+# =================================== generating_gen_app_workflow end =============================
+# ==================================== scheduler flow =======================================
+
+    async def schedule_workflow_tasks(self, technical_id, entity: SchedulerEntity, **params):
+        result = self.scheduler.schedule_workflow_task(technical_id=technical_id,
+                                                       awaited_entity_ids=entity.awaited_entity_ids)
+        return result
+
+
+    async def trigger_parent_entity(self, technical_id, entity: SchedulerEntity, **params):
+        "design_workflow_from_code"
+        await _launch_transition(entity_service=self.entity_service,
+                                 technical_id=entity.triggered_entity_id)

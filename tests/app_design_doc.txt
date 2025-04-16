@@ -1,0 +1,295 @@
+remember the flow:
+user sends request to our app endpoint, endpoint saves entity or gets entity from cyoda (depending on the requirement). when the entity is saved to cyoda, workflow starts , when entity workflow starts , cyoda grpc server sends request to our app grpc client, and it starts entity workflow processors code. regenerate sequence diagram knowing this
+
+ok, let me formulate differently:
+1 - outline all actors, they are: user, app, entities with their workflow and cyoda.
+2. when user sends post request to app. app saves related entity to cyoda. cyoda saves a return event to the app to start this entity workflow. in the workflow we do all the business logic
+
+for get request app endpoint just fetches entity from cyoda and does some business logic without invoking workflow
+what do you understand from it? return sequence diagram
+/*
+Thank you for the clarification! Based on your instructions, here’s my understanding of the flow:
+
+1. **Actors:**
+   - **User**: The individual interacting with the application.
+   - **App**: The application that manages the requests and responses.
+   - **Entities**: The various data models involved in the application (e.g., EnvironmentConfiguration, Deployment, Build).
+   - **Workflow**: The sequence of processes that handle business logic related to entities.
+   - **Cyoda**: The external service that manages data storage and triggers workflows via gRPC.
+
+2. **Flow:**
+   - For **POST Requests**: The user sends a request to the app. The app saves the relevant entity to Cyoda. Once the entity is saved, Cyoda emits an event to indicate that the workflow should start. The app's gRPC client then receives this event and starts the entity workflow processors, which contain the business logic.
+   - For **GET Requests**: The app directly fetches the required entity from Cyoda without starting a workflow. It performs any necessary business logic once the entity is retrieved.
+
+### Sequence Diagram
+
+Here’s the sequence diagram illustrating this flow:
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant A as App
+    participant E as Entity (e.g., EnvironmentConfiguration, Deployment)
+    participant W as Workflow (Business Logic)
+    participant C as Cyoda
+    participant G as gRPC Server
+
+    %% POST Request Flow
+    U->>A: POST /api/v1/environments (or deployments)
+    A->>C: Save Entity to Cyoda
+    C-->>A: Entity Saved Confirmation
+    A->>G: Start Workflow for Entity
+    G-->>A: Notify App to start Workflow
+    A->>W: Execute Entity Workflow Processors
+    W-->>A: Workflow Completed
+    A-->>U: Return Success Response (Including Entity Details)
+
+    %% GET Request Flow
+    U->>A: GET /api/v1/environments/{id} (or deployments)
+    A->>C: Fetch Entity from Cyoda
+    C-->>A: Return Entity Details
+    A->>W: Execute Business Logic (if needed)
+    A-->>U: Return Entity Details (or Response)
+```
+
+### Explanation of the Sequence Diagram
+1. **POST Request Flow**:
+   - The user sends a POST request to the app to create or update an entity.
+   - The app saves this entity to Cyoda.
+   - Cyoda confirms that the entity is saved and sends an event to the app to start the corresponding workflow.
+   - The app's gRPC client listens for this event and triggers the relevant workflow, where all business logic is executed.
+   - Finally, the app responds to the user with success information and any relevant entity details.
+
+2. **GET Request Flow**:
+   - The user sends a GET request to fetch an entity.
+   - The app retrieves the entity directly from Cyoda without starting a workflow.
+   - Any required business logic is executed based on the retrieved entity data, and the app sends the response back to the user.
+
+This diagram effectively captures the interaction between the user, app, entities, Cyoda, and workflows for both POST and GET request flows. Let me know if you need any further modifications or additional information!
+*/
+
+
+could you please return an improved journey diagram
+/*
+Certainly! Here’s an improved journey diagram that captures the interactions more clearly, including both the POST and GET request flows, and the actions involved for each type of request.
+
+### Improved Journey Diagram
+
+```mermaid
+journey
+    title User Journey for Managing Deployments and Environment Configurations
+    section Creating Environment Configuration
+      User initiates creation: 5: User
+      User submits environment configuration: 5: User
+      App saves entity to Cyoda: 3: App
+      Cyoda confirms entity saved: 3: Cyoda
+      Cyoda triggers workflow: 3: Cyoda
+      App's gRPC client receives workflow start notification: 3: App
+      Workflow processes business logic: 3: Workflow
+      App returns success response: 5: User
+
+    section Initiating Deployment
+      User initiates deployment: 5: User
+      User submits deployment request: 5: User
+      App saves deployment entity to Cyoda: 3: App
+      Cyoda confirms deployment entity saved: 3: Cyoda
+      Cyoda triggers deployment workflow: 3: Cyoda
+      App's gRPC client receives workflow start notification: 3: App
+      Deployment workflow processes business logic: 3: Workflow
+      App returns deployment success response: 5: User
+
+    section Fetching Entity
+      User requests entity details: 5: User
+      App fetches entity from Cyoda: 3: App
+      Cyoda returns entity details: 3: Cyoda
+      App executes business logic: 3: App
+      App returns entity details: 5: User
+
+    section Cancelling Deployment
+      User requests to cancel deployment: 5: User
+      App processes cancellation request: 3: App
+      App sends cancellation request to Cyoda: 3: App
+      Cyoda confirms cancellation: 3: Cyoda
+      App returns cancellation confirmation: 5: User
+```
+
+### Explanation of the Improved Journey Diagram
+1. **Creating Environment Configuration**:
+   - The user initiates the creation of an environment configuration, submits the details, and the app processes this by saving it to Cyoda. Once saved, Cyoda triggers the workflow to perform any additional business logic, and the app returns a success response.
+
+2. **Initiating Deployment**:
+   - Similar to the creation of environment configurations, initiating a deployment follows the same process with saving the deployment entity to Cyoda and triggering its workflow for further processing.
+
+3. **Fetching Entity**:
+   - When the user requests entity details via a GET request, the app fetches the entity directly from Cyoda, executes any necessary business logic, and returns the details to the user.
+
+4. **Cancelling Deployment**:
+   - The user can request to cancel a deployment, where the app processes the request, sends it to Cyoda for confirmation, and finally returns the cancellation confirmation to the user.
+
+This journey diagram provides a clear visual representation of the user interactions with the application and the subsequent flows of data and actions that occur within the app and Cyoda, covering both POST and GET operations. Let me know if you need any further modifications or details!
+*/
+
+
+do you understand now how cyoda works
+/*
+Yes, I understand how Cyoda works based on the information provided.
+
+
+Here's a summary of the key concepts and workflows that are used in Cyoda to manage application flow:
+
+1. **Entity Management**:
+   - Cyoda manages different entities which represent the core data models for the application.
+
+2. **POST Requests**:
+   - When a user sends a POST request to the application, the app saves the related entity to Cyoda.
+   - After saving the entity, Cyoda emits an event to indicate that the corresponding workflow should start.
+   - The app's gRPC client listens for this event and initiates the workflow, executing the associated business logic defined in the workflow processors. - this is done asynchronously
+
+3. **GET Requests**:
+   - For GET requests, the app simply fetches the relevant entity directly from Cyoda without triggering any workflows.
+   - The app can then perform necessary business logic based on the retrieved data.
+
+4. **Workflow Orchestration**:
+   - Workflows are triggered by events from Cyoda, allowing for organized processing of business logic related to the entities.
+   - The processing logic is encapsulated within processors that handle specific actions or calculations on the entities.
+   - A processor can get/save/etc other entities. It can also update data of the current entity directly, passed as an argument. There is no need to save current entity in its processor - only other entities.
+
+5. **gRPC Communication**:
+   - Cyoda communicates with the application via gRPC, allowing for efficient and real-time notifications regarding workflow triggers and related events.
+
+General flow:
+1. **User Interaction**:
+   - The user sends a request to the app to create or update an entity. The app processes this request.
+
+2. **Entity Management**:
+   - The app saves the entity to Cyoda. Cyoda confirms that the entity has been saved and triggers an event to start the corresponding workflow.
+   - The app receives the notification from the gRPC server and executes the defined entity workflow processors, handling the business logic.
+
+3. **Fetching Entity**:
+   - The user can request to view a specific entity. The app fetches the entity from Cyoda and retrieves the relevant details.
+   - The app may perform additional business logic before returning the entity details to the user.
+
+4. **Workflow Completion**:
+   - As the workflow completes its processing, it may update the status of the entity in the app.
+   - Finally, the app informs the user of the completion of the workflow, providing any necessary feedback.
+
+
+
+Let's outline a general user journey and sequence diagram for a Cyoda-like application that incorporates a user, the app, entities, workflows, and the Cyoda service. This structure will be applicable for any application that follows a similar model of managing entities and workflows through external services like Cyoda.
+
+### General User Journey for a Cyoda-like Application
+
+mermaid
+journey
+    title General User Journey for Cyoda-like Application
+    section User Interaction
+      User sends request to the app: 5: User
+      Application processes the request: 3: App
+
+    section Entity Management
+      Application saves entity to Cyoda: 3: App
+      Cyoda confirms entity save: 3: Cyoda
+      Cyoda triggers workflow event: 3: Cyoda
+      App receives workflow start notification: 3: App
+      App executes entity workflow processors: 3: Workflow
+
+    section Fetching Entity
+      User requests to view an entity: 5: User
+      Application fetches entity from Cyoda: 3: App
+      Cyoda returns entity details: 3: Cyoda
+      Application executes business logic: 3: App
+      Application returns entity details to the user: 5: User
+
+    section Workflow Completion
+      Workflow processes business logic: 3: Workflow
+      Application updates entity status: 3: App
+      Application informs user of completion: 5: User
+
+
+### General Sequence Diagram for a Cyoda-like Application
+
+Here’s a generalized sequence diagram based on the user journey outlined above:
+
+mermaid
+sequenceDiagram
+    participant U as User
+    participant A as App
+    participant E as Entity ()
+    participant W as Workflow (Business Logic, isolated functions "processors")
+    participant C as Cyoda
+    participant G as gRPC Server
+
+    %% User Interaction Flow
+    U->>A: Send Request (Create or Update Entity)
+    A->>C: Save Entity to Cyoda
+    C-->>A: Entity Saved Confirmation
+
+    %% Workflow Trigger Flow
+    C->>G: Trigger Workflow Event
+    G-->>A: Notify App to Start Workflow
+    A->>W: Execute Entity Workflow Processors
+    W-->>A: Workflow Completed
+
+    %% Fetching Entity Flow
+    U->>A: Request to View Entity
+    A->>C: Fetch Entity from Cyoda
+    C-->>A: Return Entity Details
+    A->>W: Execute Business Logic (if needed)
+    A-->>U: Return Entity Details
+
+    %% Workflow Completion Flow
+    W->>A: Update Entity Status
+    A-->>U: Inform User of Completion
+
+
+### Explanation of the General Journey and Sequence Diagram
+
+
+General requests:
+
+**API Endpoint:** `POST /your_endpoint`
+
+**Description:**
+- **Pseudocode:**
+  ```plaintext
+  #some code here
+  save new entity
+  #some code here
+  return entity details to user
+  ```
+
+**API Endpoint:** `PUT /your_endpoint`
+
+**Description:**
+- **Pseudocode:**
+  ```plaintext
+  #some code here
+  update entity
+  #some code here
+  return entity details to user
+  ```
+---
+
+**API Endpoint:** `GET /your_endpoint`
+
+**Description:**
+- **Pseudocode:**
+  ```plaintext
+  #some code here
+  fetch entity by ID from Cyoda
+  return entity details to user
+  ```
+
+Example workflow:
+
+1. Entity A processors (isolated functions like aws lambda)
+Pseudocode:
+function do_some_business_logic(meta, entity_data):
+    validate entity_data
+    get some other entity to fetch data if necessary
+    add new Supplementary/Secondary entity if necessary
+    entity_data["attribute"] = new_value #update current entity directly, it will be saved implicitly
+
+Launch Process:
+When a user sends a POST request and a new entity is saved this function is called asynchronously in the background.
+This function does not know about other processors, so it should not call any other processors. Processors call is managed by Cyoda
