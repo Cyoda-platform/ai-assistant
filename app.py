@@ -254,7 +254,7 @@ async def get_guest_token():
     payload = {
         "sub": f"guest.{session_id}",
         "iat": datetime.datetime.utcnow(),
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Token valid for 1 hour
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(weeks=50)
     }
 
     # Generate the token using HS256 algorithm
