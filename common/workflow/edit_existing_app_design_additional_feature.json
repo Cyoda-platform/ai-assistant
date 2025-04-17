@@ -33,7 +33,7 @@
                     "You are also provided with the app.py containing application endpoints:",
                     "{app_api}",
                     "",
-                    "User requirement: \"{user_prompt}\"",
+                    "User requirement: \"{user_request}\"",
                     "",
                     "Please return the answer in the following format:",
                     "In order to implement this requirement,",

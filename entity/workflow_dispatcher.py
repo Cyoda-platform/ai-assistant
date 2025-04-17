@@ -11,7 +11,8 @@ from typing import List
 from common.config.config import GENERAL_MEMORY_TAG, PROJECT_DIR, REPOSITORY_NAME, ENTITY_VERSION, \
     CYODA_ENTITY_TYPE_EDGE_MESSAGE
 from common.config.conts import OPEN_AI, QUESTIONS_QUEUE_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME, \
-    AI_MEMORY_EDGE_MESSAGE_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, EDGE_MESSAGE_STORE_MODEL_NAME
+    AI_MEMORY_EDGE_MESSAGE_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, EDGE_MESSAGE_STORE_MODEL_NAME, \
+    GIT_BRANCH_PARAM
 from common.util.utils import _save_file
 from entity.chat.data.workflow_prototype.batch_parallel_code import batch_process_file
 from entity.chat.model.chat import AgenticFlowEntity
@@ -205,7 +206,7 @@ class WorkflowDispatcher:
             await batch_process_file(input_file_path=input_file_path, output_file_path=output_file_path)
             return f"Scheduled batch processing for {input_file_path}"
 
-        messages = await self._get_ai_memory(config=config, memory=memory, technical_id=technical_id)
+        messages = await self._get_ai_memory(entity=entity, config=config, memory=memory, technical_id=technical_id)
         ai_agent_resp = await self.ai_agent.run(
             methods_dict=self.methods_dict,
             cls_instance=self.cls_instance,
@@ -227,7 +228,7 @@ class WorkflowDispatcher:
             memory.messages.get(memory_tag).append(AIMessage(edge_message_id=edge_message_id))
         return ai_agent_resp
 
-    async def _get_ai_memory(self, config, memory: ChatMemory, technical_id):
+    async def _get_ai_memory(self, entity, config, memory: ChatMemory, technical_id):
         memory_tags = config.get("memory_tags", [GENERAL_MEMORY_TAG])
         messages = []
         for memory_tag in memory_tags:
@@ -242,10 +243,12 @@ class WorkflowDispatcher:
             # todo verify that the copy is deep
         input_data = config.get("input")
         if input_data:
+            branch_id = entity.workflow_cache.get(GIT_BRANCH_PARAM, technical_id)
             local_fs = input_data.get("local_fs")
             for file_name in local_fs:
-                file_contents = await self._read_local_file(file_name=file_name, technical_id=technical_id)
+                file_contents = await self._read_local_file(file_name=file_name, technical_id=branch_id)
                 messages.append({"role": "user", "content": f"Reference: {file_name}: \n {file_contents}"})
+            #todo add edge messages
         return messages
 
     async def _read_local_file(self, file_name, technical_id):
@@ -349,7 +352,9 @@ class WorkflowDispatcher:
                             response = json.dumps(parsed_json, indent=4, sort_keys=True)
                         except json.JSONDecodeError as err:
                             logger.error(f"Invalid JSON format for file {cache_key}: {err}")
-                    await _save_file(chat_id=technical_id, _data=response, item=cache_key)
+                    formatted_filename = cache_key.format(**entity.workflow_cache)
+                    branch_id = entity.workflow_cache.get(GIT_BRANCH_PARAM, technical_id)
+                    await _save_file(chat_id=branch_id, _data=response, item=formatted_filename)
             if config.get("output").get("workflow_cache"):
                 cache_keys = config.get("output").get("workflow_cache")
                 for cache_key in cache_keys:

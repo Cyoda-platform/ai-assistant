@@ -3,6 +3,9 @@ import uuid
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from common.config.conts import CHAT_MODEL_NAME, ADD_NEW_WORKFLOW, EDIT_API_EXISTING_APP, EDIT_EXISTING_WORKFLOW, \
+    EDIT_EXISTING_PROCESSORS
+
 
 def convert(input_file_path, output_file_path, calculation_node_tags, model_name, model_version):
     """Reads JSON from a file, converts it to workflow_dto, and writes it to another file."""
@@ -419,8 +422,9 @@ if __name__ == "__main__":
     #chat
     #build_general_application
     #generating_gen_app_workflow
-
-    model_name = "build_general_application"
+    #EDIT_EXISTING_WORKFLOW
+    #EDIT_EXISTING_PROCESSORS
+    model_name = EDIT_EXISTING_WORKFLOW
     input_file = f"{model_name}.json"
     output_file = f"outputs/{input_file}"
     calculation_nodes_tags="ai_assistant"

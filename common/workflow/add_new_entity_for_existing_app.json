@@ -17,20 +17,33 @@
             "config": {
               "type": "prompt",
               "model": {
-                "name": "REQUIREMENT_AGENT",
-                "temperature": 0.7,
-                "max_tokens": 10000
               },
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "Please add data model example for the {entity_name} according to the user requirement: {user_prompt}.",
+                    "Please add data model example for the {entity_name} according to the user requirement: {user_request}.",
                     "Please return raw data example and not schema."
                   ]
                 }
               ],
-              "publish": true
+              "response_format": {
+                "name": "entities_design_schema",
+                "description": "entities design schema",
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                  },
+                  "required": [
+                  ]
+                }
+              },
+              "publish": true,
+              "output": {
+                "local_fs": [
+                  "entity/{entity_name}/{entity_name}.json"
+                ]
+              }
             }
           }
         }
@@ -39,7 +52,7 @@
     "user_notification": {
       "transitions": {
         "finish": {
-          "next": "none",
+          "next": "locked_chat",
           "action": {
             "name": "notify_user",
             "config": {

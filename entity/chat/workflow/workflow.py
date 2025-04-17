@@ -7,13 +7,15 @@ import aiofiles
 from bs4 import BeautifulSoup
 
 from typing import Any
+
+from common.ai.nltk_service import get_most_similar_entity
 from common.config.conts import *
 from common.config.config import MOCK_AI, \
     REPOSITORY_URL, CYODA_DEPLOY_DICT, CHECK_DEPLOY_INTERVAL, ENTITY_VERSION, GOOGLE_SEARCH_KEY, \
     GOOGLE_SEARCH_CX, PROJECT_DIR, REPOSITORY_NAME, MAX_ITERATION, CYODA_ENTITY_TYPE_EDGE_MESSAGE
 from common.util.chat_util_functions import _launch_transition
 from common.util.utils import get_project_file_name, git_pull, _git_push, _save_file, clone_repo, \
-    send_post_request, send_get_request, parse_from_string
+    send_post_request, send_get_request, parse_from_string, read_file_util
 from entity.chat.data.data import BRANCH_READY_NOTIFICATION
 from entity.chat.data.workflow_prototype.batch_converter import convert_state_diagram_to_jsonl_dataset
 from entity.chat.data.workflow_prototype.batch_parallel_code import build_workflow_from_jsonl
@@ -219,19 +221,7 @@ class ChatWorkflow(Workflow):
         Reads data from a file using the provided chat id and file name.
         """
         # Await the asynchronous git_pull function.
-        await git_pull(chat_id=technical_id)
-
-        target_dir = os.path.join(f"{PROJECT_DIR}/{technical_id}/{REPOSITORY_NAME}", "")
-        file_path = os.path.join(target_dir, params.get("filename"))
-        try:
-            async with aiofiles.open(file_path, 'r') as file:
-                content = await file.read()
-            return content
-        except FileNotFoundError:
-            return ''
-        except Exception as e:
-            logger.exception("Error during reading file")
-            return f"Error during reading file: {e}"
+        return await read_file_util(filename=params.get("filename"), technical_id=technical_id)
 
     async def set_additional_question_flag(self, technical_id: str, entity: ChatEntity, **params: Any) -> None:
         transition = params.get("transition")
@@ -341,11 +331,9 @@ class ChatWorkflow(Workflow):
     async def is_chat_unlocked(self, technical_id: str, entity: ChatEntity, **params: Any) -> bool:
         return not entity.locked
 
-    async def launch_workflow(self, technical_id: str, entity: ChatEntity, **params: Any):
-        entity_model = params.get("workflow")
+    async def build_general_application(self, technical_id: str, entity: ChatEntity, **params: Any):
+        entity_model = GEN_APP_ENTITY
         user_request = params.get("user_request")
-        if not entity_model:
-            return "parameter workflow is required"
         if not user_request:
             return "parameter user_request is required"
         child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
@@ -496,4 +484,164 @@ class ChatWorkflow(Workflow):
         await _launch_transition(entity_service=self.entity_service,
                                  technical_id=entity.triggered_entity_id,
                                  cyoda_token=self.cyoda_token)
+
+#============================editing========================
+
+
+#==================================== editing =======================================================
+
+##user_request
+##git_branch
+    async def edit_existing_app_design_additional_feature(self,
+                                                          technical_id,
+                                                          entity: AgenticFlowEntity,
+                                                          **params):
+        # Clean up chat_id if needed
+        git_branch_id = params.get(GIT_BRANCH_PARAM)
+        await clone_repo(chat_id=git_branch_id)
+        app_api = await read_file_util(filename="app.py", technical_id=git_branch_id)
+        entities_description = []
+        project_entities_list = await self.get_entities_list(branch_id=git_branch_id)
+        for project_entity in project_entities_list:
+            workflow_code = await read_file_util(technical_id=git_branch_id, filename=f"entity/{project_entity}/workflow.py")
+            entities_description.append({project_entity: workflow_code})
+
+        workflow_cache = {
+            'user_request': params.get("user_request")
+        }
+        app_api_id = await self.entity_service.add_item(token=self.cyoda_token,
+                                                             entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                             entity_version=ENTITY_VERSION,
+                                                             entity=app_api,
+                                                             meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+
+        entities_description_id = await self.entity_service.add_item(token=self.cyoda_token,
+                                                                     entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                                     entity_version=ENTITY_VERSION,
+                                                                     entity=json.dumps(entities_description),
+                                                                     meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+
+        edge_messages_store = {
+            'app_api': app_api_id,
+            'entities_description': entities_description_id,
+        }
+        child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
+            entity_service=self.entity_service,
+            technical_id=technical_id,
+            entity=entity,
+            entity_model=ADD_NEW_FEATURE,
+            workflow_cache=workflow_cache,
+            edge_messages_store=edge_messages_store)
+
+        return f"Successfully scheduled workflow for updating user application {child_technical_id}"
+
+    async def _schedule_workflow(
+            self,
+            technical_id: str,
+            entity: AgenticFlowEntity,
+            entity_model: str,
+            params: dict,
+            resolve_entity_name: bool = False,
+    ) -> str:
+        # Clone the repo based on branch ID if provided
+        git_branch_id = params.get(GIT_BRANCH_PARAM)
+        await clone_repo(chat_id=git_branch_id)
+
+        # One-off resolution for workflows that need an entity_name
+        if resolve_entity_name:
+            entity_name = await self._resolve_entity_name(
+                entity_name=params.get("entity_name"),
+                branch_id=git_branch_id,
+            )
+            params["entity_name"] = entity_name
+
+        # Launch the actual agentic workflow
+        child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
+            entity_service=self.entity_service,
+            technical_id=technical_id,
+            entity=entity,
+            entity_model=entity_model,
+            workflow_cache=params,
+            edge_messages_store={},
+        )
+
+        return (
+            f"Successfully scheduled workflow to implement the task "
+            f"{child_technical_id}"
+        )
+
+    async def add_new_entity_for_existing_app(
+            self, technical_id: str, entity: AgenticFlowEntity, **params
+    ) -> str:
+        return await self._schedule_workflow(
+            technical_id=technical_id,
+            entity=entity,
+            entity_model=ADD_NEW_ENTITY,
+            params=params,
+        )
+
+    async def add_new_workflow(
+            self, technical_id: str, entity: AgenticFlowEntity, **params
+    ) -> str:
+        return await self._schedule_workflow(
+            technical_id=technical_id,
+            entity=entity,
+            entity_model=ADD_NEW_WORKFLOW,
+            params=params,
+            resolve_entity_name=True,
+        )
+
+    async def edit_api_existing_app(
+            self, technical_id: str, entity: AgenticFlowEntity, **params
+    ) -> str:
+        return await self._schedule_workflow(
+            technical_id=technical_id,
+            entity=entity,
+            entity_model=EDIT_API_EXISTING_APP,
+            params=params,
+            resolve_entity_name=False,
+        )
+
+    async def edit_existing_processors(
+            self, technical_id: str, entity: AgenticFlowEntity, **params
+    ) -> str:
+        return await self._schedule_workflow(
+            technical_id=technical_id,
+            entity=entity,
+            entity_model=EDIT_EXISTING_PROCESSORS,
+            params=params,
+            resolve_entity_name=True,
+        )
+
+    async def edit_existing_workflow(
+            self, technical_id: str, entity: AgenticFlowEntity, **params
+    ) -> str:
+        return await self._schedule_workflow(
+            technical_id=technical_id,
+            entity=entity,
+            entity_model=EDIT_EXISTING_WORKFLOW,
+            params=params,
+            resolve_entity_name=True,
+        )
+
+    async def get_entities_list(self, branch_id: str) -> list:
+        entity_dir = f"{PROJECT_DIR}/{branch_id}/{REPOSITORY_NAME}/entity"
+
+        # List all subdirectories (each subdirectory is an entity)
+        entities = [name for name in os.listdir(entity_dir)
+                    if os.path.isdir(os.path.join(entity_dir, name))]
+
+        return entities
+
+    def parse_from_string(self, escaped_code: str) -> str:
+        return escaped_code.encode("utf-8").decode("unicode_escape")
+
+
+
+    async def _resolve_entity_name(self, entity_name: str, branch_id: str) -> str:
+        entity_names = await self.get_entities_list(branch_id=branch_id)
+        resolved_name = get_most_similar_entity(target=entity_name, entity_list=entity_names)
+        return resolved_name if resolved_name else entity_name
+
+
 

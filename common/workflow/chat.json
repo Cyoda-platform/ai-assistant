@@ -87,28 +87,178 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "launch_workflow",
-                    "description": "Launches workflow that is necessary to address the user's request. Pass workflow name that satisfies the user request best. E.g. if the user wants to order pizza, choose order_pizza and pass workflow name and user request 'as a user i want to order pizza'",
+                    "name": "build_general_application",
+                    "description": "Launches workflow that is necessary to build a new application. Do not use for editing existing applications.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
                       "properties": {
-                        "workflow": {
-                          "type": "string",
-                          "enum": [
-                            "build_general_application",
-                            "build_agentic_application",
-                            "edit_general_application",
-                            "deploy_application"
-                          ]
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_existing_app_design_additional_feature",
+                    "description": "Launches workflow that is necessary to help the user plan how to edit an existing application or add a new feature. Key factor is that an application already exists. if the user doesn't specify the branch, ask yourself.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
                         },
                         "user_request": {
                           "type": "string"
                         }
                       },
                       "required": [
-                        "workflow",
-                        "user_request"
+                        "user_request",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_new_entity_for_existing_app",
+                    "description": "Launches workflow that is necessary to help the user add a new entity to the existing application. Key factor is that an application already exists and the user explicitly asks to add a new entity (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_new_workflow",
+                    "description": "Launches workflow that is necessary to help the user add a new workflow. Key factor is that an application already exists and the user explicitly asks to add a new workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_api_existing_app",
+                    "description": "Launches workflow that is necessary to help the user edit/update existing api (app.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/app.py  (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_existing_workflow",
+                    "description": "Launches workflow that is necessary to help the user edit an existing workflow/workflow json. Key factor is that an application already exists and the user explicitly asks to update a workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_existing_processors",
+                    "description": "Launches workflow that is necessary to help the user update workflow processors code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/workflow.py code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name"
                       ],
                       "additionalProperties": false
                     }
@@ -124,6 +274,7 @@
                     " launch_workflow is an orchestration tool - you can use it to delegate some complex requests execution to the relevant workflows",
                     " In order to do it - choose launch_workflow function and pass the most relevant workflow name as a parameter. ",
                     " If you're unsure, don't hesitate to ask the human for more information.",
+                    " If git_branch is required in the tools parameters and the user doesn't specify it explicitly - ask the user, or you can use the last branc mentioned by the user. But never use main branch.",
                     " Here is the user's request:"
                   ]
                 }
@@ -216,28 +367,178 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "launch_workflow",
-                    "description": "Launches workflow that is necessary to address the user's request. Pass workflow name that satisfies the user request best. E.g. if the user wants to order pizza, choose order_pizza and pass workflow name and user request 'as a user i want to order pizza'",
+                    "name": "build_general_application",
+                    "description": "Launches workflow that is necessary to build a new application. Do not use for editing existing applications.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
                       "properties": {
-                        "workflow": {
-                          "type": "string",
-                          "enum": [
-                            "build_general_application",
-                            "build_agentic_application",
-                            "edit_general_application",
-                            "deploy_application"
-                          ]
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_existing_app_design_additional_feature",
+                    "description": "Launches workflow that is necessary to help the user plan how to edit an existing application or add a new feature. Key factor is that an application already exists. if the user doesn't specify the branch, ask yourself.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
                         },
                         "user_request": {
                           "type": "string"
                         }
                       },
                       "required": [
-                        "workflow",
-                        "user_request"
+                        "user_request",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_new_entity_for_existing_app",
+                    "description": "Launches workflow that is necessary to help the user add a new entity to the existing application. Key factor is that an application already exists and the user explicitly asks to add a new entity (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_new_workflow",
+                    "description": "Launches workflow that is necessary to help the user add a new workflow. Key factor is that an application already exists and the user explicitly asks to add a new workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_api_existing_app",
+                    "description": "Launches workflow that is necessary to help the user edit/update existing api (app.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/app.py  (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_existing_workflow",
+                    "description": "Launches workflow that is necessary to help the user edit an existing workflow/workflow json. Key factor is that an application already exists and the user explicitly asks to update a workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_existing_processors",
+                    "description": "Launches workflow that is necessary to help the user update workflow processors code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/workflow.py code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name"
                       ],
                       "additionalProperties": false
                     }
@@ -253,6 +554,7 @@
                     " launch_workflow is an orchestration tool - you can use it to delegate some complex requests execution to the relevant workflows",
                     " In order to do it - choose launch_workflow function and pass the most relevant workflow name as a parameter. ",
                     " If you're unsure, don't hesitate to ask the human for more information.",
+                    " If git_branch is required in the tools parameters and the user doesn't specify it explicitly - ask the user, or you can use the last branc mentioned by the user. But never use main branch.",
                     " Here is the user's request:"
                   ]
                 }

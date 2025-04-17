@@ -847,6 +847,7 @@ async def clone_repo(chat_id: str):
     clone_dir = f"{PROJECT_DIR}/{chat_id}/{REPOSITORY_NAME}"
 
     if await repo_exists(clone_dir):
+        await git_pull(chat_id=chat_id)
         return
 
     if CLONE_REPO != "true":
@@ -921,4 +922,16 @@ def parse_entity(model_cls, resp: Any) -> Any:
         return resp
 
 
-
+async def read_file_util(filename, technical_id):
+    await git_pull(chat_id=technical_id)
+    target_dir = os.path.join(f"{PROJECT_DIR}/{technical_id}/{REPOSITORY_NAME}", "")
+    file_path = os.path.join(target_dir, filename)
+    try:
+        async with aiofiles.open(file_path, 'r') as file:
+            content = await file.read()
+        return content
+    except FileNotFoundError:
+        return ''
+    except Exception as e:
+        logger.exception("Error during reading file")
+        return f"Error during reading file: {e}"

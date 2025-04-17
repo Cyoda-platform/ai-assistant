@@ -4,120 +4,145 @@
     "none": {
       "transitions": {
         "start_workflow_update": {
-          "next": "update_workflow_json"
+          "next": "started_workflow_update"
         }
       }
     },
-    "update_workflow_json": {
+    "started_workflow_update": {
       "transitions": {
-        "approve_workflow_json": {
-          "next": "generate_updated_workflow_json",
+        "update_workflow_config": {
+          "next": "updated_workflow_config",
           "action": {
             "name": "process_event",
             "config": {
               "type": "prompt",
               "model": {
-                "name": "OPEN_AI",
-                "temperature": 0.7,
-                "max_tokens": 10000
+              },
+              "input": {
+                "local_fs": [
+                  "entity/{entity_name}/workflow.json"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "entity/{entity_name}/workflow.json"
+                ]
               },
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "You are provided entity workflow json {workflow_json}.",
-                    "Please update it based on the user request \"{user_prompt}\".",
+                    "You are provided entity workflow json.",
+                    "Please update it based on the user request \"{user_request}\".",
                     "Processes should have name starting with 'process_'.",
                     "Please return only workflow json only."
                   ]
                 }
               ],
-              "publish": true
-            }
-          }
-        }
-      }
-    },
-    "generate_updated_workflow_json": {
-      "transitions": {
-        "enrich_workflow_definition": {
-          "next": "enrich_workflow_state",
-          "action": {
-            "name": "confirm_user",
-            "config": {
-              "type": "question",
-              "question": "The new version of the workflow is ready. Would you like to make any changes? Please approve to proceed to the next step.",
-              "approve": true,
-              "publish": true
-            }
-          }
-        }
-      }
-    },
-    "enrich_workflow_state": {
-      "transitions": {
-        "generate_workflow_json": {
-          "next": "generate_json_update",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "prompt",
-              "model": {
-                "name": "OPEN_AI",
-                "temperature": 0.7,
-                "max_tokens": 10000
-              },
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "Please return complete workflow.json taking into account user suggestions if any."
-                  ]
+              "response_format": {
+                "name": "workflow_design_schema",
+                "description": "workflow design schema",
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "transitions"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "transitions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "start_state",
+                          "end_state",
+                          "automated"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "start_state": {
+                            "type": "string"
+                          },
+                          "end_state": {
+                            "type": "string"
+                          },
+                          "automated": {
+                            "type": "boolean"
+                          },
+                          "processes": {
+                            "type": "object",
+                            "properties": {
+                              "schedule_transition_processors": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {}
+                                }
+                              },
+                              "externalized_processors": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "required": [
+                                    "name"
+                                  ],
+                                  "properties": {
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
-              ],
-              "attached_files": ["entity/{entity_name}/workflow.json"],
+              },
               "publish": true
             }
           }
         }
       }
     },
-    "generate_json_update": {
+    "updated_workflow_config": {
       "transitions": {
-        "run_enrich_workflow_function": {
-          "next": "update_processors_code",
-          "action": {
-            "name": "enrich_entity_workflow",
-            "config": {
-              "type": "function",
-            }
-          }
-        }
-      }
-    },
-    "update_processors_code": {
-      "transitions": {
-        "approve_code_update": {
-          "next": "generate_workflow_code",
+        "update_processors_code": {
+          "next": "updated_processors_code",
           "action": {
             "name": "process_event",
             "config": {
               "type": "prompt",
               "model": {
-                "name": "OPEN_AI",
-                "temperature": 0.7,
-                "max_tokens": 10000
+              },
+              "input": {
+                "local_fs": [
+                  "entity/{entity_name}/workflow.py"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "entity/{entity_name}/workflow.py"
+                ]
               },
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "# Please update processors functions according the new requirement \"{user_prompt}\".",
+                    "# Please update processors functions according the new requirement \"{user_request}\".",
                     "Generate new process functions if necessary or update existing functions according to the user requirement.",
                     "Processes should have name starting with 'process_' and take only one argument entity.",
                     "",
                     "Entity data example:",
-                    "{entity_model}"
+                    "{entity_name}"
                   ]
                 }
               ],
@@ -127,38 +152,10 @@
         }
       }
     },
-    "generate_workflow_code": {
-      "transitions": {
-        "approve_code_final": {
-          "next": "user_notification",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "prompt",
-              "model": {
-                "name": "OPEN_AI",
-                "temperature": 0.7,
-                "max_tokens": 10000
-              },
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "Please return fully functioning workflow.py code taking into account user suggestions if any."
-                  ]
-                }
-              ],
-              "publish": true
-
-            }
-          }
-        }
-      }
-    },
-    "user_notification": {
+    "updated_processors_code": {
       "transitions": {
         "done": {
-          "next": "none",
+          "next": "locked_chat",
           "action": {
             "name": "notify_user",
             "config": {

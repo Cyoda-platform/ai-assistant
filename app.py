@@ -708,6 +708,7 @@ async def process_message(finished_flow: List[FlowEdgeMessage], auth_header, dia
                 technical_id=message.edge_message_id,
                 meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE}
             )
+            message_content['technical_id']=message.edge_message_id
             dialogue.append(message_content)
 
         # If the message contains child entities, retrieve and process each child recursively
