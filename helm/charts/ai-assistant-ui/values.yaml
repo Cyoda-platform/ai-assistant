@@ -1,9 +1,5 @@
 name: ai-assistant-ui
 
-registry:
-  host: "REGISTRY_HOST_VAR"
-  username: "REGISTRY_USERNAME_VAR"
-  password: "REGISTRY_PASSWORD_VAR"
 imagePullSecret:
   enabled: true
 enabled: true
