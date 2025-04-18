@@ -1,6 +1,14 @@
 name: ai-assistant-ui
 
+registry:
+  host: "REGISTRY_HOST_VAR"
+  username: "REGISTRY_USERNAME_VAR"
+  password: "REGISTRY_PASSWORD_VAR"
+imagePullSecret:
+  enabled: true
 enabled: true
+useNamespaceForIngress: false
+
 imagePullSecrets: []
 revisionHistoryLimit: 10
 pollingInterval: 15000
@@ -65,7 +73,7 @@ affinity: { }
 strategy: {}
 
 image:
+  pullPolicy: Always
   imageName: ai-assistant-ui
-  tag: latest
 replicaCount: 1
 actuatorEnabled: false

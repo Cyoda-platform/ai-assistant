@@ -63,8 +63,8 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Values.name }}
-          image: "{{ .Values.global.registry.host }}/{{ .Values.image.imageName }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+          image: "{{ .Values.registry.host }}/{{ .Values.image.imageName }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources: {{- toYaml .Values.resources | nindent 12 }}
           {{- with .Values.securityContext }}
           securityContext:
@@ -128,11 +128,11 @@ spec:
             - secretRef:
                 name: {{ . }}
           {{- end }}
-    {{- with .Values.global.hostAliases }}
+    {{- with .Values.hostAliases }}
       hostAliases:
 {{ toYaml . | indent 8 }}
     {{- end }}
-      {{- if .Values.global.imagePullSecret.enabled | default false }}
+      {{- if .Values.imagePullSecret.enabled | default false }}
       imagePullSecrets:
         - name: regcred
       {{- end }}

@@ -1,6 +1,15 @@
 name: ai-assistant
 
+registry:
+  host: "REGISTRY_HOST_VAR"
+  username: "REGISTRY_USERNAME_VAR"
+  password: "REGISTRY_PASSWORD_VAR"
+imagePullSecret:
+  enabled: true
 enabled: true
+useNamespaceForIngress: false
+
+
 imagePullSecrets: []
 container:
   env:
@@ -58,7 +67,7 @@ affinity: { }
 strategy: {}
 
 image:
+  pullPolicy: Always
   imageName: ai-assistant
-  tag: latest
 replicaCount: 1
 actuatorEnabled: false

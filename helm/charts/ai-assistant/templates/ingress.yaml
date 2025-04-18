@@ -18,7 +18,7 @@ spec:
                 name: {{ .Values.service.name }}
                 port:
                   name: {{ .Values.service.serverPort.name }}
-            {{- if .Values.global.useNamespaceForIngress | default false }}
+            {{- if .Values.useNamespaceForIngress | default false }}
             path: /{{ .Release.Namespace }}/{{ .Values.ingress.path }}
             {{- else }}
             path: /{{ .Values.ingress.path }}
