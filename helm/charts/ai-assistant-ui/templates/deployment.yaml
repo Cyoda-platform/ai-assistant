@@ -132,7 +132,7 @@ spec:
       hostAliases:
 {{ toYaml . | indent 8 }}
     {{- end }}
-      {{- if .Values.imagePullSecret.enabled | default false }}
+      {{- if .Values.global.imagePullSecret.enabled | default false }}
       imagePullSecrets:
         - name: regcred
       {{- end }}
