@@ -1,4 +1,4 @@
-name: ai-assistant-backend
+name: ai-assistant
 
 enabled: true
 imagePullSecrets: []
