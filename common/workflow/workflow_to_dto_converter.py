@@ -7,7 +7,7 @@ from common.config.conts import CHAT_MODEL_NAME, ADD_NEW_WORKFLOW, EDIT_API_EXIS
     EDIT_EXISTING_PROCESSORS
 
 
-def convert(input_file_path, output_file_path, calculation_node_tags, model_name, model_version):
+def convert(input_file_path, output_file_path, calculation_node_tags, model_name, model_version, workflow_name):
     """Reads JSON from a file, converts it to workflow_dto, and writes it to another file."""
     with open(input_file_path, "r", encoding="utf-8") as infile:
         input_json = json.load(infile)
@@ -15,12 +15,15 @@ def convert(input_file_path, output_file_path, calculation_node_tags, model_name
     # Call the conversion method
     workflow_dto = convert_json_to_workflow_dto(input_json=input_json,
                                                 class_name="com.cyoda.tdb.model.treenode.TreeNodeEntity",
-                                                calculation_nodes_tags=calculation_node_tags, model_name=model_name, model_version=model_version)
+                                                calculation_nodes_tags=calculation_node_tags,
+                                                model_name=model_name,
+                                                model_version=model_version,
+                                                workflow_name = workflow_name)
 
     with open(output_file_path, "w", encoding="utf-8") as outfile:
         json.dump(workflow_dto, outfile, indent=4, ensure_ascii=False)
 
-def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags, model_name, model_version):
+def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags, model_name, workflow_name, model_version):
     default_param_values = {
         "owner": "CYODA",
         "user": "CYODA",
@@ -77,6 +80,13 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                 "operation": "IEQUALS",
                 "rangeField": "false",
                 "value": model_name
+            },
+            {
+                "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
+                "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.strings.[$.workflow_name]",
+                "operation": "IEQUALS",
+                "rangeField": "false",
+                "value": workflow_name
             },
             {
                 "@bean": "com.cyoda.core.conditions.queryable.Equals",
@@ -424,7 +434,8 @@ if __name__ == "__main__":
     #generating_gen_app_workflow
     #EDIT_EXISTING_WORKFLOW
     #EDIT_EXISTING_PROCESSORS
-    model_name = EDIT_EXISTING_WORKFLOW
+    model_name = CHAT_MODEL_NAME
+    workflow_name = EDIT_EXISTING_WORKFLOW
     input_file = f"{model_name}.json"
     output_file = f"outputs/{input_file}"
     calculation_nodes_tags="ai_assistant"
@@ -434,5 +445,6 @@ if __name__ == "__main__":
             output_file_path=output_file,
             calculation_node_tags=calculation_nodes_tags,
             model_name=model_name,
-            model_version=model_version)
+            model_version=model_version,
+            workflow_name = workflow_name)
     print(f"Conversion completed. Result saved to {output_file}")

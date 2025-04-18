@@ -1,0 +1,64 @@
+name: ai-assistant-backend
+
+enabled: true
+imagePullSecrets: []
+container:
+  env:
+    vars: {}
+    extraVars: []
+    configMaps: []
+    secrets: []
+podAnnotations: {}
+host:
+  name: ""
+
+health:
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 30
+    failureThreshold: 10
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 30
+    failureThreshold: 10
+service:
+  name: ai-assistant-service
+  type: NodePort
+  serverPort:
+    port: 5000
+    target: 5000
+    name: http
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations: {}
+  path: api
+  pathType: Prefix
+  tls: []
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+extraVolumeMounts: {}
+extraVolumes: {}
+securityContext: {}
+tolerations: { }
+priorityClassName: { }
+serviceAccountName: { }
+hostAliases: { }
+affinity: { }
+strategy: {}
+
+image:
+  imageName: ai-assistant
+  tag: latest
+replicaCount: 1
+actuatorEnabled: false

@@ -1,5 +1,6 @@
 {
   "initial_state": "none",
+  "workflow_name": "add_new_workflow",
   "states": {
     "none": {
       "transitions": {

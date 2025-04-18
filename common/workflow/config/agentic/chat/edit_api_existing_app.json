@@ -1,5 +1,6 @@
 {
   "initial_state": "none",
+  "workflow_name": "edit_api_existing_app",
   "states": {
     "none": {
       "transitions": {

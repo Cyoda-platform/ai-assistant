@@ -40,7 +40,8 @@ MEMORY_MODEL_NAME = "chat_memory"
 FLOW_EDGE_MESSAGE_MODEL_NAME = "flow_edge_message"
 AI_MEMORY_EDGE_MESSAGE_MODEL_NAME = "ai_memory_edge_message"
 EDGE_MESSAGE_STORE_MODEL_NAME = "edge_message_store"
-CHAT_MODEL_NAME = "chat"
+CHAT_MODEL_NAME = "chat_entity"
+AGENTIC_FLOW_ENTITY = "agentic_flow_entity"
 GEN_APP_ENTITY = "build_general_application"
 GENERATING_GEN_APP_WORKFLOW = "generating_gen_app_workflow"
 SCHEDULER_ENTITY = "scheduler_entity"
@@ -59,3 +60,5 @@ PUSH_NOTIFICATION = "push_notification"
 APPROVE = "let's proceed to the next iteration immediately: set require additional questions to False and finish the discussion."
 RATE_LIMIT = 300
 SCHEDULER_CHECK_INTERVAL=60
+
+#GENERATING_GEN_APP_WORKFLOW: AgenticFlowEntity,

@@ -1,5 +1,6 @@
 {
   "initial_state": "none",
+  "workflow_name": "edit_existing_app_design_additional_feature",
   "states": {
     "none": {
       "transitions": {
