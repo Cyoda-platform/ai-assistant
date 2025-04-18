@@ -9,7 +9,8 @@ imagePullSecret:
 enabled: true
 useNamespaceForIngress: false
 
-imagePullSecrets: []
+imagePullSecrets:
+  - name: regcred
 revisionHistoryLimit: 10
 pollingInterval: 15000
 container:

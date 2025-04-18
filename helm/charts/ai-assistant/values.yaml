@@ -6,11 +6,12 @@ registry:
   password: "REGISTRY_PASSWORD_VAR"
 imagePullSecret:
   enabled: true
+
 enabled: true
 useNamespaceForIngress: false
 
-
-imagePullSecrets: []
+imagePullSecrets:
+  - name: regcred
 container:
   env:
     vars: {}
