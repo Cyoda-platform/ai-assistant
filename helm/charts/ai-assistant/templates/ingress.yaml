@@ -10,7 +10,7 @@ metadata:
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
-    - host: ai-{{ .Values.host.name }}
+    - host: {{ .Values.host.name }}
       http:
         paths:
           - backend:
