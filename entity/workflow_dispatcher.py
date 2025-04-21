@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import re
 
 import aiofiles
 import inspect
@@ -12,7 +13,6 @@ from common.config.config import GENERAL_MEMORY_TAG, PROJECT_DIR, REPOSITORY_NAM
 from common.config.conts import OPEN_AI, QUESTIONS_QUEUE_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME, \
     AI_MEMORY_EDGE_MESSAGE_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, EDGE_MESSAGE_STORE_MODEL_NAME, \
     GIT_BRANCH_PARAM
-from common.util.chat_util_functions import enrich_config_message
 from common.util.utils import _save_file
 from entity.chat.data.workflow_prototype.batch_parallel_code import batch_process_file
 from entity.chat.model.chat import AgenticFlowEntity
@@ -115,7 +115,7 @@ class WorkflowDispatcher:
 
             response = await self._run_ai_agent(
                 config=config,
-                entity=AgenticFlowEntity(**entity.model_dump()),
+                entity=entity,
                 chat_memory=chat_memory,
                 finished_flow=finished_flow,
                 technical_id=technical_id
@@ -133,7 +133,7 @@ class WorkflowDispatcher:
 
         await self._finalize_response(technical_id=technical_id,
                                       config=config,
-                                      entity=AgenticFlowEntity(**entity.model_dump()),
+                                      entity=entity,
                                       finished_flow=finished_flow,
                                       new_entities=new_entities,
                                       response=response)
@@ -168,10 +168,7 @@ class WorkflowDispatcher:
         if config.get("messages"):
             config_messages: List[AIMessage] = []
             for config_message in config.get("messages"):
-                config_message = await enrich_config_message(entity=entity,
-                                                             config_message=config_message,
-                                                             entity_service=self.entity_service,
-                                                             cyoda_token=self.cyoda_token)
+                config_message = await self.enrich_config_message(entity=entity, config_message=config_message)
                 edge_message_id = await self.entity_service.add_item(token=self.cyoda_token,
                                                                      entity_model=AI_MEMORY_EDGE_MESSAGE_MODEL_NAME,
                                                                      entity_version=ENTITY_VERSION,
@@ -372,5 +369,63 @@ class WorkflowDispatcher:
                                                                          meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
                     entity.edge_messages_store[edge_message] = edge_message_id
 
+    async def enrich_config_message(self, entity, config_message):
+        workflow_cache: dict = entity.workflow_cache
+        edge_message_store: dict = entity.edge_messages_store
+        if not workflow_cache and not edge_message_store:
+            return config_message
+        # Aggregate all placeholders from each line in the "content" list.
+        unique_keys = set()
+        for line in config_message.get("content", []):
+            keys = re.findall(r'\{(.*?)\}', line)
+            unique_keys.update(keys)
 
+        # Dictionary to store all replacement values.
+        replacements = {}
+
+        # Synchronously replace placeholders using the workflow cache.
+        for key in unique_keys:
+            if key in workflow_cache:
+                replacements[key] = str(workflow_cache[key])
+
+        # For keys not found in workflow_cache, queue asynchronous retrieval
+        # if they exist in the edge_messages_store.
+        tasks = {}
+        if edge_message_store:
+            for key in unique_keys:
+                if key not in replacements and key in edge_message_store:
+                    edge_message_id = edge_message_store[key]
+                    # Schedule the asynchronous call to get the edge message content.
+                    tasks[key] = asyncio.create_task(
+                        self.entity_service.get_item(
+                            token=self.cyoda_token,
+                            entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
+                            entity_version=ENTITY_VERSION,
+                            technical_id=edge_message_id,
+                            meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+                        )
+                    )
+
+        # Await all asynchronous tasks concurrently.
+        if tasks:
+            results = await asyncio.gather(*tasks.values())
+            for key, result in zip(tasks.keys(), results):
+                replacements[key] = str(result)
+
+        # Define a replacement function for re.sub.
+        def repl_func(match):
+            k = match.group(1)
+            # Return the found replacement, or leave the placeholder unchanged if not found.
+            return replacements.get(k, f"{{{k}}}")
+
+        # Process and enrich each content string.
+        enriched_content = []
+        for line in config_message.get("content", []):
+            enriched_line = re.sub(r'\{(.*?)\}', repl_func, line)
+            enriched_content.append(enriched_line)
+
+        # Update the config message's content, preserving the structure.
+        config_message["content"] = enriched_content
+
+        return config_message
 

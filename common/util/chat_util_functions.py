@@ -1,6 +1,5 @@
 from common.config.config import ENTITY_VERSION, CYODA_ENTITY_TYPE_EDGE_MESSAGE
-from common.config.conts import LOCKED_CHAT, CHAT_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME, \
-    EDGE_MESSAGE_STORE_MODEL_NAME
+from common.config.conts import LOCKED_CHAT, CHAT_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME
 from common.util.file_reader import read_file_content
 from entity.chat.model.chat import ChatEntity
 from entity.model.model import FlowEdgeMessage
@@ -97,37 +96,23 @@ async def _launch_transition(entity_service, technical_id, cyoda_token, entity=N
                                      meta={"update_transition": next_transition})
 
 
-class _SafeDict(dict):
-    def __missing__(self, key):
-        # leave unknown placeholders untouched
-        return "{" + key + "}"
-
-async def enrich_config_message(entity_service, cyoda_token, entity, config_message):
-    # grab your caches (or empty if None)
-    cache = dict(entity.workflow_cache or {})
-    edge_store = entity.edge_messages_store or {}
-
-    # nothing here? bail out
-    if not cache and not edge_store:
-        return config_message
-
-    # if you still want to pull in all edge‑store items:
-    for key, edge_id in edge_store.items():
-        result = await entity_service.get_item(
-            token=cyoda_token,
-            entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
-            entity_version=ENTITY_VERSION,
-            technical_id=edge_id,
-            meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE},
-        )
-        cache[key] = str(result)
-
-    # now do one pass: each line.format_map(cache_with_fallback)
-    safe_cache = _SafeDict(cache)
-    enriched = [
-        line.format_map(safe_cache)
-        for line in config_message.get("content", [])
-    ]
-    config_message["content"] = enriched
-    return config_message
+# async def _trigger_manual_transition(chat, technical_id):
+    # if fsm_implementation == FSM_LOCAL:
+    #     fsm = await load_fsm()
+    #     current_state = chat.current_state
+    #     state_info = fsm["states"].get(current_state, {})
+    #     manual_events = [
+    #         event for event, transition in state_info.get("transitions", {}).items()
+    #         if transition.get("manual", False)
+    #     ]
+    #
+    #     if manual_events:
+    #         asyncio.create_task(flow_processor.trigger_manual_transition(
+    #             current_state=current_state,
+    #             event=manual_events[0],
+    #             entity=chat,
+    #             fsm=fsm,
+    #             technical_id=technical_id
+    #         ))
+    # else:
 

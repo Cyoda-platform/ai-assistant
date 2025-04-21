@@ -18,8 +18,7 @@ import jsonschema
 from jsonschema import validate
 
 from common.config.config import PROJECT_DIR, REPOSITORY_NAME, AUTH_SECRET_KEY, MAX_FILE_SIZE, CLONE_REPO, \
-    REPOSITORY_URL, ENTITY_VERSION, CYODA_ENTITY_TYPE_EDGE_MESSAGE
-from common.config.conts import EDGE_MESSAGE_STORE_MODEL_NAME
+    REPOSITORY_URL
 from common.exception.exceptions import InvalidTokenException
 
 logger = logging.getLogger(__name__)
