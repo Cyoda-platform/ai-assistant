@@ -4,10 +4,10 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from common.config.conts import CHAT_MODEL_NAME, ADD_NEW_WORKFLOW, EDIT_API_EXISTING_APP, EDIT_EXISTING_WORKFLOW, \
-    EDIT_EXISTING_PROCESSORS
+    EDIT_EXISTING_PROCESSORS, AGENTIC_FLOW_ENTITY
 
 
-def convert(input_file_path, output_file_path, calculation_node_tags, model_name, model_version, workflow_name):
+def convert(input_file_path, output_file_path, calculation_node_tags, model_name, model_version):
     """Reads JSON from a file, converts it to workflow_dto, and writes it to another file."""
     with open(input_file_path, "r", encoding="utf-8") as infile:
         input_json = json.load(infile)
@@ -17,13 +17,12 @@ def convert(input_file_path, output_file_path, calculation_node_tags, model_name
                                                 class_name="com.cyoda.tdb.model.treenode.TreeNodeEntity",
                                                 calculation_nodes_tags=calculation_node_tags,
                                                 model_name=model_name,
-                                                model_version=model_version,
-                                                workflow_name = workflow_name)
+                                                model_version=model_version)
 
     with open(output_file_path, "w", encoding="utf-8") as outfile:
         json.dump(workflow_dto, outfile, indent=4, ensure_ascii=False)
 
-def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags, model_name, workflow_name, model_version):
+def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags, model_name, model_version):
     default_param_values = {
         "owner": "CYODA",
         "user": "CYODA",
@@ -51,7 +50,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "persisted": True,
         "owner": default_param_values["owner"],
         "id": workflow_id,
-        "name": f"{model_name}:{model_version}",
+        "name": f"{model_name}:{model_version}:{input_json.get("workflow_name")}",
         "entityClassName": class_name,
         "creationDate": current_timestamp(),
         "description": input_json.get("description", ""),
@@ -70,33 +69,57 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
     # Add workflow's condition_criteria based on model_name and model_version
     workflow_criteria_ids = []
 
-    condition = {
-        "@bean": "com.cyoda.core.conditions.GroupCondition",
-        "operator": "AND",
-        "conditions": [
-            {
-                "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
-                "fieldName": "entityModelName",
-                "operation": "IEQUALS",
-                "rangeField": "false",
-                "value": model_name
-            },
-            {
-                "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
-                "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.strings.[$.workflow_name]",
-                "operation": "IEQUALS",
-                "rangeField": "false",
-                "value": workflow_name
-            },
-            {
-                "@bean": "com.cyoda.core.conditions.queryable.Equals",
-                "fieldName": "entityModelVersion",
-                "operation": "EQUALS",
-                "rangeField": "false",
-                "value": model_version,
-                "queryable": True
-            }
-        ]}
+    if input_json.get("workflow_name"):
+
+        condition = {
+            "@bean": "com.cyoda.core.conditions.GroupCondition",
+            "operator": "AND",
+            "conditions": [
+                {
+                    "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
+                    "fieldName": "entityModelName",
+                    "operation": "IEQUALS",
+                    "rangeField": "false",
+                    "value": model_name
+                },
+                {
+                    "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
+                    "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.strings.[$.workflow_name]",
+                    "operation": "IEQUALS",
+                    "rangeField": "false",
+                    "value": input_json["workflow_name"]
+                },
+                {
+                    "@bean": "com.cyoda.core.conditions.queryable.Equals",
+                    "fieldName": "entityModelVersion",
+                    "operation": "EQUALS",
+                    "rangeField": "false",
+                    "value": model_version,
+                    "queryable": True
+                }
+            ]}
+    else:
+
+        condition = {
+            "@bean": "com.cyoda.core.conditions.GroupCondition",
+            "operator": "AND",
+            "conditions": [
+                {
+                    "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
+                    "fieldName": "entityModelName",
+                    "operation": "IEQUALS",
+                    "rangeField": "false",
+                    "value": model_name
+                },
+                {
+                    "@bean": "com.cyoda.core.conditions.queryable.Equals",
+                    "fieldName": "entityModelVersion",
+                    "operation": "EQUALS",
+                    "rangeField": "false",
+                    "value": model_version,
+                    "queryable": True
+                }
+            ]}
 
     criteria_id = generate_id()
     workflow_criteria_ids.append(criteria_id)
@@ -104,7 +127,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "persisted": True,
         "owner": default_param_values["owner"],
         "id": criteria_id,
-        "name": f"{model_name}:{model_version}",
+        "name": f"{model_name}:{model_version}:{input_json.get("workflow_name")}",
         "entityClassName": class_name,
         "creationDate": current_timestamp(),
         "description": "Workflow criteria",
@@ -434,10 +457,11 @@ if __name__ == "__main__":
     #generating_gen_app_workflow
     #EDIT_EXISTING_WORKFLOW
     #EDIT_EXISTING_PROCESSORS
-    model_name = CHAT_MODEL_NAME
-    workflow_name = EDIT_EXISTING_WORKFLOW
-    input_file = f"{model_name}.json"
-    output_file = f"outputs/{input_file}"
+    #model_name = AGENTIC_FLOW_ENTITY
+
+
+    input_file = "config/agentic/generating_gen_app_workflow.json"
+    output_file = f"outputs/generating_gen_app_workflow.json"
     calculation_nodes_tags="ai_assistant"
 
     model_version = 1000
@@ -445,6 +469,5 @@ if __name__ == "__main__":
             output_file_path=output_file,
             calculation_node_tags=calculation_nodes_tags,
             model_name=model_name,
-            model_version=model_version,
-            workflow_name = workflow_name)
+            model_version=model_version)
     print(f"Conversion completed. Result saved to {output_file}")

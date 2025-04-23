@@ -6,7 +6,6 @@ from common.config.config import CHAT_REPOSITORY
 from common.repository.crud_repository import CrudRepository
 from common.service.entity_service_interface import EntityService
 from common.util.utils import parse_entity
-from entity.chat.model.chat import ChatEntity
 
 logger = logging.getLogger('quart')
 
@@ -44,8 +43,7 @@ class EntityServiceImpl(EntityService):
             return []
         if entity_model:
             model_cls = self._model_registry.get(entity_model.lower())
-            if model_cls:
-                resp = parse_entity(model_cls, resp)
+            resp = parse_entity(model_cls, resp)
         return resp
 
     async def get_items(self, token: str, entity_model: str, entity_version: str) -> List[Any]:

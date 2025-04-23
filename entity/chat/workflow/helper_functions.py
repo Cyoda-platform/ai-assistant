@@ -9,14 +9,14 @@ import aiofiles
 import black
 
 from common.config.config import MOCK_AI, VALIDATION_MAX_RETRIES, PROJECT_DIR, REPOSITORY_NAME, REPOSITORY_URL, \
-    WORKFLOW_AI_API, ENTITY_VERSION
+    WORKFLOW_AI_API, ENTITY_VERSION, MAX_GUEST_CHATS
 from common.config.conts import SCHEDULER_ENTITY
 from common.util.chat_util_functions import add_answer_to_finished_flow
 from common.util.utils import get_project_file_name, read_file, format_json_if_needed, parse_workflow_json, \
     _save_file, current_timestamp
 from entity.chat.data.data import PUSHED_CHANGES_NOTIFICATION
 from entity.chat.model.chat import ChatEntity
-from entity.model.model import SchedulerEntity
+from entity.model.model import SchedulerEntity, FlowEdgeMessage
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -24,9 +24,9 @@ logger = logging.getLogger(__name__)
 
 
 class WorkflowHelperService:
-    def __init__(self, cyoda_token, mock=False):
+    def __init__(self, cyoda_auth_service, mock=False):
         self.mock = mock
-        self.cyoda_token=cyoda_token
+        self.cyoda_auth_service=cyoda_auth_service
 
     if MOCK_AI == "true":
         # generate_mock_data()
@@ -216,7 +216,7 @@ class WorkflowHelperService:
                     if os.path.isfile(file_path):
                         async with aiofiles.open(file_path, "r") as f:
                             contents.append({file_pattern: await f.read()})
-                except:
+                except Exception as e:
                     logger.exception(e)
         return contents
 
@@ -431,12 +431,14 @@ class WorkflowHelperService:
                                       technical_id,
                                       entity,
                                       entity_model,
+                                      workflow_name,
                                       user_request=None,
                                       workflow_cache=None,
                                       edge_messages_store=None):
 
         child_entity: ChatEntity = ChatEntity.model_validate({
             "user_id": entity.user_id,
+            "workflow_name": workflow_name,
             "chat_id": "",
             "parent_id": technical_id,
             "date": current_timestamp(),
@@ -454,11 +456,19 @@ class WorkflowHelperService:
             }
         })
         if user_request:
-            await add_answer_to_finished_flow(entity_service=entity_service,
+
+            user_request_message_id = await add_answer_to_finished_flow(entity_service=entity_service,
                                               answer=user_request,
                                               chat=child_entity,
-                                              cyoda_token=self.cyoda_token)
-        child_technical_id = await entity_service.add_item(token=self.cyoda_token,
+                                              cyoda_auth_service=self.cyoda_auth_service)
+
+            child_entity.chat_flow.finished_flow.append(FlowEdgeMessage(type="answer",
+                                                                publish=True,
+                                                                edge_message_id=user_request_message_id,
+                                                                consumed=False,
+                                                                user_id=entity.user_id))
+
+        child_technical_id = await entity_service.add_item(token=self.cyoda_auth_service,
                                                            entity_model=entity_model,
                                                            entity_version=ENTITY_VERSION,
                                                            entity=child_entity)
@@ -478,7 +488,7 @@ class WorkflowHelperService:
             "triggered_entity_id": triggered_entity_id
         })
 
-        child_technical_id = await entity_service.add_item(token=self.cyoda_token,
+        child_technical_id = await entity_service.add_item(token=self.cyoda_auth_service,
                                                            entity_model=SCHEDULER_ENTITY,
                                                            entity_version=ENTITY_VERSION,
                                                            entity=child_entity)

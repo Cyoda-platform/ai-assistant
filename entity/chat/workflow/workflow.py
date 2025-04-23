@@ -14,7 +14,7 @@ from common.config.config import MOCK_AI, \
     REPOSITORY_URL, CYODA_DEPLOY_DICT, CHECK_DEPLOY_INTERVAL, ENTITY_VERSION, GOOGLE_SEARCH_KEY, \
     GOOGLE_SEARCH_CX, PROJECT_DIR, REPOSITORY_NAME, MAX_ITERATION, CYODA_ENTITY_TYPE_EDGE_MESSAGE
 from common.util.chat_util_functions import _launch_transition
-from common.util.utils import get_project_file_name, git_pull, _git_push, _save_file, clone_repo, \
+from common.util.utils import get_project_file_name, _git_push, _save_file, clone_repo, \
     send_post_request, send_get_request, parse_from_string, read_file_util
 from entity.chat.data.data import BRANCH_READY_NOTIFICATION
 from entity.chat.data.workflow_prototype.batch_converter import convert_state_diagram_to_jsonl_dataset
@@ -38,13 +38,13 @@ entry_point_to_stack = {
 
 
 class ChatWorkflow(Workflow):
-    def __init__(self, dataset, workflow_helper_service, entity_service, scheduler, cyoda_token, mock=False):
+    def __init__(self, dataset, workflow_helper_service, entity_service, scheduler, cyoda_auth_service, mock=False):
         self.dataset = dataset
         self.workflow_helper_service = workflow_helper_service
         self.entity_service = entity_service
         self.mock = mock
         self.scheduler = scheduler
-        self.cyoda_token=cyoda_token
+        self.cyoda_auth_service=cyoda_auth_service
 
     async def finish_app_generation_flow(self, technical_id, entity: ChatEntity, **params):
         pass
@@ -332,7 +332,7 @@ class ChatWorkflow(Workflow):
         return not entity.locked
 
     async def build_general_application(self, technical_id: str, entity: ChatEntity, **params: Any):
-        entity_model = GEN_APP_ENTITY
+        workflow_name = GEN_APP_ENTITY
         user_request = params.get("user_request")
         if not user_request:
             return "parameter user_request is required"
@@ -340,10 +340,11 @@ class ChatWorkflow(Workflow):
             entity_service=self.entity_service,
             technical_id=technical_id,
             entity=entity,
-            entity_model=entity_model,
+            entity_model=CHAT_MODEL_NAME,
+            workflow_name=workflow_name,
             user_request=user_request,
             workflow_cache=params)
-        return f"Workflow {entity_model} {child_technical_id} has been saved successfully"
+        return f"Workflow {workflow_name} {child_technical_id} has been scheduled successfully. You'll be notified when it is in progress."
 
     async def unlock_chat(self, technical_id: str, entity: ChatEntity, **params: Any):
         entity.locked = False
@@ -378,7 +379,7 @@ class ChatWorkflow(Workflow):
                     'workflow_function': entity_value.get("workflow_function"),  # f"process_{entity_name}",
                     'entity_name': entity_name
                 }
-                edge_message_id = await self.entity_service.add_item(token=self.cyoda_token,
+                edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                                      entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                                      entity_version=ENTITY_VERSION,
                                                                      entity=entity_value.get("code"),
@@ -391,7 +392,8 @@ class ChatWorkflow(Workflow):
                     entity_service=self.entity_service,
                     technical_id=technical_id,
                     entity=entity,
-                    entity_model=GENERATING_GEN_APP_WORKFLOW,
+                    entity_model=AGENTIC_FLOW_ENTITY,
+                    workflow_name=GENERATING_GEN_APP_WORKFLOW,
                     workflow_cache=workflow_cache,
                     edge_messages_store=edge_messages_store)
                 awaited_entity_ids.append(child_technical_id)
@@ -405,7 +407,7 @@ class ChatWorkflow(Workflow):
 
     async def validate_workflow_design(self, technical_id, entity: AgenticFlowEntity, **params):
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
-        result = await self.entity_service.get_item(token=self.cyoda_token,
+        result = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                     entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                     entity_version=ENTITY_VERSION,
                                                     technical_id=edge_message_id,
@@ -418,7 +420,7 @@ class ChatWorkflow(Workflow):
     async def has_workflow_code_validation_succeeded(self, technical_id: str, entity: AgenticFlowEntity,
                                                      **params: Any) -> bool:
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
-        result = await self.entity_service.get_item(token=self.cyoda_token,
+        result = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                     entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                     entity_version=ENTITY_VERSION,
                                                     technical_id=edge_message_id,
@@ -428,7 +430,7 @@ class ChatWorkflow(Workflow):
     async def has_workflow_code_validation_failed(self, technical_id: str, entity: AgenticFlowEntity,
                                                   **params: Any) -> bool:
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
-        result = await self.entity_service.get_item(token=self.cyoda_token,
+        result = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                     entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                     entity_version=ENTITY_VERSION,
                                                     technical_id=edge_message_id,
@@ -437,7 +439,7 @@ class ChatWorkflow(Workflow):
 
     async def save_extracted_workflow_code(self, technical_id, entity: AgenticFlowEntity, **params):
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
-        source = await self.entity_service.get_item(token=self.cyoda_token,
+        source = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                     entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                     entity_version=ENTITY_VERSION,
                                                     technical_id=edge_message_id,
@@ -457,7 +459,7 @@ class ChatWorkflow(Workflow):
     async def save_workflow_configuration(self, technical_id, entity: AgenticFlowEntity, **params):
         "design_workflow_from_code"
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
-        message_content = await self.entity_service.get_item(token=self.cyoda_token,
+        message_content = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                              entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                              entity_version=ENTITY_VERSION,
                                                              technical_id=edge_message_id,
@@ -483,15 +485,8 @@ class ChatWorkflow(Workflow):
         "design_workflow_from_code"
         await _launch_transition(entity_service=self.entity_service,
                                  technical_id=entity.triggered_entity_id,
-                                 cyoda_token=self.cyoda_token)
+                                 cyoda_auth_service=self.cyoda_auth_service)
 
-#============================editing========================
-
-
-#==================================== editing =======================================================
-
-##user_request
-##git_branch
     async def edit_existing_app_design_additional_feature(self,
                                                           technical_id,
                                                           entity: AgenticFlowEntity,
@@ -509,13 +504,13 @@ class ChatWorkflow(Workflow):
         workflow_cache = {
             'user_request': params.get("user_request")
         }
-        app_api_id = await self.entity_service.add_item(token=self.cyoda_token,
+        app_api_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                              entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                              entity_version=ENTITY_VERSION,
                                                              entity=app_api,
                                                              meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
 
-        entities_description_id = await self.entity_service.add_item(token=self.cyoda_token,
+        entities_description_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                                      entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                                      entity_version=ENTITY_VERSION,
                                                                      entity=json.dumps(entities_description),
@@ -529,7 +524,8 @@ class ChatWorkflow(Workflow):
             entity_service=self.entity_service,
             technical_id=technical_id,
             entity=entity,
-            entity_model=ADD_NEW_FEATURE,
+            entity_model=CHAT_MODEL_NAME,
+            workflow_name=ADD_NEW_FEATURE,
             workflow_cache=workflow_cache,
             edge_messages_store=edge_messages_store)
 
@@ -540,6 +536,7 @@ class ChatWorkflow(Workflow):
             technical_id: str,
             entity: AgenticFlowEntity,
             entity_model: str,
+            workflow_name: str,
             params: dict,
             resolve_entity_name: bool = False,
     ) -> str:
@@ -561,6 +558,7 @@ class ChatWorkflow(Workflow):
             technical_id=technical_id,
             entity=entity,
             entity_model=entity_model,
+            workflow_name=workflow_name,
             workflow_cache=params,
             edge_messages_store={},
         )
@@ -576,7 +574,8 @@ class ChatWorkflow(Workflow):
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
-            entity_model=ADD_NEW_ENTITY,
+            entity_model=CHAT_MODEL_NAME,
+            workflow_name=ADD_NEW_ENTITY,
             params=params,
         )
 
@@ -586,7 +585,8 @@ class ChatWorkflow(Workflow):
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
-            entity_model=ADD_NEW_WORKFLOW,
+            entity_model=CHAT_MODEL_NAME,
+            workflow_name=ADD_NEW_WORKFLOW,
             params=params,
             resolve_entity_name=True,
         )
@@ -597,7 +597,8 @@ class ChatWorkflow(Workflow):
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
-            entity_model=EDIT_API_EXISTING_APP,
+            entity_model=CHAT_MODEL_NAME,
+            workflow_name=EDIT_API_EXISTING_APP,
             params=params,
             resolve_entity_name=False,
         )
@@ -608,7 +609,8 @@ class ChatWorkflow(Workflow):
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
-            entity_model=EDIT_EXISTING_PROCESSORS,
+            entity_model=CHAT_MODEL_NAME,
+            workflow_name=EDIT_EXISTING_PROCESSORS,
             params=params,
             resolve_entity_name=True,
         )
@@ -619,7 +621,8 @@ class ChatWorkflow(Workflow):
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
-            entity_model=EDIT_EXISTING_WORKFLOW,
+            entity_model=CHAT_MODEL_NAME,
+            workflow_name=EDIT_EXISTING_WORKFLOW,
             params=params,
             resolve_entity_name=True,
         )

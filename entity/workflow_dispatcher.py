@@ -23,13 +23,13 @@ logger = logging.getLogger(__name__)
 
 
 class WorkflowDispatcher:
-    def __init__(self, cls, cls_instance, ai_agent, entity_service, cyoda_token, mock=False):
+    def __init__(self, cls, cls_instance, ai_agent, entity_service, cyoda_auth_service, mock=False):
         self.cls = cls
         self.cls_instance = cls_instance
         self.methods_dict = self._collect_subclass_methods()
         self.ai_agent = ai_agent
         self.entity_service = entity_service
-        self.cyoda_token=cyoda_token
+        self.cyoda_auth_service=cyoda_auth_service
 
     def _collect_subclass_methods(self):
 
@@ -63,7 +63,8 @@ class WorkflowDispatcher:
             action_name = action.get("name")
 
             if config and config.get("type") and isinstance(entity, AgenticFlowEntity):
-                response = await self._handle_config_based_event(config=config,
+                entity = AgenticFlowEntity(**entity.model_dump())
+                entity, response = await self._handle_config_based_event(config=config,
                                                                  entity=entity,
                                                                  technical_id=technical_id)
             elif config and config.get("type") and isinstance(entity, WorkflowEntity):
@@ -95,8 +96,9 @@ class WorkflowDispatcher:
             logger.info(f"Error executing method '{method_name}': {e}")
             raise
 
-    async def _handle_config_based_event(self, config, entity: WorkflowEntity, technical_id):
+    async def _handle_config_based_event(self, config, entity: AgenticFlowEntity, technical_id):
         response = None
+
         config_type = config.get("type")
         finished_flow = entity.chat_flow.finished_flow
         child_entities_size_before = len(entity.child_entities)
@@ -108,20 +110,21 @@ class WorkflowDispatcher:
                                                                            entity=entity,
                                                                            **params)
         elif config_type in ("prompt", "agent", "batch"):
-            chat_memory: ChatMemory = await self.entity_service.get_item(token=self.cyoda_token,
+            chat_memory: ChatMemory = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                                          entity_model=MEMORY_MODEL_NAME,
                                                                          entity_version=ENTITY_VERSION,
                                                                          technical_id=entity.memory_id)
 
+
             response = await self._run_ai_agent(
                 config=config,
-                entity=AgenticFlowEntity(**entity.model_dump()),
+                entity=entity,
                 chat_memory=chat_memory,
                 finished_flow=finished_flow,
                 technical_id=technical_id
             )
 
-            await self.entity_service.update_item(token=self.cyoda_token,
+            await self.entity_service.update_item(token=self.cyoda_auth_service,
                                                   entity_model=MEMORY_MODEL_NAME,
                                                   entity_version=ENTITY_VERSION,
                                                   technical_id=entity.memory_id,
@@ -133,11 +136,11 @@ class WorkflowDispatcher:
 
         await self._finalize_response(technical_id=technical_id,
                                       config=config,
-                                      entity=AgenticFlowEntity(**entity.model_dump()),
+                                      entity=entity,
                                       finished_flow=finished_flow,
                                       new_entities=new_entities,
                                       response=response)
-        return response
+        return entity, response
 
     async def _run_ai_agent(self, config, entity: AgenticFlowEntity, chat_memory: ChatMemory, finished_flow, technical_id):
         if self._check_and_update_iteration(config=config, entity=entity):
@@ -168,11 +171,15 @@ class WorkflowDispatcher:
         if config.get("messages"):
             config_messages: List[AIMessage] = []
             for config_message in config.get("messages"):
-                config_message = await enrich_config_message(entity=entity,
-                                                             config_message=config_message,
-                                                             entity_service=self.entity_service,
-                                                             cyoda_token=self.cyoda_token)
-                edge_message_id = await self.entity_service.add_item(token=self.cyoda_token,
+                try:
+                    config_message = await enrich_config_message(entity=entity,
+                                                                 config_message=config_message,
+                                                                 entity_service=self.entity_service,
+                                                                 cyoda_auth_service=self.cyoda_auth_service)
+                except Exception as e:
+                    logger.exception(e)
+                    logger.error(config_message)
+                edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                                      entity_model=AI_MEMORY_EDGE_MESSAGE_MODEL_NAME,
                                                                      entity_version=ENTITY_VERSION,
                                                                      entity=config_message,
@@ -186,14 +193,14 @@ class WorkflowDispatcher:
                 None
             )
             if latest_message and latest_message.type == "answer" and not latest_message.consumed:
-                message_content = await self.entity_service.get_item(token=self.cyoda_token,
+                message_content = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                                      entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
                                                                      entity_version=ENTITY_VERSION,
                                                                      technical_id=latest_message.edge_message_id,
                                                                      meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
                 answer_content = message_content.get("answer")
                 for memory_tag in memory_tags:
-                    edge_message_id = await self.entity_service.add_item(token=self.cyoda_token,
+                    edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                                          entity_model=AI_MEMORY_EDGE_MESSAGE_MODEL_NAME,
                                                                          entity_version=ENTITY_VERSION,
                                                                          entity={"role": "user",
@@ -221,7 +228,7 @@ class WorkflowDispatcher:
             messages=messages,
             response_format=config.get("response_format")
         )
-        edge_message_id = await self.entity_service.add_item(token=self.cyoda_token,
+        edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                              entity_model=AI_MEMORY_EDGE_MESSAGE_MODEL_NAME,
                                                              entity_version=ENTITY_VERSION,
                                                              entity={"role": "assistant", "content": ai_agent_resp},
@@ -237,7 +244,7 @@ class WorkflowDispatcher:
         for memory_tag in memory_tags:
             entity_messages: List[AIMessage] = memory.messages.get(memory_tag)
             for entity_message in entity_messages:
-                message_content = await self.entity_service.get_item(token=self.cyoda_token,
+                message_content = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                                      entity_model=AI_MEMORY_EDGE_MESSAGE_MODEL_NAME,
                                                                      entity_version=ENTITY_VERSION,
                                                                      technical_id=entity_message.edge_message_id,
@@ -298,7 +305,7 @@ class WorkflowDispatcher:
                                         user_id=entity.user_id)
 
     async def add_edge_message(self, message: dict, flow: List[FlowEdgeMessage], user_id) -> FlowEdgeMessage:
-        edge_message_id = await self.entity_service.add_item(token=self.cyoda_token,
+        edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                              entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
                                                              entity_version=ENTITY_VERSION,
                                                              entity=message,
@@ -314,13 +321,13 @@ class WorkflowDispatcher:
         questions_queue_id = entity.questions_queue_id
         # todo timeout exception
         await self.lock_questions_queue(questions_queue_id)
-        questions_queue: QuestionsQueue = await self.entity_service.get_item(token=self.cyoda_token,
+        questions_queue: QuestionsQueue = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                                              entity_model=QUESTIONS_QUEUE_MODEL_NAME,
                                                                              entity_version=ENTITY_VERSION,
                                                                              technical_id=questions_queue_id)
         if questions_queue.current_state == 'enqueue_locked':
             questions_queue.new_questions.append(message)
-            await self.entity_service.update_item(token=self.cyoda_token,
+            await self.entity_service.update_item(token=self.cyoda_auth_service,
                                                   entity_model=QUESTIONS_QUEUE_MODEL_NAME,
                                                   entity_version=ENTITY_VERSION,
                                                   technical_id=questions_queue_id,
@@ -331,7 +338,7 @@ class WorkflowDispatcher:
         while True:
             try:
                 result = await self.entity_service.update_item(
-                    token=self.cyoda_token,
+                    token=self.cyoda_auth_service,
                     entity_model=QUESTIONS_QUEUE_MODEL_NAME,
                     entity_version=ENTITY_VERSION,
                     technical_id=questions_queue_id,
@@ -365,7 +372,7 @@ class WorkflowDispatcher:
             if config.get("output").get("cyoda_edge_message"):
                 edge_messages = config.get("output").get("cyoda_edge_message")
                 for edge_message in edge_messages:
-                    edge_message_id = await self.entity_service.add_item(token=self.cyoda_token,
+                    edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                                          entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
                                                                          entity_version=ENTITY_VERSION,
                                                                          entity=response,

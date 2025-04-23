@@ -18,9 +18,8 @@ import jsonschema
 from jsonschema import validate
 
 from common.config.config import PROJECT_DIR, REPOSITORY_NAME, AUTH_SECRET_KEY, MAX_FILE_SIZE, CLONE_REPO, \
-    REPOSITORY_URL, ENTITY_VERSION, CYODA_ENTITY_TYPE_EDGE_MESSAGE
-from common.config.conts import EDGE_MESSAGE_STORE_MODEL_NAME
-from common.exception.exceptions import InvalidTokenException
+    REPOSITORY_URL
+from common.exception.exceptions import InvalidTokenException, TokenExpiredException
 
 logger = logging.getLogger(__name__)
 
@@ -913,14 +912,20 @@ def parse_from_string(escaped_code: str) -> str:
 
 
 def parse_entity(model_cls, resp: Any) -> Any:
-    if isinstance(resp, list):
+    try:
+        if model_cls:
+            if isinstance(resp, list):
 
-        return [model_cls.model_validate(item) for item in resp]
+                return [model_cls.model_validate(item) for item in resp]
 
-    else:
-        if not isinstance(resp, model_cls):
-            return model_cls.model_validate(resp)
+            else:
+                if not isinstance(resp, model_cls):
+                    return model_cls.model_validate(resp)
+                return resp
         return resp
+    except Exception as e:
+        logger.exception(e)
+        return None
 
 
 async def read_file_util(filename, technical_id):

@@ -39,6 +39,7 @@ class ChatFlow(BaseModel):
 class AgenticFlowEntity(WorkflowEntity):
     model_config = ConfigDict(extra="ignore")
     chat_id: Optional[str] = ""
+    workflow_name: Optional[str] = ""
     memory_id: str
     questions_queue_id: Optional[str] = None
     chat_flow: Optional[ChatFlow] = ChatFlow()

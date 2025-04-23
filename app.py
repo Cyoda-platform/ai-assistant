@@ -12,20 +12,20 @@ import jwt
 import aiohttp
 import aiofiles
 
-from quart import Quart, request, jsonify, send_from_directory, websocket
+from quart import Quart, request, jsonify, send_from_directory
 from quart_cors import cors
 from quart_rate_limiter import RateLimiter, rate_limit
 
-from common.config.config import MOCK_AI, ENTITY_VERSION, API_PREFIX, ENABLE_AUTH, MAX_TEXT_SIZE, \
-    MAX_FILE_SIZE, CHAT_REPOSITORY, RAW_REPOSITORY_URL, MAX_GUEST_CHATS, AUTH_SECRET_KEY, CYODA_API_URL, \
-    CYODA_ENTITY_TYPE_EDGE_MESSAGE
+from common.config.config import MOCK_AI, ENTITY_VERSION, API_PREFIX, MAX_TEXT_SIZE, \
+    MAX_FILE_SIZE, CHAT_REPOSITORY, RAW_REPOSITORY_URL, AUTH_SECRET_KEY, \
+    CYODA_ENTITY_TYPE_EDGE_MESSAGE, MAX_GUEST_CHATS, ENABLE_AUTH, CYODA_API_URL
 from common.config.conts import OPEN_AI, QUESTIONS_QUEUE_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME, \
-    CHAT_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, RATE_LIMIT, APPROVE
+    CHAT_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, RATE_LIMIT, APPROVE, TRANSFER_CHATS_ENTITY
 from common.exception.exceptions import ChatNotFoundException, InvalidTokenException
 from common.service.entity_service_interface import EntityService
 from common.util.chat_util_functions import trigger_manual_transition, get_user_message, add_answer_to_finished_flow
-from common.util.utils import send_get_request, current_timestamp, clone_repo, \
-    validate_token
+from common.util.utils import current_timestamp, clone_repo, \
+    validate_token, send_get_request
 from entity.chat.data.data import APP_BUILDER_FLOW, DESIGN_PLEASE_WAIT, \
     OPERATION_NOT_SUPPORTED_WARNING, ADDITIONAL_QUESTION_ROLLBACK_WARNING
 from entity.chat.model.chat import ChatEntity
@@ -44,7 +44,7 @@ flow_processor = factory.get_services()["flow_processor"]
 chat_lock = factory.get_services()["chat_lock"]
 fsm_implementation = factory.get_services()["fsm"]
 grpc_client = factory.get_services()["grpc_client"]
-cyoda_token = factory.get_services()["cyoda_token"]
+cyoda_auth_service = factory.get_services()["cyoda_auth_service"]
 
 
 async def load_fsm():
@@ -84,13 +84,13 @@ async def add_cors_headers():
         response.headers['Access-Control-Allow-Credentials'] = 'true'  # Allow credentials
         return response
 
-    # await init_cyoda(cyoda_token)
+    # await init_cyoda(cyoda_auth_service)
     logger.info("Starting gRPC stream on a dedicated background thread.")
 
     # Schedule the asynchronous gRPC stream on the background event loop.
     # This returns a concurrent.futures.Future which you can later cancel or inspect.
     app.background_task = asyncio.run_coroutine_threadsafe(
-        grpc_client.grpc_stream(token=cyoda_token),
+        grpc_client.grpc_stream(),
         grpc_loop
     )
 
@@ -117,21 +117,21 @@ async def handle_any_exception(error):
 def auth_required(func):
     @functools.wraps(func)  # This ensures the original function's name and metadata are preserved
     async def wrapper(*args, **kwargs):
-        # if ENABLE_AUTH:
-        #     # Check for Authorization header
-        #     auth_header = websocket.headers.get('Authorization') if websocket else request.headers.get('Authorization')
-        #     if not auth_header:
-        #         raise InvalidTokenException("Invalid token")
-        #
-        #     user_id = _get_user_id(auth_header=auth_header)
-        #     if user_id.startswith('guest.'):
-        #         return jsonify({"error": "This action is not available. Please sign in to proceed"}), 403
-        #
-        #     token = auth_header.split(" ")[1]
-        #     response = await send_get_request(token, CYODA_API_URL, "v1")
-        #     # todo
-        #     if not response or (response.get("status") and response.get("status") == 401):
-        #         raise InvalidTokenException("Invalid token")
+        if ENABLE_AUTH:
+            # Check for Authorization header
+            auth_header = request.headers.get('Authorization')
+            if not auth_header:
+                raise InvalidTokenException("Invalid token")
+
+            user_id = _get_user_id(auth_header=auth_header)
+            if user_id.startswith('guest.'):
+                return jsonify({"error": "This action is not available. Please sign in to proceed"}), 403
+
+            token = auth_header.split(" ")[1]
+            response = await send_get_request(token, CYODA_API_URL, "v1")
+
+            if not response or (response.get("status") and response.get("status") == 401):
+                raise InvalidTokenException("Invalid token")
 
         # If the token is valid, proceed to the requested route
         return await func(*args, **kwargs)
@@ -141,37 +141,46 @@ def auth_required(func):
 
 # Decorator to enforce authorization
 def auth_required_to_proceed(func):
-    @functools.wraps(func)  # This ensures the original function's name and metadata are preserved
+    @functools.wraps(func)
     async def wrapper(*args, **kwargs):
-        # todo auth!!!
-        # if ENABLE_AUTH:
-        #     # Check for Authorization header
-        #     auth_header = websocket.headers.get('Authorization') if websocket else request.headers.get('Authorization')
-        #     if not auth_header:
-        #         raise InvalidTokenException("Invalid token")
-        #     # todo!!
-        #     user_id = _get_user_id(auth_header=auth_header)
-        #     if user_id.startswith('guest.'):
-        #         chat: ChatEntity = await _get_chat_for_user(request=request, auth_header=auth_header,
-        #                                                     technical_id=request.view_args.get("technical_id"))
-        #         current_stack = chat.chat_flow.current_flow
-        #         if not current_stack:
-        #             return jsonify({"error": "Max iteration reached, please sign in to proceed"}), 403
-        #         next_event = current_stack[-1]
-        #         if not next_event.get("allow_anonymous_users", False):
-        #             return jsonify({"error": "Max iteration reached, please sign in to proceed"}), 403
-        #     else:
-        #         token = auth_header.split(" ")[1]
-        #         # Call external service to validate the token
-        #         response = await send_get_request(token, CYODA_API_URL, "v1")
-        #         # todo
-        #         if not response or (response.get("status") and response.get("status") == 401):
-        #             raise InvalidTokenException("Invalid token")
+        if not ENABLE_AUTH:
+            return await func(*args, **kwargs)
 
-        # If the token is valid, proceed to the requested route
+        auth_header = request.headers.get("Authorization")
+        if not auth_header:
+            raise InvalidTokenException("Missing Authorization header")
+
+        token = _extract_bearer_token(auth_header)
+        user_id = _get_user_id(auth_header=auth_header)
+
+        # Guests don’t need an external check
+        if not user_id.startswith("guest."):
+            await _validate_with_cyoda(token)
+
         return await func(*args, **kwargs)
 
     return wrapper
+
+
+def _extract_bearer_token(auth_header: str) -> str:
+    """
+    Expects header like "Bearer <token>". Raises if malformed.
+    """
+    parts = auth_header.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise InvalidTokenException("Invalid Authorization header format")
+    return parts[1]
+
+
+async def _validate_with_cyoda(token: str):
+    """
+    Calls the external Cyoda API to validate the token.
+    Raises InvalidTokenException on any failure.
+    """
+    response = await send_get_request(token, CYODA_API_URL, "v1")
+    # Treat missing response or 401 status as invalid
+    if not response or response.get("status") == 401:
+        raise InvalidTokenException("Invalid token")
 
 
 def _get_user_token(auth_header):
@@ -212,12 +221,21 @@ async def get_chat_flow():
 
 @app.route(API_PREFIX + '/chats', methods=['GET'])
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
+@auth_required_to_proceed
 async def get_chats():
     auth_header = request.headers.get('Authorization')
     user_id = _get_user_id(auth_header=auth_header)
     if not user_id:
         return jsonify({"error": "Invalid token"}), 401
-    chats: List[ChatEntity] = await _get_chats_by_user_name(auth_header, user_id)
+    chats: List[ChatEntity] = await _get_entities_by_user_name(user_id=user_id, entity_model=CHAT_MODEL_NAME)
+    transfer_chats_entities = await _get_entities_by_user_name(user_id=user_id, entity_model=TRANSFER_CHATS_ENTITY)
+    if transfer_chats_entities:
+        transfer_chats_entity = transfer_chats_entities[0]
+        guest_user_id = transfer_chats_entity['guest_user_id']
+        linked_guest_chats: List[ChatEntity] = await _get_entities_by_user_name(user_id=guest_user_id, entity_model=CHAT_MODEL_NAME)
+        if linked_guest_chats:
+            chats.extend(linked_guest_chats)
+
     chats_view = [{
         'technical_id': chat.technical_id,
         'name': chat.name,
@@ -230,6 +248,7 @@ async def get_chats():
 
 @app.route(API_PREFIX + '/chats/<technical_id>', methods=['GET'])
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
+@auth_required_to_proceed
 async def get_chat(technical_id):
     auth_header = request.headers.get('Authorization')
     chat: ChatEntity = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
@@ -248,7 +267,7 @@ async def get_chat(technical_id):
 
 
 @app.route(API_PREFIX + '/get_guest_token', methods=['GET'])
-# todo !!! @rate_limit(limit=3, period=timedelta(days=1))
+@rate_limit(limit=3, period=timedelta(weeks=50))
 async def get_guest_token():
     session_id = uuid.uuid4()
     payload = {
@@ -263,12 +282,12 @@ async def get_guest_token():
 
 
 @app.route(API_PREFIX + '/chats/<technical_id>', methods=['DELETE'])
-# todo !! @auth_required
+@auth_required
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def delete_chat(technical_id):
     auth_header = request.headers.get('Authorization')
     await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
-    entity_service.delete_item(token=auth_header,
+    entity_service.delete_item(token=cyoda_auth_service,
                                entity_model=CHAT_MODEL_NAME,
                                entity_version=ENTITY_VERSION,
                                technical_id=technical_id,
@@ -277,23 +296,52 @@ async def delete_chat(technical_id):
     return jsonify({"message": "Chat deleted", "technical_id": technical_id})
 
 
+@app.route(API_PREFIX + '/transfer-chats', methods=['POST'])
+@rate_limit(RATE_LIMIT, timedelta(minutes=1))
+@auth_required
+async def transfer_chats():
+    req_data = await request.get_json()
+    guest_token = req_data.get('guest_token')
+    guest_user_id = _get_user_id(auth_header=f"Bearer {guest_token}")
+
+    auth_header = request.headers.get('Authorization')
+    user_id = _get_user_id(auth_header=auth_header)
+
+    transfer_chats_entities = await _get_entities_by_user_name(user_id=user_id, entity_model=TRANSFER_CHATS_ENTITY)
+
+    if transfer_chats_entities:
+        # todo = probably can allow update
+        return jsonify(
+            {
+                "message": "Sorry, your guest chats have already been transferred. Only one guest session is allowed."}), 403
+
+    transfer_chats_entity = {
+        "user_id": user_id,
+        "guest_user_id": guest_user_id
+    }
+    await entity_service.add_item(token=cyoda_auth_service,
+                                  entity_model=TRANSFER_CHATS_ENTITY,
+                                  entity_version=ENTITY_VERSION,
+                                  entity=transfer_chats_entity)
+
+
 @app.route(API_PREFIX + '/chats', methods=['POST'])
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
+@auth_required_to_proceed
 async def add_chat():
     auth_header = request.headers.get('Authorization')
     user_id = _get_user_id(auth_header=auth_header)
-    #todo auth!!
-    # if user_id.startswith('guest.'):
-    #     user_chats = await _get_chats_by_user_name(auth_header, user_id)
-    #     if len(user_chats) >= MAX_GUEST_CHATS:
-    #         return jsonify({"error": "Max guest chats limit reached, please sign in to proceed"}), 403
+    # todo auth!!
+    if user_id.startswith('guest.'):
+        user_chats = await _get_entities_by_user_name(user_id=user_id, entity_model=CHAT_MODEL_NAME)
+        if len(user_chats) >= MAX_GUEST_CHATS:
+            return jsonify({"error": "Max guest chats limit reached, please sign in to proceed"}), 403
     req_data = await request.get_json()
 
-    edge_message_id = await entity_service.add_item(token=cyoda_token,
+    edge_message_id = await entity_service.add_item(token=cyoda_auth_service,
                                                     entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
                                                     entity_version=ENTITY_VERSION,
                                                     entity={
-                                                        "technical_id": "",
                                                         "current_transition": "",
                                                         "current_state": "",
                                                         "type": "notification",
@@ -308,12 +356,12 @@ async def add_chat():
     questions_queue = QuestionsQueue(new_questions=[greeting_edge_message],
                                      user_id=user_id)
 
-    questions_queue_id = await entity_service.add_item(token=auth_header,
+    questions_queue_id = await entity_service.add_item(token=cyoda_auth_service,
                                                        entity_model=QUESTIONS_QUEUE_MODEL_NAME,
                                                        entity_version=ENTITY_VERSION,
                                                        entity=questions_queue)
 
-    memory_id = await entity_service.add_item(token=auth_header,
+    memory_id = await entity_service.add_item(token=cyoda_auth_service,
                                               entity_model=MEMORY_MODEL_NAME,
                                               entity_version=ENTITY_VERSION,
                                               entity=ChatMemory.model_validate({"messages": {}}))
@@ -330,6 +378,7 @@ async def add_chat():
         "chat_flow": {"current_flow": [], "finished_flow": []},
         "current_transition": "",
         "current_state": "",
+        "workflow_name": CHAT_MODEL_NAME,
         "transitions_memory": {
             "conditions": {},
             "current_iteration": {},
@@ -338,29 +387,26 @@ async def add_chat():
         "memory_id": memory_id,
     })
 
-    await add_answer_to_finished_flow(entity_service=entity_service,
-                                      answer=init_question,
-                                      chat=chat_entity,
-                                      cyoda_token=cyoda_token)
+    answer_message_id = await add_answer_to_finished_flow(entity_service=entity_service,
+                                                          answer=init_question,
+                                                          chat=chat_entity,
+                                                          cyoda_auth_service=cyoda_auth_service)
+
+    chat_entity.chat_flow.finished_flow.append(FlowEdgeMessage(type="answer",
+                                                               publish=True,
+                                                               edge_message_id=answer_message_id,
+                                                               consumed=False,
+                                                               user_id=user_id))
 
     chat_entity.chat_flow.finished_flow.append(greeting_edge_message)
 
-    technical_id = await entity_service.add_item(token=auth_header,
+    technical_id = await entity_service.add_item(token=cyoda_auth_service,
                                                  entity_model=CHAT_MODEL_NAME,
                                                  entity_version=ENTITY_VERSION,
                                                  entity=chat_entity)
-    # if CHAT_REPOSITORY == "local":
-    #     # --- Simulation 1: Successful Weather Fetch Workflow ---
-    #     logger.info("=== Simulation: Successful Weather Fetch Workflow ===")
-    #     # Launch the workflow from the initial state and run automatic transitions.
-    #     fsm = await load_fsm()
-    #     current_state = asyncio.create_task(
-    #         flow_processor.run_workflow(fsm=fsm, technical_id=technical_id, entity=chat_entity))
-    #
-    #     logger.info(f"Workflow stopped at state: {current_state}")
-    #     #####todo
 
-    return jsonify({"message": "Chat created", "technical_id": technical_id}), 200
+    return jsonify(
+        {"message": "Chat created", "technical_id": technical_id, "answer_technical_id": answer_message_id}), 200
 
 
 # polling for new questions here
@@ -416,11 +462,6 @@ async def submit_question(technical_id):
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def push_notify(technical_id):
     return jsonify({"error": OPERATION_NOT_SUPPORTED_WARNING}), 400
-    # auth_header = request.headers.get('Authorization')
-    # chat = await _get_chat_for_user(auth_header, technical_id)
-    # await git_pull(chat['chat_id'])
-    # return await _submit_answer_helper(technical_id, PUSH_NOTIFICATION, auth_header, chat)
-
 
 @app.route(API_PREFIX + '/chats/<technical_id>/approve', methods=['POST'])
 @auth_required_to_proceed
@@ -428,7 +469,7 @@ async def push_notify(technical_id):
 async def approve(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
-    return await _submit_answer_helper(technical_id, APPROVE, auth_header, chat)
+    return await _submit_answer_helper(answer=APPROVE, chat=chat)
 
 
 @app.route(API_PREFIX + '/chats/<technical_id>/rollback', methods=['POST'])
@@ -450,11 +491,12 @@ async def rollback(technical_id):
 async def submit_answer_text(technical_id):
     auth_header = request.headers.get('Authorization')
     chat = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
+
     req_data = await request.get_json()
     answer = req_data.get('answer')
     if answer and len(str(answer).encode('utf-8')) > MAX_TEXT_SIZE:
         return jsonify({"error": "Answer size exceeds 1MB limit"}), 400
-    return await _submit_answer_helper(technical_id, answer, auth_header, chat)
+    return await _submit_answer_helper(answer=answer, chat=chat)
 
 
 @app.route(API_PREFIX + '/chats/<technical_id>/answers', methods=['POST'])
@@ -473,7 +515,7 @@ async def submit_answer(technical_id):
     answer = await get_user_message(message=answer, user_file=user_file)
     if user_file.content_length > MAX_FILE_SIZE:
         return {"error": f"File size exceeds {MAX_FILE_SIZE} limit"}
-    return await _submit_answer_helper(technical_id, answer, auth_header, chat, user_file)
+    return await _submit_answer_helper(answer=answer,chat=chat, user_file=user_file)
 
 
 async def _get_chat_for_user(auth_header, technical_id, request=None):
@@ -481,7 +523,7 @@ async def _get_chat_for_user(auth_header, technical_id, request=None):
     if not user_id:
         raise InvalidTokenException()
 
-    chat: ChatEntity = await entity_service.get_item(token=auth_header,
+    chat: ChatEntity = await entity_service.get_item(token=cyoda_auth_service,
                                                      entity_model=CHAT_MODEL_NAME,
                                                      entity_version=ENTITY_VERSION,
                                                      technical_id=technical_id)
@@ -489,7 +531,7 @@ async def _get_chat_for_user(auth_header, technical_id, request=None):
     if not chat and CHAT_REPOSITORY == "local":
         # todo check here
         async with chat_lock:
-            chat: ChatEntity = await entity_service.get_item(token=auth_header,
+            chat: ChatEntity = await entity_service.get_item(token=cyoda_auth_service,
                                                              entity_model=CHAT_MODEL_NAME,
                                                              entity_version=ENTITY_VERSION,
                                                              technical_id=technical_id)
@@ -503,28 +545,42 @@ async def _get_chat_for_user(auth_header, technical_id, request=None):
                 if not chat:
                     raise ChatNotFoundException()
 
-                await entity_service.add_item(token=auth_header,
+                await entity_service.add_item(token=cyoda_auth_service,
                                               entity_model=CHAT_MODEL_NAME,
                                               entity_version=ENTITY_VERSION,
                                               entity=chat)
 
     elif not chat:
         raise ChatNotFoundException()
-    # todo concurrent requests might override
-    if chat.user_id != user_id:
-        if chat.user_id.startswith("guest.") and not user_id.startswith("guest."):
-            chat.user_id = user_id
-            await entity_service.update_item(token=auth_header,
-                                             entity_model=CHAT_MODEL_NAME,
-                                             entity_version=ENTITY_VERSION,
-                                             technical_id=technical_id,
-                                             entity=chat,
-                                             meta={})
-        else:
-            raise InvalidTokenException()
+    await _validate_chat_owner(chat=chat, user_id=user_id)
 
     return chat
 
+async def _validate_chat_owner(chat, user_id):
+    # If it’s the same user, nothing to do
+    if chat.user_id == user_id:
+        return
+
+    # Only allow a guest → registered transfer
+    is_guest_to_registered = (
+        chat.user_id.startswith("guest.")
+        and not user_id.startswith("guest.")
+    )
+    if not is_guest_to_registered:
+        raise InvalidTokenException()
+
+    # Look up any transfer record for this registered user
+    entities = await _get_entities_by_user_name(
+        user_id=user_id,
+        entity_model=TRANSFER_CHATS_ENTITY
+    )
+    if not entities:
+        raise InvalidTokenException()
+
+    # Verify that the guest ID matches
+    guest_user_id = entities[0]["guest_user_id"]
+    if guest_user_id != chat.user_id:
+        raise InvalidTokenException()
 
 def _get_user_id(auth_header):
     try:
@@ -541,9 +597,9 @@ def _get_user_id(auth_header):
         return None
 
 
-async def _get_chats_by_user_name(auth_header, user_id):
-    return await entity_service.get_items_by_condition(token=auth_header,
-                                                       entity_model=CHAT_MODEL_NAME,
+async def _get_entities_by_user_name(user_id, entity_model):
+    return await entity_service.get_items_by_condition(token=cyoda_auth_service,
+                                                       entity_model=entity_model,
                                                        entity_version=ENTITY_VERSION,
                                                        condition={"cyoda": {
                                                            "operator": "AND",
@@ -590,25 +646,19 @@ async def _submit_question_helper(auth_header, technical_id, chat, question, use
     return jsonify({"message": result}), 200
 
 
-async def _submit_answer_helper(technical_id, answer, auth_header, chat, user_file=None):
-    # todo
-    # question_queue = chat.questions_queue.new_questions
-    #
-    # if question_queue:
-    #     return jsonify({
-    #         "message": "Could you please have a look at a couple of more questions before submitting your answer?"
-    #     }), 400
-
+async def _submit_answer_helper(answer, chat: ChatEntity, user_file=None):
     is_valid, validated_answer = _validate_answer(answer=answer, user_file=user_file)
     if not is_valid:
         return jsonify({"message": validated_answer}), 400
     # todo
-    await trigger_manual_transition(entity_service=entity_service,
-                                    chat=chat,
-                                    answer=validated_answer,
-                                    user_file=user_file,
-                                    cyoda_token=cyoda_token)
-    return jsonify({"message": "Answer received"}), 200
+    if len(chat.child_entities) > MAX_GUEST_CHATS:
+        return jsonify({"error": "Max guest chats limit reached, please sign in to proceed"}), 403
+    edge_message_id = await trigger_manual_transition(entity_service=entity_service,
+                                                      chat=chat,
+                                                      answer=validated_answer,
+                                                      user_file=user_file,
+                                                      cyoda_auth_service=cyoda_auth_service)
+    return jsonify({"answer_technical_id": edge_message_id}), 200
 
 
 async def rollback_dialogue_script(technical_id, auth_header, chat: ChatEntity, question):
@@ -641,7 +691,7 @@ def _append_wait_notification(question_queue):
 
 async def poll_questions(chat, questions_queue_id):
     try:
-        questions_queue: QuestionsQueue = await entity_service.get_item(token=cyoda_token,
+        questions_queue: QuestionsQueue = await entity_service.get_item(token=cyoda_auth_service,
                                                                         entity_model=QUESTIONS_QUEUE_MODEL_NAME,
                                                                         entity_version=ENTITY_VERSION,
                                                                         technical_id=questions_queue_id)
@@ -651,7 +701,7 @@ async def poll_questions(chat, questions_queue_id):
 
             await lock_questions_queue(questions_queue_id)
 
-            questions_queue: QuestionsQueue = await entity_service.get_item(token=cyoda_token,
+            questions_queue: QuestionsQueue = await entity_service.get_item(token=cyoda_auth_service,
                                                                             entity_model=QUESTIONS_QUEUE_MODEL_NAME,
                                                                             entity_version=ENTITY_VERSION,
                                                                             technical_id=questions_queue_id)
@@ -659,7 +709,7 @@ async def poll_questions(chat, questions_queue_id):
             while questions_queue.new_questions:
                 message: FlowEdgeMessage = questions_queue.new_questions.pop(0)
 
-                message_content = await entity_service.get_item(token=cyoda_token,
+                message_content = await entity_service.get_item(token=cyoda_auth_service,
                                                                 entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
                                                                 entity_version=ENTITY_VERSION,
                                                                 technical_id=message.edge_message_id,
@@ -668,7 +718,7 @@ async def poll_questions(chat, questions_queue_id):
                 questions_to_user.append(message_content)
                 questions_queue.asked_questions.append(message)
 
-            await entity_service.update_item(token=cyoda_token,
+            await entity_service.update_item(token=cyoda_auth_service,
                                              entity_model=QUESTIONS_QUEUE_MODEL_NAME,
                                              entity_version=ENTITY_VERSION,
                                              technical_id=questions_queue_id,
@@ -684,7 +734,7 @@ async def poll_questions(chat, questions_queue_id):
 async def lock_questions_queue(questions_queue_id):
     while True:
         try:
-            result = await entity_service.update_item(token=cyoda_token,
+            result = await entity_service.update_item(token=cyoda_auth_service,
                                                       entity_model=QUESTIONS_QUEUE_MODEL_NAME,
                                                       entity_version=ENTITY_VERSION,
                                                       technical_id=questions_queue_id,
@@ -702,19 +752,19 @@ async def process_message(finished_flow: List[FlowEdgeMessage], auth_header, dia
         if ((message.type in ["question", "notification"] and getattr(message, "publish", False))
                 or message.type == "answer"):
             message_content = await entity_service.get_item(
-                token=auth_header,
+                token=cyoda_auth_service,
                 entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
                 entity_version=ENTITY_VERSION,
                 technical_id=message.edge_message_id,
                 meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE}
             )
-            message_content['technical_id']=message.edge_message_id
+            message_content['technical_id'] = message.edge_message_id
             dialogue.append(message_content)
 
         # If the message contains child entities, retrieve and process each child recursively
         if message.type == "child_entities":
             message_content = await entity_service.get_item(
-                token=auth_header,
+                token=cyoda_auth_service,
                 entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
                 entity_version=ENTITY_VERSION,
                 technical_id=message.edge_message_id,
@@ -723,7 +773,7 @@ async def process_message(finished_flow: List[FlowEdgeMessage], auth_header, dia
             child_entities = message_content.get("child_entities", [])
             for child_entity_id in child_entities:
                 child_entity: ChatEntity = await entity_service.get_item(
-                    token=auth_header,
+                    token=cyoda_auth_service,
                     entity_model=CHAT_MODEL_NAME,
                     entity_version=ENTITY_VERSION,
                     technical_id=child_entity_id
