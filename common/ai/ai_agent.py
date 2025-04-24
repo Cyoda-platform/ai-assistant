@@ -2,6 +2,7 @@ import json
 
 from common.config.config import MAX_AI_AGENT_ITERATIONS
 from entity.chat.model.chat import ChatEntity
+from entity.model.model import ModelConfig
 
 
 #todo add react, prompt chaining etc - other techniques, add more implementations
@@ -22,7 +23,7 @@ class OpenAiAgent:
                     message["content"] = " ".join(content)
         return messages
 
-    async def run(self, methods_dict, technical_id, cls_instance, entity: ChatEntity, tools, model, messages, tool_choice="auto", response_format=None):
+    async def run_agent(self, methods_dict, technical_id, cls_instance, entity: ChatEntity, tools, model: ModelConfig, messages, tool_choice="auto", response_format=None):
         # Loop until a final answer is received or maximum calls are reached.
         messages = self.adapt_messages(messages)
         ai_response_format = {"type": "json_schema",
@@ -31,11 +32,6 @@ class OpenAiAgent:
             completion = await self.client.create_completion(
                 model=model,
                 messages=messages,
-                temperature=0.7,
-                max_tokens=1000,
-                top_p=1.0,
-                frequency_penalty=0.0,
-                presence_penalty=0.0,
                 tools=tools,
                 tool_choice=tool_choice,
                 response_format=ai_response_format

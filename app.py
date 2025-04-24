@@ -19,7 +19,7 @@ from quart_rate_limiter import RateLimiter, rate_limit
 from common.config.config import MOCK_AI, ENTITY_VERSION, API_PREFIX, MAX_TEXT_SIZE, \
     MAX_FILE_SIZE, CHAT_REPOSITORY, RAW_REPOSITORY_URL, AUTH_SECRET_KEY, \
     CYODA_ENTITY_TYPE_EDGE_MESSAGE, MAX_GUEST_CHATS, ENABLE_AUTH, CYODA_API_URL
-from common.config.conts import OPEN_AI, QUESTIONS_QUEUE_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME, \
+from common.config.conts import QUESTIONS_QUEUE_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME, \
     CHAT_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, RATE_LIMIT, APPROVE, TRANSFER_CHATS_ENTITY
 from common.exception.exceptions import ChatNotFoundException, InvalidTokenException
 from common.service.entity_service_interface import EntityService
@@ -29,7 +29,7 @@ from common.util.utils import current_timestamp, clone_repo, \
 from entity.chat.data.data import APP_BUILDER_FLOW, DESIGN_PLEASE_WAIT, \
     OPERATION_NOT_SUPPORTED_WARNING, ADDITIONAL_QUESTION_ROLLBACK_WARNING
 from entity.chat.model.chat import ChatEntity
-from entity.model.model import QuestionsQueue, FlowEdgeMessage, ChatMemory
+from entity.model.model import QuestionsQueue, FlowEdgeMessage, ChatMemory, ModelConfig
 from logic.init import BeanFactory
 
 logger = logging.getLogger('django')
@@ -227,14 +227,15 @@ async def get_chats():
     user_id = _get_user_id(auth_header=auth_header)
     if not user_id:
         return jsonify({"error": "Invalid token"}), 401
-    chats: List[ChatEntity] = await _get_entities_by_user_name(user_id=user_id, entity_model=CHAT_MODEL_NAME)
-    transfer_chats_entities = await _get_entities_by_user_name(user_id=user_id, entity_model=TRANSFER_CHATS_ENTITY)
-    if transfer_chats_entities:
-        transfer_chats_entity = transfer_chats_entities[0]
-        guest_user_id = transfer_chats_entity['guest_user_id']
-        linked_guest_chats: List[ChatEntity] = await _get_entities_by_user_name(user_id=guest_user_id, entity_model=CHAT_MODEL_NAME)
-        if linked_guest_chats:
-            chats.extend(linked_guest_chats)
+    chats: List[ChatEntity] = await _get_entities_by_user_name_and_workflow_name(user_id=user_id, entity_model=CHAT_MODEL_NAME, workflow_name=CHAT_MODEL_NAME)
+    if not user_id.startswith('guest.'):
+        transfer_chats_entities = await _get_entities_by_user_name(user_id=user_id, entity_model=TRANSFER_CHATS_ENTITY)
+        if transfer_chats_entities:
+            transfer_chats_entity = transfer_chats_entities[0]
+            guest_user_id = transfer_chats_entity['guest_user_id']
+            linked_guest_chats: List[ChatEntity] = await _get_entities_by_user_name_and_workflow_name(user_id=guest_user_id, entity_model=CHAT_MODEL_NAME, workflow_name=CHAT_MODEL_NAME)
+            if linked_guest_chats:
+                chats.extend(linked_guest_chats)
 
     chats_view = [{
         'technical_id': chat.technical_id,
@@ -265,9 +266,9 @@ async def get_chat(technical_id):
     }
     return jsonify({"chat_body": chats_view})
 
-
+#todo
 @app.route(API_PREFIX + '/get_guest_token', methods=['GET'])
-@rate_limit(limit=3, period=timedelta(weeks=50))
+@rate_limit(limit=10, period=timedelta(weeks=50))
 async def get_guest_token():
     session_id = uuid.uuid4()
     payload = {
@@ -333,7 +334,7 @@ async def add_chat():
     user_id = _get_user_id(auth_header=auth_header)
     # todo auth!!
     if user_id.startswith('guest.'):
-        user_chats = await _get_entities_by_user_name(user_id=user_id, entity_model=CHAT_MODEL_NAME)
+        user_chats = await _get_entities_by_user_name_and_workflow_name(user_id=user_id, entity_model=CHAT_MODEL_NAME, workflow_name=CHAT_MODEL_NAME)
         if len(user_chats) >= MAX_GUEST_CHATS:
             return jsonify({"error": "Max guest chats limit reached, please sign in to proceed"}), 403
     req_data = await request.get_json()
@@ -615,6 +616,29 @@ async def _get_entities_by_user_name(user_id, entity_model):
                                                        },
                                                            "local": {"key": "user_id", "value": user_id}})
 
+async def _get_entities_by_user_name_and_workflow_name(user_id, entity_model, workflow_name):
+    return await entity_service.get_items_by_condition(token=cyoda_auth_service,
+                                                       entity_model=entity_model,
+                                                       entity_version=ENTITY_VERSION,
+                                                       condition={"cyoda": {
+                                                           "operator": "AND",
+                                                           "conditions": [
+                                                               {
+                                                                   "jsonPath": "$.user_id",
+                                                                   "operatorType": "EQUALS",
+                                                                   "value": user_id,
+                                                                   "type": "simple"
+                                                               },
+                                                               {
+                                                                   "jsonPath": "$.workflow_name",
+                                                                   "operatorType": "EQUALS",
+                                                                   "value": workflow_name,
+                                                                   "type": "simple"
+                                                               }
+                                                           ],
+                                                           "type": "group"
+                                                       },
+                                                           "local": {"key": "user_id", "value": user_id}})
 
 async def _submit_question_helper(auth_header, technical_id, chat, question, user_file=None):
     # Check if a file has been uploaded
@@ -638,7 +662,7 @@ async def _submit_question_helper(auth_header, technical_id, chat, question, use
         entity=chat,
         technical_id=technical_id,
         tools=None,
-        model=OPEN_AI,
+        model=ModelConfig(),
         tool_choice=None,
         messages=[{"role": "user", "content": question}]
     )

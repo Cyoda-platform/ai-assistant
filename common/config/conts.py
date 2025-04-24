@@ -1,4 +1,6 @@
 # Constants
+from enum import Enum
+
 CAN_PROCEED = "can_proceed"
 PROMPT = "prompt"
 ANSWER = "answer"
@@ -20,9 +22,6 @@ API_V_CONNECTIONS_ = "api/v1/connections"
 API_V_CYODA_ = "api/v1/cyoda"
 API_V_WORKFLOWS_ = "api/v1/workflows"
 API_V_RANDOM_ = "api/v1/random"
-OPEN_AI = "gpt-4o-mini"
-OPEN_AI_4o = "gpt-4o"
-OPEN_AI_o3 = "o3-mini"
 DEEPSEEK_CHAT = "deepseek-chat"
 REQUIREMENT_AGENT = "requirement_agent"
 EDITING_AGENT = "editing_agent"
@@ -62,4 +61,10 @@ APPROVE = "let's proceed to the next iteration immediately: set require addition
 RATE_LIMIT = 300
 SCHEDULER_CHECK_INTERVAL=60
 
-#GENERATING_GEN_APP_WORKFLOW: AgenticFlowEntity,
+class GetCyodaGuidelinesData(str, Enum):
+    GENERATE_WORKFLOW = "generate_workflow"
+    GENERATE_PROCESSORS = "generate_processors"
+    CONFIGURE_TRINO = "configure_trino"
+    GENERATE_ENTITY = "generate_entity"
+    START_APP = "start_app"
+    CYODA_BEST_PRACTICE = "cyoda_best_practice"

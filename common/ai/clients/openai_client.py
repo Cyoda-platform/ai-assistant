@@ -1,5 +1,11 @@
+import logging
+
 from openai import AsyncOpenAI
 
+from entity.model.model import ModelConfig, ToolChoice
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class AsyncOpenAIClient:
     def __init__(self):
@@ -7,15 +13,10 @@ class AsyncOpenAIClient:
 
     async def create_completion(
             self,
-            model: str,
+            model: ModelConfig,
             messages: list,
-            temperature: float = 0.7,
-            max_tokens: int = 1000,
-            top_p: float = 1.0,
-            frequency_penalty: float = 0.0,
-            presence_penalty: float = 0.0,
             tools: list = None,
-            tool_choice: str = "auto",
+            tool_choice: ToolChoice = "auto",
             response_format = None
     ):
         """
@@ -35,16 +36,28 @@ class AsyncOpenAIClient:
         Returns:
             The response from the OpenAI API.
         """
-        response = await self.client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            top_p=top_p,
-            frequency_penalty=frequency_penalty,
-            presence_penalty=presence_penalty,
-            tools=tools,
-            tool_choice=tool_choice,
-            response_format=response_format
-        )
+        if model.model_name in ["o4-mini"]:
+            response = await self.client.chat.completions.create(
+                model=model.model_name,
+                max_completion_tokens=model.max_tokens,
+                messages=messages,
+                tools=tools,
+                tool_choice=tool_choice,
+                response_format=response_format
+            )
+        else:
+            response = await self.client.chat.completions.create(
+                model=model.model_name,
+                temperature=model.temperature,
+                max_tokens=model.max_tokens,
+                top_p=model.top_p,
+                frequency_penalty=model.frequency_penalty,
+                presence_penalty=model.presence_penalty,
+                messages=messages,
+                tools=tools,
+                tool_choice=tool_choice,
+                response_format=response_format
+            )
+
+        logger.info(response)
         return response

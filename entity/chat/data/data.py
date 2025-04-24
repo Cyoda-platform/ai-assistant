@@ -1,7 +1,8 @@
 from common.config.conts import *
 from common.config.config import MAX_ITERATION
 from common.config.conts import EMPTY_PROMPT
-
+OPEN_AI_o3=""
+OPEN_AI=""
 APP_BUILDING_STACK_KEY = "app_building_stack"
 
 DATA_INGESTION_STACK_KEY = "data_ingestion_stack"

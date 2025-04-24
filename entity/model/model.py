@@ -1,5 +1,5 @@
-from typing import Dict, Any, Optional, List
-from pydantic import BaseModel, ConfigDict
+from typing import Dict, Any, Optional, List, Literal
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class WorkflowEntity(BaseModel):
@@ -11,19 +11,23 @@ class WorkflowEntity(BaseModel):
     workflow_cache: Optional[Dict[str, Any]] = {}
     edge_messages_store: Optional[Dict[str, Any]] = {}
 
+
 class AIMessage(BaseModel):
     model_config = ConfigDict(extra="ignore")
     edge_message_id: str
 
+
 class ChatMemory(BaseModel):
     model_config = ConfigDict(extra="ignore")
     messages: Optional[Dict[str, List[AIMessage]]] = {}
+
 
 class TransitionsMemory(BaseModel):
     model_config = ConfigDict(extra="ignore")
     conditions: Optional[Dict[str, Any]] = {}
     current_iteration: Optional[Dict[str, Any]] = {}
     max_iteration: Optional[Dict[str, Any]] = {}
+
 
 class FlowEdgeMessage(WorkflowEntity):
     model_config = ConfigDict(extra="ignore")
@@ -32,9 +36,12 @@ class FlowEdgeMessage(WorkflowEntity):
     consumed: Optional[bool] = True
     edge_message_id: str
 
+
 class ChatFlow(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     current_flow: Optional[List[FlowEdgeMessage]] = []
     finished_flow: Optional[List[FlowEdgeMessage]] = []
+
 
 class AgenticFlowEntity(WorkflowEntity):
     model_config = ConfigDict(extra="ignore")
@@ -53,11 +60,63 @@ class AgenticFlowEntity(WorkflowEntity):
     child_entities: Optional[List[str]] = []
     scheduled_entities: Optional[List[str]] = []
 
+
 class SchedulerEntity(WorkflowEntity):
+    model_config = ConfigDict(extra="ignore")
     awaited_entity_ids: Optional[List[str]] = []
     triggered_entity_id: str = ""
 
 
 class QuestionsQueue(WorkflowEntity):
+    model_config = ConfigDict(extra="ignore")
     new_questions: Optional[List[FlowEdgeMessage]] = []
     asked_questions: Optional[List[FlowEdgeMessage]] = []
+
+
+# https://platform.openai.com/docs/pricing
+ModelName = Literal["gpt-4o-mini",
+"gpt-4.1-mini",
+"gpt-4o",
+"gpt-4.1-nano",
+"o4-mini"]
+
+ToolChoice = Literal["none", "auto", "required"]
+
+class ModelConfig(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    model_name: ModelName = Field(
+        default="gpt-4.1-nano",
+        description="Name of the model to use"
+    )
+    temperature: float = Field(
+        default=0.7,
+        ge=0.0,
+        le=2.0,
+        description="Sampling temperature: higher values = more random"
+    )
+    max_tokens: int = Field(
+        default=1000,
+        ge=1,
+        description="Maximum number of tokens to generate"
+    )
+    top_p: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1.0,
+        description="Nucleus sampling cumulative probability"
+    )
+    frequency_penalty: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=2.0,
+        description="Penalize new tokens based on existing frequency in text"
+    )
+    presence_penalty: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=2.0,
+        description="Penalize new tokens based on whether they appear in text"
+    )
+
+
+

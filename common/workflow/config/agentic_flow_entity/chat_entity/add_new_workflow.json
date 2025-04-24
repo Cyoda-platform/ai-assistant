@@ -177,7 +177,9 @@
                     "async def process_some_name(entity: dict):",
                     "    final_result = do_some_user_request(...)",
                     "    entity[\"final_result\"] = final_result",
-                    "    entity[\"workflowProcessed\"] = True"
+                    "    entity[\"workflowProcessed\"] = True",
+                    "",
+                    " Response format: respond with only the code. No markdown, no comments, no explanation. "
                   ]
                 }
               ],

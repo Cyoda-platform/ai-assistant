@@ -9,14 +9,14 @@ from typing import List
 
 from common.config.config import GENERAL_MEMORY_TAG, PROJECT_DIR, REPOSITORY_NAME, ENTITY_VERSION, \
     CYODA_ENTITY_TYPE_EDGE_MESSAGE
-from common.config.conts import OPEN_AI, QUESTIONS_QUEUE_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME, \
+from common.config.conts import QUESTIONS_QUEUE_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME, \
     AI_MEMORY_EDGE_MESSAGE_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, EDGE_MESSAGE_STORE_MODEL_NAME, \
     GIT_BRANCH_PARAM
 from common.util.chat_util_functions import enrich_config_message
-from common.util.utils import _save_file
+from common.util.utils import _save_file, _post_process_response
 from entity.chat.data.workflow_prototype.batch_parallel_code import batch_process_file
 from entity.chat.model.chat import AgenticFlowEntity
-from entity.model.model import QuestionsQueue, FlowEdgeMessage, ChatMemory, AIMessage, WorkflowEntity
+from entity.model.model import QuestionsQueue, FlowEdgeMessage, ChatMemory, AIMessage, WorkflowEntity, ModelConfig
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -217,13 +217,14 @@ class WorkflowDispatcher:
             return f"Scheduled batch processing for {input_file_path}"
 
         messages = await self._get_ai_memory(entity=entity, config=config, memory=memory, technical_id=technical_id)
-        ai_agent_resp = await self.ai_agent.run(
+
+        ai_agent_resp = await self.ai_agent.run_agent(
             methods_dict=self.methods_dict,
             cls_instance=self.cls_instance,
             entity=entity,
             technical_id=technical_id,
             tools=config.get("tools"),
-            model=OPEN_AI,
+            model=ModelConfig.model_validate(config.get("model")),
             tool_choice=config.get("tool_choice"),
             messages=messages,
             response_format=config.get("response_format")
@@ -285,7 +286,7 @@ class WorkflowDispatcher:
                 notification = {
                     "allow_anonymous_users": config.get("allow_anonymous_users", False),
                     "publish": config.get("publish", False),
-                    "question": f"{response}",
+                    "question": _post_process_response(response = f"{response}", config=config),
                     "approve": config.get("approve", False),
                     "type": "question",
                 }

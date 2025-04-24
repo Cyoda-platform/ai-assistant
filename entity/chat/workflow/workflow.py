@@ -12,7 +12,7 @@ from common.ai.nltk_service import get_most_similar_entity
 from common.config.conts import *
 from common.config.config import MOCK_AI, \
     REPOSITORY_URL, CYODA_DEPLOY_DICT, CHECK_DEPLOY_INTERVAL, ENTITY_VERSION, GOOGLE_SEARCH_KEY, \
-    GOOGLE_SEARCH_CX, PROJECT_DIR, REPOSITORY_NAME, MAX_ITERATION, CYODA_ENTITY_TYPE_EDGE_MESSAGE
+    GOOGLE_SEARCH_CX, PROJECT_DIR, REPOSITORY_NAME, MAX_ITERATION, CYODA_ENTITY_TYPE_EDGE_MESSAGE, DATA_REPOSITORY_URL
 from common.util.chat_util_functions import _launch_transition
 from common.util.utils import get_project_file_name, _git_push, _save_file, clone_repo, \
     send_post_request, send_get_request, parse_from_string, read_file_util
@@ -171,9 +171,12 @@ class ChatWorkflow(Workflow):
         """
         Reads the content of a given URL and returns its textual content.
         """
+        return await self._fetch_data(url=params.get("url"))
+
+    async def _fetch_data(self, url):
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(params.get("url"))
+                response = await client.get(url)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, "html.parser")
             paragraphs = soup.find_all("p")
@@ -531,6 +534,17 @@ class ChatWorkflow(Workflow):
 
         return f"Successfully scheduled workflow for updating user application {child_technical_id}"
 
+#========== general function
+
+    async def get_cyoda_guidelines(
+            self, technical_id: str, entity: AgenticFlowEntity, **params
+    ) -> str:
+        url = f"{DATA_REPOSITORY_URL}/get_cyoda_guidelines/{params.get("workflow_name")}.adoc"
+        return await self._fetch_data(url=url)
+
+#==========
+
+
     async def _schedule_workflow(
             self,
             technical_id: str,
@@ -568,6 +582,7 @@ class ChatWorkflow(Workflow):
             f"{child_technical_id}"
         )
 
+#==========================editing========================================
     async def add_new_entity_for_existing_app(
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:

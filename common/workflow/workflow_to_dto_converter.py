@@ -1,8 +1,10 @@
 import json
 import uuid
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from common.config.config import ENTITY_VERSION, GRPC_PROCESSOR_TAG
 from common.config.conts import CHAT_MODEL_NAME, ADD_NEW_WORKFLOW, EDIT_API_EXISTING_APP, EDIT_EXISTING_WORKFLOW, \
     EDIT_EXISTING_PROCESSORS, AGENTIC_FLOW_ENTITY
 
@@ -452,22 +454,38 @@ def generate_ext_criteria(criteria, criteria_id, criteria_params, class_name):
 
 
 if __name__ == "__main__":
-    #chat
-    #build_general_application
-    #generating_gen_app_workflow
-    #EDIT_EXISTING_WORKFLOW
-    #EDIT_EXISTING_PROCESSORS
-    #model_name = AGENTIC_FLOW_ENTITY
 
+    CONFIG_DIR = Path("config")
+    OUTPUT_ROOT = Path("outputs")
+    CALCULATION_NODE_TAGS = "ai_assistant"
 
-    input_file = "config/agentic/generating_gen_app_workflow.json"
-    output_file = f"outputs/generating_gen_app_workflow.json"
-    calculation_nodes_tags="ai_assistant"
+    for file_path in CONFIG_DIR.rglob("*"):
+        if not file_path.is_file():
+            continue
 
-    model_version = 1000
-    convert(input_file_path=input_file,
-            output_file_path=output_file,
-            calculation_node_tags=calculation_nodes_tags,
+        # model_name is the name of the folder directly under config/
+        # e.g. config/scheduler/foo.json -> scheduler
+        try:
+            # file_path.relative_to(CONFIG_DIR) == scheduler/foo.json
+            model_name = file_path.relative_to(CONFIG_DIR).parts[-2]
+        except IndexError:
+            # fallback, though .rglob under CONFIG_DIR always has at least one part
+            model_name = file_path.parent.name
+
+        input_file = str(file_path)
+
+        # Build the output path under outputs/ preserving subdirs
+        output_file = OUTPUT_ROOT / file_path
+        output_dir = output_file.parent
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Call your conversion
+        convert(
+            input_file_path=input_file,
+            output_file_path=str(output_file),
+            calculation_node_tags=GRPC_PROCESSOR_TAG,
             model_name=model_name,
-            model_version=model_version)
-    print(f"Conversion completed. Result saved to {output_file}")
+            model_version=int(ENTITY_VERSION)
+        )
+
+        print(f"Conversion completed. Result saved to {output_file}")

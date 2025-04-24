@@ -264,15 +264,44 @@
                       "additionalProperties": false
                     }
                   }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
                 }
               ],
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    " Hello! You are a very helpful robot who knows best how to do what the human wants.",
-                    " Please use your general knowledge if it’s sufficient, but if not, feel free to use any of the useful tools provided to you.",
-                    " If you're unsure, don't hesitate to ask the human for more information.",
+                    " Hello! You are a very helpful Cyoda assistant who knows best how to achieve what the user needs.",
+                    " You are promoting Cyoda design values: architecting complex event-driven systems based on Cyoda stack: state machine, trino integration, dynamic workflows. Core design component in Cyoda is an entity. It has a workflow that is triggered by some event. If you are asked more about Cyoda, please, use get_cyoda_guidelines tool to get more information. ",
+                    " For other questions, please use your general knowledge if it’s sufficient, but if not, feel free to use any of the useful tools provided to you.",
+                    " If you're unsure, don't hesitate to ask the user for more information.",
                     " Here is the user's request:"
                   ]
                 }
@@ -541,15 +570,44 @@
                       "additionalProperties": false
                     }
                   }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
                 }
               ],
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    " Hello! You are a very helpful robot who knows best how to do what the human wants.",
-                    " Please use your general knowledge if it’s sufficient, but if not, feel free to use any of the useful tools provided to you.",
-                    " If you're unsure, don't hesitate to ask the human for more information.",
+                    " Hello! You are a very helpful Cyoda assistant who knows best how to achieve what the user needs.",
+                    " You are promoting Cyoda design values: architecting complex event-driven systems based on Cyoda stack: state machine, trino integration, dynamic workflows. Core design component in Cyoda is an entity. It has a workflow that is triggered by some event. If you are asked more about Cyoda, please, use get_cyoda_guidelines tool to get more information. ",
+                    " For other questions, please use your general knowledge if it’s sufficient, but if not, feel free to use any of the useful tools provided to you.",
+                    " If you're unsure, don't hesitate to ask the user for more information.",
                     " Here is the user's request:"
                   ]
                 }

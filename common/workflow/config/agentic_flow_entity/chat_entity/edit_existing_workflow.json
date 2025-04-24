@@ -143,7 +143,10 @@
                     "Processes should have name starting with 'process_' and take only one argument entity.",
                     "",
                     "Entity data example:",
-                    "{entity_name}"
+                    "{entity_name}",
+
+                    "",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
                   ]
                 }
               ],

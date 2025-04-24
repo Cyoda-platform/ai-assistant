@@ -58,7 +58,9 @@
                     "await entity_service.update_item(...)",
                     "",
                     "4. Delete:",
-                    "await entity_service.delete_item(...)"
+                    "await entity_service.delete_item(...)",
+                    "",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
                   ]
                 }
               ],

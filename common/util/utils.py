@@ -941,3 +941,81 @@ async def read_file_util(filename, technical_id):
     except Exception as e:
         logger.exception("Error during reading file")
         return f"Error during reading file: {e}"
+
+def wrap_response_by_extension(filename: str, response: str) -> str:
+    """
+    Wrap the given response string in a Markdown code fence based on the file extension of filename.
+
+    Args:
+        filename: The name (or path) of the output file.
+        response: The content to wrap in a code block.
+
+    Returns:
+        A Markdown-formatted string with the response wrapped in a code fence and appropriate language hint.
+    """
+    # Extract the file extension (without the leading dot) and normalize
+    _, ext = os.path.splitext(filename)
+    ext = ext.lower().lstrip('.')
+
+    # Mapping from extensions to Markdown language identifiers
+    lang_map = {
+        'py': 'python',
+        'js': 'javascript',
+        'ts': 'typescript',
+        'java': 'java',
+        'html': 'html',
+        'css': 'css',
+        'json': 'json',
+        'xml': 'xml',
+        'sh': 'bash',
+        'rb': 'ruby',
+        'go': 'go',
+        'php': 'php',
+        # Add more mappings as needed
+    }
+
+    # Determine the language for the code fence
+    language = lang_map.get(ext)
+
+    # Wrap in Markdown code fence
+    if language:
+        return f"```{language}\n{response}\n```"
+    else:
+        # Fallback to a generic code block if unknown extension
+        return f"```\n{response}\n```"
+
+def _post_process_response(response: str, config: dict) -> str:
+    """
+    Post-process the response by formatting and wrapping based on output configuration.
+
+    - If a local filesystem output is specified, inspects the first filename.
+    - For JSON files, parses and pretty-prints JSON before wrapping.
+    - Wraps all responses in a code fence matching the file extension.
+
+    Args:
+        response: Raw response content.
+        config: Configuration dict, expecting {'output': {'local_fs': [filenames]}}.
+
+    Returns:
+        The formatted and/or wrapped response, or the original response if no output is configured.
+    """
+    # Safely retrieve local_fs list
+    local_files = config.get('output', {}).get('local_fs') or []
+    if not local_files:
+        return response
+
+    filename = local_files[0]
+    _, ext = os.path.splitext(filename)
+    ext = ext.lower()
+
+    # Handle JSON formatting
+    if ext == '.json':
+        try:
+            parsed = json.loads(response)
+            response = json.dumps(parsed, indent=4, sort_keys=True)
+        except json.JSONDecodeError as err:
+            logger.error("Invalid JSON format for file %s: %s", filename, err)
+            # Fall back to raw response on error
+
+    # Wrap based on extension
+    return wrap_response_by_extension(filename, response)
