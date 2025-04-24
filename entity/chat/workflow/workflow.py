@@ -364,6 +364,7 @@ class ChatWorkflow(Workflow):
             try:
                 input_code = input_code.replace("```python", "")
                 input_code = input_code.replace("```", "")
+                #todo might return empty
                 code_without_workflow, workflow_json = analyze_code_with_libcst(input_code)
             except Exception as e:
                 # todo add retry here

@@ -95,7 +95,7 @@ class ModelConfig(BaseModel):
         description="Sampling temperature: higher values = more random"
     )
     max_tokens: int = Field(
-        default=1000,
+        default=10000,
         ge=1,
         description="Maximum number of tokens to generate"
     )
