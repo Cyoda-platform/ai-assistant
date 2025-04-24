@@ -260,6 +260,9 @@ class CyodaRepository(CrudRepository):
         data = json.dumps(entity, default=custom_serializer)
         resp = await self._send_request("put", path, data=data)
         result = resp.get("json", {})
+        if not isinstance(result, dict):
+            logger.exception(result)
+            return None
         return result.get("entityIds", [None])[0]
 
     async def update_all(self, meta, entities: List[Any]) -> List[Any]:

@@ -189,6 +189,7 @@ class GrpcClient:
                 return await self.consume_stream()
             else:
                 logger.exception("gRPC error in consume_stream")
+                await asyncio.sleep(1)
                 await self.consume_stream()
 
     async def grpc_stream(self):
