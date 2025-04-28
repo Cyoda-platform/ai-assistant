@@ -19,7 +19,7 @@ from quart_rate_limiter import RateLimiter, rate_limit
 from common.config.config import MOCK_AI, ENTITY_VERSION, API_PREFIX, MAX_TEXT_SIZE, \
     MAX_FILE_SIZE, CHAT_REPOSITORY, RAW_REPOSITORY_URL, AUTH_SECRET_KEY, \
     CYODA_ENTITY_TYPE_EDGE_MESSAGE, MAX_GUEST_CHATS, ENABLE_AUTH, CYODA_API_URL
-from common.config.conts import QUESTIONS_QUEUE_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME, \
+from common.config.conts import FLOW_EDGE_MESSAGE_MODEL_NAME, \
     CHAT_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, RATE_LIMIT, APPROVE, TRANSFER_CHATS_ENTITY
 from common.exception.exceptions import ChatNotFoundException, InvalidTokenException
 from common.service.entity_service_interface import EntityService
@@ -29,7 +29,7 @@ from common.util.utils import current_timestamp, clone_repo, \
 from entity.chat.data.data import APP_BUILDER_FLOW, DESIGN_PLEASE_WAIT, \
     OPERATION_NOT_SUPPORTED_WARNING, ADDITIONAL_QUESTION_ROLLBACK_WARNING
 from entity.chat.model.chat import ChatEntity
-from entity.model.model import QuestionsQueue, FlowEdgeMessage, ChatMemory, ModelConfig
+from entity.model.model import FlowEdgeMessage, ChatMemory, ModelConfig
 from logic.init import BeanFactory
 
 logger = logging.getLogger('django')
@@ -354,13 +354,6 @@ async def add_chat():
 
     greeting_edge_message = FlowEdgeMessage(user_id=user_id, type="notification", publish=True,
                                             edge_message_id=edge_message_id)
-    questions_queue = QuestionsQueue(new_questions=[greeting_edge_message],
-                                     user_id=user_id)
-
-    questions_queue_id = await entity_service.add_item(token=cyoda_auth_service,
-                                                       entity_model=QUESTIONS_QUEUE_MODEL_NAME,
-                                                       entity_version=ENTITY_VERSION,
-                                                       entity=questions_queue)
 
     memory_id = await entity_service.add_item(token=cyoda_auth_service,
                                               entity_model=MEMORY_MODEL_NAME,
@@ -373,7 +366,6 @@ async def add_chat():
         "user_id": user_id,
         "chat_id": "",
         "date": current_timestamp(),
-        "questions_queue_id": str(questions_queue_id),
         "name": init_question[:25] + '...' if len(init_question) > 25 else init_question,
         "description": req_data.get('description'),
         "chat_flow": {"current_flow": [], "finished_flow": []},
@@ -408,17 +400,6 @@ async def add_chat():
 
     return jsonify(
         {"message": "Chat created", "technical_id": technical_id, "answer_technical_id": answer_message_id}), 200
-
-
-# polling for new questions here
-@app.route(API_PREFIX + '/chats/<technical_id>/questions', methods=['GET'])
-@rate_limit(RATE_LIMIT, timedelta(seconds=10))
-async def get_question(technical_id):
-    auth_header = request.headers.get('Authorization')
-    chat: ChatEntity = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
-    questions_queue_id = chat.questions_queue_id
-    return await poll_questions(chat=chat,
-                                questions_queue_id=questions_queue_id)
 
 
 @app.route(API_PREFIX + '/chats/<technical_id>/text-questions', methods=['POST'])
@@ -689,87 +670,12 @@ async def rollback_dialogue_script(technical_id, auth_header, chat: ChatEntity, 
     pass
 
 
-async def _initialize_question_queue(chat):
-    pass
-
-
 def _validate_answer(answer, user_file):
     if not answer:
         if not user_file:
             return False, "Invalid entity"
         return True, "please, consider the contents of this file"
     return True, answer
-
-
-def _append_wait_notification(question_queue):
-    wait_notification = {
-        "notification": f"Thank you for your answer! {DESIGN_PLEASE_WAIT}",
-        "prompt": {},
-        "answer": None,
-        "function": None,
-        "iteration": 0,
-        "max_iteration": 0
-    }
-    question_queue.append(wait_notification)
-
-
-async def poll_questions(chat, questions_queue_id):
-    try:
-        questions_queue: QuestionsQueue = await entity_service.get_item(token=cyoda_auth_service,
-                                                                        entity_model=QUESTIONS_QUEUE_MODEL_NAME,
-                                                                        entity_version=ENTITY_VERSION,
-                                                                        technical_id=questions_queue_id)
-        questions_to_user = []
-
-        if questions_queue.new_questions and questions_queue.current_state == 'idle':
-
-            await lock_questions_queue(questions_queue_id)
-
-            questions_queue: QuestionsQueue = await entity_service.get_item(token=cyoda_auth_service,
-                                                                            entity_model=QUESTIONS_QUEUE_MODEL_NAME,
-                                                                            entity_version=ENTITY_VERSION,
-                                                                            technical_id=questions_queue_id)
-
-            while questions_queue.new_questions:
-                message: FlowEdgeMessage = questions_queue.new_questions.pop(0)
-
-                message_content = await entity_service.get_item(token=cyoda_auth_service,
-                                                                entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
-                                                                entity_version=ENTITY_VERSION,
-                                                                technical_id=message.edge_message_id,
-                                                                meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
-
-                questions_to_user.append(message_content)
-                questions_queue.asked_questions.append(message)
-
-            await entity_service.update_item(token=cyoda_auth_service,
-                                             entity_model=QUESTIONS_QUEUE_MODEL_NAME,
-                                             entity_version=ENTITY_VERSION,
-                                             technical_id=questions_queue_id,
-                                             entity=questions_queue,
-                                             meta={UPDATE_TRANSITION: "dequeue_message"})
-
-        return jsonify({"questions": questions_to_user}), 200
-    except Exception as e:
-        logger.exception(e)
-        return jsonify({"questions": []}), 200  # No Content
-
-
-async def lock_questions_queue(questions_queue_id):
-    while True:
-        try:
-            result = await entity_service.update_item(token=cyoda_auth_service,
-                                                      entity_model=QUESTIONS_QUEUE_MODEL_NAME,
-                                                      entity_version=ENTITY_VERSION,
-                                                      technical_id=questions_queue_id,
-                                                      entity=None,
-                                                      meta={UPDATE_TRANSITION: "lock_for_dequeue"})
-            return result
-        except Exception as e:
-            logging.exception("failed_transition_to_lock_for_dequeue_entity_questions_queue...")
-            # Delay before retrying to prevent tight looping
-            await asyncio.sleep(1)
-
 
 async def process_message(finished_flow: List[FlowEdgeMessage], auth_header, dialogue: list) -> list:
     for message in finished_flow:

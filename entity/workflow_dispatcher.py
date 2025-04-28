@@ -1,4 +1,3 @@
-import asyncio
 import json
 import os
 
@@ -9,14 +8,14 @@ from typing import List
 
 from common.config.config import GENERAL_MEMORY_TAG, PROJECT_DIR, REPOSITORY_NAME, ENTITY_VERSION, \
     CYODA_ENTITY_TYPE_EDGE_MESSAGE
-from common.config.conts import QUESTIONS_QUEUE_MODEL_NAME, FLOW_EDGE_MESSAGE_MODEL_NAME, \
+from common.config.conts import FLOW_EDGE_MESSAGE_MODEL_NAME, \
     AI_MEMORY_EDGE_MESSAGE_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, EDGE_MESSAGE_STORE_MODEL_NAME, \
     GIT_BRANCH_PARAM
 from common.util.chat_util_functions import enrich_config_message
 from common.util.utils import _save_file, _post_process_response
 from entity.chat.data.workflow_prototype.batch_parallel_code import batch_process_file
 from entity.chat.model.chat import AgenticFlowEntity
-from entity.model.model import QuestionsQueue, FlowEdgeMessage, ChatMemory, AIMessage, WorkflowEntity, ModelConfig
+from entity.model.model import FlowEdgeMessage, ChatMemory, AIMessage, WorkflowEntity, ModelConfig
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -274,11 +273,8 @@ class WorkflowDispatcher:
 
     async def _finalize_response(self, technical_id, entity: AgenticFlowEntity, config, finished_flow, response, new_entities):
 
-        flow_edge_message = await self.add_edge_message(message=config, flow=finished_flow, user_id=entity.user_id)
+        await self.add_edge_message(message=config, flow=finished_flow, user_id=entity.user_id)
         config_type = config["type"]
-        if config_type in ("notification", "question"):
-            if config.get("publish"):
-                await self.queue_message(entity=entity, message=flow_edge_message)
 
         if config_type in ("function", "prompt", "agent"):
 
@@ -290,11 +286,10 @@ class WorkflowDispatcher:
                     "approve": config.get("approve", False),
                     "type": "question",
                 }
-                flow_edge_message = await self.add_edge_message(message=notification,
+                await self.add_edge_message(message=notification,
                                                                 flow=finished_flow,
                                                                 user_id=entity.user_id)
-                if config.get("publish"):
-                    await self.queue_message(entity=entity, message=flow_edge_message)
+
 
             await self._write_to_output(entity=entity,
                                         config=config,
@@ -317,40 +312,6 @@ class WorkflowDispatcher:
                                             user_id=user_id)
         flow.append(flow_edge_message)
         return flow_edge_message
-
-    async def queue_message(self, entity, message: FlowEdgeMessage):
-        questions_queue_id = entity.questions_queue_id
-        # todo timeout exception
-        await self.lock_questions_queue(questions_queue_id)
-        questions_queue: QuestionsQueue = await self.entity_service.get_item(token=self.cyoda_auth_service,
-                                                                             entity_model=QUESTIONS_QUEUE_MODEL_NAME,
-                                                                             entity_version=ENTITY_VERSION,
-                                                                             technical_id=questions_queue_id)
-        if questions_queue.current_state == 'enqueue_locked':
-            questions_queue.new_questions.append(message)
-            await self.entity_service.update_item(token=self.cyoda_auth_service,
-                                                  entity_model=QUESTIONS_QUEUE_MODEL_NAME,
-                                                  entity_version=ENTITY_VERSION,
-                                                  technical_id=questions_queue_id,
-                                                  entity=questions_queue,
-                                                  meta={UPDATE_TRANSITION: "enqueue_message"})
-
-    async def lock_questions_queue(self, questions_queue_id):
-        while True:
-            try:
-                result = await self.entity_service.update_item(
-                    token=self.cyoda_auth_service,
-                    entity_model=QUESTIONS_QUEUE_MODEL_NAME,
-                    entity_version=ENTITY_VERSION,
-                    technical_id=questions_queue_id,
-                    entity=None,
-                    meta={UPDATE_TRANSITION: "lock_for_enqueue"}
-                )
-                return result
-            except Exception as e:
-                logging.exception("Update operation failed, retrying in 1 second...")
-                # Delay before retrying to prevent tight looping
-                await asyncio.sleep(1)
 
     async def _write_to_output(self, entity, config, response, technical_id):
         if config.get("output"):
