@@ -6,17 +6,13 @@ import asyncio
 from typing import List, Any, Optional
 
 from common.config.config import (
-    CYODA_API_URL,
     CYODA_ENTITY_TYPE_EDGE_MESSAGE,
 )
 from common.config.conts import EDGE_MESSAGE_CLASS, TREE_NODE_ENTITY_CLASS, UPDATE_TRANSITION
 from common.repository.crud_repository import CrudRepository
 from common.util.utils import (
     custom_serializer,
-    send_get_request,
-    send_post_request,
-    send_put_request,
-    send_delete_request,
+    send_cyoda_request,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,49 +37,6 @@ class CyodaRepository(CrudRepository):
                 cls._instance._cyoda_auth_service = cyoda_auth_service
         return cls._instance
 
-    def invalidate_tokens(self):
-        """Delegate token invalidation to the provided token service."""
-        if hasattr(self._cyoda_auth_service, "invalidate_tokens"):
-            self._cyoda_auth_service.invalidate_tokens()
-
-    async def _send_request(
-        self,
-        method: str,
-        path: str,
-        data: Any = None
-    ) -> dict:
-        """
-        Send an HTTP request to the Cyoda API with automatic retry on 401.
-        """
-        token = self._cyoda_auth_service.get_access_token()
-        for attempt in range(2):
-            try:
-                if method.lower() == "get":
-                    resp = await send_get_request(token, CYODA_API_URL, path)
-                elif method.lower() == "post":
-                    resp = await send_post_request(token, CYODA_API_URL, path, data=data)
-                elif method.lower() == "put":
-                    resp = await send_put_request(token, CYODA_API_URL, path, data=data)
-                elif method.lower() == "delete":
-                    resp = await send_delete_request(token, CYODA_API_URL, path)
-                else:
-                    raise ValueError(f"Unsupported HTTP method: {method}")
-            except Exception as exc:
-                msg = str(exc)
-                if attempt == 0 and ("401" in msg or "Unauthorized" in msg):
-                    logger.warning(f"Request to {path} failed with 401; invalidating tokens and retrying")
-                    self.invalidate_tokens()
-                    token = self._cyoda_auth_service.get_access_token()
-                    continue
-                raise
-            status = resp.get("status") if isinstance(resp, dict) else None
-            if attempt == 0 and status == 401:
-                logger.warning(f"Response from {path} returned status 401; invalidating tokens and retrying")
-                self.invalidate_tokens()
-                token = self._cyoda_auth_service.get_access_token()
-                continue
-            return resp
-        raise RuntimeError(f"Failed request {method.upper()} {path} after retry")
 
     async def _wait_for_search_completion(
         self,
@@ -98,7 +51,7 @@ class CyodaRepository(CrudRepository):
         status_path = f"search/snapshot/{snapshot_id}/status"
 
         while True:
-            resp = await self._send_request("get", status_path)
+            resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="get", path=status_path)
             if resp.get("status") != 200:
                 return
             status = resp.get("json", {}).get("snapshotStatus")
@@ -122,7 +75,7 @@ class CyodaRepository(CrudRepository):
 
     async def delete_all(self, meta) -> None:
         path = f"entity/{meta['entity_model']}/{meta['entity_version']}"
-        await self._send_request("delete", path)
+        await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="delete", path=path)
 
     async def delete_all_entities(self, meta, entities: List[Any]) -> None:
         for entity in entities:
@@ -143,7 +96,7 @@ class CyodaRepository(CrudRepository):
 
     async def find_all(self, meta) -> List[Any]:
         path = f"entity/{meta['entity_model']}/{meta['entity_version']}"
-        resp = await self._send_request("get", path)
+        resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="get", path=path)
         return resp.get("json", [])
 
     async def find_all_by_key(self, meta, keys: List[Any]) -> List[Any]:
@@ -165,7 +118,7 @@ class CyodaRepository(CrudRepository):
             if _uuid in _edge_messages_cache:
                 return _edge_messages_cache[_uuid]
             path = f"message/get/{_uuid}"
-            resp = await self._send_request("get", path)
+            resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="get", path=path)
             content = resp.get("json", {}).get("content", "{}")
             data = json.loads(content).get("edge_message_content")
             if data:
@@ -173,7 +126,7 @@ class CyodaRepository(CrudRepository):
             return data
 
         path = f"entity/{_uuid}"
-        resp = await self._send_request("get", path)
+        resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="get", path=path)
         payload = resp.get("json", {})
         data = payload.get("data", {})
         data["current_state"] = payload.get("meta", {}).get("state")
@@ -183,16 +136,17 @@ class CyodaRepository(CrudRepository):
     async def find_all_by_criteria(self, meta, criteria: Any) -> List[Any]:
         # 1) trigger snapshot
         snap_path = f"search/snapshot/{meta['entity_model']}/{meta['entity_version']}"
-        resp = await self._send_request("post", snap_path, data=json.dumps(criteria))
+        resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="post", path=snap_path, data=json.dumps(criteria))
         snapshot_id = resp.get("json")
 
         # 2) poll until ready
         await self._wait_for_search_completion(snapshot_id)
 
         # 3) fetch results (first page)
-        result_resp = await self._send_request(
-            "get",
-            f"search/snapshot/{snapshot_id}"
+        result_resp = await send_cyoda_request(
+            cyoda_auth_service=self._cyoda_auth_service,
+            method="get",
+            path=f"search/snapshot/{snapshot_id}"
         )
         if result_resp.get("status") != 200:
             return []
@@ -223,7 +177,7 @@ class CyodaRepository(CrudRepository):
             data = json.dumps(entity, default=custom_serializer)
             path = f"entity/JSON/{meta['entity_model']}/{meta['entity_version']}"
 
-        resp = await self._send_request("post", path, data=data)
+        resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="post", path=path, data=data)
         result = resp.get("json", [])
 
         technical_id = None
@@ -239,7 +193,7 @@ class CyodaRepository(CrudRepository):
         # restore v1 behavior: return first entity ID only
         data = json.dumps(entities, default=custom_serializer)
         path = f"entity/JSON/{meta['entity_model']}/{meta['entity_version']}"
-        resp = await self._send_request("post", path, data=data)
+        resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="post", path=path, data=data)
         result = resp.get("json", [])
 
         technical_id = None
@@ -258,7 +212,7 @@ class CyodaRepository(CrudRepository):
             "?transactional=true&waitForConsistencyAfter=true"
         )
         data = json.dumps(entity, default=custom_serializer)
-        resp = await self._send_request("put", path, data=data)
+        resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="put", path=path, data=data)
         result = resp.get("json", {})
         if not isinstance(result, dict):
             logger.exception(result)
@@ -275,12 +229,12 @@ class CyodaRepository(CrudRepository):
             })
         data = json.dumps(payload)
         path = "entity/JSON"
-        await self._send_request("put", path, data=data)
+        await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="put", path=path, data=data)
         return entities
 
     async def delete_by_id(self, meta, technical_id: Any) -> None:
         path = f"entity/{technical_id}"
-        await self._send_request("delete", path)
+        await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="delete", path=path)
 
     async def get_transitions(self, meta, technical_id: Any) -> Any:
         entity_class = (
@@ -292,7 +246,7 @@ class CyodaRepository(CrudRepository):
             f"platform-api/entity/fetch/transitions?entityClass={entity_class}"
             f"&entityId={technical_id}"
         )
-        resp = await self._send_request("get", path)
+        resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="get", path=path)
         return resp.get("json")
 
     async def _launch_transition(self, meta, technical_id):
@@ -306,5 +260,5 @@ class CyodaRepository(CrudRepository):
             f"&entityClass={entity_class}&transitionName="
             f"{meta.get('update_transition', UPDATE_TRANSITION)}"
         )
-        resp = await self._send_request("put", path)
+        resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="put", path=path)
         return resp.get("json")

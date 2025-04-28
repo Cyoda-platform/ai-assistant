@@ -20,9 +20,13 @@ class RequestLimitExceededException(Exception):
 class TokenExpiredException(Exception):
     """Raised when a JWT has expired."""
     def __init__(self, message="Token has expired"):
+        self.message = message
+        self.status_code = 401
         super().__init__(message)
 
 class GuestChatsLimitExceededException(Exception):
     """Raised when a JWT has expired."""
     def __init__(self, message="Sorry, max guest chat limit exceeded. Please sign up."):
+        self.message = message
+        self.status_code = 403
         super().__init__(message)

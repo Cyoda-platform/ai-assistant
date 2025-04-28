@@ -14,19 +14,20 @@ import aiofiles
 
 from quart import Quart, request, jsonify, send_from_directory
 from quart_cors import cors
-from quart_rate_limiter import RateLimiter, rate_limit
+from quart_rate_limiter import RateLimiter, rate_limit, RateLimitExceeded
 
 from common.config.config import MOCK_AI, ENTITY_VERSION, API_PREFIX, MAX_TEXT_SIZE, \
     MAX_FILE_SIZE, CHAT_REPOSITORY, RAW_REPOSITORY_URL, AUTH_SECRET_KEY, \
-    CYODA_ENTITY_TYPE_EDGE_MESSAGE, MAX_GUEST_CHATS, ENABLE_AUTH, CYODA_API_URL
+    CYODA_ENTITY_TYPE_EDGE_MESSAGE, MAX_GUEST_CHATS, ENABLE_AUTH, CYODA_API_URL, GUEST_TOKEN_LIMIT
 from common.config.conts import FLOW_EDGE_MESSAGE_MODEL_NAME, \
     CHAT_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, RATE_LIMIT, APPROVE, TRANSFER_CHATS_ENTITY
-from common.exception.exceptions import ChatNotFoundException, InvalidTokenException
+from common.exception.exceptions import ChatNotFoundException, InvalidTokenException, RequestLimitExceededException, \
+    TokenExpiredException, GuestChatsLimitExceededException
 from common.service.entity_service_interface import EntityService
 from common.util.chat_util_functions import trigger_manual_transition, get_user_message, add_answer_to_finished_flow
 from common.util.utils import current_timestamp, clone_repo, \
     validate_token, send_get_request
-from entity.chat.data.data import APP_BUILDER_FLOW, DESIGN_PLEASE_WAIT, \
+from entity.chat.data.data import APP_BUILDER_FLOW, \
     OPERATION_NOT_SUPPORTED_WARNING, ADDITIONAL_QUESTION_ROLLBACK_WARNING
 from entity.chat.model.chat import ChatEntity
 from entity.model.model import FlowEdgeMessage, ChatMemory, ModelConfig
@@ -79,7 +80,7 @@ async def add_cors_headers():
     async def apply_cors(response):
         # Set CORS headers for all HTTP requests
         response.headers['Access-Control-Allow-Origin'] = '*'  # Allow all origins
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'  # Allow these methods
+        response.headers['Access-Control-Allow-Methods'] = 'GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE'  # Allow these methods
         response.headers['Access-Control-Allow-Headers'] = '*'  # Allow these headers
         response.headers['Access-Control-Allow-Credentials'] = 'true'  # Allow credentials
         return response
@@ -100,12 +101,35 @@ async def handle_unauthorized_exception(error):
     logger.exception(error)
     return jsonify({"error": str(error)}), 401
 
-
 @app.errorhandler(ChatNotFoundException)
 async def handle_chat_not_found_exception(error):
     logger.exception(error)
     return jsonify({"error": str(error)}), 404
 
+@app.errorhandler(InvalidTokenException)
+async def handle_unauthorized_exception(error):
+    logger.exception(error)
+    return jsonify({"error": str(error)}), 401
+
+@app.errorhandler(TokenExpiredException)
+async def handle_token_expired_exception(error):
+    logger.exception(error)
+    return jsonify({"error": str(error)}), 401
+
+@app.errorhandler(GuestChatsLimitExceededException)
+async def handle_limit_exception(error):
+    logger.exception(error)
+    return jsonify({"error": str(error)}), 403
+
+@app.errorhandler(RequestLimitExceededException)
+async def handle_request_limit_exceeded(error):
+    logger.exception(error)
+    return jsonify({"error": str(error)}), 429
+
+@app.errorhandler(RateLimitExceeded)
+async def handle_rate_limit_exceeded(error):
+    logger.exception(error)
+    return jsonify({"error": str(error)}), 429
 
 @app.errorhandler(Exception)
 async def handle_any_exception(error):
@@ -266,9 +290,8 @@ async def get_chat(technical_id):
     }
     return jsonify({"chat_body": chats_view})
 
-#todo
 @app.route(API_PREFIX + '/get_guest_token', methods=['GET'])
-@rate_limit(limit=10, period=timedelta(weeks=50))
+@rate_limit(limit=GUEST_TOKEN_LIMIT, period=timedelta(weeks=50))
 async def get_guest_token():
     session_id = uuid.uuid4()
     payload = {

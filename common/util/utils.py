@@ -17,8 +17,9 @@ import httpx
 import jsonschema
 from jsonschema import validate
 
+from common.auth.cyoda_auth import CyodaAuthService
 from common.config.config import PROJECT_DIR, REPOSITORY_NAME, AUTH_SECRET_KEY, MAX_FILE_SIZE, CLONE_REPO, \
-    REPOSITORY_URL
+    REPOSITORY_URL, CYODA_API_URL
 from common.exception.exceptions import InvalidTokenException, TokenExpiredException
 
 logger = logging.getLogger(__name__)
@@ -341,7 +342,7 @@ async def validate_result(data: str, file_path: str, schema: Optional[str]) -> s
         return normalized_json_data
     except jsonschema.exceptions.ValidationError as err:
         logger.error(f"JSON schema validation failed: {err.message}")
-        raise ValidationErrorException(message = f"JSON schema validation failed: {err}, {err.message}")
+        raise ValidationErrorException(message=f"JSON schema validation failed: {err}, {err.message}")
     except json.JSONDecodeError as err:
         logger.error(f"Failed to decode JSON: {err}")
         try:
@@ -438,6 +439,54 @@ async def read_json_file(file_path: str):
         logger.error(f"An unexpected error occurred while reading the file {file_path}: {e}")
         raise
 
+
+def _invalidate_tokens(cyoda_auth_service: CyodaAuthService):
+    """Delegate token invalidation to the provided token service."""
+    cyoda_auth_service.invalidate_tokens()
+
+
+async def send_cyoda_request(
+        cyoda_auth_service: CyodaAuthService,
+        method: str,
+        path: str,
+        data: Any = None,
+        base_url: str = CYODA_API_URL
+) -> dict:
+    """
+    Send an HTTP request to the Cyoda API with automatic retry on 401.
+    """
+    token = cyoda_auth_service.get_access_token()
+    for attempt in range(2):
+        try:
+            if method.lower() == "get":
+                resp = await send_get_request(token, base_url, path)
+            elif method.lower() == "post":
+                resp = await send_post_request(token, base_url, path, data=data)
+            elif method.lower() == "put":
+                resp = await send_put_request(token, base_url, path, data=data)
+            elif method.lower() == "delete":
+                resp = await send_delete_request(token, base_url, path)
+            else:
+                raise ValueError(f"Unsupported HTTP method: {method}")
+            # todo check here
+        except Exception as exc:
+            msg = str(exc)
+            if attempt == 0 and ("401" in msg or "Unauthorized" in msg):
+                logger.warning(f"Request to {path} failed with 401; invalidating tokens and retrying")
+                _invalidate_tokens(cyoda_auth_service=cyoda_auth_service)
+                token = cyoda_auth_service.get_access_token()
+                continue
+            raise
+        status = resp.get("status") if isinstance(resp, dict) else None
+        if attempt == 0 and status == 401:
+            logger.warning(f"Response from {path} returned status 401; invalidating tokens and retrying")
+            _invalidate_tokens(cyoda_auth_service=cyoda_auth_service)
+            token = cyoda_auth_service.get_access_token()
+            continue
+        return resp
+    raise RuntimeError(f"Failed request {method.upper()} {path} after retry")
+
+
 async def send_get_request(token: str, api_url: str, path: str) -> Optional[Any]:
     url = f"{api_url}/{path}"
     token = f"Bearer {token}" if not token.startswith('Bearer') else token
@@ -462,18 +511,22 @@ async def send_request(headers, url, method, data=None, json=None):
             response = await client.get(url, headers=headers)
             # Only process GET responses with status 200 or 404 as in your original code
             if response.status_code in (200, 404):
-                content = response.json() if 'application/json' in response.headers.get('Content-Type', '') else response.text
+                content = response.json() if 'application/json' in response.headers.get('Content-Type',
+                                                                                        '') else response.text
             else:
                 content = None
         elif method == 'POST':
             response = await client.post(url, headers=headers, data=data, json=json)
-            content = response.json() if 'application/json' in response.headers.get('Content-Type', '') else response.text
+            content = response.json() if 'application/json' in response.headers.get('Content-Type',
+                                                                                    '') else response.text
         elif method == 'PUT':
             response = await client.put(url, headers=headers, data=data, json=json)
-            content = response.json() if 'application/json' in response.headers.get('Content-Type', '') else response.text
+            content = response.json() if 'application/json' in response.headers.get('Content-Type',
+                                                                                    '') else response.text
         elif method == 'DELETE':
             response = await client.delete(url, headers=headers)
-            content = response.json() if 'application/json' in response.headers.get('Content-Type', '') else response.text
+            content = response.json() if 'application/json' in response.headers.get('Content-Type',
+                                                                                    '') else response.text
         else:
             raise ValueError("Unsupported HTTP method")
 
@@ -542,12 +595,15 @@ def now():
 def timestamp_before(seconds: int) -> int:
     return int((time.time() - seconds) * 1000.0)
 
+
 def clean_formatting(text):
     """
     Convert multi-line text into a single line, preserving all other content.
     """
     # Replace any sequence of newlines (and carriage returns) with a single space
     return re.sub(r'[\r\n]+', ' ', text)
+
+
 # def clean_formatting(text):
 #     """
 #     This function simulates the behavior of text pasted into Google search:
@@ -897,6 +953,7 @@ def validate_token(token):
     except jwt.InvalidTokenError:
         raise InvalidTokenException()
 
+
 def parse_from_string(escaped_code: str) -> str:
     """
     Convert a string containing escape sequences into its normal representation.
@@ -942,6 +999,7 @@ async def read_file_util(filename, technical_id):
         logger.exception("Error during reading file")
         return f"Error during reading file: {e}"
 
+
 def wrap_response_by_extension(filename: str, response: str) -> str:
     """
     Wrap the given response string in a Markdown code fence based on the file extension of filename.
@@ -983,6 +1041,7 @@ def wrap_response_by_extension(filename: str, response: str) -> str:
     else:
         # Fallback to a generic code block if unknown extension
         return f"```\n{response}\n```"
+
 
 def _post_process_response(response: str, config: dict) -> str:
     """

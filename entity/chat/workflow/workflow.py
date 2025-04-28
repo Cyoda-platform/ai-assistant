@@ -62,28 +62,26 @@ class ChatWorkflow(Workflow):
             await new_file.write(updated_content)
         await _git_push(technical_id, [file_name], "Added env file template")
 
-    # todo!
-    async def deploy_app(self, token, _event, chat):
-        chat_id = chat["chat_id"]
+
+    async def schedule_deploy_env(self, technical_id, entity: ChatEntity, **params):
+        chat_id = technical_id["chat_id"]
         data = json.dumps({
             "chat_id": str(chat_id),
-            "user_name": str(chat["user_id"]),
+            "user_name": str(entity.get("user_id")),
             "is_public": "true",
             "repository_url": REPOSITORY_URL,
             "branch": str(chat_id)
         })
-
-        deployment_type = _event["function"]["input"]["deployment_type"]
-        deploy_url = CYODA_DEPLOY_DICT.get(deployment_type)
-        resp = await send_post_request(token=token, api_url=deploy_url, path='', data=data)
+        deploy_url = CYODA_DEPLOY_DICT.get(DEPLOY_CYODA_ENV)
+        resp = await send_post_request(token=self.cyoda_auth_service, api_url=deploy_url, path='', data=data)
         build_id = resp.get("build_id")
-        _event["function"]["output"]["build_id"] = build_id
+        entity["function"]["output"]["build_id"] = build_id
 
         if not build_id:
             raise ValueError("No build_id found in the initial response")
 
         # Schedule the status check as a background task and exit deploy_app immediately
-        asyncio.create_task(self._check_status_and_notify(token, build_id, chat, _event))
+        #asyncio.create_task(self._check_status_and_notify(token, build_id, chat, _event))
         return build_id  # or any other immediate response you wish to send
 
     # todo!
