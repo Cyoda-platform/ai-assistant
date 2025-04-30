@@ -1,6 +1,8 @@
 from typing import Dict, Any, Optional, List, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
+from common.config.config import ScheduledAction
+
 
 class WorkflowEntity(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -8,6 +10,7 @@ class WorkflowEntity(BaseModel):
     current_transition: Optional[str] = None
     current_state: Optional[str] = None
     user_id: str
+    workflow_name: Optional[str] = None
     workflow_cache: Optional[Dict[str, Any]] = {}
     edge_messages_store: Optional[Dict[str, Any]] = {}
 
@@ -46,7 +49,6 @@ class ChatFlow(BaseModel):
 class AgenticFlowEntity(WorkflowEntity):
     model_config = ConfigDict(extra="ignore")
     chat_id: Optional[str] = ""
-    workflow_name: Optional[str] = ""
     memory_id: str
     questions_queue_id: Optional[str] = None
     chat_flow: Optional[ChatFlow] = ChatFlow()
@@ -65,6 +67,7 @@ class SchedulerEntity(WorkflowEntity):
     model_config = ConfigDict(extra="ignore")
     awaited_entity_ids: Optional[List[str]] = []
     triggered_entity_id: str = ""
+    scheduled_action: Optional[str] = ScheduledAction.SCHEDULE_ENTITIES_FLOW.value
 
 
 class QuestionsQueue(WorkflowEntity):

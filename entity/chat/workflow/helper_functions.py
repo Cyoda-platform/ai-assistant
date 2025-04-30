@@ -16,7 +16,7 @@ from common.util.utils import get_project_file_name, read_file, format_json_if_n
     _save_file, current_timestamp
 from entity.chat.data.data import PUSHED_CHANGES_NOTIFICATION
 from entity.chat.model.chat import ChatEntity
-from entity.model.model import SchedulerEntity, FlowEdgeMessage
+from entity.model.model import SchedulerEntity, FlowEdgeMessage, ScheduledAction
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class WorkflowHelperService:
     def __init__(self, cyoda_auth_service, mock=False):
         self.mock = mock
-        self.cyoda_auth_service=cyoda_auth_service
+        self.cyoda_auth_service = cyoda_auth_service
 
     if MOCK_AI == "true":
         # generate_mock_data()
@@ -456,17 +456,16 @@ class WorkflowHelperService:
             }
         })
         if user_request:
-
             user_request_message_id = await add_answer_to_finished_flow(entity_service=entity_service,
-                                              answer=user_request,
-                                              chat=child_entity,
-                                              cyoda_auth_service=self.cyoda_auth_service)
+                                                                        answer=user_request,
+                                                                        cyoda_auth_service=self.cyoda_auth_service,
+                                                                        publish=False)
 
             child_entity.chat_flow.finished_flow.append(FlowEdgeMessage(type="answer",
-                                                                publish=True,
-                                                                edge_message_id=user_request_message_id,
-                                                                consumed=False,
-                                                                user_id=entity.user_id))
+                                                                        publish=True,
+                                                                        edge_message_id=user_request_message_id,
+                                                                        consumed=False,
+                                                                        user_id=entity.user_id))
 
         child_technical_id = await entity_service.add_item(token=self.cyoda_auth_service,
                                                            entity_model=entity_model,
@@ -480,12 +479,15 @@ class WorkflowHelperService:
     async def launch_scheduled_workflow(self,
                                         entity_service,
                                         awaited_entity_ids,
-                                        triggered_entity_id):
+                                        triggered_entity_id,
+                                        scheduled_action: ScheduledAction = ScheduledAction.SCHEDULE_ENTITIES_FLOW):
 
         child_entity: SchedulerEntity = SchedulerEntity.model_validate({
             "user_id": "system",
+            "workflow_name": SCHEDULER_ENTITY,
             "awaited_entity_ids": awaited_entity_ids,
-            "triggered_entity_id": triggered_entity_id
+            "triggered_entity_id": triggered_entity_id,
+            "scheduled_action": scheduled_action.value
         })
 
         child_technical_id = await entity_service.add_item(token=self.cyoda_auth_service,

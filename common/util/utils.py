@@ -488,7 +488,7 @@ async def send_cyoda_request(
 
 
 async def send_get_request(token: str, api_url: str, path: str) -> Optional[Any]:
-    url = f"{api_url}/{path}"
+    url = f"{api_url}/{path}" if path else api_url
     token = f"Bearer {token}" if not token.startswith('Bearer') else token
     headers = {
         "Content-Type": "application/json",
@@ -537,7 +537,7 @@ async def send_request(headers, url, method, data=None, json=None):
 
 
 async def send_post_request(token: str, api_url: str, path: str, data=None, json=None) -> Optional[Any]:
-    url = f"{api_url}/{path}"
+    url = f"{api_url}/{path}" if path else api_url
     token = f"Bearer {token}" if not token.startswith('Bearer') else token
     headers = {
         "Content-Type": "application/json",
@@ -552,7 +552,7 @@ async def send_post_request(token: str, api_url: str, path: str, data=None, json
 
 
 async def send_put_request(token: str, api_url: str, path: str, data=None, json=None) -> Optional[Any]:
-    url = f"{api_url}/{path}"
+    url = f"{api_url}/{path}" if path else api_url
     token = f"Bearer {token}" if not token.startswith('Bearer') else token
     headers = {
         "Content-Type": "application/json",
@@ -568,7 +568,7 @@ async def send_put_request(token: str, api_url: str, path: str, data=None, json=
 
 
 async def send_delete_request(token: str, api_url: str, path: str) -> Optional[Any]:
-    url = f"{api_url}/{path}"
+    url = f"{api_url}/{path}" if path else api_url
     token = f"Bearer {token}" if not token.startswith('Bearer') else token
     headers = {
         "Content-Type": "application/json",

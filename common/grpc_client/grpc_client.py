@@ -186,7 +186,7 @@ class GrpcClient:
                 self.auth.invalidate_tokens()
                 # backoff briefly before reconnecting
                 await asyncio.sleep(1)
-                return await self.consume_stream()
+                await self.consume_stream()
             else:
                 logger.exception("gRPC error in consume_stream")
                 await asyncio.sleep(1)

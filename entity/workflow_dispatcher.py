@@ -102,6 +102,12 @@ class WorkflowDispatcher:
         finished_flow = entity.chat_flow.finished_flow
         child_entities_size_before = len(entity.child_entities)
 
+        if config_type == "notification" and config.get("notification"):
+            config["notification"] = config["notification"].format(**entity.workflow_cache)
+
+        if config_type == "question" and config.get("question"):
+            config["question"] = config["question"].format(**entity.workflow_cache)
+
         if config_type == "function":
             params = config["function"].get("parameters", {})
             response = await self.methods_dict[config["function"]["name"]](self.cls_instance,

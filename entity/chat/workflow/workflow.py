@@ -1,5 +1,4 @@
 import json
-import asyncio
 import logging
 import os
 import httpx
@@ -11,11 +10,13 @@ from typing import Any
 from common.ai.nltk_service import get_most_similar_entity
 from common.config.conts import *
 from common.config.config import MOCK_AI, \
-    REPOSITORY_URL, CYODA_DEPLOY_DICT, CHECK_DEPLOY_INTERVAL, ENTITY_VERSION, GOOGLE_SEARCH_KEY, \
-    GOOGLE_SEARCH_CX, PROJECT_DIR, REPOSITORY_NAME, MAX_ITERATION, CYODA_ENTITY_TYPE_EDGE_MESSAGE, DATA_REPOSITORY_URL
+    ENTITY_VERSION, GOOGLE_SEARCH_KEY, \
+    GOOGLE_SEARCH_CX, PROJECT_DIR, REPOSITORY_NAME, MAX_ITERATION, CYODA_ENTITY_TYPE_EDGE_MESSAGE, DATA_REPOSITORY_URL, \
+    CLIENT_HOST, CLIENT_QUART_TEMPLATE_REPOSITORY_URL, ScheduledAction, ACTION_URL_MAP
+from common.exception.exceptions import GuestChatsLimitExceededException
 from common.util.chat_util_functions import _launch_transition
 from common.util.utils import get_project_file_name, _git_push, _save_file, clone_repo, \
-    send_post_request, send_get_request, parse_from_string, read_file_util
+     parse_from_string, read_file_util, send_cyoda_request
 from entity.chat.data.data import BRANCH_READY_NOTIFICATION
 from entity.chat.data.workflow_prototype.batch_converter import convert_state_diagram_to_jsonl_dataset
 from entity.chat.data.workflow_prototype.batch_parallel_code import build_workflow_from_jsonl
@@ -44,7 +45,7 @@ class ChatWorkflow(Workflow):
         self.entity_service = entity_service
         self.mock = mock
         self.scheduler = scheduler
-        self.cyoda_auth_service=cyoda_auth_service
+        self.cyoda_auth_service = cyoda_auth_service
 
     async def finish_app_generation_flow(self, technical_id, entity: ChatEntity, **params):
         pass
@@ -61,65 +62,102 @@ class ChatWorkflow(Workflow):
         async with aiofiles.open(file_name, 'w') as new_file:
             await new_file.write(updated_content)
         await _git_push(technical_id, [file_name], "Added env file template")
+#todo need to refactor and add a different service for cloud manager integration
+    async def _schedule_deploy(
+            self,
+            technical_id: str,
+            entity: ChatEntity,
+            scheduled_action: ScheduledAction,
+            extra_payload: dict | None = None
+    ) -> str:
+        # Determine endpoint from action
+        try:
+            base_url = ACTION_URL_MAP[scheduled_action]
+        except KeyError:
+            raise ValueError(f"Unsupported scheduled action: {scheduled_action}")
 
+        # Prepare request payload
+        payload = {
+            "chat_id": str(technical_id),
+            "user_name": str(entity.user_id)
+        }
+        if extra_payload:
+            payload.update(extra_payload)
 
-    async def schedule_deploy_env(self, technical_id, entity: ChatEntity, **params):
-        chat_id = technical_id["chat_id"]
-        data = json.dumps({
-            "chat_id": str(chat_id),
-            "user_name": str(entity.get("user_id")),
-            "is_public": "true",
-            "repository_url": REPOSITORY_URL,
-            "branch": str(chat_id)
-        })
-        deploy_url = CYODA_DEPLOY_DICT.get(DEPLOY_CYODA_ENV)
-        resp = await send_post_request(token=self.cyoda_auth_service, api_url=deploy_url, path='', data=data)
-        build_id = resp.get("build_id")
-        entity["function"]["output"]["build_id"] = build_id
+        data = json.dumps(payload)
+        # Send the deployment request
+        resp = await send_cyoda_request(
+            cyoda_auth_service=self.cyoda_auth_service,
+            method="post",
+            base_url=base_url,
+            path='',
+            data=data
+        )
 
+        # Validate response
+        build_info = resp.get("json", {})
+        build_id = build_info.get("build_id")
         if not build_id:
-            raise ValueError("No build_id found in the initial response")
+            raise ValueError("No build_id found in the response")
 
-        # Schedule the status check as a background task and exit deploy_app immediately
-        #asyncio.create_task(self._check_status_and_notify(token, build_id, chat, _event))
-        return build_id  # or any other immediate response you wish to send
+        # Schedule the workflow
+        scheduled_entity_id = await self.workflow_helper_service.launch_scheduled_workflow(
+            entity_service=self.entity_service,
+            awaited_entity_ids=[build_id],
+            triggered_entity_id=technical_id,
+            scheduled_action=scheduled_action
+        )
+        entity.scheduled_entities.append(scheduled_entity_id)
 
-    # todo!
-    async def _check_status_and_notify(self, token, build_id, chat, _event):
-        while True:
-            status_url = f"{CYODA_DEPLOY_DICT.get(DEPLOY_STATUS)}?build_id={build_id}"
-            status_resp = await send_get_request(token, status_url)
-            state = status_resp.get("state")
-            if state in ("success", "finished"):
-                logger.info("Deployment finished!")
-                break
-            elif state == "running":
-                logger.info(
-                    f"Deployment status: {status_resp.get('status')}. Checking again in {CHECK_DEPLOY_INTERVAL} seconds...")
-            else:
-                logger.error(f"Unknown status: {state}")
-                break
-            await asyncio.sleep(CHECK_DEPLOY_INTERVAL)  # Wait for 3 minutes before checking again
+        return f"Successfully scheduled {scheduled_action.value.replace('_', ' ')} with build ID {build_id}"
 
-        deployment_status = f"Deployment status: {json.dumps(status_resp)}"
-        chat["chat_flow"]["finished_flow"].append(
-            self.workflow_helper_service.get_event_template(notification=deployment_status,
-                                                            event=_event,
-                                                            question='',
-                                                            answer='',
-                                                            publish=True))
-        # todo
-        # chat["questions_queue"]["new_questions"].append({
-        #     "notification": deployment_status,
-        # })
-        chat_id = chat['chat_id']
-        await self.entity_service.update_item(token=token,
-                                              entity_model=CHAT_MODEL_NAME,
-                                              entity_version=ENTITY_VERSION,
-                                              technical_id=chat_id,
-                                              entity=chat,
-                                              meta={})
-        await _save_file(chat_id=chat_id, _data=json.dumps(chat), item="entity/chat.json")
+    async def schedule_deploy_env(
+            self,
+            technical_id: str,
+            entity: ChatEntity,
+            **params
+    ) -> str:
+        return await self._schedule_deploy(
+            technical_id,
+            entity,
+            scheduled_action=ScheduledAction.SCHEDULE_CYODA_ENV_DEPLOY
+        )
+
+    async def schedule_build_user_application(
+            self,
+            technical_id: str,
+            entity: ChatEntity,
+            **params
+    ) -> str:
+        extra_payload = {
+            "repository_url": CLIENT_QUART_TEMPLATE_REPOSITORY_URL,
+            "branch": entity.workflow_cache.get(GIT_BRANCH_PARAM),
+            "is_public": "true"
+        }
+        return await self._schedule_deploy(
+            technical_id,
+            entity,
+            scheduled_action=ScheduledAction.SCHEDULE_USER_APP_BUILD,
+            extra_payload=extra_payload
+        )
+
+    async def schedule_deploy_user_application(
+            self,
+            technical_id: str,
+            entity: ChatEntity,
+            **params
+    ) -> str:
+        extra_payload = {
+            "repository_url": CLIENT_QUART_TEMPLATE_REPOSITORY_URL,
+            "branch": entity.workflow_cache.get(GIT_BRANCH_PARAM),
+            "is_public": "true"
+        }
+        return await self._schedule_deploy(
+            technical_id,
+            entity,
+            scheduled_action=ScheduledAction.SCHEDULE_USER_APP_DEPLOY,
+            extra_payload=extra_payload
+        )
 
     async def clone_repo(self, technical_id, entity: ChatEntity, **params):
         """
@@ -350,6 +388,9 @@ class ChatWorkflow(Workflow):
     async def unlock_chat(self, technical_id: str, entity: ChatEntity, **params: Any):
         entity.locked = False
 
+    async def lock_chat(self, technical_id: str, entity: ChatEntity, **params: Any):
+        entity.locked = True
+
     # =================================== generating_gen_app_workflow =============================
 
     async def register_workflow_with_app(self, technical_id, entity: AgenticFlowEntity, **params):
@@ -362,7 +403,7 @@ class ChatWorkflow(Workflow):
             try:
                 input_code = input_code.replace("```python", "")
                 input_code = input_code.replace("```", "")
-                #todo might return empty
+                # todo might return empty
                 code_without_workflow, workflow_json = analyze_code_with_libcst(input_code)
             except Exception as e:
                 # todo add retry here
@@ -474,14 +515,14 @@ class ChatWorkflow(Workflow):
             item=f"entity/{entity.workflow_cache.get('entity_name')}/workflow.json"
         )
 
-# =================================== generating_gen_app_workflow end =============================
-# ==================================== scheduler flow =======================================
+    # =================================== generating_gen_app_workflow end =============================
+    # ==================================== scheduler flow =======================================
 
     async def schedule_workflow_tasks(self, technical_id, entity: SchedulerEntity, **params):
         result = self.scheduler.schedule_workflow_task(technical_id=technical_id,
-                                                       awaited_entity_ids=entity.awaited_entity_ids)
+                                                       awaited_entity_ids=entity.awaited_entity_ids,
+                                                       scheduled_action=ScheduledAction(entity.scheduled_action))
         return result
-
 
     async def trigger_parent_entity(self, technical_id, entity: SchedulerEntity, **params):
         "design_workflow_from_code"
@@ -500,17 +541,18 @@ class ChatWorkflow(Workflow):
         entities_description = []
         project_entities_list = await self.get_entities_list(branch_id=git_branch_id)
         for project_entity in project_entities_list:
-            workflow_code = await read_file_util(technical_id=git_branch_id, filename=f"entity/{project_entity}/workflow.py")
+            workflow_code = await read_file_util(technical_id=git_branch_id,
+                                                 filename=f"entity/{project_entity}/workflow.py")
             entities_description.append({project_entity: workflow_code})
 
         workflow_cache = {
             'user_request': params.get("user_request")
         }
         app_api_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
-                                                             entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
-                                                             entity_version=ENTITY_VERSION,
-                                                             entity=app_api,
-                                                             meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                        entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                        entity_version=ENTITY_VERSION,
+                                                        entity=app_api,
+                                                        meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
 
         entities_description_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                                      entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
@@ -533,7 +575,7 @@ class ChatWorkflow(Workflow):
 
         return f"Successfully scheduled workflow for updating user application {child_technical_id}"
 
-#========== general function
+    # ========== general function
 
     async def get_cyoda_guidelines(
             self, technical_id: str, entity: AgenticFlowEntity, **params
@@ -541,8 +583,7 @@ class ChatWorkflow(Workflow):
         url = f"{DATA_REPOSITORY_URL}/get_cyoda_guidelines/{params.get("workflow_name")}.adoc"
         return await self._fetch_data(url=url)
 
-#==========
-
+    # ==========
 
     async def _schedule_workflow(
             self,
@@ -555,7 +596,8 @@ class ChatWorkflow(Workflow):
     ) -> str:
         # Clone the repo based on branch ID if provided
         git_branch_id = params.get(GIT_BRANCH_PARAM)
-        await clone_repo(chat_id=git_branch_id)
+        if git_branch_id:
+            await clone_repo(chat_id=git_branch_id)
 
         # One-off resolution for workflows that need an entity_name
         if resolve_entity_name:
@@ -581,7 +623,43 @@ class ChatWorkflow(Workflow):
             f"{child_technical_id}"
         )
 
-#==========================editing========================================
+
+    #==========================deploy================================
+    async def deploy_cyoda_env(
+            self, technical_id: str, entity: AgenticFlowEntity, **params
+    ) -> str:
+        if entity.user_id.startswith('guest'):
+            raise GuestChatsLimitExceededException()
+        #todo cloud manager needs to return namespace
+        params['cyoda_env_name'] = f"{entity.user_id.lower()}.{CLIENT_HOST}"
+        return await self._schedule_workflow(
+            technical_id=technical_id,
+            entity=entity,
+            entity_model=CHAT_MODEL_NAME,
+            workflow_name=DEPLOY_CYODA_ENV_FLOW,
+            params=params,
+        )
+
+
+    async def deploy_user_application(
+            self, technical_id: str, entity: AgenticFlowEntity, **params
+    ) -> str:
+        if entity.user_id.startswith('guest'):
+            raise GuestChatsLimitExceededException()
+
+        # todo cloud manager needs to return namespace
+        params['cyoda_env_name'] = f"{entity.user_id.lower()}.{CLIENT_HOST}"
+
+        return await self._schedule_workflow(
+            technical_id=technical_id,
+            entity=entity,
+            entity_model=CHAT_MODEL_NAME,
+            workflow_name=DEPLOY_USER_APP_FLOW,
+            params=params,
+        )
+
+
+    # ==========================editing========================================
     async def add_new_entity_for_existing_app(
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
@@ -653,12 +731,7 @@ class ChatWorkflow(Workflow):
     def parse_from_string(self, escaped_code: str) -> str:
         return escaped_code.encode("utf-8").decode("unicode_escape")
 
-
-
     async def _resolve_entity_name(self, entity_name: str, branch_id: str) -> str:
         entity_names = await self.get_entities_list(branch_id=branch_id)
         resolved_name = get_most_similar_entity(target=entity_name, entity_list=entity_names)
         return resolved_name if resolved_name else entity_name
-
-
-

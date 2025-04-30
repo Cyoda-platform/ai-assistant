@@ -20,7 +20,7 @@ from common.config.config import MOCK_AI, ENTITY_VERSION, API_PREFIX, MAX_TEXT_S
     MAX_FILE_SIZE, CHAT_REPOSITORY, RAW_REPOSITORY_URL, AUTH_SECRET_KEY, \
     CYODA_ENTITY_TYPE_EDGE_MESSAGE, MAX_GUEST_CHATS, ENABLE_AUTH, CYODA_API_URL, GUEST_TOKEN_LIMIT
 from common.config.conts import FLOW_EDGE_MESSAGE_MODEL_NAME, \
-    CHAT_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, RATE_LIMIT, APPROVE, TRANSFER_CHATS_ENTITY
+    CHAT_MODEL_NAME, MEMORY_MODEL_NAME, RATE_LIMIT, APPROVE, TRANSFER_CHATS_ENTITY
 from common.exception.exceptions import ChatNotFoundException, InvalidTokenException, RequestLimitExceededException, \
     TokenExpiredException, GuestChatsLimitExceededException
 from common.service.entity_service_interface import EntityService
@@ -75,15 +75,20 @@ grpc_thread.start()
 
 
 @app.before_serving
-async def add_cors_headers():
+async def configure_app():
     @app.after_request
     async def apply_cors(response):
-        # Set CORS headers for all HTTP requests
-        response.headers['Access-Control-Allow-Origin'] = '*'  # Allow all origins
-        response.headers['Access-Control-Allow-Methods'] = 'GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE'  # Allow these methods
-        response.headers['Access-Control-Allow-Headers'] = '*'  # Allow these headers
-        response.headers['Access-Control-Allow-Credentials'] = 'true'  # Allow credentials
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response.headers['Access-Control-Allow-Credentials'] = 'true'
         return response
+
+    # Handle OPTIONS requests for all routes
+    @app.route("/<path:path>", methods=["OPTIONS"])
+    @app.route("/", methods=["OPTIONS"])
+    async def options_handler(path=None):
+        return "", 204
 
     # await init_cyoda(cyoda_auth_service)
     logger.info("Starting gRPC stream on a dedicated background thread.")
@@ -290,12 +295,18 @@ async def get_chat(technical_id):
     }
     return jsonify({"chat_body": chats_view})
 
+
+@app.route(API_PREFIX + '/get_guest_token', methods=['OPTIONS'])
+async def get_guest_token_preflight():
+    return jsonify({})
+
 @app.route(API_PREFIX + '/get_guest_token', methods=['GET'])
 @rate_limit(limit=GUEST_TOKEN_LIMIT, period=timedelta(weeks=50))
 async def get_guest_token():
     session_id = uuid.uuid4()
     payload = {
         "sub": f"guest.{session_id}",
+        "caas_org_id": f"guest.{session_id}",
         "iat": datetime.datetime.utcnow(),
         "exp": datetime.datetime.utcnow() + datetime.timedelta(weeks=50)
     }
@@ -405,7 +416,6 @@ async def add_chat():
 
     answer_message_id = await add_answer_to_finished_flow(entity_service=entity_service,
                                                           answer=init_question,
-                                                          chat=chat_entity,
                                                           cyoda_auth_service=cyoda_auth_service)
 
     chat_entity.chat_flow.finished_flow.append(FlowEdgeMessage(type="answer",
@@ -589,12 +599,18 @@ async def _validate_chat_owner(chat, user_id):
 
 def _get_user_id(auth_header):
     try:
+        if not auth_header:
+            raise InvalidTokenException()
         token = auth_header.split(" ")[1]
+        if not token:
+            raise InvalidTokenException()
         # Decode the JWT without verifying the signature
         # The `verify=False` option ensures that we do not verify the signature
         # This is useful for extracting the payload only.
         decoded = jwt.decode(token, options={"verify_signature": False})
-        user_id = decoded.get("sub")
+        user_id = decoded.get("caas_org_id")
+        if not user_id:
+            raise InvalidTokenException()
         if user_id.startswith('guest.'):
             validate_token(token)
         return user_id

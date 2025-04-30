@@ -1,10 +1,11 @@
 import os
 import base64
+from enum import Enum
+
 from dotenv import load_dotenv
 
-from common.config.conts import DEPLOY_CYODA_ENV, DEPLOY_USER_APP, DEPLOY_STATUS
-
 load_dotenv()  # Loads the .env file automatically from the current working directory
+
 
 def get_env(key, default=None):
     """Get the environment variable for 'key'.
@@ -13,6 +14,7 @@ def get_env(key, default=None):
     if value is None:
         raise Exception(f"{key} not found")
     return value
+
 
 CYODA_HOST = get_env("CYODA_HOST")
 CYODA_AI_URL = os.getenv("CYODA_AI_URL", f"https://{CYODA_HOST}/ai")
@@ -41,7 +43,7 @@ VALIDATION_MAX_RETRIES = int(get_env("VALIDATION_MAX_RETRIES"))
 MAX_ITERATION = int(os.getenv("MAX_ITERATION", 30))
 MAX_AI_AGENT_ITERATIONS = int(os.getenv("MAX_AI_AGENT_ITERATIONS", 20))
 MAX_GUEST_CHATS = int(os.getenv("MAX_GUEST_CHATS", 2))
-CHECK_DEPLOY_INTERVAL = int(os.getenv("CHECK_DEPLOY_INTERVAL", 60))
+CHECK_DEPLOY_INTERVAL = int(os.getenv("CHECK_DEPLOY_INTERVAL", 30))
 NUM_MOCK_ARR_ITEMS = int(get_env("NUM_MOCK_ARR_ITEMS"))
 REPOSITORY_NAME = get_env("REPOSITORY_URL").split('/')[-1].replace('.git', '')
 CHAT_REPOSITORY = os.getenv("CHAT_REPOSITORY", "local")
@@ -54,15 +56,31 @@ DATA_REPOSITORY_URL = get_env("DATA_REPOSITORY_URL")
 GOOGLE_SEARCH_KEY = get_env("GOOGLE_SEARCH_KEY")
 GOOGLE_SEARCH_CX = get_env("GOOGLE_SEARCH_CX")
 AUTH_SECRET_KEY = get_env("AUTH_SECRET_KEY")
-CYODA_DEPLOY_DICT = {
-    DEPLOY_CYODA_ENV: os.getenv("DEPLOY_CYODA_ENV", f"https://infra-{CYODA_HOST}/deploy/cyoda-env"),
-    DEPLOY_USER_APP: os.getenv("DEPLOY_USER_APP", f"https://infra-{CYODA_HOST}/deploy/user_app"),
-    DEPLOY_STATUS: os.getenv("DEPLOY_STATUS", f"https://infra-{CYODA_HOST}/deploy/cyoda-env/status")
-}
-MAX_IPS_PER_DEVICE_BEFORE_BLOCK=int(os.getenv("MAX_IPS_PER_DEVICE_BEFORE_BLOCK", 300))
-MAX_IPS_PER_DEVICE_BEFORE_ALARM=int(os.getenv("MAX_IPS_PER_DEVICE_BEFORE_ALARM", 100))
-MAX_SESSIONS_PER_IP=int(os.getenv("MAX_SESSIONS_PER_IP", 100))
-GENERAL_MEMORY_TAG="general_memory_tag"
-CYODA_ENTITY_TYPE_TREE="TREE"
-CYODA_ENTITY_TYPE_EDGE_MESSAGE="EDGE_MESSAGE"
+CLOUD_MANAGER_HOST = get_env("CLOUD_MANAGER_HOST")
+DEPLOY_CYODA_ENV = os.getenv("DEPLOY_CYODA_ENV", f"https://{CLOUD_MANAGER_HOST}/deploy/cyoda-env")
+DEPLOY_USER_APP = os.getenv("DEPLOY_USER_APP", f"https://{CLOUD_MANAGER_HOST}/deploy/user-app")
+BUILD_USER_APP = os.getenv("DEPLOY_USER_APP", f"https://{CLOUD_MANAGER_HOST}/build/user-app")
+DEPLOY_CYODA_ENV_STATUS = os.getenv("DEPLOY_CYODA_ENV_STATUS", f"https://{CLOUD_MANAGER_HOST}/deploy/cyoda-env/status")
+DEPLOY_USER_APP_STATUS = os.getenv("DEPLOYUSER_APP_STATUS", f"https://{CLOUD_MANAGER_HOST}/deploy/user-app/status")
+MAX_IPS_PER_DEVICE_BEFORE_BLOCK = int(os.getenv("MAX_IPS_PER_DEVICE_BEFORE_BLOCK", 300))
+MAX_IPS_PER_DEVICE_BEFORE_ALARM = int(os.getenv("MAX_IPS_PER_DEVICE_BEFORE_ALARM", 100))
+MAX_SESSIONS_PER_IP = int(os.getenv("MAX_SESSIONS_PER_IP", 100))
+GENERAL_MEMORY_TAG = "general_memory_tag"
+CYODA_ENTITY_TYPE_TREE = "TREE"
+CYODA_ENTITY_TYPE_EDGE_MESSAGE = "EDGE_MESSAGE"
 GUEST_TOKEN_LIMIT = int(get_env("GUEST_TOKEN_LIMIT", "10"))
+CLIENT_HOST=get_env("CLIENT_HOST")
+CLIENT_QUART_TEMPLATE_REPOSITORY_URL=os.getenv("CLIENT_REPOSITORY_URL", "https://github.com/Cyoda-platform/quart-client-template.git")
+
+class ScheduledAction(str, Enum):
+    SCHEDULE_ENTITIES_FLOW = "schedule_entities_flow"
+    SCHEDULE_CYODA_ENV_DEPLOY = "schedule_cyoda_env_deploy"
+    SCHEDULE_USER_APP_DEPLOY = "schedule_user_app_deploy"
+    SCHEDULE_USER_APP_BUILD = "schedule_user_app_build"
+
+
+ACTION_URL_MAP: dict[ScheduledAction, str] = {
+    ScheduledAction.SCHEDULE_CYODA_ENV_DEPLOY: DEPLOY_CYODA_ENV,
+    ScheduledAction.SCHEDULE_USER_APP_BUILD: BUILD_USER_APP,
+    ScheduledAction.SCHEDULE_USER_APP_DEPLOY: DEPLOY_USER_APP,
+}

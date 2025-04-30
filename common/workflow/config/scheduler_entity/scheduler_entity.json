@@ -1,5 +1,6 @@
 {
   "initial_state": "none",
+  "workflow_name": "scheduler_entity",
   "states": {
     "uninitialized": {
       "transitions": {
