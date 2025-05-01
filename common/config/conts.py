@@ -60,6 +60,8 @@ APPROVE = "let's proceed to the next iteration immediately: set require addition
 RATE_LIMIT = 300
 SCHEDULER_CHECK_INTERVAL=60
 
+MANUAL_RETRY_TRANSITION = "manual_retry"
+
 class GetCyodaGuidelinesData(str, Enum):
     GENERATE_WORKFLOW = "generate_workflow"
     GENERATE_PROCESSORS = "generate_processors"

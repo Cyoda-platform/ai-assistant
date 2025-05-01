@@ -20,11 +20,12 @@ from common.config.config import MOCK_AI, ENTITY_VERSION, API_PREFIX, MAX_TEXT_S
     MAX_FILE_SIZE, CHAT_REPOSITORY, RAW_REPOSITORY_URL, AUTH_SECRET_KEY, \
     CYODA_ENTITY_TYPE_EDGE_MESSAGE, MAX_GUEST_CHATS, ENABLE_AUTH, CYODA_API_URL, GUEST_TOKEN_LIMIT
 from common.config.conts import FLOW_EDGE_MESSAGE_MODEL_NAME, \
-    CHAT_MODEL_NAME, MEMORY_MODEL_NAME, RATE_LIMIT, APPROVE, TRANSFER_CHATS_ENTITY
+    CHAT_MODEL_NAME, MEMORY_MODEL_NAME, RATE_LIMIT, APPROVE, TRANSFER_CHATS_ENTITY, MANUAL_RETRY_TRANSITION
 from common.exception.exceptions import ChatNotFoundException, InvalidTokenException, RequestLimitExceededException, \
     TokenExpiredException, GuestChatsLimitExceededException
 from common.service.entity_service_interface import EntityService
-from common.util.chat_util_functions import trigger_manual_transition, get_user_message, add_answer_to_finished_flow
+from common.util.chat_util_functions import trigger_manual_transition, get_user_message, add_answer_to_finished_flow, \
+    _launch_transition
 from common.util.utils import current_timestamp, clone_repo, \
     validate_token, send_get_request
 from entity.chat.data.data import APP_BUILDER_FLOW, \
@@ -486,18 +487,16 @@ async def approve(technical_id):
     chat = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
     return await _submit_answer_helper(answer=APPROVE, chat=chat)
 
-
+#moved to retry
 @app.route(API_PREFIX + '/chats/<technical_id>/rollback', methods=['POST'])
-@auth_required
+@auth_required_to_proceed
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def rollback(technical_id):
     auth_header = request.headers.get('Authorization')
-    req_data = await request.get_json()
-    if not req_data.get('question') or not req_data.get('stack'):
-        return jsonify({"error": ADDITIONAL_QUESTION_ROLLBACK_WARNING}), 400
-    question = req_data.get('question') if req_data else None
-    chat = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
-    return await rollback_dialogue_script(technical_id, auth_header, chat, question)
+    #check the user is authorised to access the chat
+    await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
+    await rollback_dialogue_script(technical_id=technical_id)
+    return jsonify({"message": "Successfully restarted the workflow"}), 200
 
 
 @app.route(API_PREFIX + '/chats/<technical_id>/text-answers', methods=['POST'])
@@ -676,7 +675,7 @@ async def _submit_question_helper(auth_header, technical_id, chat, question, use
         question = await get_user_message(message=question, user_file=user_file)
 
     # Call AI service with the file
-    result = await ai_agent.run(
+    result = await ai_agent.run_agent(
         methods_dict=None,
         cls_instance=None,
         entity=chat,
@@ -691,6 +690,8 @@ async def _submit_question_helper(auth_header, technical_id, chat, question, use
 
 
 async def _submit_answer_helper(answer, chat: ChatEntity, user_file=None):
+    if chat.user_id.startswith('guest.') and chat.chat_flow and chat.chat_flow.finished_flow and len(chat.chat_flow.finished_flow)>300:
+        return jsonify({"error": "Maximum number of messages achieved. Please sign in to proceed"}), 403
     is_valid, validated_answer = _validate_answer(answer=answer, user_file=user_file)
     if not is_valid:
         return jsonify({"message": validated_answer}), 400
@@ -705,8 +706,12 @@ async def _submit_answer_helper(answer, chat: ChatEntity, user_file=None):
     return jsonify({"answer_technical_id": edge_message_id}), 200
 
 
-async def rollback_dialogue_script(technical_id, auth_header, chat: ChatEntity, question):
-    pass
+async def rollback_dialogue_script(technical_id):
+    await _launch_transition(entity_service=entity_service,
+                             technical_id=technical_id,
+                             cyoda_auth_service=cyoda_auth_service,
+                             entity=None,
+                             transition=MANUAL_RETRY_TRANSITION)
 
 
 def _validate_answer(answer, user_file):
@@ -718,8 +723,7 @@ def _validate_answer(answer, user_file):
 
 async def process_message(finished_flow: List[FlowEdgeMessage], auth_header, dialogue: list) -> list:
     for message in finished_flow:
-        if ((message.type in ["question", "notification"] and getattr(message, "publish", False))
-                or message.type == "answer"):
+        if message.type in ["question", "notification", "answer"] and getattr(message, "publish", False):
             message_content = await entity_service.get_item(
                 token=cyoda_auth_service,
                 entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,

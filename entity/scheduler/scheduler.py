@@ -2,10 +2,11 @@ import asyncio
 import logging
 
 from common.config.config import ENTITY_VERSION, CHECK_DEPLOY_INTERVAL, DEPLOY_CYODA_ENV_STATUS, DEPLOY_USER_APP_STATUS, \
-    ScheduledAction
-from common.config.conts import SCHEDULER_CHECK_INTERVAL, LOCKED_CHAT
+    ScheduledAction, ACTION_SUCCESS_TRANSITIONS, ACTION_FAILURE_TRANSITIONS
+from common.config.conts import SCHEDULER_CHECK_INTERVAL, LOCKED_CHAT, SCHEDULER_ENTITY
 from common.util.chat_util_functions import _launch_transition
 from common.util.utils import send_cyoda_request
+from entity.model.model import SchedulerEntity
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -79,10 +80,26 @@ class WorkflowTask:
                     f"re-checking in {check_interval}s..."
                 )
             else:
+                scheduled_entity: SchedulerEntity = await self.entity_service.get_item(
+                    token=self.cyoda_auth_service,
+                    entity_model=SCHEDULER_ENTITY,
+                    entity_version=ENTITY_VERSION,
+                    technical_id=self.technical_id
+                )
+                # Determine whether we succeeded or failed
+                deploy_status = resp.get("json").get("status")
+                if deploy_status == "SUCCESS":
+                    transition_map = ACTION_SUCCESS_TRANSITIONS
+                else:
+                    transition_map = ACTION_FAILURE_TRANSITIONS
+
+                # Pick the right transition based on the scheduled action
+                scheduled_entity.triggered_entity_next_transition = transition_map.get(self.scheduled_action)
                 await _launch_transition(
                     entity_service=self.entity_service,
                     technical_id=self.technical_id,
-                    cyoda_auth_service=self.cyoda_auth_service
+                    cyoda_auth_service=self.cyoda_auth_service,
+                    entity=scheduled_entity
                 )
                 return
             await asyncio.sleep(check_interval)

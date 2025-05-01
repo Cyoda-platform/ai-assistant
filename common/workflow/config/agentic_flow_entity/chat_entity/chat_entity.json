@@ -722,6 +722,10 @@
     },
     "processed_question": {
       "transitions": {
+        "lock_chat_retry": {
+          "next": "locked_chat",
+          "manual": true
+        },
         "lock_chat": {
           "next": "locked_chat",
           "condition": {

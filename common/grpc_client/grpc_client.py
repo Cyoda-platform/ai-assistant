@@ -159,44 +159,56 @@ class GrpcClient:
         await queue.put(notif)
 
     async def consume_stream(self):
-        creds = self.get_grpc_credentials()
-        queue = asyncio.Queue()
+        backoff = 1
+        while True:
+            creds = self.get_grpc_credentials()
+            queue = asyncio.Queue()
 
-        try:
-            async with grpc.aio.secure_channel(config.GRPC_ADDRESS, creds) as channel:
-                stub = CloudEventsServiceStub(channel)
-                call = stub.startStreaming(self.event_generator(queue))
+            try:
+                async with grpc.aio.secure_channel(config.GRPC_ADDRESS, creds) as channel:
+                    stub = CloudEventsServiceStub(channel)
+                    call = stub.startStreaming(self.event_generator(queue))
 
-                async for response in call:
-                    if response.type == KEEP_ALIVE_EVENT_TYPE:
-                        await self.handle_keep_alive_event(response, queue)
-                    elif response.type == EVENT_ACK_TYPE:
-                        logger.debug(response)
-                    elif response.type in (CALC_REQ_EVENT_TYPE, CRITERIA_CALC_REQ_EVENT_TYPE):
-                        logger.info(f"Calc request: {response.type}")
-                        data = json.loads(response.text_data)
-                        await self.process_calc_req_event(data, queue, response.type)
-                    elif response.type == GREET_EVENT_TYPE:
-                        logger.info("Greet event received")
-                    else:
-                        logger.error(f"Unhandled event type: {response.type}")
-        except grpc.RpcError as e:
-            if e.code() == grpc.StatusCode.UNAUTHENTICATED:
-                logger.warning("Stream got UNAUTHENTICATED—invalidating tokens and retrying", exc_info=e)
-                self.auth.invalidate_tokens()
-                # backoff briefly before reconnecting
-                await asyncio.sleep(1)
-                await self.consume_stream()
-            else:
-                logger.exception("gRPC error in consume_stream")
-                await asyncio.sleep(1)
-                await self.consume_stream()
+                    async for response in call:
+                        if response.type == KEEP_ALIVE_EVENT_TYPE:
+                            await self.handle_keep_alive_event(response, queue)
+                        elif response.type == EVENT_ACK_TYPE:
+                            logger.debug(response)
+                        elif response.type in (CALC_REQ_EVENT_TYPE, CRITERIA_CALC_REQ_EVENT_TYPE):
+                            logger.info(f"Calc request: {response.type}")
+                            data = json.loads(response.text_data)
+                            await self.process_calc_req_event(data, queue, response.type)
+                        elif response.type == GREET_EVENT_TYPE:
+                            logger.info("Greet event received")
+                        else:
+                            logger.error(f"Unhandled event type: {response.type}")
+
+                # If we exit the stream cleanly, break out of the retry loop
+                return
+
+            except grpc.RpcError as e:
+                # UNAUTHENTICATED → invalidate tokens, then retry with fresh creds
+                if getattr(e, "code", lambda: None)() == grpc.StatusCode.UNAUTHENTICATED:
+                    logger.warning(
+                        "Stream got UNAUTHENTICATED—invalidating tokens and retrying",
+                        exc_info=e,
+                    )
+                    self.auth.invalidate_tokens()
+                else:
+                    # Log everything else and retry
+                    logger.exception("gRPC RpcError in consume_stream", exc_info=e)
+
+
+            except Exception as e:
+                # Catch-all for anything unexpected
+                logger.exception("Unexpected error in consume_stream", exc_info=e)
+
+            # back off and retry
+            await asyncio.sleep(backoff)
+            backoff = min(backoff * 2, 30)  # exponential backoff up to 30s
 
     async def grpc_stream(self):
         """
         Entry point: keeps the bidirectional stream alive, reconnecting on token revocations.
         """
-        while True:
-            await self.consume_stream()
-            logger.info("Reconnecting to gRPC stream")
-            await asyncio.sleep(1)  # brief backoff before retry
+        await self.consume_stream()

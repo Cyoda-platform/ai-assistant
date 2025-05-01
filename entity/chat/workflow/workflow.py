@@ -12,7 +12,8 @@ from common.config.conts import *
 from common.config.config import MOCK_AI, \
     ENTITY_VERSION, GOOGLE_SEARCH_KEY, \
     GOOGLE_SEARCH_CX, PROJECT_DIR, REPOSITORY_NAME, MAX_ITERATION, CYODA_ENTITY_TYPE_EDGE_MESSAGE, DATA_REPOSITORY_URL, \
-    CLIENT_HOST, CLIENT_QUART_TEMPLATE_REPOSITORY_URL, ScheduledAction, ACTION_URL_MAP
+    CLIENT_HOST, CLIENT_QUART_TEMPLATE_REPOSITORY_URL, ScheduledAction, ACTION_URL_MAP, DEPLOY_CYODA_ENV_STATUS, \
+    DEPLOY_USER_APP_STATUS
 from common.exception.exceptions import GuestChatsLimitExceededException
 from common.util.chat_util_functions import _launch_transition
 from common.util.utils import get_project_file_name, _git_push, _save_file, clone_repo, \
@@ -62,6 +63,8 @@ class ChatWorkflow(Workflow):
         async with aiofiles.open(file_name, 'w') as new_file:
             await new_file.write(updated_content)
         await _git_push(technical_id, [file_name], "Added env file template")
+
+
 #todo need to refactor and add a different service for cloud manager integration
     async def _schedule_deploy(
             self,
@@ -528,7 +531,8 @@ class ChatWorkflow(Workflow):
         "design_workflow_from_code"
         await _launch_transition(entity_service=self.entity_service,
                                  technical_id=entity.triggered_entity_id,
-                                 cyoda_auth_service=self.cyoda_auth_service)
+                                 cyoda_auth_service=self.cyoda_auth_service,
+                                 transition=entity.triggered_entity_next_transition)
 
     async def edit_existing_app_design_additional_feature(self,
                                                           technical_id,
@@ -584,6 +588,7 @@ class ChatWorkflow(Workflow):
         return await self._fetch_data(url=url)
 
     # ==========
+
 
     async def _schedule_workflow(
             self,
@@ -648,7 +653,7 @@ class ChatWorkflow(Workflow):
             raise GuestChatsLimitExceededException()
 
         # todo cloud manager needs to return namespace
-        params['cyoda_env_name'] = f"{entity.user_id.lower()}.{CLIENT_HOST}"
+        params['user_env_name'] = f"client-{entity.user_id.lower()}.{CLIENT_HOST}"
 
         return await self._schedule_workflow(
             technical_id=technical_id,

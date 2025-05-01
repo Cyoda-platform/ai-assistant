@@ -1,0 +1,125 @@
+{
+  "initial_state": "none",
+  "workflow_name": "chat_entity",
+  "states": {
+    "none": {
+      "transitions": {
+        "notify_env_deployment": {
+          "next": "notified_user_application_deployment",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "Hello! Let's start deploying your Cyoda client application. I will let you know once it's ready",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "notified_user_application_deployment": {
+      "transitions": {
+        "schedule_build_user_application": {
+          "next": "scheduled_build_user_application",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "publish": true,
+              "function": {
+                "name": "schedule_build_user_application",
+                "description": "",
+                "max_iteration": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "scheduled_build_user_application": {
+      "transitions": {
+        "lock_chat": {
+          "next": "locked_chat",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "publish": true,
+              "function": {
+                "name": "lock_chat",
+                "description": "",
+                "max_iteration": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "locked_chat": {
+      "transitions": {
+        "finish_build_success": {
+          "next": "locked_chat",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "publish": true,
+              "function": {
+                "name": "schedule_deploy_user_application",
+                "description": "",
+                "max_iteration": 0
+              }
+            }
+          }
+        },
+        "finish_deployment_success": {
+          "next": "deployed_user_app",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "Your application has been successfully deployed to  {user_env_name} !  API docs are available at https://{cyoda_env_name}/scalar.",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        },
+        "finish_deployment_failure": {
+          "next": "deployed_user_app",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "Sorry, we had internal issues while building your application",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "deployed_user_app": {
+      "transitions": {
+        "lock_chat": {
+          "next": "locked_chat",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "publish": true,
+              "function": {
+                "name": "lock_chat",
+                "description": "",
+                "max_iteration": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

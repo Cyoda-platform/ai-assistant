@@ -69,8 +69,10 @@ GENERAL_MEMORY_TAG = "general_memory_tag"
 CYODA_ENTITY_TYPE_TREE = "TREE"
 CYODA_ENTITY_TYPE_EDGE_MESSAGE = "EDGE_MESSAGE"
 GUEST_TOKEN_LIMIT = int(get_env("GUEST_TOKEN_LIMIT", "10"))
-CLIENT_HOST=get_env("CLIENT_HOST")
-CLIENT_QUART_TEMPLATE_REPOSITORY_URL=os.getenv("CLIENT_REPOSITORY_URL", "https://github.com/Cyoda-platform/quart-client-template.git")
+CLIENT_HOST = get_env("CLIENT_HOST")
+CLIENT_QUART_TEMPLATE_REPOSITORY_URL = os.getenv("CLIENT_REPOSITORY_URL",
+                                                 "https://github.com/Cyoda-platform/quart-client-template.git")
+
 
 class ScheduledAction(str, Enum):
     SCHEDULE_ENTITIES_FLOW = "schedule_entities_flow"
@@ -83,4 +85,16 @@ ACTION_URL_MAP: dict[ScheduledAction, str] = {
     ScheduledAction.SCHEDULE_CYODA_ENV_DEPLOY: DEPLOY_CYODA_ENV,
     ScheduledAction.SCHEDULE_USER_APP_BUILD: BUILD_USER_APP,
     ScheduledAction.SCHEDULE_USER_APP_DEPLOY: DEPLOY_USER_APP,
+}
+
+ACTION_SUCCESS_TRANSITIONS = {
+    ScheduledAction.SCHEDULE_CYODA_ENV_DEPLOY: "finish_deployment_success",
+    ScheduledAction.SCHEDULE_USER_APP_DEPLOY: "finish_deployment_success",
+    ScheduledAction.SCHEDULE_USER_APP_BUILD: "finish_build_success",
+}
+
+ACTION_FAILURE_TRANSITIONS = {
+    ScheduledAction.SCHEDULE_CYODA_ENV_DEPLOY: "finish_deployment_failure",
+    ScheduledAction.SCHEDULE_USER_APP_DEPLOY: "finish_deployment_failure",
+    ScheduledAction.SCHEDULE_USER_APP_BUILD: "finish_deployment_failure",
 }

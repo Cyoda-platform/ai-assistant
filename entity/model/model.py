@@ -68,7 +68,7 @@ class SchedulerEntity(WorkflowEntity):
     awaited_entity_ids: Optional[List[str]] = []
     triggered_entity_id: str = ""
     scheduled_action: Optional[str] = ScheduledAction.SCHEDULE_ENTITIES_FLOW.value
-
+    triggered_entity_next_transition: Optional[str] = None
 
 class QuestionsQueue(WorkflowEntity):
     model_config = ConfigDict(extra="ignore")
