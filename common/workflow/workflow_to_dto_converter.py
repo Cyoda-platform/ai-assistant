@@ -6,8 +6,7 @@ from typing import Dict
 from zoneinfo import ZoneInfo
 
 from common.config.config import ENTITY_VERSION, GRPC_PROCESSOR_TAG
-from common.config.conts import CHAT_MODEL_NAME, ADD_NEW_WORKFLOW, EDIT_API_EXISTING_APP, EDIT_EXISTING_WORKFLOW, \
-    EDIT_EXISTING_PROCESSORS, AGENTIC_FLOW_ENTITY, MANUAL_RETRY_TRANSITION
+from common.config.conts import MANUAL_RETRY_TRANSITION, FAIL_TRANSITION, LOCKED_CHAT
 
 
 def convert(input_file_path, output_file_path, calculation_node_tags, model_name, model_version, workflow_name):
@@ -39,12 +38,39 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "new_transaction_for_async": "true",
         "none_transactional_for_async": "false",
     }
-
+    fail_chat_criteria_id = generate_id()
+    fail_chat_criteria = {
+        "persisted": True,
+        "owner": "CYODA",
+        "id": fail_chat_criteria_id,
+        "name": "has_failed",
+        "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+        "creationDate": "2025-05-02T15:17:30.992+02:00",
+        "description": "",
+        "condition": {
+            "@bean": "com.cyoda.core.conditions.GroupCondition",
+            "operator": "AND",
+            "conditions": [
+                {
+                    "@bean": "com.cyoda.core.conditions.queryable.Equals",
+                    "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.booleans.[$.failed]",
+                    "operation": "EQUALS",
+                    "rangeField": "false",
+                    "value": True,
+                    "queryable": True
+                }
+            ]
+        },
+        "aliasDefs": [],
+        "parameters": [],
+        "criteriaChecker": "ConditionCriteriaChecker",
+        "user": "CYODA"
+    }
     dto = {
         "@bean": "com.cyoda.core.model.stateMachine.dto.FullWorkflowContainerDto",
         "workflow": [],
         "transitions": [],
-        "criterias": [],
+        "criterias": [fail_chat_criteria],
         "processes": [],
         "states": [],
         "processParams": []
@@ -74,7 +100,6 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
 
     # Add workflow's condition_criteria based on model_name and model_version
     workflow_criteria_ids = []
-
     condition = {
         "@bean": "com.cyoda.core.conditions.GroupCondition",
         "operator": "AND",
@@ -131,11 +156,25 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
             "next": state_name,
             "manual": True
         }
+        state_data["transitions"][FAIL_TRANSITION] = {
+            "next": f"{LOCKED_CHAT}_{state_name}",
+            "action": {
+                "name": "process_event",
+                "config": {
+                    "type": "function",
+                    "function": {
+                        "name": "fail_workflow",
+                        "description": "Clones template repository"
+                    },
+                    "publish": True
+                }
+            }
+        }
         # Process transitions
         for transition_name, transition_data in state_data["transitions"].items():
             transition_id = generate_id()
             dto["workflow"][0]["transitionIds"].append(transition_id)
-            criteria_ids = []
+            criteria_ids = [] if transition_name != FAIL_TRANSITION else [fail_chat_criteria_id]
             process_ids = []
             end_state_name = transition_data["next"]
             end_state = save_new_state(end_state_name, state_map, default_param_values, class_name, state_data)
@@ -297,6 +336,8 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
 
     dto["states"].extend(state_map.values())
     dto["transitions"].extend(transitions)
+
+
 
     add_none_state_if_not_exists(dto, default_param_values, class_name)
     return dto

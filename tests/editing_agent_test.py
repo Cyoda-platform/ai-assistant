@@ -219,7 +219,7 @@ def update_api(user_prompt: str, entity_name: str, chat_id: str) -> str:
 def analyse_feature_request(user_prompt: str, chat_id: str) -> str:
     chat = json.loads(read_file(chat_id=chat_id, file_name=f"entity/chat.json"))
     stack = chat["chat_flow"]["current_flow"]
-    app_api = read_file(chat_id=chat_id, file_name=f"app.py")
+    app_api = read_file(chat_id=chat_id, file_name=f"routes/routes.py")
     entities_description = []
     entity_names = get_entities_list(chat_id=chat_id)
     for entity_name in entity_names:

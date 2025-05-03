@@ -81,7 +81,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "Your application has been successfully deployed to  {user_env_name} !  API docs are available at https://{cyoda_env_name}/scalar.",
+              "notification": "Your application has been successfully deployed to  {user_env_name} !  API docs are available at https://{user_env_name}/scalar.",
               "publish": true,
               "allow_anonymous_users": true
             }

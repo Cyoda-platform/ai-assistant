@@ -184,7 +184,7 @@
     },
     "app_requirements_requested": {
       "transitions": {
-        "process_application_requirement": {
+        "process_user_input": {
           "next": "app_requirements_requested",
           "manual": true,
           "action": {
@@ -388,7 +388,7 @@
     },
     "api_inquired": {
       "transitions": {
-        "discuss_api": {
+        "process_user_input": {
           "next": "api_inquired",
           "manual": true,
           "action": {
@@ -691,7 +691,7 @@
     },
     "prototype_discussion_requested": {
       "transitions": {
-        "discuss_prototype": {
+        "process_user_input": {
           "next": "prototype_discussion_requested",
           "manual": true,
           "action": {
@@ -898,7 +898,7 @@
     },
     "migration_confirmation_requested": {
       "transitions": {
-        "notify_confirmed_migration": {
+        "process_user_input": {
           "next": "migration_confirmation_notified",
           "manual": true,
           "action": {

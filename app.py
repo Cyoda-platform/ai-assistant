@@ -20,7 +20,8 @@ from common.config.config import MOCK_AI, ENTITY_VERSION, API_PREFIX, MAX_TEXT_S
     MAX_FILE_SIZE, CHAT_REPOSITORY, RAW_REPOSITORY_URL, AUTH_SECRET_KEY, \
     CYODA_ENTITY_TYPE_EDGE_MESSAGE, MAX_GUEST_CHATS, ENABLE_AUTH, CYODA_API_URL, GUEST_TOKEN_LIMIT
 from common.config.conts import FLOW_EDGE_MESSAGE_MODEL_NAME, \
-    CHAT_MODEL_NAME, MEMORY_MODEL_NAME, RATE_LIMIT, APPROVE, TRANSFER_CHATS_ENTITY, MANUAL_RETRY_TRANSITION
+    CHAT_MODEL_NAME, MEMORY_MODEL_NAME, RATE_LIMIT, APPROVE, TRANSFER_CHATS_ENTITY, MANUAL_RETRY_TRANSITION, \
+    LOCKED_CHAT, MAX_GUEST_CHAT_MESSAGES, PROCESS_USER_INPUT_TRANSITION, MAX_CHAT_MESSAGES
 from common.exception.exceptions import ChatNotFoundException, InvalidTokenException, RequestLimitExceededException, \
     TokenExpiredException, GuestChatsLimitExceededException
 from common.service.entity_service_interface import EntityService
@@ -29,9 +30,9 @@ from common.util.chat_util_functions import trigger_manual_transition, get_user_
 from common.util.utils import current_timestamp, clone_repo, \
     validate_token, send_get_request
 from entity.chat.data.data import APP_BUILDER_FLOW, \
-    OPERATION_NOT_SUPPORTED_WARNING, ADDITIONAL_QUESTION_ROLLBACK_WARNING
+    OPERATION_NOT_SUPPORTED_WARNING
 from entity.chat.model.chat import ChatEntity
-from entity.model.model import FlowEdgeMessage, ChatMemory, ModelConfig
+from entity.model.model import FlowEdgeMessage, ChatMemory, ModelConfig, AgenticFlowEntity
 from logic.init import BeanFactory
 
 logger = logging.getLogger('django')
@@ -107,35 +108,42 @@ async def handle_unauthorized_exception(error):
     logger.exception(error)
     return jsonify({"error": str(error)}), 401
 
+
 @app.errorhandler(ChatNotFoundException)
 async def handle_chat_not_found_exception(error):
     logger.exception(error)
     return jsonify({"error": str(error)}), 404
+
 
 @app.errorhandler(InvalidTokenException)
 async def handle_unauthorized_exception(error):
     logger.exception(error)
     return jsonify({"error": str(error)}), 401
 
+
 @app.errorhandler(TokenExpiredException)
 async def handle_token_expired_exception(error):
     logger.exception(error)
     return jsonify({"error": str(error)}), 401
+
 
 @app.errorhandler(GuestChatsLimitExceededException)
 async def handle_limit_exception(error):
     logger.exception(error)
     return jsonify({"error": str(error)}), 403
 
+
 @app.errorhandler(RequestLimitExceededException)
 async def handle_request_limit_exceeded(error):
     logger.exception(error)
     return jsonify({"error": str(error)}), 429
 
+
 @app.errorhandler(RateLimitExceeded)
 async def handle_rate_limit_exceeded(error):
     logger.exception(error)
     return jsonify({"error": str(error)}), 429
+
 
 @app.errorhandler(Exception)
 async def handle_any_exception(error):
@@ -257,13 +265,16 @@ async def get_chats():
     user_id = _get_user_id(auth_header=auth_header)
     if not user_id:
         return jsonify({"error": "Invalid token"}), 401
-    chats: List[ChatEntity] = await _get_entities_by_user_name_and_workflow_name(user_id=user_id, entity_model=CHAT_MODEL_NAME, workflow_name=CHAT_MODEL_NAME)
+    chats: List[ChatEntity] = await _get_entities_by_user_name_and_workflow_name(user_id=user_id,
+                                                                                 entity_model=CHAT_MODEL_NAME,
+                                                                                 workflow_name=CHAT_MODEL_NAME)
     if not user_id.startswith('guest.'):
         transfer_chats_entities = await _get_entities_by_user_name(user_id=user_id, entity_model=TRANSFER_CHATS_ENTITY)
         if transfer_chats_entities:
             transfer_chats_entity = transfer_chats_entities[0]
             guest_user_id = transfer_chats_entity['guest_user_id']
-            linked_guest_chats: List[ChatEntity] = await _get_entities_by_user_name_and_workflow_name(user_id=guest_user_id, entity_model=CHAT_MODEL_NAME, workflow_name=CHAT_MODEL_NAME)
+            linked_guest_chats: List[ChatEntity] = await _get_entities_by_user_name_and_workflow_name(
+                user_id=guest_user_id, entity_model=CHAT_MODEL_NAME, workflow_name=CHAT_MODEL_NAME)
             if linked_guest_chats:
                 chats.extend(linked_guest_chats)
 
@@ -300,6 +311,7 @@ async def get_chat(technical_id):
 @app.route(API_PREFIX + '/get_guest_token', methods=['OPTIONS'])
 async def get_guest_token_preflight():
     return jsonify({})
+
 
 @app.route(API_PREFIX + '/get_guest_token', methods=['GET'])
 @rate_limit(limit=GUEST_TOKEN_LIMIT, period=timedelta(weeks=50))
@@ -369,7 +381,8 @@ async def add_chat():
     user_id = _get_user_id(auth_header=auth_header)
     # todo auth!!
     if user_id.startswith('guest.'):
-        user_chats = await _get_entities_by_user_name_and_workflow_name(user_id=user_id, entity_model=CHAT_MODEL_NAME, workflow_name=CHAT_MODEL_NAME)
+        user_chats = await _get_entities_by_user_name_and_workflow_name(user_id=user_id, entity_model=CHAT_MODEL_NAME,
+                                                                        workflow_name=CHAT_MODEL_NAME)
         if len(user_chats) >= MAX_GUEST_CHATS:
             return jsonify({"error": "Max guest chats limit reached, please sign in to proceed"}), 403
     req_data = await request.get_json()
@@ -407,6 +420,7 @@ async def add_chat():
         "current_transition": "",
         "current_state": "",
         "workflow_name": CHAT_MODEL_NAME,
+        "failed": "false",
         "transitions_memory": {
             "conditions": {},
             "current_iteration": {},
@@ -479,6 +493,7 @@ async def submit_question(technical_id):
 async def push_notify(technical_id):
     return jsonify({"error": OPERATION_NOT_SUPPORTED_WARNING}), 400
 
+
 @app.route(API_PREFIX + '/chats/<technical_id>/approve', methods=['POST'])
 @auth_required_to_proceed
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
@@ -487,15 +502,17 @@ async def approve(technical_id):
     chat = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
     return await _submit_answer_helper(answer=APPROVE, chat=chat)
 
-#moved to retry
+
+# moved to retry
 @app.route(API_PREFIX + '/chats/<technical_id>/rollback', methods=['POST'])
 @auth_required_to_proceed
 @rate_limit(RATE_LIMIT, timedelta(minutes=1))
 async def rollback(technical_id):
     auth_header = request.headers.get('Authorization')
-    #check the user is authorised to access the chat
-    await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
-    await rollback_dialogue_script(technical_id=technical_id)
+    # check the user is authorised to access the chat
+    chat: ChatEntity = await _get_chat_for_user(request=request, auth_header=auth_header, technical_id=technical_id)
+    await rollback_dialogue_script(technical_id=technical_id, chat=chat, entity_service=entity_service,
+                                   cyoda_auth_service=cyoda_auth_service)
     return jsonify({"message": "Successfully restarted the workflow"}), 200
 
 
@@ -529,7 +546,7 @@ async def submit_answer(technical_id):
     answer = await get_user_message(message=answer, user_file=user_file)
     if user_file.content_length > MAX_FILE_SIZE:
         return {"error": f"File size exceeds {MAX_FILE_SIZE} limit"}
-    return await _submit_answer_helper(answer=answer,chat=chat, user_file=user_file)
+    return await _submit_answer_helper(answer=answer, chat=chat, user_file=user_file)
 
 
 async def _get_chat_for_user(auth_header, technical_id, request=None):
@@ -570,6 +587,7 @@ async def _get_chat_for_user(auth_header, technical_id, request=None):
 
     return chat
 
+
 async def _validate_chat_owner(chat, user_id):
     # If it’s the same user, nothing to do
     if chat.user_id == user_id:
@@ -577,8 +595,8 @@ async def _validate_chat_owner(chat, user_id):
 
     # Only allow a guest → registered transfer
     is_guest_to_registered = (
-        chat.user_id.startswith("guest.")
-        and not user_id.startswith("guest.")
+            chat.user_id.startswith("guest.")
+            and not user_id.startswith("guest.")
     )
     if not is_guest_to_registered:
         raise InvalidTokenException()
@@ -595,6 +613,7 @@ async def _validate_chat_owner(chat, user_id):
     guest_user_id = entities[0]["guest_user_id"]
     if guest_user_id != chat.user_id:
         raise InvalidTokenException()
+
 
 def _get_user_id(auth_header):
     try:
@@ -635,29 +654,32 @@ async def _get_entities_by_user_name(user_id, entity_model):
                                                        },
                                                            "local": {"key": "user_id", "value": user_id}})
 
-async def _get_entities_by_user_name_and_workflow_name(user_id, entity_model, workflow_name):
-    return await entity_service.get_items_by_condition(token=cyoda_auth_service,
-                                                       entity_model=entity_model,
-                                                       entity_version=ENTITY_VERSION,
-                                                       condition={"cyoda": {
-                                                           "operator": "AND",
-                                                           "conditions": [
-                                                               {
-                                                                   "jsonPath": "$.user_id",
-                                                                   "operatorType": "EQUALS",
-                                                                   "value": user_id,
-                                                                   "type": "simple"
-                                                               },
-                                                               {
-                                                                   "jsonPath": "$.workflow_name",
-                                                                   "operatorType": "EQUALS",
-                                                                   "value": workflow_name,
-                                                                   "type": "simple"
-                                                               }
-                                                           ],
-                                                           "type": "group"
-                                                       },
-                                                           "local": {"key": "user_id", "value": user_id}})
+
+async def _get_entities_by_user_name_and_workflow_name(user_id, entity_model, workflow_name, sorted=False):
+    result_entities = await entity_service.get_items_by_condition(token=cyoda_auth_service,
+                                                                  entity_model=entity_model,
+                                                                  entity_version=ENTITY_VERSION,
+                                                                  condition={"cyoda": {
+                                                                      "operator": "AND",
+                                                                      "conditions": [
+                                                                          {
+                                                                              "jsonPath": "$.user_id",
+                                                                              "operatorType": "EQUALS",
+                                                                              "value": user_id,
+                                                                              "type": "simple"
+                                                                          },
+                                                                          {
+                                                                              "jsonPath": "$.workflow_name",
+                                                                              "operatorType": "EQUALS",
+                                                                              "value": workflow_name,
+                                                                              "type": "simple"
+                                                                          }
+                                                                      ],
+                                                                      "type": "group"
+                                                                  },
+                                                                      "local": {"key": "user_id", "value": user_id}})
+    return result_entities
+
 
 async def _submit_question_helper(auth_header, technical_id, chat, question, user_file=None):
     # Check if a file has been uploaded
@@ -690,28 +712,116 @@ async def _submit_question_helper(auth_header, technical_id, chat, question, use
 
 
 async def _submit_answer_helper(answer, chat: ChatEntity, user_file=None):
-    if chat.user_id.startswith('guest.') and chat.chat_flow and chat.chat_flow.finished_flow and len(chat.chat_flow.finished_flow)>300:
+    if chat.user_id.startswith('guest.') and chat.chat_flow and chat.chat_flow.finished_flow and len(
+            chat.chat_flow.finished_flow) > MAX_GUEST_CHAT_MESSAGES:
         return jsonify({"error": "Maximum number of messages achieved. Please sign in to proceed"}), 403
+    if chat.chat_flow and chat.chat_flow.finished_flow and len(
+            chat.chat_flow.finished_flow) > MAX_CHAT_MESSAGES:
+        return jsonify({"error": "Maximum number of messages achieved. Please start a new chat"}), 403
     is_valid, validated_answer = _validate_answer(answer=answer, user_file=user_file)
     if not is_valid:
         return jsonify({"message": validated_answer}), 400
-    # todo
-    if len(chat.child_entities) > MAX_GUEST_CHATS:
-        return jsonify({"error": "Max guest chats limit reached, please sign in to proceed"}), 403
-    edge_message_id = await trigger_manual_transition(entity_service=entity_service,
-                                                      chat=chat,
-                                                      answer=validated_answer,
-                                                      user_file=user_file,
-                                                      cyoda_auth_service=cyoda_auth_service)
-    return jsonify({"answer_technical_id": edge_message_id}), 200
+    edge_message_id, transitioned = await trigger_manual_transition(entity_service=entity_service,
+                                                                    chat=chat,
+                                                                    answer=validated_answer,
+                                                                    user_file=user_file,
+                                                                    cyoda_auth_service=cyoda_auth_service,
+                                                                    transition=PROCESS_USER_INPUT_TRANSITION)
+    if transitioned:
+        return jsonify({"answer_technical_id": edge_message_id}), 200
+    else:
+        return jsonify({
+            "message": (
+                "Sorry, you cannot proceed with this chat yet. "
+                "Please start a new chat or wait for the workflow to complete."
+            )
+        }), 409
 
 
-async def rollback_dialogue_script(technical_id):
-    await _launch_transition(entity_service=entity_service,
-                             technical_id=technical_id,
-                             cyoda_auth_service=cyoda_auth_service,
-                             entity=None,
-                             transition=MANUAL_RETRY_TRANSITION)
+async def rollback_dialogue_script(
+        technical_id: str,
+        chat: ChatEntity,
+        entity_service,
+        cyoda_auth_service
+) -> bool:
+    """
+    Recursively walk the tree of chat.child_entities (and chat.scheduled_entities, if present)
+    in reverse order. As soon as we find an unlocked node, fire a MANUAL_RETRY_TRANSITION
+    on it and stop. If we exhaust all descendants without finding one, we retry the root only.
+    """
+
+    async def traverse_and_rollback(
+            entity: ChatEntity,
+            tid: str,
+            is_root: bool = False
+    ) -> bool:
+        # Build list of potential targets
+        targets = []
+        if entity.child_entities:
+            targets.extend(entity.child_entities)
+        if getattr(entity, "scheduled_entities", None):
+            targets.extend(entity.scheduled_entities)
+
+        # Case A: Locked node with children/scheduled → try descendants first
+        if entity.current_state.startswith(LOCKED_CHAT) and targets:
+            # Depth-first, right-to-left
+            for child_id in reversed(targets):
+                child = await entity_service.get_item(
+                    token=cyoda_auth_service,
+                    entity_model=CHAT_MODEL_NAME,
+                    entity_version=ENTITY_VERSION,
+                    technical_id=child_id
+                )
+
+                # 1) If child is locked but has its own targets, recurse
+                has_grandkids = bool(child.child_entities or getattr(child, "scheduled_entities", None))
+                if child.current_state.startswith(LOCKED_CHAT) and has_grandkids:
+                    if await traverse_and_rollback(child, child_id, False):
+                        return True
+
+                # 2) If child is unlocked, retry it immediately
+                if not child.current_state.startswith(LOCKED_CHAT):
+                    transitioned = await _launch_transition(
+                        entity_service=entity_service,
+                        technical_id=child.technical_id,
+                        cyoda_auth_service=cyoda_auth_service,
+                        entity=None,
+                        transition=MANUAL_RETRY_TRANSITION
+                    )
+                    if transitioned:
+                        return True
+
+            # No unlocked descendants—only retry *if* this is the root
+            if is_root:
+                await _launch_transition(
+                    entity_service=entity_service,
+                    technical_id=tid,
+                    cyoda_auth_service=cyoda_auth_service,
+                    entity=None,
+                    transition=MANUAL_RETRY_TRANSITION
+                )
+                return True
+
+            # Intermediate locked node with no unlocked children: give up here
+            return False
+
+        # Case B: Either unlocked, or locked with no targets
+        # → for unlocked nodes, retry immediately; for root locked-without-children, also retry
+        if not entity.current_state.startswith(LOCKED_CHAT) or is_root:
+            await _launch_transition(
+                entity_service=entity_service,
+                technical_id=tid,
+                cyoda_auth_service=cyoda_auth_service,
+                entity=None,
+                transition=MANUAL_RETRY_TRANSITION
+            )
+            return True
+
+        # Locked intermediate node with no targets: skip
+        return False
+
+    # Start recursion with is_root=True so only the top chat can fall back
+    return await traverse_and_rollback(chat, technical_id, is_root=True)
 
 
 def _validate_answer(answer, user_file):
@@ -720,6 +830,7 @@ def _validate_answer(answer, user_file):
             return False, "Invalid entity"
         return True, "please, consider the contents of this file"
     return True, answer
+
 
 async def process_message(finished_flow: List[FlowEdgeMessage], auth_header, dialogue: list) -> list:
     for message in finished_flow:

@@ -31,7 +31,7 @@
                     "Currently we have the following entities with the following workflow processors attached:",
                     "{entities_description}",
                     "",
-                    "You are also provided with the app.py containing application endpoints:",
+                    "You are also provided with the routes/routes.py containing application endpoints:",
                     "{app_api}",
                     "",
                     "User requirement: \"{user_request}\"",

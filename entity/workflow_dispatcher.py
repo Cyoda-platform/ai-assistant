@@ -51,14 +51,13 @@ class WorkflowDispatcher:
             return response
         except Exception as e:
             logger.exception(e)
-            logger.info(f"Error processing event: {e}")
+            logger.error(f"Error processing event: {e}")
 
     async def process_event(self, entity: WorkflowEntity, action, technical_id):
 
         response = "returned empty response"
-        config = action.get("config")
-
         try:
+            config = action.get("config")
             action_name = action.get("name")
 
             if config and config.get("type") and isinstance(entity, AgenticFlowEntity):
@@ -81,9 +80,12 @@ class WorkflowDispatcher:
                 raise ValueError(f"Unknown processing step: {action_name}")
 
         except Exception as e:
+            entity.failed = True
+            entity.error = f"Error: {e}"
             logger.exception(f"Exception occurred while processing event: {e}")
 
         logger.info(f"{action}: {response}")
+
         return entity, response
 
     async def _execute_method(self, method_name, technical_id, entity: WorkflowEntity):
@@ -92,7 +94,9 @@ class WorkflowDispatcher:
                                                         technical_id=technical_id,
                                                         entity=entity)
         except Exception as e:
-            logger.info(f"Error executing method '{method_name}': {e}")
+            logger.exception(f"Error executing method '{method_name}': {e}")
+            entity.failed = True
+            entity.error = f"Error executing method '{method_name}': {e}"
             raise
 
     async def _handle_config_based_event(self, config, entity: AgenticFlowEntity, technical_id):
@@ -103,10 +107,16 @@ class WorkflowDispatcher:
         child_entities_size_before = len(entity.child_entities)
 
         if config_type == "notification" and config.get("notification"):
-            config["notification"] = config["notification"].format(**entity.workflow_cache)
+            try:
+                config["notification"] = config["notification"].format(**entity.workflow_cache)
+            except Exception as e:
+                logger.exception(e)
 
         if config_type == "question" and config.get("question"):
-            config["question"] = config["question"].format(**entity.workflow_cache)
+            try:
+                config["question"] = config["question"].format(**entity.workflow_cache)
+            except Exception as e:
+                logger.exception(e)
 
         if config_type == "function":
             params = config["function"].get("parameters", {})
@@ -330,7 +340,11 @@ class WorkflowDispatcher:
                             response = json.dumps(parsed_json, indent=4, sort_keys=True)
                         except json.JSONDecodeError as err:
                             logger.error(f"Invalid JSON format for file {cache_key}: {err}")
-                    formatted_filename = cache_key.format(**entity.workflow_cache)
+                    try:
+                        formatted_filename = cache_key.format(**entity.workflow_cache)
+                    except Exception as e:
+                        formatted_filename = cache_key
+                        logger.exception(e)
                     branch_id = entity.workflow_cache.get(GIT_BRANCH_PARAM, technical_id)
                     await _save_file(chat_id=branch_id, _data=response, item=formatted_filename)
             if config.get("output").get("workflow_cache"):

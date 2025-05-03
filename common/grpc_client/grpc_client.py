@@ -153,6 +153,8 @@ class GrpcClient:
             data['payload']['data'] = model_cls.model_dump(entity)
         except Exception:
             logger.exception("Error processing entity")
+            entity.failed = True
+            data['payload']['data'] = model_cls.model_dump(entity)
             resp = None
 
         notif = self.create_notification_event(data=data, response=resp, type=type)
@@ -165,9 +167,22 @@ class GrpcClient:
             queue = asyncio.Queue()
 
             try:
-                async with grpc.aio.secure_channel(config.GRPC_ADDRESS, creds) as channel:
+                # 1) Define keep-alive options (milliseconds unless noted)
+                keepalive_opts = [
+                    ('grpc.keepalive_time_ms', 30_000),  # PING every 30 s
+                    ('grpc.keepalive_timeout_ms', 10_000),  # wait 10 s for PONG
+                    ('grpc.keepalive_permit_without_calls', 1),  # even if idle
+                ]
+
+                # 2) Pass them into secure_channel alongside your creds
+                async with grpc.aio.secure_channel(
+                        config.GRPC_ADDRESS,
+                        creds,
+                        options=keepalive_opts
+                ) as channel:
                     stub = CloudEventsServiceStub(channel)
                     call = stub.startStreaming(self.event_generator(queue))
+                    # … then await call or iterate its stream as needed
 
                     async for response in call:
                         if response.type == KEEP_ALIVE_EVENT_TYPE:

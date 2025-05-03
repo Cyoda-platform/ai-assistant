@@ -8,7 +8,7 @@ from typing import List, Any, Optional
 from common.config.config import (
     CYODA_ENTITY_TYPE_EDGE_MESSAGE,
 )
-from common.config.conts import EDGE_MESSAGE_CLASS, TREE_NODE_ENTITY_CLASS, UPDATE_TRANSITION
+from common.config.conts import EDGE_MESSAGE_CLASS, TREE_NODE_ENTITY_CLASS, UPDATE_TRANSITION, CYODA_PAGE_SIZE
 from common.repository.crud_repository import CrudRepository
 from common.util.utils import (
     custom_serializer,
@@ -95,7 +95,7 @@ class CyodaRepository(CrudRepository):
         return (await self.find_by_key(meta, key)) is not None
 
     async def find_all(self, meta) -> List[Any]:
-        path = f"entity/{meta['entity_model']}/{meta['entity_version']}"
+        path = f"entity/{meta['entity_model']}/{meta['entity_version']}?pageSize={CYODA_PAGE_SIZE}"
         resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="get", path=path)
         return resp.get("json", [])
 
@@ -136,32 +136,63 @@ class CyodaRepository(CrudRepository):
     async def find_all_by_criteria(self, meta, criteria: Any) -> List[Any]:
         # 1) trigger snapshot
         snap_path = f"search/snapshot/{meta['entity_model']}/{meta['entity_version']}"
-        resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="post", path=snap_path, data=json.dumps(criteria))
+        resp = await send_cyoda_request(
+            cyoda_auth_service=self._cyoda_auth_service,
+            method="post",
+            path=snap_path,
+            data=json.dumps(criteria)
+        )
         snapshot_id = resp.get("json")
 
         # 2) poll until ready
         await self._wait_for_search_completion(snapshot_id)
 
-        # 3) fetch results (first page)
+        # 3) fetch all results, page by page
+        entities: List[Any] = []
+        page_number = 0
+        page_size = 100  # match your initial request
+
+        # first request so we can read totalElements/totalPages
         result_resp = await send_cyoda_request(
             cyoda_auth_service=self._cyoda_auth_service,
             method="get",
-            path=f"search/snapshot/{snapshot_id}"
+            path=f"search/snapshot/{snapshot_id}?pageSize={page_size}&pageNumber={page_number}"
         )
         if result_resp.get("status") != 200:
             return []
-        resp_json = json.loads(result_resp.get("json", "{}"))
 
-        if resp_json.get("page", {}).get("totalElements", 0) == 0:
+        resp_json = json.loads(result_resp.get("json", "{}"))
+        page_info = resp_json.get("page", {})
+
+        # **zero‐results guard**
+        if page_info.get("totalElements", 0) == 0:
             return []
 
-        nodes = resp_json.get("_embedded", {}).get("objectNodes", [])
-        entities = []
-        for node in nodes:
-            tree = node.get("data", {})
-            if not tree.get("technical_id"):
-                tree["technical_id"] = node.get("meta", {}).get("id")
-            entities.append(tree)
+        total_pages = page_info.get("totalPages", 1)
+
+        # helper to extract & normalize nodes
+        def _extract(nodes):
+            for node in nodes:
+                tree = node.get("data", {})
+                if not tree.get("technical_id"):
+                    tree["technical_id"] = node.get("meta", {}).get("id")
+                entities.append(tree)
+
+        # process page 0
+        _extract(resp_json.get("_embedded", {}).get("objectNodes", []))
+
+        # fetch remaining pages (1 through total_pages-1)
+        for page_number in range(1, total_pages):
+            result_resp = await send_cyoda_request(
+                cyoda_auth_service=self._cyoda_auth_service,
+                method="get",
+                path=f"search/snapshot/{snapshot_id}?pageSize={page_size}&pageNumber={page_number}"
+            )
+            if result_resp.get("status") != 200:
+                break  # or continue, per your error‐handling policy
+
+            resp_json = json.loads(result_resp.get("json", "{}"))
+            _extract(resp_json.get("_embedded", {}).get("objectNodes", []))
 
         return entities
 

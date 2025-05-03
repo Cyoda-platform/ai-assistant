@@ -21,12 +21,12 @@
               },
               "input": {
                 "local_fs": [
-                  "app.py"
+                  "routes/routes.py"
                 ]
               },
               "output": {
                 "local_fs": [
-                  "app.py"
+                  "routes/routes.py"
                 ]
               },
               "messages": [

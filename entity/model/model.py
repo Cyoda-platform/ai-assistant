@@ -13,6 +13,8 @@ class WorkflowEntity(BaseModel):
     workflow_name: Optional[str] = None
     workflow_cache: Optional[Dict[str, Any]] = {}
     edge_messages_store: Optional[Dict[str, Any]] = {}
+    failed: Optional[bool] = False
+    error: Optional[str] = None
 
 
 class AIMessage(BaseModel):

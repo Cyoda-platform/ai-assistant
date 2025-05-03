@@ -59,9 +59,16 @@ PUSH_NOTIFICATION = "push_notification"
 APPROVE = "let's proceed to the next iteration immediately: set require additional questions to False and finish the discussion."
 RATE_LIMIT = 300
 SCHEDULER_CHECK_INTERVAL=60
-
-MANUAL_RETRY_TRANSITION = "manual_retry"
-
+CYODA_PAGE_SIZE=100
+MAX_SCHEDULER_POLLS=120
+PROCESS_USER_INPUT_TRANSITION = "process_user_input"
+MANUAL_RETRY_TRANSITION = "retry"
+UNLOCK_CHAT_TRANSITION = "unlock_chat"
+FAIL_TRANSITION = "fail"
+ROLLBACK_TRANSITION = "rollback"
+MAX_GUEST_CHAT_MESSAGES = 300
+MAX_CHAT_MESSAGES = 1500
+FAILED_WORKFLOW_NOTIFICATION = "We have encountered error while processing the workflow {technical_id}, we'll look into it shortly. Please start a new chat. Sorry for inconvenience"
 class GetCyodaGuidelinesData(str, Enum):
     GENERATE_WORKFLOW = "generate_workflow"
     GENERATE_PROCESSORS = "generate_processors"

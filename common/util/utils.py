@@ -514,17 +514,21 @@ async def send_request(headers, url, method, data=None, json=None):
                 content = response.json() if 'application/json' in response.headers.get('Content-Type',
                                                                                         '') else response.text
             else:
+                response.raise_for_status()
                 content = None
         elif method == 'POST':
             response = await client.post(url, headers=headers, data=data, json=json)
+            response.raise_for_status()
             content = response.json() if 'application/json' in response.headers.get('Content-Type',
                                                                                     '') else response.text
         elif method == 'PUT':
             response = await client.put(url, headers=headers, data=data, json=json)
+            response.raise_for_status()
             content = response.json() if 'application/json' in response.headers.get('Content-Type',
                                                                                     '') else response.text
         elif method == 'DELETE':
             response = await client.delete(url, headers=headers)
+            response.raise_for_status()
             content = response.json() if 'application/json' in response.headers.get('Content-Type',
                                                                                     '') else response.text
         else:

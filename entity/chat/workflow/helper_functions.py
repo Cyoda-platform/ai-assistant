@@ -462,7 +462,7 @@ class WorkflowHelperService:
                                                                         publish=False)
 
             child_entity.chat_flow.finished_flow.append(FlowEdgeMessage(type="answer",
-                                                                        publish=True,
+                                                                        publish=False,
                                                                         edge_message_id=user_request_message_id,
                                                                         consumed=False,
                                                                         user_id=entity.user_id))

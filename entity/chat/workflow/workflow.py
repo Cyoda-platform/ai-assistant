@@ -203,6 +203,8 @@ class ChatWorkflow(Workflow):
             else:
                 result = "No results found."
         except Exception as e:
+            entity.failed = True
+            entity.error = f"Error: {e}"
             result = f"Error during search: {e}"
         return result
 
@@ -225,6 +227,8 @@ class ChatWorkflow(Workflow):
             else:
                 result = soup.get_text(strip=True)
         except Exception as e:
+            entity.failed = True
+            entity.error = f"Error: {e}"
             result = f"Error reading link: {e}"
         return result
 
@@ -244,6 +248,8 @@ class ChatWorkflow(Workflow):
             else:
                 result = "No elements found for the given selector."
         except Exception as e:
+            entity.failed = True
+            entity.error = f"Error: {e}"
             result = f"Error during web scraping: {e}"
         return result
 
@@ -256,6 +262,8 @@ class ChatWorkflow(Workflow):
             await _save_file(chat_id=technical_id, _data=new_content, item=params.get("filename"))
             return "File saved successfully"
         except Exception as e:
+            entity.failed = True
+            entity.error = f"Error: {e}"
             return f"Error during saving file: {e}"
 
     async def read_file(self, technical_id, entity: ChatEntity, **params) -> str:
@@ -410,13 +418,17 @@ class ChatWorkflow(Workflow):
                 code_without_workflow, workflow_json = analyze_code_with_libcst(input_code)
             except Exception as e:
                 # todo add retry here
+                entity.failed = True
+                entity.error = f"Error: {e}"
                 logger.exception(e)
         except Exception as e:
+            entity.failed = True
+            entity.error = f"Error: {e}"
             logger.exception(e)
 
         await _save_file(chat_id=technical_id,
                          _data=app_post_process(code_without_workflow),
-                         item=f"app.py")
+                         item=f"routes/routes.py")
         awaited_entity_ids = []
         for item in workflow_json:
             # For each key-value pair in the dictionary, where key is the entity name and value is the code snippet
@@ -540,8 +552,11 @@ class ChatWorkflow(Workflow):
                                                           **params):
         # Clean up chat_id if needed
         git_branch_id = params.get(GIT_BRANCH_PARAM)
+        if git_branch_id and git_branch_id == "main":
+            logger.exception("Modifications to main branch are not allowed")
+            return "Modifications to main branch are not allowed"
         await clone_repo(chat_id=git_branch_id)
-        app_api = await read_file_util(filename="app.py", technical_id=git_branch_id)
+        app_api = await read_file_util(filename="routes/routes.py", technical_id=git_branch_id)
         entities_description = []
         project_entities_list = await self.get_entities_list(branch_id=git_branch_id)
         for project_entity in project_entities_list:
@@ -602,6 +617,9 @@ class ChatWorkflow(Workflow):
         # Clone the repo based on branch ID if provided
         git_branch_id = params.get(GIT_BRANCH_PARAM)
         if git_branch_id:
+            if git_branch_id == "main":
+                logger.exception("Modifications to main branch are not allowed")
+                return "Modifications to main branch are not allowed"
             await clone_repo(chat_id=git_branch_id)
 
         # One-off resolution for workflows that need an entity_name
@@ -723,6 +741,13 @@ class ChatWorkflow(Workflow):
             params=params,
             resolve_entity_name=True,
         )
+
+    async def fail_workflow(
+            self, technical_id: str, entity: AgenticFlowEntity, **params
+    ) -> str:
+        logger.exception(f"failed workflow {technical_id}")
+        return FAILED_WORKFLOW_NOTIFICATION.format(technical_id=technical_id)
+
 
     async def get_entities_list(self, branch_id: str) -> list:
         entity_dir = f"{PROJECT_DIR}/{branch_id}/{REPOSITORY_NAME}/entity"
