@@ -352,7 +352,7 @@
               ],
               "tool_choice": "auto",
               "max_iteration": 30,
-              "approve": true
+              "approve": false
             }
           }
         }
@@ -702,7 +702,7 @@
               ],
               "tool_choice": "auto",
               "max_iteration": 30,
-              "approve": true
+              "approve": false
             }
           }
         },
@@ -765,7 +765,7 @@
               "name": "unlock_chat",
               "description": "",
               "max_iteration": 30,
-              "approve": true
+              "approve": false
             }
           }
         }

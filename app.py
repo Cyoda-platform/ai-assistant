@@ -192,7 +192,7 @@ def auth_required_to_proceed(func):
         user_id = _get_user_id(auth_header=auth_header)
 
         # Guests don’t need an external check
-        if not user_id.startswith("guest."):
+        if not user_id or not user_id.startswith("guest."):
             await _validate_with_cyoda(token)
 
         return await func(*args, **kwargs)

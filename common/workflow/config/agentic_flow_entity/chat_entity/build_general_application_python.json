@@ -70,6 +70,34 @@
                 {
                   "type": "function",
                   "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
                     "name": "web_search",
                     "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
                     "strict": true,
@@ -195,6 +223,34 @@
               "allow_anonymous_users": true,
               "model": {},
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -377,7 +433,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "Let's discuss the API for your application together. Would you like to enhance the current version?",
+              "question": "Let's review the API for your application together. Are you interested in enhancing the current version?",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -399,6 +455,34 @@
               "allow_anonymous_users": true,
               "model": {},
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -680,7 +764,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "First Prototype Ready for Validation\n\nWe have completed the first prototype for your functional requirements. \n\nTo validate the API, please follow the steps below:\n\n**1. Run the Application**\n\nExecute the following command to start the application:\n\n```python \npython entity/prototype.py\n```\n\n2. Validate the API\nOnce the application is running, open your browser and navigate to:\n```\nhttp://localhost:8000/docs or http://localhost:8000/scalar\n```\nRequest and response examples are available in entity/functional_requirement.md\n\nThis will allow you to validate the API response. Please let me know when you are happy with the result.",
+              "question": "First Prototype Ready for Validation\n\nWe’re excited to share that the initial prototype based on your functional requirements is now complete.\n\nTo validate the API, please follow the steps below:\n\n**1. Run the Application**\n\nUse the command below to start the application:\n\n```python\npython entity/prototype.py\n```\n\n**2. Validate the API**\n\nOnce the application is running, open your browser and go to:\n```\nhttp://localhost:8000/docs\nor\nhttp://localhost:8000/scalar\n```\n\nYou can find example requests and responses in `entity/functional_requirement.md`.\n\nThis will help you validate the API responses. Let me know once you're happy with the results or if you'd like to make any adjustments.",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -702,6 +786,34 @@
               "allow_anonymous_users": true,
               "model": {},
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -887,7 +999,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "Congratulations on successfully completing your application prototype!\uD83E\uDD73\n \nYou’ve put in a lot of hard work to bring your idea to life, and it’s truly exciting to see it in action. \n\n\uD83E\uDE85\uD83E\uDE85\uD83E\uDE85This is an important milestone—well done!\uD83E\uDE85\uD83E\uDE85\uD83E\uDE85\n\nHowever, as impressive as your prototype is, it’s not yet fully robust. A few critical components are missing:\n\n**Scalability and High Availability**\n\n**Persistence and Data Integrity**\n\n**Production-Ready Features**\n\nTo address these gaps and ensure your application can handle real-world demands, we recommend refactoring your solution using the Cyoda Framework. By deploying to a High Availability (HA) cluster on Cyoda Cloud, you’ll benefit from:\n\n**Enterprise-grade reliability and failover capabilities**\n\n**Seamless data persistence**\n\n**Streamlined deployment and scaling processes**\n\n**A comprehensive set of production-ready tools and services**\n\nWe believe this transformation will empower your application to reach its full potential. Would you like to proceed with refactoring your prototype to make it robust, production-ready, and fully deployable on Cyoda Cloud?\n\nJust give me a thumbs up! \uD83D\uDC4D ",
+              "question": "Congratulations on successfully completing your application prototype! 🥳\n\nYou’ve put in a lot of hard work to bring your idea to life, and it’s truly exciting to see it in action.\n\n🧐🧐🧐 This is an important milestone—well done! 🧐🧐🧐\n\nThat said, while your prototype is impressive, it’s not yet fully robust. A few critical components are still missing:\n\n**Scalability and High Availability**\n\n**Persistence and Data Integrity**\n\n**Production-Ready Features**\n\nTo address these gaps and ensure your application can handle real-world demands, we recommend refactoring your solution using the Cyoda Framework. By deploying to a High Availability (HA) cluster on Cyoda Cloud, you’ll gain access to:\n\n**Enterprise-grade reliability and failover capabilities**\n\n**Seamless data persistence**\n\n**Streamlined deployment and scaling processes**\n\n**A comprehensive suite of production-ready tools and services**\n\nWe believe this transformation will empower your application to reach its full potential.\n\nWould you like to proceed with refactoring your prototype to make it robust, production-ready, and fully deployable on Cyoda Cloud?\n\nJust give me a thumbs up! 👍\n\nIf you'd like to get more info about Cyoda, don't hesitate to ask!",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -905,7 +1017,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "Awesome! Let's dive into generating your application code! \uD83D\uDE80 \n\nI'll keep you updated with notifications on my progress, and let you know when it's time to discuss any changes.\n \nFeel free to grab a coffee ☕ while I work—it's going to take about 2 minutes. \n \nJust relax and wait for the update!\n\nIn this process, we will walk through each stage of building an application, from gathering initial requirements to designing, coding, and implementing the final logic.\n\n### The stages of the process are as follows:\n\n1. **Entities design**:  \n   Let's define the JSON data structure for each entity.\n   *Output documents*: entity/*\n\n2. **Workflow design**:  \n   Let's ensure our entity workflow is correctly defined.\n   *Output documents*: entity/*/workflow.json\n\n3. **Workflow processors code design**:  \n   Let's implement the workflow processors.\n   *Output documents*: entity/*/workflow.py ",
+              "notification": "🚀 Awesome! Let's dive into generating your application code.\n\nI’ll take care of everything and notify you once the process is complete—no interruptions needed.\n\nIn the meantime, feel free to grab a coffee ☕ and relax—this will take about 5 minutes.\n\nWe're about to walk through the full cycle of building your application, from requirements to implementation.\n\n### 🛠️ Here's what’s happening behind the scenes:\n\n1. **Entity Design**  \n   Defining the JSON data structure for each entity.  \n   _📄 Output: `entity/*`_\n\n2. **Workflow Design**  \n   Structuring how each entity behaves and transitions.  \n   _📄 Output: `entity/*/workflow.json`_\n\n3. **Workflow Processor Implementation**  \n   Writing the Python code that powers your workflows.  \n   _📄 Output: `entity/*/workflow.py`_\n\nSit back and let me do the work. I’ll let you know as soon as everything’s ready to go! ✅",
               "publish": true
             }
           }
@@ -1325,7 +1437,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "question": "Your application is now complete! Thank you!\n\nIf you need any further assistance, please let me know.\n\nTo proceed with your application, you can use the following prompt starters:\nAdd a new feature\nCreate a new entity with {entity_name}\nUpdate the API as per requirements\n\nSearch the web\nRead content from a URL\nScrape webpage content using a CSS selector\nSave data to a file (e.g. entity/entity_name/workflow.py, app.py)\nRead data from a file\nUpdate an entity workflow\nAdd an entity workflow\nModify existing processors\n\nRefresh the context\nDeploy the Cyoda environment or application\n\nAnswer general questions\n\nLet me know how I can assist further! \uD83D\uDE80",
+              "question": "🎉 Your application is now complete—congratulations! \n\nYou've done the hard part—now let’s get it running and unlock its full potential. 🚀\n\n---\n\n**🧠 How It Works**\nYour app is powered by the **Cyoda Finite State Machine (FSM)**, which orchestrates workflows, events, and processors through a robust gRPC-based engine. \n\nYou can run the app locally or deploy it to the cloud—either way, setup is straightforward.\n\n---\n\n**▶️ Running Your App Locally**\nTo run your application on your machine:\n\n1. **Make sure your Cyoda environment is up and running.**\n   - Ask in chat:\n     ```\n     deploy cyoda env\n     ```\n   - We’ll deploy it for you and share a link once it’s ready.\n   - 🔐 *Note: This feature is only available to logged-in users.*\n\n2. **Start your app with:**\n   ```\n   python app.py\n   ```\n   ✅ At startup, your app will automatically:\n   - Connect to your Cyoda environment via gRPC (no setup needed)\n   - Import workflow configurations from `entity/workflow/`\n   - Register your workflows and get ready to process events\n\n3. **Access your Cyoda environment:**\n   - Use the link we provide to verify that your workflows have been successfully registered.\n\n4. **Test your app end-to-end:**\n   - Perform actions (like saving entities) as defined in your app logic.\n   - The `commons` module will dispatch events to your processors (`entity/workflow/workflow.py`).\n   - Events will be handled by Cyoda FSM seamlessly.\n\n---\n\n**☁️ Want to Deploy Your App?**\nSimply ask:\n```\ndeploy user app\n```\nWe’ll handle the deployment and provide a public link once it’s live.\n\n---\n\n**🧭 What You Can Do Next**\nHere are some prompt starters to guide your next steps:\n\n- Add a new feature\n- Create a new entity with `{entity_name}`\n- Update the API as per requirements\n- Update or add entity workflows\n- Modify existing processors\n- Search the web / read content from a URL / scrape data\n- Save or read files (e.g., `app.py`, `workflow.py`)\n- Deploy or refresh your environment\n- Ask general questions\n\n---\n\n**📈 Ready to Take It Further?**\nYou can:\n- Edit your API\n- Add or modify entities and workflows\n- Refactor processor logic\n\nSubmit a feature request in chat, and I’ll walk you through the next steps with a tailored plan.\n\nIf you'd like to learn more about Cyoda and how it works behind the scenes, just ask. I'm here to help! 💬",
               "publish": true
             }
           }

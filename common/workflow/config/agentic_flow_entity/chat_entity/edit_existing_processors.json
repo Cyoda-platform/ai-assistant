@@ -68,7 +68,7 @@
             "name": "notify_user",
             "config": {
               "type": "question",
-              "question": "Please let me know if I can help!",
+              "question": "Your processor has been adjusted as requested. Would you like to review it together or explore additional changes?",
               "publish": true
             }
           }

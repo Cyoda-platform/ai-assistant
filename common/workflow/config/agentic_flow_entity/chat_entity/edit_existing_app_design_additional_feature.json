@@ -60,7 +60,7 @@
             "name": "notify_user",
             "config": {
               "type": "notification",
-              "question": "Examples to proceed:\n\nPlease, add a new entity for ...\nPlease, add a workflow for ...\n\nPlease let me know if I can help!",
+              "question": "Here are some examples of what you can do next:\n\n- Please add a new entity for ...\n- Please add a workflow for ...\n\nLet me know how I can assist you further—I'm here to help!",
               "publish": true
             }
           }

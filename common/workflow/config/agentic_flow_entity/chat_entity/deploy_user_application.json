@@ -81,7 +81,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "Your application has been successfully deployed to  {user_env_name} !  API docs are available at https://{user_env_name}/scalar.",
+              "notification": "✅ Your application has been successfully deployed to **{user_env_name}**!\n\n📄 API documentation is now available at:\n- https://{user_env_name}/scalar\n- https://{user_env_name}/docs\n\nYou can use either link to explore and test your API endpoints interactively.\n\n🚀 Your app is now connected to your Cyoda environment and ready to process workflows. Try running your app locally with:\n```bash\npython app.py\n```\nThis will automatically initialize your workflows and establish communication with your deployed environment.\n\nLet us know if you'd like help validating your API, testing event flows, or making further improvements!",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -94,7 +94,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "Sorry, we had internal issues while building your application",
+              "notification": "⚠️ Sorry, we encountered internal issues while building your application.\n\nOur team has been alerted and is investigating the problem. Please try again shortly.\n\nIf the issue persists, feel free to ask for help—we're here to support you!",
               "publish": true,
               "allow_anonymous_users": true
             }
