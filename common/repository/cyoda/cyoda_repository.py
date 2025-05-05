@@ -143,6 +143,8 @@ class CyodaRepository(CrudRepository):
             data=json.dumps(criteria)
         )
         snapshot_id = resp.get("json")
+        if resp.get('status') == 404:
+            return []
 
         # 2) poll until ready
         await self._wait_for_search_completion(snapshot_id)

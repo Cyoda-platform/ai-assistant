@@ -13,12 +13,12 @@ logger = logging.getLogger(__name__)
 
 
 async def trigger_manual_transition(
-    entity_service,
-    chat: ChatEntity,
-    answer,
-    cyoda_auth_service,
-    user_file=None,
-    transition = None
+        entity_service,
+        chat: ChatEntity,
+        answer,
+        cyoda_auth_service,
+        user_file=None,
+        transition=None
 ) -> Tuple[str, bool]:
     # Resolve the user's answer
     user_answer = (
@@ -35,7 +35,7 @@ async def trigger_manual_transition(
     )
 
     # Shared “answer + increment + launch” logic
-    async def process_entity(entity: ChatEntity, technical_id: str):
+    async def process_entity(entity: ChatEntity, technical_id: str, process_entity_transition=None) -> bool:
         entity.chat_flow.finished_flow.append(
             FlowEdgeMessage(
                 type="answer",
@@ -51,14 +51,15 @@ async def trigger_manual_transition(
             technical_id=technical_id,
             entity_service=entity_service,
             cyoda_auth_service=cyoda_auth_service,
-            transition=transition
+            transition=process_entity_transition if process_entity_transition else transition
         )
-    #last child entity always takes precedence
+
+    # last child entity always takes precedence
     # Recursive DFS that only unlocks on the root fallback
     async def traverse_and_process(
-        entity: ChatEntity,
-        technical_id: str,
-        is_root: bool = False
+            entity: ChatEntity,
+            technical_id: str,
+            is_root: bool = False
     ) -> bool:
         # If locked and has children, try them first
         if entity.current_state.startswith(LOCKED_CHAT) and entity.child_entities:
@@ -79,7 +80,6 @@ async def trigger_manual_transition(
                 if not child.current_state.startswith(LOCKED_CHAT):
                     return await process_entity(child, child_id)
 
-
             # No unlocked descendants—only unlock if this is the root
             if is_root:
                 entity.locked = False
@@ -91,15 +91,23 @@ async def trigger_manual_transition(
                     cyoda_auth_service=cyoda_auth_service,
                     transition=UNLOCK_CHAT_TRANSITION
                 )
-                await process_entity(entity, technical_id)
-                return True
+                return await process_entity(entity, technical_id)
             else:
                 # intermediate locked node but nothing to do here
                 return False
-
+        elif entity.current_state.startswith(LOCKED_CHAT) and not entity.child_entities:
+            entity.locked = False
+            # launch a transition to clear the lock
+            await _launch_transition(
+                entity=entity,
+                technical_id=technical_id,
+                entity_service=entity_service,
+                cyoda_auth_service=cyoda_auth_service,
+                transition=UNLOCK_CHAT_TRANSITION
+            )
+            return await process_entity(entity, technical_id)
         # Otherwise (not locked or no children): process immediately
-        await process_entity(entity, technical_id)
-        return True
+        return await process_entity(entity, technical_id)
 
     # Kick off with is_root=True so only chat itself can be unlocked
     transitioned = await traverse_and_process(chat, chat.technical_id, is_root=True)
