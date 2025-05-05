@@ -518,19 +518,30 @@ async def send_request(headers, url, method, data=None, json=None):
                 content = None
         elif method == 'POST':
             response = await client.post(url, headers=headers, data=data, json=json)
-            response.raise_for_status()
-            content = response.json() if 'application/json' in response.headers.get('Content-Type',
+            if response.status_code in (200, 404):
+                content = response.json() if 'application/json' in response.headers.get('Content-Type',
                                                                                     '') else response.text
+            else:
+                response.raise_for_status()
+                content = None
         elif method == 'PUT':
             response = await client.put(url, headers=headers, data=data, json=json)
-            response.raise_for_status()
-            content = response.json() if 'application/json' in response.headers.get('Content-Type',
-                                                                                    '') else response.text
+            if response.status_code in (200, 404):
+                response.raise_for_status()
+                content = response.json() if 'application/json' in response.headers.get('Content-Type',
+                                                                                        '') else response.text
+            else:
+                response.raise_for_status()
+                content = None
         elif method == 'DELETE':
             response = await client.delete(url, headers=headers)
-            response.raise_for_status()
-            content = response.json() if 'application/json' in response.headers.get('Content-Type',
-                                                                                    '') else response.text
+            if response.status_code in (200, 404):
+                response.raise_for_status()
+                content = response.json() if 'application/json' in response.headers.get('Content-Type',
+                                                                                        '') else response.text
+            else:
+                response.raise_for_status()
+                content = None
         else:
             raise ValueError("Unsupported HTTP method")
 
