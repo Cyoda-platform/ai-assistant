@@ -421,47 +421,49 @@ class ChatWorkflow(Workflow):
                 entity.failed = True
                 entity.error = f"Error: {e}"
                 logger.exception(e)
+
+            await _save_file(chat_id=technical_id,
+                             _data=app_post_process(code_without_workflow),
+                             item=f"routes/routes.py")
+            awaited_entity_ids = []
+            for item in workflow_json:
+                # For each key-value pair in the dictionary, where key is the entity name and value is the code snippet
+                for entity_name, entity_value in item.items():
+                    workflow_cache = {
+                        'workflow_function': entity_value.get("workflow_function"),  # f"process_{entity_name}",
+                        'entity_name': entity_name
+                    }
+                    edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
+                                                                         entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                                         entity_version=ENTITY_VERSION,
+                                                                         entity=entity_value.get("code"),
+                                                                         meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                    edge_messages_store = {
+                        'code': edge_message_id,
+                    }
+
+                    child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
+                        entity_service=self.entity_service,
+                        technical_id=technical_id,
+                        entity=entity,
+                        entity_model=AGENTIC_FLOW_ENTITY,
+                        workflow_name=GENERATING_GEN_APP_WORKFLOW,
+                        workflow_cache=workflow_cache,
+                        edge_messages_store=edge_messages_store)
+                    awaited_entity_ids.append(child_technical_id)
+
+            if awaited_entity_ids:
+                scheduled_entity_id = await self.workflow_helper_service.launch_scheduled_workflow(
+                    entity_service=self.entity_service,
+                    awaited_entity_ids=awaited_entity_ids,
+                    triggered_entity_id=technical_id)
+                entity.scheduled_entities.append(scheduled_entity_id)
+            else:
+                raise Exception(f"No workflows generated for {technical_id}")
         except Exception as e:
             entity.failed = True
             entity.error = f"Error: {e}"
             logger.exception(e)
-
-        await _save_file(chat_id=technical_id,
-                         _data=app_post_process(code_without_workflow),
-                         item=f"routes/routes.py")
-        awaited_entity_ids = []
-        for item in workflow_json:
-            # For each key-value pair in the dictionary, where key is the entity name and value is the code snippet
-            for entity_name, entity_value in item.items():
-                workflow_cache = {
-                    'workflow_function': entity_value.get("workflow_function"),  # f"process_{entity_name}",
-                    'entity_name': entity_name
-                }
-                edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
-                                                                     entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
-                                                                     entity_version=ENTITY_VERSION,
-                                                                     entity=entity_value.get("code"),
-                                                                     meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
-                edge_messages_store = {
-                    'code': edge_message_id,
-                }
-
-                child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
-                    entity_service=self.entity_service,
-                    technical_id=technical_id,
-                    entity=entity,
-                    entity_model=AGENTIC_FLOW_ENTITY,
-                    workflow_name=GENERATING_GEN_APP_WORKFLOW,
-                    workflow_cache=workflow_cache,
-                    edge_messages_store=edge_messages_store)
-                awaited_entity_ids.append(child_technical_id)
-
-        if awaited_entity_ids:
-            scheduled_entity_id = await self.workflow_helper_service.launch_scheduled_workflow(
-                entity_service=self.entity_service,
-                awaited_entity_ids=awaited_entity_ids,
-                triggered_entity_id=technical_id)
-            entity.scheduled_entities.append(scheduled_entity_id)
 
     async def validate_workflow_design(self, technical_id, entity: AgenticFlowEntity, **params):
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
