@@ -66,11 +66,39 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "criteriaChecker": "ConditionCriteriaChecker",
         "user": "CYODA"
     }
+    proceed_chat_criteria_id = generate_id()
+    proceed_chat_criteria = {
+        "persisted": True,
+        "owner": "CYODA",
+        "id": proceed_chat_criteria_id,
+        "name": "has_succeeded",
+        "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+        "creationDate": "2025-05-02T15:17:30.992+02:00",
+        "description": "",
+        "condition": {
+            "@bean": "com.cyoda.core.conditions.GroupCondition",
+            "operator": "AND",
+            "conditions": [
+                {
+                    "@bean": "com.cyoda.core.conditions.queryable.Equals",
+                    "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.booleans.[$.failed]",
+                    "operation": "EQUALS",
+                    "rangeField": "false",
+                    "value": False,
+                    "queryable": True
+                }
+            ]
+        },
+        "aliasDefs": [],
+        "parameters": [],
+        "criteriaChecker": "ConditionCriteriaChecker",
+        "user": "CYODA"
+    }
     dto = {
         "@bean": "com.cyoda.core.model.stateMachine.dto.FullWorkflowContainerDto",
         "workflow": [],
         "transitions": [],
-        "criterias": [fail_chat_criteria],
+        "criterias": [fail_chat_criteria, proceed_chat_criteria],
         "processes": [],
         "states": [],
         "processParams": []
@@ -174,7 +202,14 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         for transition_name, transition_data in state_data["transitions"].items():
             transition_id = generate_id()
             dto["workflow"][0]["transitionIds"].append(transition_id)
-            criteria_ids = [] if transition_name != FAIL_TRANSITION else [fail_chat_criteria_id]
+            if transition_name != FAIL_TRANSITION:
+                #if active
+                if not transition_data.get("manual", False):
+                    criteria_ids = [proceed_chat_criteria_id]
+                else:
+                    criteria_ids = []
+            else:
+                criteria_ids = [fail_chat_criteria_id]
             process_ids = []
             end_state_name = transition_data["next"]
             end_state = save_new_state(end_state_name, state_map, default_param_values, class_name, state_data)

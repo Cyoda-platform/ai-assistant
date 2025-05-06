@@ -42,6 +42,7 @@ class GrpcClient:
         try:
             token = self.auth.get_access_token()
         except Exception as e:
+            logger.exception(e)
             logger.warning("Access‑token fetch failed, invalidating and retrying", exc_info=e)
             self.auth.invalidate_tokens()
             token = self.auth.get_access_token()
@@ -151,8 +152,9 @@ class GrpcClient:
                 technical_id=data['entityId']
             )
             data['payload']['data'] = model_cls.model_dump(entity)
-        except Exception:
+        except Exception as e:
             logger.exception("Error processing entity")
+            logger.exception(e)
             entity.failed = True
             data['payload']['data'] = model_cls.model_dump(entity)
             resp = None
@@ -202,6 +204,7 @@ class GrpcClient:
                 return
 
             except grpc.RpcError as e:
+                logger.exception(e)
                 # UNAUTHENTICATED → invalidate tokens, then retry with fresh creds
                 if getattr(e, "code", lambda: None)() == grpc.StatusCode.UNAUTHENTICATED:
                     logger.warning(
@@ -216,6 +219,7 @@ class GrpcClient:
 
             except Exception as e:
                 # Catch-all for anything unexpected
+                logger.exception(e)
                 logger.exception("Unexpected error in consume_stream", exc_info=e)
 
             # back off and retry

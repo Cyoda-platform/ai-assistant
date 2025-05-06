@@ -12,10 +12,9 @@ from common.config.conts import *
 from common.config.config import MOCK_AI, \
     ENTITY_VERSION, GOOGLE_SEARCH_KEY, \
     GOOGLE_SEARCH_CX, PROJECT_DIR, REPOSITORY_NAME, MAX_ITERATION, CYODA_ENTITY_TYPE_EDGE_MESSAGE, DATA_REPOSITORY_URL, \
-    CLIENT_HOST, CLIENT_QUART_TEMPLATE_REPOSITORY_URL, ScheduledAction, ACTION_URL_MAP, DEPLOY_CYODA_ENV_STATUS, \
-    DEPLOY_USER_APP_STATUS
+    CLIENT_HOST, CLIENT_QUART_TEMPLATE_REPOSITORY_URL, ScheduledAction, ACTION_URL_MAP
 from common.exception.exceptions import GuestChatsLimitExceededException
-from common.util.chat_util_functions import _launch_transition
+from common.util.chat_util_functions import _launch_transition, add_answer_to_finished_flow
 from common.util.utils import get_project_file_name, _git_push, _save_file, clone_repo, \
      parse_from_string, read_file_util, send_cyoda_request
 from entity.chat.data.data import BRANCH_READY_NOTIFICATION
@@ -28,7 +27,7 @@ from entity.chat.workflow.gen_and_validation.function_extractor import extract_f
 from entity.chat.workflow.gen_and_validation.result_validator import validate_ai_result
 from entity.chat.workflow.gen_and_validation.workflow_enricher import enrich_workflow
 from entity.chat.workflow.gen_and_validation.workflow_extractor import analyze_code_with_libcst
-from entity.model.model import AgenticFlowEntity, SchedulerEntity
+from entity.model.model import AgenticFlowEntity, SchedulerEntity, FlowEdgeMessage
 from entity.workflow import Workflow
 
 # Configure logging
@@ -227,9 +226,8 @@ class ChatWorkflow(Workflow):
             else:
                 result = soup.get_text(strip=True)
         except Exception as e:
-            entity.failed = True
-            entity.error = f"Error: {e}"
-            result = f"Error reading link: {e}"
+            logger.exception(e)
+            return "Sorry, there were issues while doing your task. Please retry."
         return result
 
     async def web_scrape(self, technical_id, entity: ChatEntity, **params) -> str:
@@ -420,6 +418,24 @@ class ChatWorkflow(Workflow):
                 # todo add retry here
                 entity.failed = True
                 entity.error = f"Error: {e}"
+                entity.error_code = AiErrorCodes.WRONG_GENERATED_CONTENT.value
+                error_message = "Validation failed. Please regenerate as no process_{entity_name} has been found. Make sure you use lowercase underscore entity names"
+
+                # Append to finished_flow and get the edge ID
+                edge_message_id = await add_answer_to_finished_flow(
+                    entity_service=self.entity_service,
+                    answer=error_message,
+                    cyoda_auth_service=self.cyoda_auth_service
+                )
+                entity.chat_flow.finished_flow.append(
+                    FlowEdgeMessage(
+                        type="answer",
+                        publish=True,
+                        edge_message_id=edge_message_id,
+                        consumed=False,
+                        user_id=entity.user_id
+                    )
+                )
                 logger.exception(e)
 
             await _save_file(chat_id=technical_id,
@@ -464,6 +480,11 @@ class ChatWorkflow(Workflow):
             entity.failed = True
             entity.error = f"Error: {e}"
             logger.exception(e)
+
+
+    async def reset_failed_entity(self, technical_id, entity: AgenticFlowEntity, **params):
+        entity.failed = False
+
 
     async def validate_workflow_design(self, technical_id, entity: AgenticFlowEntity, **params):
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
@@ -617,7 +638,7 @@ class ChatWorkflow(Workflow):
             resolve_entity_name: bool = False,
     ) -> str:
         # Clone the repo based on branch ID if provided
-        git_branch_id = params.get(GIT_BRANCH_PARAM)
+        git_branch_id: str = params.get(GIT_BRANCH_PARAM)
         if git_branch_id:
             if git_branch_id == "main":
                 logger.exception("Modifications to main branch are not allowed")

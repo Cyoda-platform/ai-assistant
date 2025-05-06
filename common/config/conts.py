@@ -77,3 +77,8 @@ class GetCyodaGuidelinesData(str, Enum):
     START_APP = "start_app"
     CYODA_BEST_PRACTICE = "cyoda_best_practice"
 
+class AiErrorCodes(str, Enum):
+    WRONG_GENERATED_CONTENT = "wrong_generated_content"
+
+
+

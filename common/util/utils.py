@@ -503,52 +503,51 @@ async def send_get_request(token: str, api_url: str, path: str) -> Optional[Any]
         logger.error(f"Error during GET request to {url}: {err}")
         raise
 
-
 async def send_request(headers, url, method, data=None, json=None):
-    async with httpx.AsyncClient(timeout=150.0) as client:
-        method = method.upper()
-        if method == 'GET':
-            response = await client.get(url, headers=headers)
-            # Only process GET responses with status 200 or 404 as in your original code
-            if response.status_code in (200, 404):
-                content = response.json() if 'application/json' in response.headers.get('Content-Type',
-                                                                                        '') else response.text
-            else:
-                response.raise_for_status()
-                content = None
-        elif method == 'POST':
-            response = await client.post(url, headers=headers, data=data, json=json)
-            if response.status_code in (200, 404):
-                content = response.json() if 'application/json' in response.headers.get('Content-Type',
-                                                                                    '') else response.text
-            else:
-                response.raise_for_status()
-                content = None
-        elif method == 'PUT':
-            response = await client.put(url, headers=headers, data=data, json=json)
-            if response.status_code in (200, 404):
-                response.raise_for_status()
-                content = response.json() if 'application/json' in response.headers.get('Content-Type',
-                                                                                        '') else response.text
-            else:
-                response.raise_for_status()
-                content = None
-        elif method == 'DELETE':
-            response = await client.delete(url, headers=headers)
-            if response.status_code in (200, 404):
-                response.raise_for_status()
-                content = response.json() if 'application/json' in response.headers.get('Content-Type',
-                                                                                        '') else response.text
-            else:
-                response.raise_for_status()
-                content = None
-        else:
-            raise ValueError("Unsupported HTTP method")
+    """
+    Send an HTTP request with the given headers and payload.
+    Behaves as before: for GET/POST, returns content on 200 or 404;
+    for PUT/DELETE, raises for 404 before returning content.
+    Raises InvalidTokenException on 401, and otherwise raises on other error-statuses.
+    """
+    method = method.upper()
+    if method not in {'GET', 'POST', 'PUT', 'DELETE'}:
+        raise ValueError(f"Unsupported HTTP method: {method}")
 
-        return {
-            "status": response.status_code,
-            "json": content
-        }
+    async with httpx.AsyncClient(timeout=150.0) as client:
+        # use the generic request interface to handle all verbs
+        response = await client.request(
+            method,
+            url,
+            headers=headers,
+            data=data,
+            json=json
+        )
+
+    status = response.status_code
+
+    if status == 401:
+        raise InvalidTokenException("Invalid token")
+
+    if status in (200, 404):
+        # PUT and DELETE originally raised even on 404 before reading content
+        if method in ('PUT', 'DELETE'):
+            response.raise_for_status()
+
+        ct = response.headers.get('Content-Type', '')
+        if 'application/json' in ct:
+            content = response.json()
+        else:
+            content = response.text
+    else:
+        response.raise_for_status()
+        content = None
+
+    return {
+        "status": status,
+        "json": content
+    }
+
 
 
 async def send_post_request(token: str, api_url: str, path: str, data=None, json=None) -> Optional[Any]:

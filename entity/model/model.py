@@ -15,6 +15,7 @@ class WorkflowEntity(BaseModel):
     edge_messages_store: Optional[Dict[str, Any]] = {}
     failed: Optional[bool] = False
     error: Optional[str] = None
+    error_code: Optional[str] = "None"
 
 
 class AIMessage(BaseModel):

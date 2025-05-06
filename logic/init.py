@@ -20,13 +20,21 @@ from entity.workflow_dispatcher import WorkflowDispatcher
 
 
 class BeanFactory:
+    _instance = None
+    _initialized = False
+
+    def __new__(cls, config=None):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self, config=None):
-        """
-        Initialize the dependency container. You can pass a configuration dictionary,
-        or rely on environment variables/default values.
-        """
-        # Load configuration, allowing overrides via environment or parameter.
-        # Initialize asynchronous lock (e.g., for handling concurrent chat operations)
+        # Only run the initialization logic a single time
+        if self.__class__._initialized:
+            return
+        self.__class__._initialized = True
+
+        # === your existing init logic ===
         self.chat_lock = asyncio.Lock()
 
         try:
@@ -37,14 +45,15 @@ class BeanFactory:
             self.workflow_helper_service = WorkflowHelperService(cyoda_auth_service=self.cyoda_auth_service)
             self.workflow = Workflow()
 
-            self.entity_repository = self._create_repository(repo_type=CHAT_REPOSITORY, cyoda_auth_service=self.cyoda_auth_service)
+            self.entity_repository = self._create_repository(repo_type=CHAT_REPOSITORY,
+                                                             cyoda_auth_service=self.cyoda_auth_service)
             self.entity_service = EntityServiceImpl(repository=self.entity_repository, model_registry=model_registry)
             self.scheduler = Scheduler(entity_service=self.entity_service, cyoda_auth_service=self.cyoda_auth_service)
             self.chat_workflow = ChatWorkflow(
                 dataset=self.dataset,
                 workflow_helper_service=self.workflow_helper_service,
                 entity_service=self.entity_service,
-                scheduler = self.scheduler,
+                scheduler=self.scheduler,
                 cyoda_auth_service=self.cyoda_auth_service
             )
             self.openai_client = AsyncOpenAIClient()
@@ -54,7 +63,7 @@ class BeanFactory:
                 cls=ChatWorkflow,
                 cls_instance=self.chat_workflow,
                 ai_agent=self.ai_agent,
-                entity_service = self.entity_service,
+                entity_service=self.entity_service,
                 cyoda_auth_service=self.cyoda_auth_service
             )
             self.flow_processor = FlowProcessor(
@@ -62,14 +71,12 @@ class BeanFactory:
             )
             self.grpc_client = GrpcClient(workflow_dispatcher=self.workflow_dispatcher, auth=self.cyoda_auth_service)
 
-
-
-
-
         except Exception as e:
             # Replace print with a proper logging framework in production.
             print("Error during BeanFactory initialization:", e)
             raise
+
+
 
     def _load_default_config(self):
         """

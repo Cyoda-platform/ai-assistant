@@ -1,7 +1,9 @@
+import json
 import logging
 
 from openai import AsyncOpenAI
 
+from common.util.utils import custom_serializer
 from entity.model.model import ModelConfig, ToolChoice
 
 logging.basicConfig(level=logging.INFO)
@@ -36,6 +38,7 @@ class AsyncOpenAIClient:
         Returns:
             The response from the OpenAI API.
         """
+        logger.info(f"Invoking openai client with messages: {json.dumps(messages, default=custom_serializer)}")
         if model.model_name in ["o4-mini"]:
             response = await self.client.chat.completions.create(
                 model=model.model_name,
@@ -58,6 +61,5 @@ class AsyncOpenAIClient:
                 tool_choice=tool_choice,
                 response_format=response_format
             )
-
-        logger.info(response)
+        logger.info(f"Invoked openai client with response: {response}")
         return response
