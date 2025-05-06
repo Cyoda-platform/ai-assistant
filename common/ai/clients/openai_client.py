@@ -38,7 +38,10 @@ class AsyncOpenAIClient:
         Returns:
             The response from the OpenAI API.
         """
-        logger.info(f"Invoking openai client with messages: {json.dumps(messages, default=custom_serializer)}")
+        try:
+            logger.info(f"Invoking openai client with messages: {json.dumps(messages[-1], default=custom_serializer)}")
+        except Exception as e:
+            logger.exception(e)
         if model.model_name in ["o4-mini"]:
             response = await self.client.chat.completions.create(
                 model=model.model_name,

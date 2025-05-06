@@ -272,7 +272,12 @@ class WorkflowDispatcher:
             branch_id = entity.workflow_cache.get(GIT_BRANCH_PARAM, technical_id)
             local_fs = input_data.get("local_fs")
             for file_name in local_fs:
-                file_contents = await self._read_local_file(file_name=file_name, technical_id=branch_id)
+                try:
+                    formatted_filename = file_name.format(**entity.workflow_cache)
+                except Exception as e:
+                    formatted_filename = file_name
+                    logger.exception(e)
+                file_contents = await self._read_local_file(file_name=formatted_filename, technical_id=branch_id)
                 messages.append({"role": "user", "content": f"Reference: {file_name}: \n {file_contents}"})
             #todo add edge messages
         return messages
