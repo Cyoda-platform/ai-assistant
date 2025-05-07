@@ -1,12 +1,16 @@
 import json
 import uuid
+import common.config.const as const
 from datetime import datetime
 from pathlib import Path
-from typing import Dict
 from zoneinfo import ZoneInfo
 
 from common.config.config import ENTITY_VERSION, GRPC_PROCESSOR_TAG
-from common.config.conts import MANUAL_RETRY_TRANSITION, FAIL_TRANSITION, LOCKED_CHAT
+
+
+
+def generate_id():
+    return str(uuid.uuid1())
 
 
 def convert(input_file_path, output_file_path, calculation_node_tags, model_name, model_version, workflow_name):
@@ -94,11 +98,39 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "criteriaChecker": "ConditionCriteriaChecker",
         "user": "CYODA"
     }
+    wrong_generated_content_criteria_id = generate_id()
+    wrong_generated_content_criteria = {
+        "persisted": True,
+        "owner": "CYODA",
+        "id": wrong_generated_content_criteria_id,
+        "name": "wrong_generated_content",
+        "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+        "creationDate": "2025-05-02T15:17:30.992+02:00",
+        "description": "",
+        "condition": {
+            "@bean": "com.cyoda.core.conditions.GroupCondition",
+            "operator": "AND",
+            "conditions": [
+                {
+                    "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
+                    "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.booleans.[$.error_code]",
+                    "operation": "IEQUALS",
+                    "rangeField": "false",
+                    "value": "wrong_generated_content"
+                }
+            ]
+        },
+        "aliasDefs": [],
+        "parameters": [],
+        "criteriaChecker": "ConditionCriteriaChecker",
+        "user": "CYODA"
+    }
+    error_codes_name_to_id = {const.AiErrorCodes.WRONG_GENERATED_CONTENT.value: wrong_generated_content_criteria_id}
     dto = {
         "@bean": "com.cyoda.core.model.stateMachine.dto.FullWorkflowContainerDto",
         "workflow": [],
         "transitions": [],
-        "criterias": [fail_chat_criteria, proceed_chat_criteria],
+        "criterias": [fail_chat_criteria, proceed_chat_criteria, wrong_generated_content_criteria],
         "processes": [],
         "states": [],
         "processParams": []
@@ -177,15 +209,18 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
 
     # Process states
     state_map = {}
+    state_name_to_id = {}
     transitions = []
+
     for state_name, state_data in input_json["states"].items():
         start_state = save_new_state(state_name, state_map, default_param_values, class_name, state_data)
-        state_data["transitions"][MANUAL_RETRY_TRANSITION] = {
+        state_name_to_id[state_name] = start_state
+        state_data["transitions"][const.MANUAL_RETRY_TRANSITION] = {
             "next": state_name,
             "manual": True
         }
-        state_data["transitions"][FAIL_TRANSITION] = {
-            "next": f"{LOCKED_CHAT}_{state_name}",
+        state_data["transitions"][const.FAIL_TRANSITION] = {
+            "next": f"{const.LOCKED_CHAT}_{state_name}",
             "action": {
                 "name": "process_event",
                 "config": {
@@ -198,21 +233,26 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                 }
             }
         }
+
         # Process transitions
-        for transition_name, transition_data in state_data["transitions"].items():
+        def add_transition(transition_name, transition_data, transition_start_state=None, transition_criteria_id=None):
             transition_id = generate_id()
             dto["workflow"][0]["transitionIds"].append(transition_id)
-            if transition_name != FAIL_TRANSITION:
-                #if active
-                if not transition_data.get("manual", False):
-                    criteria_ids = [proceed_chat_criteria_id]
-                else:
-                    criteria_ids = []
+            if transition_criteria_id:
+                criteria_ids = [transition_criteria_id]
             else:
-                criteria_ids = [fail_chat_criteria_id]
+                if transition_name != const.FAIL_TRANSITION:
+                    # if active
+                    if not transition_data.get("manual", False):
+                        criteria_ids = [proceed_chat_criteria_id]
+                    else:
+                        criteria_ids = []
+                else:
+                    criteria_ids = [fail_chat_criteria_id]
             process_ids = []
             end_state_name = transition_data["next"]
             end_state = save_new_state(end_state_name, state_map, default_param_values, class_name, state_data)
+            state_name_to_id[end_state_name] = end_state
             transitions.append({
                 "persisted": True,
                 "owner": default_param_values["owner"],
@@ -221,7 +261,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                 "entityClassName": class_name,
                 "creationDate": current_timestamp(),
                 "description": transition_data.get("description", ""),
-                "startStateId": start_state["id"],
+                "startStateId": transition_start_state["id"] if transition_start_state else start_state["id"],
                 "endStateId": end_state["id"],
                 "workflowId": workflow_id,
                 "criteriaIds": criteria_ids,
@@ -267,9 +307,10 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                     "newTransactionForAsync": transition_data["action"]["config"].get("new_transaction_for_async",
                                                                                       default_param_values[
                                                                                           "new_transaction_for_async"]),
-                    "noneTransactionalForAsync": transition_data["action"]["config"].get("none_transactional_for_async",
-                                                                                         default_param_values[
-                                                                                             "none_transactional_for_async"]),
+                    "noneTransactionalForAsync": transition_data["action"]["config"].get(
+                        "none_transactional_for_async",
+                        default_param_values[
+                            "none_transactional_for_async"]),
                     "isTemplate": False,
                     "criteriaIds": process_criteria_ids,
                     "user": default_param_values["user"]
@@ -299,8 +340,9 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                         "valueType": "STRING",
                         "value": {
                             "@type": "String",
-                            "value": str(transition_data["action"]["config"].get("attach_entity", default_param_values[
-                                "attach_entity"])).lower()
+                            "value": str(
+                                transition_data["action"]["config"].get("attach_entity", default_param_values[
+                                    "attach_entity"])).lower()
                         }
                     },
                     {
@@ -322,9 +364,10 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                         "name": "Retry policy",
                         "creationDate": current_timestamp(),
                         "valueType": "STRING",
-                        "value": {"@type": "String", "value": transition_data["action"]["config"].get("retry_policy",
-                                                                                                      default_param_values[
-                                                                                                          "retry_policy"])}
+                        "value": {"@type": "String",
+                                  "value": transition_data["action"]["config"].get("retry_policy",
+                                                                                   default_param_values[
+                                                                                       "retry_policy"])}
                     },
                     {
                         "persisted": True,
@@ -355,7 +398,8 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                                                                    default_param_values[
                                                                        "calculation_response_timeout_ms"])),
                     "retry_policy": transition_data["condition"]["config"].get("retry_policy",
-                                                                               default_param_values["retry_policy"]),
+                                                                               default_param_values[
+                                                                                   "retry_policy"]),
                     "name": transition_data["condition"]["config"]["function"]["name"],
                     "description": transition_data["condition"]["config"]["function"].get("description", ""),
                     "config": transition_data["condition"]["config"],
@@ -369,10 +413,31 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                 criteria_dto = generate_ext_criteria(criteria, criteria_id, criteria_params, class_name)
                 dto["criterias"].append(criteria_dto)
 
+        for transition_name, transition_data in state_data["transitions"].items():
+            add_transition(transition_name=transition_name, transition_data=transition_data)
+        if state_data.get("error_codes", []):
+            for state in state_data["error_codes"]:
+                transition_name = "process_error"
+                transition_data = {
+                    "next": state["next_state"],  # f"{LOCKED_CHAT}_{state_name}",
+                    "action": {
+                        "name": "process_event",
+                        "config": {
+                            "type": "function",
+                            "function": {
+                                "name": "reset_failed_entity",
+                                "description": "reset failed entity state"
+                            },
+                            "publish": True
+                        }
+                    }
+                }
+                add_transition(transition_name=transition_name, transition_data=transition_data,
+                               transition_start_state=state_name_to_id.get(f"{const.LOCKED_CHAT}_{state_name}"),
+                               transition_criteria_id=error_codes_name_to_id.get(state["error_code"]))
+
     dto["states"].extend(state_map.values())
     dto["transitions"].extend(transitions)
-
-
 
     add_none_state_if_not_exists(dto, default_param_values, class_name)
     return dto
@@ -439,10 +504,6 @@ def add_none_state_if_not_exists(dto, default_param_values, class_name):
             }
             dto["transitions"].append(new_transition)
             dto["workflow"][0]["transitionIds"].append(new_transition["id"])
-
-
-def generate_id():
-    return str(uuid.uuid1())
 
 
 def current_timestamp():

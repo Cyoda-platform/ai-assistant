@@ -1,4 +1,4 @@
-from entity.model.model import FlowEdgeMessage, AgenticFlowEntity
+from entity.model import AgenticFlowEntity
 
 class ChatEntity(AgenticFlowEntity):
     pass

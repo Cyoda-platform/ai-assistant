@@ -3,8 +3,8 @@ import logging
 
 from openai import AsyncOpenAI
 
-from common.util.utils import custom_serializer
-from entity.model.model import ModelConfig, ToolChoice
+from common.utils.utils import custom_serializer
+from entity.model import ModelConfig, ToolChoice
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

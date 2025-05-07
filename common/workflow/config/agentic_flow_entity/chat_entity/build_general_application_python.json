@@ -389,7 +389,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "Let's proceed to functional requirements. Please, give me a moment to think everything over.",
+              "notification": "Let's proceed to functional requirements. ⏳ Please, give me a moment to think everything over. 🤔",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -606,7 +606,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "Let's proceed to generating the first prototype. Please, give me a moment to think everything over: i will finalise the functional requirements first and then proceed to generation the first prototype.",
+              "notification":  "Let's proceed to generating the first prototype. ⏳ Please, give me a moment to think everything over: I will finalise the functional requirements first, and then proceed to generating the first prototype. \uD83E\uDD14",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -1197,24 +1197,6 @@
     },
     "generated_entities_data_design": {
       "transitions": {
-        "save_entity_templates": {
-          "next": "saved_entity_templates",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "function",
-              "function": {
-                "name": "save_entity_templates",
-                "description": "Clones template repository"
-              },
-              "publish": true
-            }
-          }
-        }
-      }
-    },
-    "saved_entity_templates": {
-      "transitions": {
         "generate_prototype_cyoda_workflow": {
           "next": "generated_prototype_cyoda_workflow",
           "action": {
@@ -1351,11 +1333,12 @@
           }
         }
       },
-      "error_codes": {
-        "wrong_generated_content": {
-          "next_transition": "saved_entity_templates"
+      "error_codes": [
+        {
+          "error_code": "wrong_generated_content",
+          "next_state": "generated_entities_data_design"
         }
-      }
+      ]
     },
     "launched_register_workflow_with_app": {
       "transitions": {
@@ -1382,16 +1365,17 @@
           "manual": true
         }
       },
-      "error_codes": {
-        "wrong_generated_content": {
-          "next_transition": "saved_entity_templates"
+      "error_codes": [
+        {
+          "error_code": "wrong_generated_content",
+          "next_state": "generated_entities_data_design"
         }
-      }
+      ]
     },
     "finished_app_generation_flow": {
       "transitions": {
         "update_rotes_file": {
-          "next": "updated_rotes_file",
+          "next": "updated_routes_file",
           "action": {
             "name": "process_event",
             "config": {
@@ -1445,7 +1429,7 @@
         }
       }
     },
-    "updated_rotes_file": {
+    "updated_routes_file": {
       "transitions": {
         "finished_app_generation_flow_notify": {
           "next": "finished_app_generation_flow_notified",

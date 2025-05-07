@@ -8,15 +8,12 @@ import os
 import aiofiles
 import black
 
-from common.config.config import MOCK_AI, VALIDATION_MAX_RETRIES, PROJECT_DIR, REPOSITORY_NAME, REPOSITORY_URL, \
-    WORKFLOW_AI_API, ENTITY_VERSION, MAX_GUEST_CHATS
-from common.config.conts import SCHEDULER_ENTITY
-from common.util.chat_util_functions import add_answer_to_finished_flow
-from common.util.utils import get_project_file_name, read_file, format_json_if_needed, parse_workflow_json, \
-    _save_file, current_timestamp
-from entity.chat.data.data import PUSHED_CHANGES_NOTIFICATION
+from common.config.config import MOCK_AI, PROJECT_DIR, REPOSITORY_NAME, REPOSITORY_URL, ENTITY_VERSION
+from common.config.const import SCHEDULER_ENTITY, PUSHED_CHANGES_NOTIFICATION
+from common.utils.chat_util_functions import add_answer_to_finished_flow
+from common.utils.utils import get_project_file_name, read_file, format_json_if_needed, _save_file, current_timestamp
 from entity.chat.model.chat import ChatEntity
-from entity.model.model import SchedulerEntity, FlowEdgeMessage, ScheduledAction
+from entity.model import SchedulerEntity, FlowEdgeMessage, ScheduledAction
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -41,44 +38,6 @@ class WorkflowHelperService:
             logger.error(f"Failed to read JSON file {mock_external_data_path}: {e}")
             raise
         json_mock_data = json.loads(data)
-
-    async def _get_valid_result(self, _data, schema, token, ai_endpoint, chat_id):
-        if MOCK_AI == "true" and not isinstance(_data, dict):
-            return _data
-        result = await self.ai_service.validate_and_parse_json(token=token,
-                                                               ai_endpoint=ai_endpoint,
-                                                               chat_id=chat_id,
-                                                               data=_data,
-                                                               schema=schema,
-                                                               max_retries=VALIDATION_MAX_RETRIES)
-        return result
-
-    async def run_chat(self, chat, _event, token, ai_endpoint, chat_id, additional_prompt=None):
-        event_prompt, prompt = await self.build_prompt(_event, chat) if not additional_prompt else (
-            {"prompt": additional_prompt}, additional_prompt)
-        user_file_name = None
-        if _event.get("user_file") and _event.get("user_file_processed") is False:
-            user_file_name = _event.get("user_file")
-            _event["user_file_processed"] = True
-
-        result = await self._get_chat_response(
-            prompt=prompt,
-            token=token,
-            ai_endpoint=ai_endpoint,
-            chat_id=chat_id,
-            user_file=user_file_name,
-        )
-
-        if event_prompt.get("schema"):
-            try:
-                result = await self._get_valid_result(_data=result,
-                                                      schema=event_prompt["schema"],
-                                                      token=token,
-                                                      ai_endpoint=ai_endpoint,
-                                                      chat_id=chat_id)
-            except Exception as e:
-                return {"success": "false", "error": str(e)}
-        return result
 
     async def build_prompt(self, _event, chat):
         if _event.get("function") and _event["function"].get("prompt"):
@@ -119,13 +78,6 @@ class WorkflowHelperService:
                     prompt_text = prompt_text.replace(f'${prompt_context_item}', str(chat_context))
         return prompt_text
 
-    async def _get_chat_response(self, prompt, token, ai_endpoint, chat_id, user_file=None):
-        """Get chat response either from the AI service or mock entity."""
-        if MOCK_AI == "true":
-            return self._mock_ai(prompt)
-        resp = await self.ai_service.ai_chat(token=token, ai_endpoint=ai_endpoint, chat_id=chat_id, ai_question=prompt,
-                                             user_file=user_file)
-        return resp
 
     def _mock_ai(self, prompt_text):
         return self.json_mock_data.get(prompt_text[:15], json.dumps({"entity": "some random text"}))
@@ -168,14 +120,6 @@ class WorkflowHelperService:
         except Exception as e:
             print(f"Error formatting code: {e}")
             return code  # Return the original code if formatting fails
-
-    async def _export_workflow_to_cyoda_ai(self, token, chat_id, _data):
-        if MOCK_AI == "true":
-            return
-        if _data.get("transitions"):
-            _data.get("transitions")[0]["start_state"] = "None"
-
-        await self.ai_service.export_workflow_to_cyoda_ai(token=token, chat_id=chat_id, data=_data)
 
     async def _send_notification(self, chat, event, notification_text, file_name=None, editable=False, publish=False):
         stack = chat["chat_flow"]["current_flow"]
@@ -330,61 +274,6 @@ class WorkflowHelperService:
             return "\n".join(commented_lines)
         else:
             return text
-
-    # what workflow could you recommend for this sketch: class_name = com.cyoda.tdb.model.treenode.TreeNodeEntity, name = job, workflow transitions: [{"name": "create_report", "start_state": "initial", "end_state": "report_generated", "process": "create_report"}]. All transitions automated, no criteria needed, only externalized processors allowed, calculation node = 3fc5df73-e8db-11ef-81a1-40c2ba0ac9eb, calculation_response_timeout_ms = 120000, sync_process=false, new_transaction_for_async=true.  Return only json without any comments.
-    async def generate_cyoda_workflow(self, token, entity_name, entity_workflow, chat_id, file_name):
-        # sourcery skip: use-named-expression
-        if MOCK_AI == "true":
-            return
-        try:
-            transitions = [{
-                "name": item.get("action", ""),
-                "start_state": item.get("start_state", ""),
-                "end_state": item.get("end_state", ""),
-                "process": item.get("action", ""),
-                "externalized_processor_name": item.get("action", "")
-            } for item in entity_workflow]
-            ai_question = f"what workflow could you recommend for this sketch: class_name = com.cyoda.tdb.model.treenode.TreeNodeEntity, name = {entity_name}, workflow transitions: {json.dumps(transitions)}. All transitions automated, no criteria needed, only externalized processors allowed, calculation node = {chat_id}, calculation_response_timeout_ms = 120000, sync_process=false, new_transaction_for_async=true.  Return only json without any comments."
-            resp = await self.ai_service.ai_chat(token=token, chat_id=chat_id, ai_endpoint={"model": WORKFLOW_AI_API},
-                                                 ai_question=ai_question)
-            logger.info(resp)
-            workflow = parse_workflow_json(resp)
-            workflow_json = json.loads(workflow)
-            workflow_json["name"] = f"{workflow_json["name"]}:ENTITY_VERSION_VAR:{chat_id}"
-            workflow_json["workflow_criteria"] = {
-                "externalized_criteria": [
-
-                ],
-                "condition_criteria": [
-                    {
-                        "name": f"{entity_name}:ENTITY_VERSION_VAR:{chat_id}",
-                        "description": "Workflow criteria",
-                        "condition": {
-                            "group_condition_operator": "AND",
-                            "conditions": [
-                                {
-                                    "field_name": "entityModelName",
-                                    "is_meta_field": True,
-                                    "operation": "equals",
-                                    "value": entity_name,
-                                    "value_type": "strings"
-                                },
-                                {
-                                    "field_name": "entityModelVersion",
-                                    "is_meta_field": True,
-                                    "operation": "equals",
-                                    "value": "ENTITY_VERSION_VAR",
-                                    "value_type": "strings"
-                                }
-                            ]
-                        }
-                    }
-                ]
-            }
-            await _save_file(chat_id=chat_id, _data=json.dumps(workflow_json), item=file_name)
-        except Exception as e:
-            logger.error(f"Error generating workflow: {e}")
-            logger.exception("Error generating workflow")
 
     def _process_question(self, question):
         if question.get("processed"):

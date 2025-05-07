@@ -5,7 +5,7 @@ from typing import Any, List
 from common.config.config import CHAT_REPOSITORY
 from common.repository.crud_repository import CrudRepository
 from common.service.entity_service_interface import EntityService
-from common.util.utils import parse_entity
+from common.utils.utils import parse_entity
 
 logger = logging.getLogger('quart')
 

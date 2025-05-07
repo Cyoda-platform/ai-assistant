@@ -2,7 +2,7 @@ import json
 
 from common.config.config import MAX_AI_AGENT_ITERATIONS
 from entity.chat.model.chat import ChatEntity
-from entity.model.model import ModelConfig
+from entity.model import ModelConfig
 
 
 #todo add react, prompt chaining etc - other techniques, add more implementations

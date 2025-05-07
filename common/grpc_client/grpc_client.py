@@ -8,8 +8,8 @@ from cloudevents_pb2 import CloudEvent
 from common.config import config
 from common.config.config import GRPC_PROCESSOR_TAG
 from cyoda_cloud_api_pb2_grpc import CloudEventsServiceStub
-from entity.model.model import WorkflowEntity
-from entity.model.model_registry import model_registry
+from entity.model import WorkflowEntity
+from entity.model_registry import model_registry
 
 # These tags/configs from your original snippet
 TAGS = [GRPC_PROCESSOR_TAG]

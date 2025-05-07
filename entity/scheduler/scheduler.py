@@ -1,12 +1,12 @@
 import asyncio
 import logging
+import common.config.const as const
 
 from common.config.config import ENTITY_VERSION, CHECK_DEPLOY_INTERVAL, DEPLOY_CYODA_ENV_STATUS, DEPLOY_USER_APP_STATUS, \
     ScheduledAction, ACTION_SUCCESS_TRANSITIONS, ACTION_FAILURE_TRANSITIONS
-from common.config.conts import SCHEDULER_CHECK_INTERVAL, LOCKED_CHAT, SCHEDULER_ENTITY, MAX_SCHEDULER_POLLS
-from common.util.chat_util_functions import _launch_transition
-from common.util.utils import send_cyoda_request
-from entity.model.model import SchedulerEntity
+from common.utils.chat_util_functions import _launch_transition
+from common.utils.utils import send_cyoda_request
+from entity.model import SchedulerEntity
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,8 +39,8 @@ class WorkflowTask:
 
     async def _run_entities_flow(
             self,
-            check_interval: float = SCHEDULER_CHECK_INTERVAL,
-            max_attempts: int = MAX_SCHEDULER_POLLS,
+            check_interval: float = const.SCHEDULER_CHECK_INTERVAL,
+            max_attempts: int = const.MAX_SCHEDULER_POLLS,
     ) -> None:
         """Wait until all child entities are LOCKED_CHAT, then launch transition,
         but give up after max_attempts polls."""
@@ -58,7 +58,7 @@ class WorkflowTask:
             ]
             children = await asyncio.gather(*tasks)
 
-            if all(c.get("current_state").startswith(LOCKED_CHAT) for c in children):
+            if all(c.get("current_state").startswith(const.LOCKED_CHAT) for c in children):
                 await _launch_transition(
                     entity_service=self.entity_service,
                     technical_id=self.technical_id,
@@ -77,7 +77,7 @@ class WorkflowTask:
     async def _run_deploy_flow(
             self,
             check_interval: float = CHECK_DEPLOY_INTERVAL,
-            max_attempts: int = MAX_SCHEDULER_POLLS,
+            max_attempts: int = const.MAX_SCHEDULER_POLLS,
     ) -> None:
         """Poll the deploy status endpoint until the build finishes,
         but fail after max_attempts polls."""
@@ -108,7 +108,7 @@ class WorkflowTask:
             else:
                 scheduled_entity: SchedulerEntity = await self.entity_service.get_item(
                     token=self.cyoda_auth_service,
-                    entity_model=SCHEDULER_ENTITY,
+                    entity_model=const.SCHEDULER_ENTITY,
                     entity_version=ENTITY_VERSION,
                     technical_id=self.technical_id
                 )
@@ -134,7 +134,7 @@ class WorkflowTask:
             if attempts >= max_attempts:
                 scheduled_entity: SchedulerEntity = await self.entity_service.get_item(
                     token=self.cyoda_auth_service,
-                    entity_model=SCHEDULER_ENTITY,
+                    entity_model=const.SCHEDULER_ENTITY,
                     entity_version=ENTITY_VERSION,
                     technical_id=self.technical_id
                 )

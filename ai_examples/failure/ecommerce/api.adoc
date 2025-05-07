@@ -1,0 +1,87 @@
+= E-commerce API Documentation
+:author: API Team
+:version: 1.0
+:doctype: article
+
+== Overview
+This API manages products, orders, and customers for an online e-commerce platform.
+
+== Base URL
+`https://api.ecommerce.com/v1`
+
+== Authentication
+Include your API token in the header:
+`Authorization: Bearer <token>`
+
+== Endpoints
+
+=== Products
+* **GET** `/products`
+  Retrieve a list of products.
+  _Query Parameters:_ `limit`, `offset`, `category`.
+
+* **GET** `/products/{productId}`
+  Retrieve detailed information for a specific product.
+
+* **POST** `/products`
+  Create a new product.
+  [source,json]
+  ----
+  {
+    "name": "Wireless Mouse",
+    "price": 29.99,
+    "category": "Electronics",
+    "description": "Ergonomic wireless mouse",
+    "stock": 150
+  }
+  ----
+
+* **PUT** `/products/{productId}`
+  Update an existing product.
+
+* **DELETE** `/products/{productId}`
+  Delete a product from the catalog.
+
+=== Orders
+* **GET** `/orders`
+  Retrieve all orders with optional filters.
+
+* **GET** `/orders/{orderId}`
+  Get details of a specific order.
+
+* **POST** `/orders`
+  Create a new order.
+  [source,json]
+  ----
+  {
+    "customerId": "cust123",
+    "items": [
+      { "productId": "prod456", "quantity": 2 },
+      { "productId": "prod789", "quantity": 1 }
+    ],
+    "shippingAddress": "123 Main St, City, Country",
+    "paymentMethod": "credit card"
+  }
+  ----
+
+* **PUT** `/orders/{orderId}`
+  Update order details (such as status).
+
+* **DELETE** `/orders/{orderId}`
+  Cancel an order.
+
+=== Customers
+* **GET** `/customers`
+  Retrieve a list of customers.
+
+* **GET** `/customers/{customerId}`
+  Retrieve details for a specific customer.
+
+* **POST** `/customers`
+  Create a new customer record.
+
+* **PUT** `/customers/{customerId}`
+  Update customer information.
+
+* **DELETE** `/customers/{customerId}`
+  Delete a customer account.

@@ -8,9 +8,9 @@ from typing import List, Any, Optional
 from common.config.config import (
     CYODA_ENTITY_TYPE_EDGE_MESSAGE,
 )
-from common.config.conts import EDGE_MESSAGE_CLASS, TREE_NODE_ENTITY_CLASS, UPDATE_TRANSITION, CYODA_PAGE_SIZE
+from common.config.const import EDGE_MESSAGE_CLASS, TREE_NODE_ENTITY_CLASS, UPDATE_TRANSITION, CYODA_PAGE_SIZE
 from common.repository.crud_repository import CrudRepository
-from common.util.utils import (
+from common.utils.utils import (
     custom_serializer,
     send_cyoda_request,
 )

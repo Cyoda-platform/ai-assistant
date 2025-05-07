@@ -1,0 +1,48 @@
+= IoT Device Management API Documentation
+:author: IoT Solutions
+:version: 1.0
+:doctype: article
+
+== Overview
+This API manages IoT devices, their configurations, and data streams.
+
+== Base URL
+`https://api.iotmanager.com/v1`
+
+== Authentication
+Use an API token for authentication:
+`Authorization: Bearer <token>`
+
+== Endpoints
+
+=== Devices
+* **GET** `/devices`
+  Retrieve a list of IoT devices.
+  _Query Parameters:_ `status`, `location`.
+
+* **GET** `/devices/{deviceId}`
+  Retrieve details for a specific device.
+
+* **POST** `/devices`
+  Register a new IoT device.
+  [source,json]
+  ----
+  {
+    "name": "Temperature Sensor",
+    "model": "TS-100",
+    "location": "Warehouse 3"
+  }
+  ----
+
+* **PUT** `/devices/{deviceId}`
+  Update device details.
+
+* **DELETE** `/devices/{deviceId}`
+  Remove an IoT device.
+
+=== Configurations
+* **GET** `/devices/{deviceId}/config`
+  Retrieve the configuration for a device.
+
+* **PUT** `/devices/{deviceId}/config`
+  Update device configuration.
