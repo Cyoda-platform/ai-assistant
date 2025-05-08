@@ -5,7 +5,7 @@ from quart import Blueprint, request, jsonify
 from quart_rate_limiter import rate_limit
 import jwt
 
-import common.config.config as config
+from common.config.config import config
 
 token_bp = Blueprint('token', __name__, url_prefix=config.API_PREFIX)
 

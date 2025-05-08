@@ -3,7 +3,7 @@ from quart import Blueprint, request, jsonify
 from quart_rate_limiter import rate_limit
 
 import common.config.const as const
-import common.config.config as config
+from common.config.config import config
 from common.utils.auth_utils import auth_optional, auth_required, get_user_id
 from services.chat_service import ChatService
 

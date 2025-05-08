@@ -1,7 +1,7 @@
 import asyncio
 import os
 
-import common.config.config as config
+from common.config.config import config as env_config
 import common.config.const as const
 from common.ai.ai_agent import OpenAiAgent
 from common.ai.clients.openai_client import AsyncOpenAIClient
@@ -44,7 +44,7 @@ class BeanFactory:
             self.workflow_helper_service = WorkflowHelperService(cyoda_auth_service=self.cyoda_auth_service)
             self.workflow = Workflow()
 
-            self.entity_repository = self._create_repository(repo_type=config.CHAT_REPOSITORY,
+            self.entity_repository = self._create_repository(repo_type=env_config.CHAT_REPOSITORY,
                                                              cyoda_auth_service=self.cyoda_auth_service)
             self.entity_service = EntityServiceImpl(repository=self.entity_repository, model_registry=model_registry)
             self.scheduler = Scheduler(entity_service=self.entity_service, cyoda_auth_service=self.cyoda_auth_service)

@@ -1,5 +1,5 @@
 from common.utils.utils import send_get_request
-import common.config.config as config
+from common.config.config import config
 from common.exception.exceptions import InvalidTokenException
 
 def extract_bearer_token(auth_header: str) -> str:

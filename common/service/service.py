@@ -2,7 +2,7 @@ import logging
 import threading
 from typing import Any, List
 
-from common.config.config import CHAT_REPOSITORY
+from common.config.config import config
 from common.repository.crud_repository import CrudRepository
 from common.service.entity_service_interface import EntityService
 from common.utils.utils import parse_entity
@@ -67,7 +67,7 @@ class EntityServiceImpl(EntityService):
 
     async def get_items_by_condition(self, token: str, entity_model: str, entity_version: str, condition: Any) -> List[Any]:
         """Retrieve multiple items based on their IDs."""
-        resp = await self._find_by_criteria(token, entity_model, entity_version, condition.get(CHAT_REPOSITORY))
+        resp = await self._find_by_criteria(token, entity_model, entity_version, condition.get(config.CHAT_REPOSITORY))
         if resp and isinstance(resp, dict) and resp.get("errorMessage"):
             return []
         model_cls = self._model_registry.get(entity_model.lower())

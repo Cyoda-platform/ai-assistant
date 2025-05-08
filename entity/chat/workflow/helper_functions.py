@@ -8,12 +8,12 @@ import os
 import aiofiles
 import black
 
-from common.config.config import MOCK_AI, PROJECT_DIR, REPOSITORY_NAME, REPOSITORY_URL, ENTITY_VERSION
+from common.config.config import config
 from common.config.const import SCHEDULER_ENTITY, PUSHED_CHANGES_NOTIFICATION
 from common.utils.chat_util_functions import add_answer_to_finished_flow
 from common.utils.utils import get_project_file_name, read_file, format_json_if_needed, _save_file, current_timestamp
 from entity.chat.model.chat import ChatEntity
-from entity.model import SchedulerEntity, FlowEdgeMessage, ScheduledAction
+from entity.model import SchedulerEntity, FlowEdgeMessage
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -25,7 +25,7 @@ class WorkflowHelperService:
         self.mock = mock
         self.cyoda_auth_service = cyoda_auth_service
 
-    if MOCK_AI == "true":
+    if config.MOCK_AI == "true":
         # generate_mock_data()
         current_dir = os.path.dirname(os.path.abspath(__file__))
         current_dir = os.path.dirname(current_dir)
@@ -168,7 +168,7 @@ class WorkflowHelperService:
         file_name = _event.get("file_name")
         if file_name:
             await _save_file(chat_id=chat["chat_id"], _data=_data, item=file_name)
-            notification_text = PUSHED_CHANGES_NOTIFICATION.format(file_name=file_name, repository_url=REPOSITORY_URL,
+            notification_text = PUSHED_CHANGES_NOTIFICATION.format(file_name=file_name, repository_url=config.REPOSITORY_URL,
                                                                    chat_id=chat["chat_id"])
             await self._send_notification(chat=chat, event=_event, notification_text=notification_text,
                                           file_name=file_name,
@@ -222,7 +222,7 @@ class WorkflowHelperService:
         )
 
     async def get_remote_branches(self, chat_id):
-        clone_dir = f"{PROJECT_DIR}/{chat_id}/{REPOSITORY_NAME}"
+        clone_dir = f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}"
 
         try:
             # Start the git branch -r command asynchronously to get remote branches
@@ -358,7 +358,7 @@ class WorkflowHelperService:
 
         child_technical_id = await entity_service.add_item(token=self.cyoda_auth_service,
                                                            entity_model=entity_model,
-                                                           entity_version=ENTITY_VERSION,
+                                                           entity_version=config.ENTITY_VERSION,
                                                            entity=child_entity)
         # lock parent chat
         entity.locked = True
@@ -369,7 +369,7 @@ class WorkflowHelperService:
                                         entity_service,
                                         awaited_entity_ids,
                                         triggered_entity_id,
-                                        scheduled_action: ScheduledAction = ScheduledAction.SCHEDULE_ENTITIES_FLOW):
+                                        scheduled_action: config.ScheduledAction = config.ScheduledAction.SCHEDULE_ENTITIES_FLOW):
 
         child_entity: SchedulerEntity = SchedulerEntity.model_validate({
             "user_id": "system",
@@ -381,7 +381,7 @@ class WorkflowHelperService:
 
         child_technical_id = await entity_service.add_item(token=self.cyoda_auth_service,
                                                            entity_model=SCHEDULER_ENTITY,
-                                                           entity_version=ENTITY_VERSION,
+                                                           entity_version=config.ENTITY_VERSION,
                                                            entity=child_entity)
 
         return child_technical_id

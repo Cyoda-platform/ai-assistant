@@ -6,13 +6,13 @@ import grpc
 
 from cloudevents_pb2 import CloudEvent
 from common.config import config
-from common.config.config import GRPC_PROCESSOR_TAG
+from common.config.config import config
 from cyoda_cloud_api_pb2_grpc import CloudEventsServiceStub
 from entity.model import WorkflowEntity
 from entity.model_registry import model_registry
 
 # These tags/configs from your original snippet
-TAGS = [GRPC_PROCESSOR_TAG]
+TAGS = [config.GRPC_PROCESSOR_TAG]
 OWNER = "PLAY"
 SPEC_VERSION = "1.0"
 SOURCE = "SimpleSample"

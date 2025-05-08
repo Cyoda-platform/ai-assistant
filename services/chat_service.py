@@ -3,12 +3,7 @@ import json
 import aiohttp
 from typing import List
 import common.config.const as const
-import common.config.config as config
-from common.config.config import (
-    RAW_REPOSITORY_URL,
-    CHAT_REPOSITORY,
-    CYODA_ENTITY_TYPE_EDGE_MESSAGE,
-)
+from common.config.config import config
 
 from common.exception.exceptions import (
     InvalidTokenException,
@@ -81,7 +76,7 @@ class ChatService:
                 "consumed": True,
                 "notification": "Hi! I'm Cyoda 🧚. Let me take a look at your question…"
             },
-            meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+            meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
         )
         greeting = FlowEdgeMessage(user_id=user_id, type="notification",
                                    publish=True, edge_message_id=edge_id)
@@ -200,7 +195,7 @@ class ChatService:
             technical_id=technical_id
         )
 
-        if not chat and CHAT_REPOSITORY == "local":
+        if not chat and config.CHAT_REPOSITORY == "local":
             async with self.chat_lock:
                 chat = await self.entity_service.get_item(
                     token=self.auth_service,
@@ -211,7 +206,7 @@ class ChatService:
                 if not chat:
                     await clone_repo(chat_id=technical_id)
                     async with aiohttp.ClientSession() as session:
-                        async with session.get(f"{RAW_REPOSITORY_URL}/{technical_id}/entity/chat.json") as resp:
+                        async with session.get(f"{config.RAW_REPOSITORY_URL}/{technical_id}/entity/chat.json") as resp:
                             data = await resp.text()
                     chat = ChatEntity.model_validate(json.loads(data))
                     if not chat:
@@ -383,7 +378,7 @@ class ChatService:
                     entity_model=const.FLOW_EDGE_MESSAGE_MODEL_NAME,
                     entity_version=config.ENTITY_VERSION,
                     technical_id=msg.edge_message_id,
-                    meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+                    meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
                 )
                 content["technical_id"] = msg.edge_message_id
                 dialogue.append(content)
@@ -394,7 +389,7 @@ class ChatService:
                     entity_model=const.FLOW_EDGE_MESSAGE_MODEL_NAME,
                     entity_version=config.ENTITY_VERSION,
                     technical_id=msg.edge_message_id,
-                    meta={"type":CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+                    meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
                 )
                 for child_id in content.get("child_entities", []):
                     child = await self.entity_service.get_item(

@@ -18,8 +18,7 @@ import jsonschema
 from jsonschema import validate
 
 from common.auth.cyoda_auth import CyodaAuthService
-from common.config.config import PROJECT_DIR, REPOSITORY_NAME, AUTH_SECRET_KEY, MAX_FILE_SIZE, CLONE_REPO, \
-    REPOSITORY_URL, CYODA_API_URL
+from common.config.config import config
 from common.exception.exceptions import InvalidTokenException
 
 logger = logging.getLogger(__name__)
@@ -411,8 +410,8 @@ async def read_file_object(file_path: str):
         # todo blocking!!!
         file_size = os.path.getsize(file_path)
 
-        if file_size > MAX_FILE_SIZE:
-            raise ValueError(f"File size exceeds the {MAX_FILE_SIZE} byte limit")
+        if file_size > config.MAX_FILE_SIZE:
+            raise ValueError(f"File size exceeds the {config.MAX_FILE_SIZE} byte limit")
 
         # Now open the file asynchronously if the size is within limits
         async with aiofiles.open(file_path, 'rb') as file:
@@ -450,7 +449,7 @@ async def send_cyoda_request(
         method: str,
         path: str,
         data: Any = None,
-        base_url: str = CYODA_API_URL
+        base_url: str = config.CYODA_API_URL
 ) -> dict:
     """
     Send an HTTP request to the Cyoda API with automatic retry on 401.
@@ -642,9 +641,9 @@ def clean_formatting(text):
 
 def get_project_file_name(chat_id, file_name, folder_name=None):
     if folder_name:
-        return f"{PROJECT_DIR}/{chat_id}/{REPOSITORY_NAME}/{folder_name}/{file_name}"
+        return f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}/{folder_name}/{file_name}"
     else:
-        return f"{PROJECT_DIR}/{chat_id}/{REPOSITORY_NAME}/{file_name}"
+        return f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}/{file_name}"
 
 
 def current_timestamp():
@@ -678,7 +677,7 @@ async def _save_file(chat_id, _data, item, folder_name=None) -> str:
     Save a file (text or binary) inside a specific directory.
     Handles FileStorage objects directly.
     """
-    target_dir = os.path.join(f"{PROJECT_DIR}/{chat_id}/{REPOSITORY_NAME}", folder_name or "")
+    target_dir = os.path.join(f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}", folder_name or "")
     file_path = os.path.join(target_dir, item)
     logger.info(f"Saving to {file_path}")
 
@@ -729,7 +728,7 @@ async def _save_file(chat_id, _data, item, folder_name=None) -> str:
         logger.info(f"Created {init_file}")
         file_paths_to_commit.append(init_file)
 
-    if CLONE_REPO == "true":
+    if config.CLONE_REPO == "true":
         await _git_push(chat_id, file_paths_to_commit, commit_message=f"saved {item}")
 
     logger.info(f"pushed to git")
@@ -738,7 +737,7 @@ async def _save_file(chat_id, _data, item, folder_name=None) -> str:
 
 
 async def git_pull(chat_id, merge_strategy="recursive"):
-    clone_dir = f"{PROJECT_DIR}/{chat_id}/{REPOSITORY_NAME}"
+    clone_dir = f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}"
 
     try:
         # Start the `git checkout` command asynchronously
@@ -816,7 +815,7 @@ async def git_pull(chat_id, merge_strategy="recursive"):
 async def _git_push(chat_id, file_paths: list, commit_message: str):
     await git_pull(chat_id=chat_id)
 
-    clone_dir = f"{PROJECT_DIR}/{chat_id}/{REPOSITORY_NAME}"
+    clone_dir = f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}"
 
     try:
         # Create a new branch with the name $chat_id
@@ -914,13 +913,13 @@ async def clone_repo(chat_id: str):
     Clone the GitHub repository to the target directory.
     If the repository should not be copied, it ensures the target directory exists.
     """
-    clone_dir = f"{PROJECT_DIR}/{chat_id}/{REPOSITORY_NAME}"
+    clone_dir = f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}"
 
     if await repo_exists(clone_dir):
         await git_pull(chat_id=chat_id)
         return
 
-    if CLONE_REPO != "true":
+    if config.CLONE_REPO != "true":
         # Create the directory asynchronously using asyncio.to_thread
         await asyncio.to_thread(os.makedirs, clone_dir, exist_ok=True)
         logger.info(f"Target directory '{clone_dir}' is created.")
@@ -928,7 +927,7 @@ async def clone_repo(chat_id: str):
 
     # Asynchronously clone the repository using subprocess
     clone_process = await asyncio.create_subprocess_exec(
-        'git', 'clone', REPOSITORY_URL, clone_dir,
+        'git', 'clone', config.REPOSITORY_URL, clone_dir,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )
@@ -960,7 +959,7 @@ async def clone_repo(chat_id: str):
 
 def validate_token(token):
     try:
-        payload = jwt.decode(token, AUTH_SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(token, config.AUTH_SECRET_KEY, algorithms=["HS256"])
         return payload
     except jwt.ExpiredSignatureError:
         raise InvalidTokenException()
@@ -1001,7 +1000,7 @@ def parse_entity(model_cls, resp: Any) -> Any:
 
 async def read_file_util(filename, technical_id):
     await git_pull(chat_id=technical_id)
-    target_dir = os.path.join(f"{PROJECT_DIR}/{technical_id}/{REPOSITORY_NAME}", "")
+    target_dir = os.path.join(f"{config.PROJECT_DIR}/{technical_id}/{config.REPOSITORY_NAME}", "")
     file_path = os.path.join(target_dir, filename)
     try:
         async with aiofiles.open(file_path, 'r') as file:

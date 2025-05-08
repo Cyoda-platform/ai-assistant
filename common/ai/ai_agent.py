@@ -1,13 +1,13 @@
 import json
 
-from common.config.config import MAX_AI_AGENT_ITERATIONS
+from common.config.config import config
 from entity.chat.model.chat import ChatEntity
 from entity.model import ModelConfig
 
 
 #todo add react, prompt chaining etc - other techniques, add more implementations
 class OpenAiAgent:
-    def __init__(self, client, max_calls=MAX_AI_AGENT_ITERATIONS):
+    def __init__(self, client, max_calls=config.MAX_AI_AGENT_ITERATIONS):
         """
         Initialize the AiAgent with a maximum number of API calls and a model name.
         """

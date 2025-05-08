@@ -1,7 +1,7 @@
 from typing import Dict, Any, Optional, List, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
-from common.config.config import ScheduledAction
+from common.config.config import config
 
 
 class WorkflowEntity(BaseModel):
@@ -70,7 +70,7 @@ class SchedulerEntity(WorkflowEntity):
     model_config = ConfigDict(extra="ignore")
     awaited_entity_ids: Optional[List[str]] = []
     triggered_entity_id: str = ""
-    scheduled_action: Optional[str] = ScheduledAction.SCHEDULE_ENTITIES_FLOW.value
+    scheduled_action: Optional[str] = config.ScheduledAction.SCHEDULE_ENTITIES_FLOW.value
     triggered_entity_next_transition: Optional[str] = None
 
 class QuestionsQueue(WorkflowEntity):

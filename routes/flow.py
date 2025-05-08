@@ -3,7 +3,7 @@ from datetime import timedelta
 from quart import Blueprint, jsonify
 from quart_rate_limiter import rate_limit
 import common.config.const as const
-import common.config.config as config
+from common.config.config import config
 
 flow_bp = Blueprint('flow', __name__, url_prefix=config.API_PREFIX)
 

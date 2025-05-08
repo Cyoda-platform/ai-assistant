@@ -5,9 +5,7 @@ import time
 import asyncio
 from typing import List, Any, Optional
 
-from common.config.config import (
-    CYODA_ENTITY_TYPE_EDGE_MESSAGE,
-)
+from common.config.config import config
 from common.config.const import EDGE_MESSAGE_CLASS, TREE_NODE_ENTITY_CLASS, UPDATE_TRANSITION, CYODA_PAGE_SIZE
 from common.repository.crud_repository import CrudRepository
 from common.utils.utils import (
@@ -114,7 +112,7 @@ class CyodaRepository(CrudRepository):
         return entities[0] if entities else None
 
     async def find_by_id(self, meta, _uuid: Any) -> Optional[Any]:
-        if meta and meta.get("type") == CYODA_ENTITY_TYPE_EDGE_MESSAGE:
+        if meta and meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE:
             if _uuid in _edge_messages_cache:
                 return _edge_messages_cache[_uuid]
             path = f"message/get/{_uuid}"
@@ -199,7 +197,7 @@ class CyodaRepository(CrudRepository):
         return entities
 
     async def save(self, meta, entity: Any) -> Any:
-        if meta.get("type") == CYODA_ENTITY_TYPE_EDGE_MESSAGE:
+        if meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE:
             payload = {
                 "meta-data": {"source": "ai_assistant"},
                 "payload": {"edge_message_content": entity},
@@ -217,7 +215,7 @@ class CyodaRepository(CrudRepository):
         if isinstance(result, list) and result:
             technical_id = result[0].get("entityIds", [None])[0]
 
-        if meta.get("type") == CYODA_ENTITY_TYPE_EDGE_MESSAGE and technical_id:
+        if meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE and technical_id:
             _edge_messages_cache[technical_id] = entity
 
         return technical_id
@@ -272,7 +270,7 @@ class CyodaRepository(CrudRepository):
     async def get_transitions(self, meta, technical_id: Any) -> Any:
         entity_class = (
             EDGE_MESSAGE_CLASS
-            if meta.get("type") == CYODA_ENTITY_TYPE_EDGE_MESSAGE
+            if meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE
             else TREE_NODE_ENTITY_CLASS
         )
         path = (
@@ -285,7 +283,7 @@ class CyodaRepository(CrudRepository):
     async def _launch_transition(self, meta, technical_id):
         entity_class = (
             EDGE_MESSAGE_CLASS
-            if meta.get("type") == CYODA_ENTITY_TYPE_EDGE_MESSAGE
+            if meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE
             else TREE_NODE_ENTITY_CLASS
         )
         path = (

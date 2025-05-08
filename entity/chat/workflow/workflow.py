@@ -8,10 +8,7 @@ import common.config.const as const
 from bs4 import BeautifulSoup
 from typing import Any
 from common.ai.nltk_service import get_most_similar_entity
-from common.config.config import MOCK_AI, \
-    ENTITY_VERSION, GOOGLE_SEARCH_KEY, \
-    GOOGLE_SEARCH_CX, PROJECT_DIR, REPOSITORY_NAME, MAX_ITERATION, CYODA_ENTITY_TYPE_EDGE_MESSAGE, DATA_REPOSITORY_URL, \
-    CLIENT_HOST, CLIENT_QUART_TEMPLATE_REPOSITORY_URL, ScheduledAction, ACTION_URL_MAP
+from common.config.config import config
 from common.exception.exceptions import GuestChatsLimitExceededException
 from common.utils.app_postprocessor import app_post_process
 from common.utils.batch_converter import convert_state_diagram_to_jsonl_dataset
@@ -67,12 +64,12 @@ class ChatWorkflow(Workflow):
             self,
             technical_id: str,
             entity: ChatEntity,
-            scheduled_action: ScheduledAction,
+            scheduled_action: config.ScheduledAction,
             extra_payload: dict | None = None
     ) -> str:
         # Determine endpoint from action
         try:
-            base_url = ACTION_URL_MAP[scheduled_action]
+            base_url = config.ACTION_URL_MAP[scheduled_action]
         except KeyError:
             raise ValueError(f"Unsupported scheduled action: {scheduled_action}")
 
@@ -120,7 +117,7 @@ class ChatWorkflow(Workflow):
         return await self._schedule_deploy(
             technical_id,
             entity,
-            scheduled_action=ScheduledAction.SCHEDULE_CYODA_ENV_DEPLOY
+            scheduled_action=config.ScheduledAction.SCHEDULE_CYODA_ENV_DEPLOY
         )
 
     async def schedule_build_user_application(
@@ -130,14 +127,14 @@ class ChatWorkflow(Workflow):
             **params
     ) -> str:
         extra_payload = {
-            "repository_url": CLIENT_QUART_TEMPLATE_REPOSITORY_URL,
+            "repository_url": config.CLIENT_QUART_TEMPLATE_REPOSITORY_URL,
             "branch": entity.workflow_cache.get(const.GIT_BRANCH_PARAM),
             "is_public": "true"
         }
         return await self._schedule_deploy(
             technical_id,
             entity,
-            scheduled_action=ScheduledAction.SCHEDULE_USER_APP_BUILD,
+            scheduled_action=config.ScheduledAction.SCHEDULE_USER_APP_BUILD,
             extra_payload=extra_payload
         )
 
@@ -148,14 +145,14 @@ class ChatWorkflow(Workflow):
             **params
     ) -> str:
         extra_payload = {
-            "repository_url": CLIENT_QUART_TEMPLATE_REPOSITORY_URL,
+            "repository_url": config.CLIENT_QUART_TEMPLATE_REPOSITORY_URL,
             "branch": entity.workflow_cache.get(const.GIT_BRANCH_PARAM),
             "is_public": "true"
         }
         return await self._schedule_deploy(
             technical_id,
             entity,
-            scheduled_action=ScheduledAction.SCHEDULE_USER_APP_DEPLOY,
+            scheduled_action=config.ScheduledAction.SCHEDULE_USER_APP_DEPLOY,
             extra_payload=extra_payload
         )
 
@@ -173,7 +170,7 @@ class ChatWorkflow(Workflow):
         return const.BRANCH_READY_NOTIFICATION.format(chat_id=technical_id)
 
     async def init_chats(self, technical_id, entity: ChatEntity, **params):
-        if MOCK_AI == "true":
+        if config.MOCK_AI == "true":
             return
         pass
 
@@ -184,8 +181,8 @@ class ChatWorkflow(Workflow):
         try:
             url = "https://www.googleapis.com/customsearch/v1"
             params = {
-                "key": GOOGLE_SEARCH_KEY,
-                "cx": GOOGLE_SEARCH_CX,
+                "key": config.GOOGLE_SEARCH_KEY,
+                "cx": config.GOOGLE_SEARCH_CX,
                 "q": params.get("query"),
                 "num": 1  # Retrieve only the first result
             }
@@ -292,7 +289,7 @@ class ChatWorkflow(Workflow):
         max_iteration = transitions.max_iteration
 
         if transition in current_iteration:
-            allowed_max = max_iteration.get(transition, MAX_ITERATION)
+            allowed_max = max_iteration.get(transition, config.MAX_ITERATION)
             if current_iteration[transition] > allowed_max:
                 return True
 
@@ -449,9 +446,9 @@ class ChatWorkflow(Workflow):
                     }
                     edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                                          entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
-                                                                         entity_version=ENTITY_VERSION,
+                                                                         entity_version=config.ENTITY_VERSION,
                                                                          entity=entity_value.get("code"),
-                                                                         meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                                         meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
                     edge_messages_store = {
                         'code': edge_message_id,
                     }
@@ -489,9 +486,9 @@ class ChatWorkflow(Workflow):
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
         result = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                     entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
-                                                    entity_version=ENTITY_VERSION,
+                                                    entity_version=config.ENTITY_VERSION,
                                                     technical_id=edge_message_id,
-                                                    meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                    meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
         is_valid, formatted_result = validate_ai_result(result, "result.py")
         if is_valid:
             return formatted_result
@@ -502,9 +499,9 @@ class ChatWorkflow(Workflow):
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
         result = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                     entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
-                                                    entity_version=ENTITY_VERSION,
+                                                    entity_version=config.ENTITY_VERSION,
                                                     technical_id=edge_message_id,
-                                                    meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                    meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
         return result is not None
 
     async def has_workflow_code_validation_failed(self, technical_id: str, entity: AgenticFlowEntity,
@@ -512,18 +509,18 @@ class ChatWorkflow(Workflow):
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
         result = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                     entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
-                                                    entity_version=ENTITY_VERSION,
+                                                    entity_version=config.ENTITY_VERSION,
                                                     technical_id=edge_message_id,
-                                                    meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                    meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
         return result is None
 
     async def save_extracted_workflow_code(self, technical_id, entity: AgenticFlowEntity, **params):
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
         source = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                     entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
-                                                    entity_version=ENTITY_VERSION,
+                                                    entity_version=config.ENTITY_VERSION,
                                                     technical_id=edge_message_id,
-                                                    meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                    meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
 
         code_without_function, extracted_function = extract_function(
             source=source,
@@ -541,9 +538,9 @@ class ChatWorkflow(Workflow):
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
         message_content = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                              entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
-                                                             entity_version=ENTITY_VERSION,
+                                                             entity_version=config.ENTITY_VERSION,
                                                              technical_id=edge_message_id,
-                                                             meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                             meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
         workflow_json = json.loads(message_content)
         workflow = enrich_workflow(workflow_json)
         await _save_file(
@@ -558,7 +555,7 @@ class ChatWorkflow(Workflow):
     async def schedule_workflow_tasks(self, technical_id, entity: SchedulerEntity, **params):
         result = self.scheduler.schedule_workflow_task(technical_id=technical_id,
                                                        awaited_entity_ids=entity.awaited_entity_ids,
-                                                       scheduled_action=ScheduledAction(entity.scheduled_action))
+                                                       scheduled_action=config.ScheduledAction(entity.scheduled_action))
         return result
 
     async def trigger_parent_entity(self, technical_id, entity: SchedulerEntity, **params):
@@ -591,15 +588,15 @@ class ChatWorkflow(Workflow):
         }
         app_api_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                         entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
-                                                        entity_version=ENTITY_VERSION,
+                                                        entity_version=config.ENTITY_VERSION,
                                                         entity=app_api,
-                                                        meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                        meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
 
         entities_description_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                                      entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
-                                                                     entity_version=ENTITY_VERSION,
+                                                                     entity_version=config.ENTITY_VERSION,
                                                                      entity=json.dumps(entities_description),
-                                                                     meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                                     meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
 
         edge_messages_store = {
             'app_api': app_api_id,
@@ -621,7 +618,7 @@ class ChatWorkflow(Workflow):
     async def get_cyoda_guidelines(
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
-        url = f"{DATA_REPOSITORY_URL}/get_cyoda_guidelines/{params.get("workflow_name")}.adoc"
+        url = f"{config.DATA_REPOSITORY_URL}/get_cyoda_guidelines/{params.get("workflow_name")}.adoc"
         return await self._fetch_data(url=url)
 
     # ==========
@@ -676,7 +673,7 @@ class ChatWorkflow(Workflow):
         if entity.user_id.startswith('guest'):
             raise GuestChatsLimitExceededException()
         #todo cloud manager needs to return namespace
-        params['cyoda_env_name'] = f"{entity.user_id.lower()}.{CLIENT_HOST}"
+        params['cyoda_env_name'] = f"{entity.user_id.lower()}.{config.CLIENT_HOST}"
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
@@ -693,7 +690,7 @@ class ChatWorkflow(Workflow):
             raise GuestChatsLimitExceededException()
 
         # todo cloud manager needs to return namespace
-        params['user_env_name'] = f"client-{entity.user_id.lower()}.{CLIENT_HOST}"
+        params['user_env_name'] = f"client-{entity.user_id.lower()}.{config.CLIENT_HOST}"
 
         return await self._schedule_workflow(
             technical_id=technical_id,
@@ -772,7 +769,7 @@ class ChatWorkflow(Workflow):
 
 
     async def get_entities_list(self, branch_id: str) -> list:
-        entity_dir = f"{PROJECT_DIR}/{branch_id}/{REPOSITORY_NAME}/entity"
+        entity_dir = f"{config.PROJECT_DIR}/{branch_id}/{config.REPOSITORY_NAME}/entity"
 
         # List all subdirectories (each subdirectory is an entity)
         entities = [name for name in os.listdir(entity_dir)

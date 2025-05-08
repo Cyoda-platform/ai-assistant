@@ -2,7 +2,7 @@ import functools
 import jwt
 from quart import request, jsonify
 
-import common.config.config as config
+from common.config.config import config
 from common.utils.request_utils import extract_bearer_token, validate_with_cyoda
 from common.exception.exceptions import InvalidTokenException, TokenExpiredException
 from common.utils.utils import validate_token

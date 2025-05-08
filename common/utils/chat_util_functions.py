@@ -2,7 +2,7 @@ import logging
 import common.config.const as const
 from typing import Tuple
 
-from common.config.config import ENTITY_VERSION, CYODA_ENTITY_TYPE_EDGE_MESSAGE
+from common.config.config import config
 from common.utils.file_reader import read_file_content
 from entity.chat.model.chat import ChatEntity
 from entity.model import FlowEdgeMessage
@@ -65,7 +65,7 @@ async def trigger_manual_transition(
                 child = await entity_service.get_item(
                     token=cyoda_auth_service,
                     entity_model=const.CHAT_MODEL_NAME,
-                    entity_version=ENTITY_VERSION,
+                    entity_version=config.ENTITY_VERSION,
                     technical_id=child_id
                 )
 
@@ -120,9 +120,9 @@ async def add_answer_to_finished_flow(entity_service, answer: str, cyoda_auth_se
     }
     edge_message_id = await entity_service.add_item(token=cyoda_auth_service,
                                                     entity_model=const.FLOW_EDGE_MESSAGE_MODEL_NAME,
-                                                    entity_version=ENTITY_VERSION,
+                                                    entity_version=config.ENTITY_VERSION,
                                                     entity=flow_message_content,
-                                                    meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                    meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
 
     return edge_message_id
 
@@ -171,7 +171,7 @@ async def _launch_transition(entity_service,
 
     await entity_service.update_item(token=cyoda_auth_service,
                                      entity_model=const.CHAT_MODEL_NAME,
-                                     entity_version=ENTITY_VERSION,
+                                     entity_version=config.ENTITY_VERSION,
                                      technical_id=technical_id,
                                      entity=entity,
                                      meta={"update_transition": next_transition})
@@ -198,9 +198,9 @@ async def enrich_config_message(entity_service, cyoda_auth_service, entity, conf
         result = await entity_service.get_item(
             token=cyoda_auth_service,
             entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
-            entity_version=ENTITY_VERSION,
+            entity_version=config.ENTITY_VERSION,
             technical_id=edge_id,
-            meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE},
+            meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE},
         )
         cache[key] = str(result)
 
