@@ -60,22 +60,22 @@ async def trigger_manual_transition(
             is_root: bool = False
     ) -> bool:
         # If locked and has children, try them first
-        if entity.current_state.startswith(const.LOCKED_CHAT) and entity.child_entities:
+        if entity.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) and entity.child_entities:
             for child_id in reversed(entity.child_entities):
                 child = await entity_service.get_item(
                     token=cyoda_auth_service,
-                    entity_model=const.CHAT_MODEL_NAME,
+                    entity_model=const.ModelName.CHAT_ENTITY.value,
                     entity_version=config.ENTITY_VERSION,
                     technical_id=child_id
                 )
 
                 # Recurse into further-locked nodes
-                if child.current_state.startswith(const.LOCKED_CHAT) and child.child_entities:
+                if child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) and child.child_entities:
                     if await traverse_and_process(child, child_id, False):
                         return True
 
                 # If we find an unlocked child, process it and stop
-                if not child.current_state.startswith(const.LOCKED_CHAT):
+                if not child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value):
                     return await process_entity(child, child_id)
 
             # No unlocked descendants—only unlock if this is the root
@@ -87,13 +87,13 @@ async def trigger_manual_transition(
                     technical_id=technical_id,
                     entity_service=entity_service,
                     cyoda_auth_service=cyoda_auth_service,
-                    transition=const.UNLOCK_CHAT_TRANSITION
+                    transition=const.TransitionKey.UNLOCK_CHAT.value
                 )
                 return await process_entity(entity, technical_id)
             else:
                 # intermediate locked node but nothing to do here
                 return False
-        elif entity.current_state.startswith(const.LOCKED_CHAT) and not entity.child_entities:
+        elif entity.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) and not entity.child_entities:
             entity.locked = False
             # launch a transition to clear the lock
             await _launch_transition(
@@ -101,7 +101,7 @@ async def trigger_manual_transition(
                 technical_id=technical_id,
                 entity_service=entity_service,
                 cyoda_auth_service=cyoda_auth_service,
-                transition=const.UNLOCK_CHAT_TRANSITION
+                transition=const.TransitionKey.UNLOCK_CHAT.value
             )
             return await process_entity(entity, technical_id)
         # Otherwise (not locked or no children): process immediately
@@ -119,7 +119,7 @@ async def add_answer_to_finished_flow(entity_service, answer: str, cyoda_auth_se
         "publish": publish
     }
     edge_message_id = await entity_service.add_item(token=cyoda_auth_service,
-                                                    entity_model=const.FLOW_EDGE_MESSAGE_MODEL_NAME,
+                                                    entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
                                                     entity_version=config.ENTITY_VERSION,
                                                     entity=flow_message_content,
                                                     meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
@@ -161,16 +161,16 @@ async def _launch_transition(entity_service,
 
     next_transition = transition if transition else next_transitions[0]
 
-    if next_transition == const.MANUAL_RETRY_TRANSITION and const.ROLLBACK_TRANSITION in next_transitions:
-        next_transition = const.ROLLBACK_TRANSITION
-    elif next_transition == const.MANUAL_RETRY_TRANSITION and const.PROCESS_USER_INPUT_TRANSITION in next_transitions:
-        next_transition = const.PROCESS_USER_INPUT_TRANSITION
+    if next_transition == const.TransitionKey.MANUAL_RETRY.value and const.TransitionKey.ROLLBACK.value in next_transitions:
+        next_transition = const.TransitionKey.ROLLBACK.value
+    elif next_transition == const.TransitionKey.MANUAL_RETRY.value and const.TransitionKey.PROCESS_USER_INPUT.value in next_transitions:
+        next_transition = const.TransitionKey.PROCESS_USER_INPUT.value
     if not next_transition:
         logger.exception('Sorry, no valid transitions found')
         return False
 
     await entity_service.update_item(token=cyoda_auth_service,
-                                     entity_model=const.CHAT_MODEL_NAME,
+                                     entity_model=const.ModelName.CHAT_ENTITY.value,
                                      entity_version=config.ENTITY_VERSION,
                                      technical_id=technical_id,
                                      entity=entity,
@@ -197,7 +197,7 @@ async def enrich_config_message(entity_service, cyoda_auth_service, entity, conf
     for key, edge_id in edge_store.items():
         result = await entity_service.get_item(
             token=cyoda_auth_service,
-            entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
+            entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
             entity_version=config.ENTITY_VERSION,
             technical_id=edge_id,
             meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE},

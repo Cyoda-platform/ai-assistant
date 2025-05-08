@@ -9,7 +9,6 @@ from quart_rate_limiter import RateLimiter, rate_limit
 import common.config.const as const
 from common.exception.errors import init_error_handlers
 from routes.chat import chat_bp
-from routes.flow import flow_bp
 from routes.token import token_bp
 from services.factory import grpc_client
 
@@ -61,7 +60,6 @@ def create_app():
         return await send_from_directory(app.static_folder, 'index.html')
 
     # --- Register blueprints ---
-    app.register_blueprint(flow_bp)
     app.register_blueprint(token_bp)
     app.register_blueprint(chat_bp)
 

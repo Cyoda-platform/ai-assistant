@@ -3,10 +3,10 @@ from entity.chat.model.chat import ChatEntity
 from entity.model import QuestionsQueue, SchedulerEntity, AgenticFlowEntity, ChatMemory
 
 model_registry = {
-    const.AGENTIC_FLOW_ENTITY: AgenticFlowEntity,
-    const.CHAT_MODEL_NAME: ChatEntity,
-    const.SCHEDULER_ENTITY: SchedulerEntity,
-    const.QUESTIONS_QUEUE_MODEL_NAME: QuestionsQueue,
-    const.MEMORY_MODEL_NAME: ChatMemory,
+    const.ModelName.AGENTIC_FLOW_ENTITY.value: AgenticFlowEntity,
+    const.ModelName.CHAT_ENTITY.value: ChatEntity,
+    const.ModelName.SCHEDULER_ENTITY.value: SchedulerEntity,
+    const.ModelName.QUESTIONS_QUEUE.value: QuestionsQueue,
+    const.ModelName.CHAT_MEMORY.value: ChatMemory,
 
 }

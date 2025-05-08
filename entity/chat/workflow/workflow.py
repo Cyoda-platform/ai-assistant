@@ -375,7 +375,7 @@ class ChatWorkflow(Workflow):
         return not entity.locked
 
     async def build_general_application(self, technical_id: str, entity: ChatEntity, **params: Any):
-        workflow_name = const.GEN_APP_ENTITY
+        workflow_name = const.ModelName.GEN_APP_ENTITY.value
         user_request = params.get("user_request")
         if not user_request:
             return "parameter user_request is required"
@@ -383,7 +383,7 @@ class ChatWorkflow(Workflow):
             entity_service=self.entity_service,
             technical_id=technical_id,
             entity=entity,
-            entity_model=const.CHAT_MODEL_NAME,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
             workflow_name=workflow_name,
             user_request=user_request,
             workflow_cache=params)
@@ -445,7 +445,7 @@ class ChatWorkflow(Workflow):
                         'entity_name': entity_name
                     }
                     edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
-                                                                         entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                                         entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
                                                                          entity_version=config.ENTITY_VERSION,
                                                                          entity=entity_value.get("code"),
                                                                          meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
@@ -457,8 +457,8 @@ class ChatWorkflow(Workflow):
                         entity_service=self.entity_service,
                         technical_id=technical_id,
                         entity=entity,
-                        entity_model=const.AGENTIC_FLOW_ENTITY,
-                        workflow_name=const.GENERATING_GEN_APP_WORKFLOW,
+                        entity_model=const.ModelName.AGENTIC_FLOW_ENTITY.value,
+                        workflow_name=const.ModelName.GENERATING_GEN_APP_WORKFLOW.value,
                         workflow_cache=workflow_cache,
                         edge_messages_store=edge_messages_store)
                     awaited_entity_ids.append(child_technical_id)
@@ -485,7 +485,7 @@ class ChatWorkflow(Workflow):
     async def validate_workflow_design(self, technical_id, entity: AgenticFlowEntity, **params):
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
         result = await self.entity_service.get_item(token=self.cyoda_auth_service,
-                                                    entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                    entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
                                                     entity_version=config.ENTITY_VERSION,
                                                     technical_id=edge_message_id,
                                                     meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
@@ -498,7 +498,7 @@ class ChatWorkflow(Workflow):
                                                      **params: Any) -> bool:
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
         result = await self.entity_service.get_item(token=self.cyoda_auth_service,
-                                                    entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                    entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
                                                     entity_version=config.ENTITY_VERSION,
                                                     technical_id=edge_message_id,
                                                     meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
@@ -508,7 +508,7 @@ class ChatWorkflow(Workflow):
                                                   **params: Any) -> bool:
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
         result = await self.entity_service.get_item(token=self.cyoda_auth_service,
-                                                    entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                    entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
                                                     entity_version=config.ENTITY_VERSION,
                                                     technical_id=edge_message_id,
                                                     meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
@@ -517,7 +517,7 @@ class ChatWorkflow(Workflow):
     async def save_extracted_workflow_code(self, technical_id, entity: AgenticFlowEntity, **params):
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
         source = await self.entity_service.get_item(token=self.cyoda_auth_service,
-                                                    entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                    entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
                                                     entity_version=config.ENTITY_VERSION,
                                                     technical_id=edge_message_id,
                                                     meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
@@ -537,7 +537,7 @@ class ChatWorkflow(Workflow):
         "design_workflow_from_code"
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
         message_content = await self.entity_service.get_item(token=self.cyoda_auth_service,
-                                                             entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                             entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
                                                              entity_version=config.ENTITY_VERSION,
                                                              technical_id=edge_message_id,
                                                              meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
@@ -587,13 +587,13 @@ class ChatWorkflow(Workflow):
             'user_request': params.get("user_request")
         }
         app_api_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
-                                                        entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                        entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
                                                         entity_version=config.ENTITY_VERSION,
                                                         entity=app_api,
                                                         meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
 
         entities_description_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
-                                                                     entity_model=const.EDGE_MESSAGE_STORE_MODEL_NAME,
+                                                                     entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
                                                                      entity_version=config.ENTITY_VERSION,
                                                                      entity=json.dumps(entities_description),
                                                                      meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
@@ -606,8 +606,8 @@ class ChatWorkflow(Workflow):
             entity_service=self.entity_service,
             technical_id=technical_id,
             entity=entity,
-            entity_model=const.CHAT_MODEL_NAME,
-            workflow_name=const.ADD_NEW_FEATURE,
+            entity_model=const.ModelName.CHAT_MODEL_NAME.value,
+            workflow_name=const.ModelName.ADD_NEW_FEATURE.value,
             workflow_cache=workflow_cache,
             edge_messages_store=edge_messages_store)
 
@@ -677,8 +677,8 @@ class ChatWorkflow(Workflow):
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
-            entity_model=const.CHAT_MODEL_NAME,
-            workflow_name=const.DEPLOY_CYODA_ENV_FLOW,
+            entity_model=const.ModelName.CHAT_MODEL_NAME.value,
+            workflow_name=const.ModelName.DEPLOY_CYODA_ENV_FLOW.value,
             params=params,
         )
 
@@ -695,8 +695,8 @@ class ChatWorkflow(Workflow):
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
-            entity_model=const.CHAT_MODEL_NAME,
-            workflow_name=const.DEPLOY_USER_APP_FLOW,
+            entity_model=const.ModelName.CHAT_MODEL_NAME.value,
+            workflow_name=const.ModelName.DEPLOY_USER_APP_FLOW.value,
             params=params,
         )
 
@@ -708,8 +708,8 @@ class ChatWorkflow(Workflow):
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
-            entity_model=const.CHAT_MODEL_NAME,
-            workflow_name=const.ADD_NEW_ENTITY,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
+            workflow_name=const.ModelName.ADD_NEW_ENTITY.value,
             params=params,
         )
 
@@ -719,8 +719,8 @@ class ChatWorkflow(Workflow):
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
-            entity_model=const.CHAT_MODEL_NAME,
-            workflow_name=const.ADD_NEW_WORKFLOW,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
+            workflow_name=const.ModelName.ADD_NEW_WORKFLOW.value,
             params=params,
             resolve_entity_name=True,
         )
@@ -731,8 +731,8 @@ class ChatWorkflow(Workflow):
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
-            entity_model=const.CHAT_MODEL_NAME,
-            workflow_name=const.EDIT_API_EXISTING_APP,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
+            workflow_name=const.ModelName.EDIT_API_EXISTING_APP.value,
             params=params,
             resolve_entity_name=False,
         )
@@ -743,8 +743,8 @@ class ChatWorkflow(Workflow):
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
-            entity_model=const.CHAT_MODEL_NAME,
-            workflow_name=const.EDIT_EXISTING_PROCESSORS,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
+            workflow_name=const.ModelName.EDIT_EXISTING_PROCESSORS.value,
             params=params,
             resolve_entity_name=True,
         )
@@ -755,8 +755,8 @@ class ChatWorkflow(Workflow):
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
-            entity_model=const.CHAT_MODEL_NAME,
-            workflow_name=const.EDIT_EXISTING_WORKFLOW,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
+            workflow_name=const.ModelName.EDIT_EXISTING_WORKFLOW.value,
             params=params,
             resolve_entity_name=True,
         )
@@ -765,7 +765,7 @@ class ChatWorkflow(Workflow):
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
         logger.exception(f"failed workflow {technical_id}")
-        return const.FAILED_WORKFLOW_NOTIFICATION.format(technical_id=technical_id)
+        return const.Notifications.FAILED_WORKFLOW.value.format(technical_id=technical_id)
 
 
     async def get_entities_list(self, branch_id: str) -> list:

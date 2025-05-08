@@ -97,7 +97,7 @@ class BeanFactory:
         Retrieve a dictionary of all managed services for further use.
         """
         return {
-            "fsm": const.FSM_CYODA,
+            "fsm": const.FsmTarget.CYODA.value,
             "grpc_client": self.grpc_client,
             "chat_lock": self.chat_lock,
             "entity_repository": self.entity_repository,

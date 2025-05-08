@@ -171,7 +171,7 @@ class GrpcClient:
             try:
                 # 1) Define keep-alive options (milliseconds unless noted)
                 keepalive_opts = [
-                    ('grpc.keepalive_time_ms', 30_000),  # PING every 30 s
+                    ('grpc.keepalive_time_ms', 15_000),  # PING every 30 s
                     ('grpc.keepalive_timeout_ms', 10_000),  # wait 10 s for PONG
                     ('grpc.keepalive_permit_without_calls', 1),  # even if idle
                 ]
@@ -201,7 +201,9 @@ class GrpcClient:
                             logger.error(f"Unhandled event type: {response.type}")
 
                 # If we exit the stream cleanly, break out of the retry loop
-                return
+                logger.info("Stream closed by server—reconnecting")
+                backoff = 1  # reset your backoff if you like
+                continue
 
             except grpc.RpcError as e:
                 logger.exception(e)

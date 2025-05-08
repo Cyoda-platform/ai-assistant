@@ -4,9 +4,8 @@ import logging
 import time
 import asyncio
 from typing import List, Any, Optional
-
+import common.config.const as const
 from common.config.config import config
-from common.config.const import EDGE_MESSAGE_CLASS, TREE_NODE_ENTITY_CLASS, UPDATE_TRANSITION, CYODA_PAGE_SIZE
 from common.repository.crud_repository import CrudRepository
 from common.utils.utils import (
     custom_serializer,
@@ -93,7 +92,7 @@ class CyodaRepository(CrudRepository):
         return (await self.find_by_key(meta, key)) is not None
 
     async def find_all(self, meta) -> List[Any]:
-        path = f"entity/{meta['entity_model']}/{meta['entity_version']}?pageSize={CYODA_PAGE_SIZE}"
+        path = f"entity/{meta['entity_model']}/{meta['entity_version']}?pageSize={const.CYODA_PAGE_SIZE}"
         resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="get", path=path)
         return resp.get("json", [])
 
@@ -237,7 +236,7 @@ class CyodaRepository(CrudRepository):
         if entity is None:
             return await self._launch_transition(meta=meta, technical_id=technical_id)
 
-        transition = meta.get("update_transition", UPDATE_TRANSITION)
+        transition = meta.get("update_transition", const.TransitionKey.UPDATE.value)
         path = (
             f"entity/JSON/{technical_id}/{transition}"
             "?transactional=true&waitForConsistencyAfter=true"
@@ -255,7 +254,7 @@ class CyodaRepository(CrudRepository):
         for ent in entities:
             payload.append({
                 "id": meta.get("technical_id"),
-                "transition": meta.get("update_transition", UPDATE_TRANSITION),
+                "transition": meta.get("update_transition", const.TransitionKey.UPDATE.value),
                 "payload": json.dumps(ent, default=custom_serializer),
             })
         data = json.dumps(payload)
@@ -269,9 +268,9 @@ class CyodaRepository(CrudRepository):
 
     async def get_transitions(self, meta, technical_id: Any) -> Any:
         entity_class = (
-            EDGE_MESSAGE_CLASS
+            const.JavaClasses.EDGE_MESSAGE.value
             if meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE
-            else TREE_NODE_ENTITY_CLASS
+            else const.JavaClasses.TREE_NODE_ENTITY.value
         )
         path = (
             f"platform-api/entity/fetch/transitions?entityClass={entity_class}"
@@ -282,14 +281,14 @@ class CyodaRepository(CrudRepository):
 
     async def _launch_transition(self, meta, technical_id):
         entity_class = (
-            EDGE_MESSAGE_CLASS
+            const.JavaClasses.EDGE_MESSAGE.value
             if meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE
-            else TREE_NODE_ENTITY_CLASS
+            else const.JavaClasses.TREE_NODE_ENTITY.value
         )
         path = (
             f"platform-api/entity/transition?entityId={technical_id}"
             f"&entityClass={entity_class}&transitionName="
-            f"{meta.get('update_transition', UPDATE_TRANSITION)}"
+            f"{meta.get('update_transition', const.TransitionKey.UPDATE.value)}"
         )
         resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="put", path=path)
         return resp.get("json")

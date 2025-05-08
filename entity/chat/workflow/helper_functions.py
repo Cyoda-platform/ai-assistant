@@ -1,17 +1,11 @@
-import asyncio
-import copy
-import glob
 import json
 import logging
 import os
 
-import aiofiles
-import black
-
 from common.config.config import config
-from common.config.const import SCHEDULER_ENTITY, PUSHED_CHANGES_NOTIFICATION
+import common.config.const as const
 from common.utils.chat_util_functions import add_answer_to_finished_flow
-from common.utils.utils import get_project_file_name, read_file, format_json_if_needed, _save_file, current_timestamp
+from common.utils.utils import current_timestamp
 from entity.chat.model.chat import ChatEntity
 from entity.model import SchedulerEntity, FlowEdgeMessage
 
@@ -39,280 +33,6 @@ class WorkflowHelperService:
             raise
         json_mock_data = json.loads(data)
 
-    async def build_prompt(self, _event, chat):
-        if _event.get("function") and _event["function"].get("prompt"):
-            event_prompt = _event["function"]["prompt"]
-        else:
-            event_prompt = _event.get("prompt", {})
-        prompt_text = await self._enrich_prompt_with_context(_event, chat, event_prompt)
-        prompt = f'{prompt_text}: {_event.get("answer", "")}' if _event.get(
-            "answer") else prompt_text
-        prompt = f'{prompt}. Use this json schema http://json-schema.org/draft-07/schema# to understand how to structure your answer: {event_prompt.get("schema", "")}. It will be validated against this schema. Return only json (python dictionary)' if event_prompt.get(
-            "schema") else prompt
-        return event_prompt, prompt
-
-    async def _enrich_prompt_with_context(self, _event, chat, event_prompt):
-        prompt_text = event_prompt.get("text", "")
-        if event_prompt.get("attached_files"):
-            attached_files = event_prompt.get("attached_files")
-            contents = []
-            for file_pattern in attached_files:
-                file_path = get_project_file_name(chat["chat_id"], file_pattern)
-                # Check if the file exists before trying to open it
-                if os.path.isfile(file_path):
-                    async with aiofiles.open(file_path, "r") as f:
-                        contents.append({file_pattern: await f.read()})
-            prompt_text = prompt_text + " \n " + json.dumps(contents)
-
-        prompt_context = _event.get("context", {}).get("prompt", {})
-        if prompt_context:
-            # Loop through each item in the context dictionary
-            for prompt_context_item, prompt_item_values in prompt_context.items():
-                chat_context = chat.get('cache', {})
-                # Assuming prompt_item_value is a dictionary with keys to resolve in chat_context
-                if isinstance(prompt_item_values, list):
-                    for item in prompt_item_values:
-                        chat_context = chat_context.get(item, {})
-                # After finding the correct value in chat_context, replace in the prompt_text
-                if chat_context:
-                    prompt_text = prompt_text.replace(f'${prompt_context_item}', str(chat_context))
-        return prompt_text
-
-
-    def _mock_ai(self, prompt_text):
-        return self.json_mock_data.get(prompt_text[:15], json.dumps({"entity": "some random text"}))
-
-    def get_event_template(self, event, question='', notification='', answer=None, prompt=None, file_name=None,
-                           editable=False,
-                           publish=False):
-        # Predefined keys for the final JSON structure
-        final_json = {
-            "question": question,  # Sets the provided question
-            "prompt": prompt if prompt else {},  # Sets the provided prompt
-            "notification": notification,
-            "answer": '',  # Initially no answer
-            "function": event.get('prompt', {}).get('function', {}),  # Placeholder for function
-            "index": event.get('index', 0),  # Default index
-            "iteration": event.get('iteration', 0),  # Initial iteration count
-            "max_iteration": event.get('max_iteration', 0),
-            "data": event.get('data', {}),
-            "entity": event.get('entity', {}),
-            "file_name": file_name if file_name else event.get('file_name', ''),
-            "context": event.get('context', {}),
-            "approve": True,
-            "editable": False,  # editable todo
-            "publish": publish if publish else event.get('publish', {})
-        }
-        exclusion_values = ['stack']  # Values to be excluded from the final JSON
-
-        # Iterate through additional key-value pairs in the event object
-        for key, value in event.items():
-            if key not in final_json and key not in exclusion_values:  # Only add key-value pairs not already in final_json
-                final_json[key] = value
-
-        return final_json
-
-    def _format_code(self, code):
-        try:
-            # Format the code using black's formatting
-            formatted_code = black.format_str(code, mode=black.Mode())
-            return formatted_code
-        except Exception as e:
-            print(f"Error formatting code: {e}")
-            return code  # Return the original code if formatting fails
-
-    async def _send_notification(self, chat, event, notification_text, file_name=None, editable=False, publish=False):
-        stack = chat["chat_flow"]["current_flow"]
-        stack.append({"notification": notification_text})
-        return stack
-
-    async def _send_notification_with_file(self, chat, event, notification_text, file_name, editable):
-        stack = chat["chat_flow"]["current_flow"]
-        notification_event = self.get_event_template(notification=notification_text,
-                                                     event=event,
-                                                     question='',
-                                                     answer='',
-                                                     prompt={},
-                                                     file_name=file_name,
-                                                     editable=editable)
-        stack.append(notification_event)
-        return stack
-
-    async def _build_context_from_project_files(self, chat, files, excluded_files):
-        contents = []
-        for file_pattern in files:
-            root_path = get_project_file_name(chat["chat_id"], file_pattern)
-            if "**" in root_path or os.path.isdir(root_path):
-                # Use glob to get all files matching the pattern (including files in subdirectories)
-                for file_path in glob.glob(root_path,
-                                           recursive=True):  # recursive=True to include files in subdirectories
-                    try:
-                        if os.path.isfile(file_path) and not any(
-                                file_path.endswith(excluded) for excluded in excluded_files):
-                            async with aiofiles.open(file_path, "r") as f:
-                                contents.append({file_path: await f.read()})
-                    except Exception as e:
-                        logger.exception(e)
-            else:
-                try:
-                    file_path = get_project_file_name(chat["chat_id"], file_pattern)
-                    # Check if the file exists before trying to open it
-                    if os.path.isfile(file_path):
-                        async with aiofiles.open(file_path, "r") as f:
-                            contents.append({file_pattern: await f.read()})
-                except Exception as e:
-                    logger.exception(e)
-        return contents
-
-    async def save_result_to_file(self, chat, _event, _data):
-        file_name = _event.get("file_name")
-        if file_name:
-            await _save_file(chat_id=chat["chat_id"], _data=_data, item=file_name)
-            notification_text = PUSHED_CHANGES_NOTIFICATION.format(file_name=file_name, repository_url=config.REPOSITORY_URL,
-                                                                   chat_id=chat["chat_id"])
-            await self._send_notification(chat=chat, event=_event, notification_text=notification_text,
-                                          file_name=file_name,
-                                          editable=True, publish=True)
-
-    # Helper function to generate file name from template
-    def get_file_name(self, template, entity_name):
-        return template.format(entity_name=entity_name)
-
-    # Helper function to construct file paths
-    def get_file_path(self, target_dir, file_name):
-        return os.path.join(target_dir, file_name)
-
-    # Async function to read files concurrently
-    async def read_files_concurrently(self, file_paths):
-        file_contents = await asyncio.gather(*[read_file(file_path) for file_path in file_paths])
-        return file_contents
-
-    # Main function for getting resources
-    async def _get_resources(self, entity, files_notifications, target_dir):
-        entity_name = entity.get("entity_name")
-
-        # Define a map for 'code', 'doc', and 'entity' file types
-        file_types = {
-            "code": files_notifications.get("code", {}),
-            "doc": files_notifications.get("doc", {}),
-            "entity": files_notifications.get("entity", {})
-        }
-
-        # Generate file names using the map and templates
-        file_names = {
-            file_type: self.get_file_name(file_info.get("file_name", ""), entity_name)
-            for file_type, file_info in file_types.items()
-        }
-
-        # Construct file paths
-        file_paths = {
-            file_type: self.get_file_path(target_dir, file_name)
-            for file_type, file_name in file_names.items()
-        }
-
-        # Read the files concurrently
-        file_contents = await self.read_files_concurrently(list(file_paths.values()))
-
-        # Return the results in the desired order
-        return (
-            file_names["code"],  # Code file name
-            file_contents[1],  # Doc file content
-            file_contents[2],  # Entity file content
-            entity_name  # Entity name
-        )
-
-    async def get_remote_branches(self, chat_id):
-        clone_dir = f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}"
-
-        try:
-            # Start the git branch -r command asynchronously to get remote branches
-            process = await asyncio.create_subprocess_exec(
-                'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-                'branch', '-r',
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
-
-            # Wait for the process to complete
-            stdout, stderr = await process.communicate()
-
-            if process.returncode == 0:
-                remote_branches = stdout.decode('utf-8').splitlines()
-                # Clean the output to remove "origin/" prefix if you only want branch names
-                remote_branches = [branch.strip().replace("origin/", "") for branch in remote_branches]
-                return remote_branches
-            else:
-                error_message = stderr.decode('utf-8')
-                raise Exception(f"Error fetching remote branches: {error_message}")
-
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            return []
-
-    def comment_out_non_code(self, text):
-        if '```python' in text:
-            lines = text.splitlines()
-            in_python_block = False
-            commented_lines = []
-
-            for line in lines:
-                if line.strip().startswith("```python"):
-                    # Comment out the ```python line
-                    commented_lines.append(f"# {line}")
-                    in_python_block = True
-                elif line.strip().startswith("```") and in_python_block:
-                    # Comment out the ``` line
-                    commented_lines.append(f"# {line}")
-                    in_python_block = False
-                elif in_python_block:
-                    # Keep lines inside the Python block as-is
-                    commented_lines.append(line)
-                else:
-                    # Comment out lines outside the Python block
-                    commented_lines.append(f"# {line}")
-
-            return "\n".join(commented_lines)
-        else:
-            return text
-
-    def _process_question(self, question):
-        if question.get("processed"):
-            return question
-        if question.get("question"):
-            question["question_key"] = question.get("question")
-            question = format_json_if_needed(question, "question")
-
-        if question.get("notification"):
-            question = format_json_if_needed(question, "notification")
-        if question.get("question") and question.get("ui_config"):
-            # Create a deep copy of the question object
-            new_question = copy.deepcopy(question)
-            result = []
-
-            # Iterating through display_keys in the ui_config
-            for key_object in new_question.get("ui_config", {}).get("display_keys", []):
-                # Extract the key from the key_object (the dictionary key)
-                if isinstance(key_object, dict):
-                    for key, value in key_object.items():
-                        # Append the corresponding value from the "question" dictionary using the extracted key
-                        if key in new_question.get("question", {}):
-                            result.append(value)
-                            result.append(new_question.get("question").get(key))
-
-            # Combine the values into a single string
-            new_question["question"] = " ".join(str(item) for item in result)
-
-            return new_question
-        if question.get("question") and question.get("example_answers"):
-            question["question"] = f"""
-    {question["question"]}
-    
-    ***Example answers***:
-    {'\n\n'.join([answer.strip() for answer in question.get("example_answers", [])])}
-    """
-        # Return the original question if conditions are not met
-        question["processed"] = True
-        return question
 
     # =============================
     async def launch_agentic_workflow(self,
@@ -373,14 +93,14 @@ class WorkflowHelperService:
 
         child_entity: SchedulerEntity = SchedulerEntity.model_validate({
             "user_id": "system",
-            "workflow_name": SCHEDULER_ENTITY,
+            "workflow_name": const.ModelName.SCHEDULER_ENTITY.value,
             "awaited_entity_ids": awaited_entity_ids,
             "triggered_entity_id": triggered_entity_id,
             "scheduled_action": scheduled_action.value
         })
 
         child_technical_id = await entity_service.add_item(token=self.cyoda_auth_service,
-                                                           entity_model=SCHEDULER_ENTITY,
+                                                           entity_model=const.ModelName.SCHEDULER_ENTITY.value,
                                                            entity_version=config.ENTITY_VERSION,
                                                            entity=child_entity)
 

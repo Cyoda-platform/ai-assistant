@@ -220,7 +220,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
             "manual": True
         }
         state_data["transitions"][const.FAIL_TRANSITION] = {
-            "next": f"{const.LOCKED_CHAT}_{state_name}",
+            "next": f"{const.TransitionKey.LOCKED_CHAT}_{state_name}",
             "action": {
                 "name": "process_event",
                 "config": {
@@ -433,7 +433,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                     }
                 }
                 add_transition(transition_name=transition_name, transition_data=transition_data,
-                               transition_start_state=state_name_to_id.get(f"{const.LOCKED_CHAT}_{state_name}"),
+                               transition_start_state=state_name_to_id.get(f"{const.TransitionKey.LOCKED_CHAT.value}_{state_name}"),
                                transition_criteria_id=error_codes_name_to_id.get(state["error_code"]))
 
     dto["states"].extend(state_map.values())

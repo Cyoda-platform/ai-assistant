@@ -57,7 +57,7 @@ class WorkflowTask:
             ]
             children = await asyncio.gather(*tasks)
 
-            if all(c.get("current_state").startswith(const.LOCKED_CHAT) for c in children):
+            if all(c.get("current_state").startswith(const.TransitionKey.LOCKED_CHAT.value) for c in children):
                 await _launch_transition(
                     entity_service=self.entity_service,
                     technical_id=self.technical_id,
@@ -107,7 +107,7 @@ class WorkflowTask:
             else:
                 scheduled_entity: SchedulerEntity = await self.entity_service.get_item(
                     token=self.cyoda_auth_service,
-                    entity_model=const.SCHEDULER_ENTITY,
+                    entity_model=const.ModelName.SCHEDULER_ENTITY.value,
                     entity_version=config.ENTITY_VERSION,
                     technical_id=self.technical_id
                 )
@@ -133,7 +133,7 @@ class WorkflowTask:
             if attempts >= max_attempts:
                 scheduled_entity: SchedulerEntity = await self.entity_service.get_item(
                     token=self.cyoda_auth_service,
-                    entity_model=const.SCHEDULER_ENTITY,
+                    entity_model=const.ModelName.SCHEDULER_ENTITY.value,
                     entity_version=config.ENTITY_VERSION,
                     technical_id=self.technical_id
                 )
