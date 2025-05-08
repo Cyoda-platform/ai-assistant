@@ -13,7 +13,7 @@ from common.service.service import EntityServiceImpl
 from entity.model_registry import model_registry
 from entity.chat.workflow.helper_functions import WorkflowHelperService
 from entity.chat.workflow.workflow import ChatWorkflow
-from entity.scheduler.scheduler import Scheduler
+from services.scheduler import Scheduler
 from entity.workflow import Workflow
 from entity.workflow_dispatcher import WorkflowDispatcher
 
