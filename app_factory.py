@@ -9,6 +9,7 @@ from quart_rate_limiter import RateLimiter, rate_limit
 import common.config.const as const
 from common.exception.errors import init_error_handlers
 from routes.chat import chat_bp
+from routes.labels_config import labels_config_bp
 from routes.token import token_bp
 from services.factory import grpc_client
 
@@ -62,5 +63,6 @@ def create_app():
     # --- Register blueprints ---
     app.register_blueprint(token_bp)
     app.register_blueprint(chat_bp)
+    app.register_blueprint(labels_config_bp)
 
     return app

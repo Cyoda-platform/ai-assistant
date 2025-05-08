@@ -18,7 +18,7 @@ from entity.workflow import Workflow
 from entity.workflow_dispatcher import WorkflowDispatcher
 
 
-class BeanFactory:
+class ServicesFactory:
     _instance = None
     _initialized = False
 
@@ -73,8 +73,6 @@ class BeanFactory:
             print("Error during BeanFactory initialization:", e)
             raise
 
-
-
     def _load_default_config(self):
         """
         Load default configuration values, optionally from environment variables.
@@ -110,15 +108,16 @@ class BeanFactory:
             "dataset": self.dataset,
             "device_sessions": self.device_sessions,
             "cyoda_auth_service": self.cyoda_auth_service,
-        } # or directly paste the BeanFactory class here, then drop logic.init
+        }  # or directly paste the BeanFactory class here, then drop logic.init
+
 
 # one single factory for the whole app
-_factory = BeanFactory()
+_factory = ServicesFactory()
 _services = _factory.get_services()
 
-ai_agent           = _services['ai_agent']
-entity_service     = _services['entity_service']
-chat_lock          = _services['chat_lock']
+ai_agent = _services['ai_agent']
+entity_service = _services['entity_service']
+chat_lock = _services['chat_lock']
 fsm_implementation = _services['fsm']
-grpc_client        = _services['grpc_client']
+grpc_client = _services['grpc_client']
 cyoda_auth_service = _services['cyoda_auth_service']

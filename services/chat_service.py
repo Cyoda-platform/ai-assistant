@@ -1,7 +1,9 @@
+import logging
+
 import jwt
 import json
 import aiohttp
-from typing import List
+from typing import List, Tuple
 import common.config.const as const
 from common.config.config import config
 
@@ -21,18 +23,23 @@ from common.utils.chat_util_functions import (
 from common.utils.utils import (
     current_timestamp,
     clone_repo,
-    validate_token,
+    validate_token, send_cyoda_request,
 )
 from entity.chat.model.chat import ChatEntity
-from entity.model import FlowEdgeMessage, ChatMemory, ModelConfig
-from services.factory import entity_service, cyoda_auth_service, chat_lock, ai_agent  # imported from services/__init__.py
+from entity.model import FlowEdgeMessage, ChatMemory, ModelConfig, AgenticFlowEntity
+from services.factory import entity_service, cyoda_auth_service, chat_lock, ai_agent
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 
 class ChatService:
     def __init__(self):
-        self.entity_service     : EntityService = entity_service
-        self.auth_service                          = cyoda_auth_service
-        self.chat_lock                             = chat_lock
-        self.ai_agent                              = ai_agent
+        self.entity_service: EntityService = entity_service
+        self.auth_service = cyoda_auth_service
+        self.chat_lock = chat_lock
+        self.ai_agent = ai_agent
+        self.cyoda_auth_service = cyoda_auth_service
 
     # public methods used by routes
     async def list_chats(self, user_id: str) -> List[dict]:
@@ -44,7 +51,8 @@ class ChatService:
             transfers = await self._get_entities_by_user_name(user_id, const.ModelName.TRANSFER_CHATS_ENTITY.value)
             if transfers:
                 guest_id = transfers[0]["guest_user_id"]
-                chats += await self._get_entities_by_user_name_and_workflow_name(guest_id, const.ModelName.CHAT_ENTITY.value)
+                chats += await self._get_entities_by_user_name_and_workflow_name(guest_id,
+                                                                                 const.ModelName.CHAT_ENTITY.value)
 
         return [{
             "technical_id": c.technical_id,
@@ -55,7 +63,8 @@ class ChatService:
 
     async def create_chat(self, user_id: str, req_data: dict) -> dict:
         if user_id.startswith("guest."):
-            existing = await self._get_entities_by_user_name_and_workflow_name(user_id, const.ModelName.CHAT_ENTITY.value)
+            existing = await self._get_entities_by_user_name_and_workflow_name(user_id,
+                                                                               const.ModelName.CHAT_ENTITY.value)
             if len(existing) >= config.MAX_GUEST_CHATS:
                 raise GuestChatsLimitExceededException("Max guest chats limit reached")
 
@@ -124,22 +133,28 @@ class ChatService:
             entity_version=config.ENTITY_VERSION,
             entity=chat
         )
-        return {"message":"Chat created", "technical_id": tech_id, "answer_technical_id": ans_id}
+        return {"message": "Chat created", "technical_id": tech_id, "answer_technical_id": ans_id}
 
     async def get_chat(self, auth_header: str, technical_id: str) -> dict:
         chat = await self._get_chat_for_user(auth_header, technical_id)
-        dialog = await self._process_message(chat.chat_flow.finished_flow, auth_header, [])
+        dialogue, child_entities = await self._process_message(finished_flow=chat.chat_flow.finished_flow,
+                                                               auth_header=auth_header,
+                                                               dialogue=[],
+                                                               child_entities=set())
+        entities_data = await self._get_entities_processing_data(technical_id=technical_id,
+                                                                 child_entities=child_entities)
         return {
             "technical_id": technical_id,
             "name": chat.name,
             "description": chat.description,
             "date": chat.date,
-            "dialogue": dialog
+            "dialogue": dialogue,
+            "entities_data": entities_data
         }
 
     async def delete_chat(self, auth_header: str, technical_id: str) -> dict:
         await self._get_chat_for_user(auth_header, technical_id)
-        #todo Unresolved attribute reference 'delete_item' for class 'EntityService'
+        # todo Unresolved attribute reference 'delete_item' for class 'EntityService'
         await self.entity_service.delete_item(
             token=self.auth_service,
             entity_model=const.ModelName.CHAT_ENTITY.value,
@@ -147,7 +162,7 @@ class ChatService:
             technical_id=technical_id,
             meta={}
         )
-        return {"message":"Chat deleted", "technical_id": technical_id}
+        return {"message": "Chat deleted", "technical_id": technical_id}
 
     async def submit_text_question(self, auth_header, technical_id, question):
         chat = await self._get_chat_for_user(auth_header, technical_id)
@@ -162,7 +177,7 @@ class ChatService:
     async def submit_text_answer(self, auth_header, technical_id, answer):
         chat = await self._get_chat_for_user(auth_header, technical_id)
         if len(answer.encode("utf-8")) > config.MAX_TEXT_SIZE:
-            return {"error":"Answer size exceeds 1MB limit"}
+            return {"error": "Answer size exceeds 1MB limit"}
         return await self._submit_answer_helper(answer, chat)
 
     async def submit_answer(self, auth_header, technical_id, answer, user_file):
@@ -179,7 +194,7 @@ class ChatService:
     async def rollback(self, auth_header, technical_id):
         chat = await self._get_chat_for_user(auth_header, technical_id)
         await self._rollback_dialogue_script(technical_id, chat)
-        return {"message":"Successfully restarted the workflow"}
+        return {"message": "Successfully restarted the workflow"}
 
     # ─── Private helpers ─────────────────────────────────────────────────────
 
@@ -263,12 +278,12 @@ class ChatService:
                 "cyoda": {
                     "operator": "AND",
                     "conditions": [{
-                        "jsonPath":"$.user_id","operatorType":"EQUALS",
-                        "value":user_id,"type":"simple"
+                        "jsonPath": "$.user_id", "operatorType": "EQUALS",
+                        "value": user_id, "type": "simple"
                     }],
-                    "type":"group"
+                    "type": "group"
                 },
-                "local":{"key":"user_id","value":user_id}
+                "local": {"key": "user_id", "value": user_id}
             }
         )
 
@@ -279,22 +294,23 @@ class ChatService:
             entity_version=config.ENTITY_VERSION,
             condition={
                 "cyoda": {
-                    "operator":"AND",
-                    "conditions":[
-                        {"jsonPath":"$.user_id","operatorType":"EQUALS","value":user_id,"type":"simple"},
-                        {"jsonPath":"$.workflow_name","operatorType":"EQUALS","value":const.ModelName.CHAT_ENTITY.value,"type":"simple"}
+                    "operator": "AND",
+                    "conditions": [
+                        {"jsonPath": "$.user_id", "operatorType": "EQUALS", "value": user_id, "type": "simple"},
+                        {"jsonPath": "$.workflow_name", "operatorType": "EQUALS",
+                         "value": const.ModelName.CHAT_ENTITY.value, "type": "simple"}
                     ],
-                    "type":"group"
+                    "type": "group"
                 },
-                "local":{"key":"user_id","value":user_id}
+                "local": {"key": "user_id", "value": user_id}
             }
         )
 
     async def _submit_question_helper(self, auth_header, technical_id, chat, question, user_file=None):
         if not question:
-            return {"error":"Invalid entity"}, 400
+            return {"error": "Invalid entity"}, 400
         if config.MOCK_AI == "true":
-            return {"message":"mock ai answer"}, 200
+            return {"message": "mock ai answer"}, 200
         if user_file:
             question = await get_user_message(message=question, user_file=user_file)
 
@@ -306,18 +322,18 @@ class ChatService:
             tools=None,
             model=ModelConfig(),
             tool_choice=None,
-            messages=[{"role":"user","content":question}]
+            messages=[{"role": "user", "content": question}]
         )
         return {"message": result}, 200
 
     async def _submit_answer_helper(self, answer, chat, user_file=None):
         if chat.user_id.startswith("guest.") and len(chat.chat_flow.finished_flow) > const.MAX_GUEST_CHAT_MESSAGES:
-            return {"error":"Maximum messages reached"}, 403
+            return {"error": "Maximum messages reached"}, 403
         if len(chat.chat_flow.finished_flow) > const.MAX_CHAT_MESSAGES:
-            return {"error":"Maximum messages reached"}, 403
+            return {"error": "Maximum messages reached"}, 403
         valid, val_answer = self._validate_answer(answer, user_file)
         if not valid:
-            return {"message":val_answer}, 400
+            return {"message": val_answer}, 400
 
         edge_id, transitioned = await trigger_manual_transition(
             entity_service=self.entity_service,
@@ -332,7 +348,7 @@ class ChatService:
         return {"message": const.Notifications.DESIGN_PLEASE_WAIT.value}, 409
 
     async def _rollback_dialogue_script(self, technical_id: str, chat: ChatEntity):
-        async def _traverse(entity: ChatEntity, tid: str, is_root: bool=False) -> bool:
+        async def _traverse(entity: ChatEntity, tid: str, is_root: bool = False) -> bool:
             targets = getattr(entity, "child_entities", []) + getattr(entity, "scheduled_entities", [])
             if entity.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) and targets:
                 for child_id in reversed(targets):
@@ -342,23 +358,28 @@ class ChatService:
                         entity_version=config.ENTITY_VERSION,
                         technical_id=child_id
                     )
-                    has_kids = bool(getattr(child, "child_entities", None) or getattr(child, "scheduled_entities", None))
+                    has_kids = bool(
+                        getattr(child, "child_entities", None) or getattr(child, "scheduled_entities", None))
                     if child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) and has_kids:
                         if await _traverse(child, child_id):
                             return True
                     if not child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value):
-                        await _launch_transition(self.entity_service, child.technical_id, self.auth_service, None, const.TransitionKey.MANUAL_RETRY.value)
+                        await _launch_transition(self.entity_service, child.technical_id, self.auth_service, None,
+                                                 const.TransitionKey.MANUAL_RETRY.value)
                         if chat.chat_flow.finished_flow and not chat.chat_flow.finished_flow[-1].consumed:
-                            await _launch_transition(self.entity_service, child.technical_id, self.auth_service, None, const.TransitionKey.PROCESS_USER_INPUT.value)
+                            await _launch_transition(self.entity_service, child.technical_id, self.auth_service, None,
+                                                     const.TransitionKey.PROCESS_USER_INPUT.value)
                         return True
                 if is_root:
-                    for t in (const.TransitionKey.MANUAL_RETRY.value, const.TransitionKey.UNLOCK_CHAT.value, const.TransitionKey.PROCESS_USER_INPUT.value):
+                    for t in (const.TransitionKey.MANUAL_RETRY.value, const.TransitionKey.UNLOCK_CHAT.value,
+                              const.TransitionKey.PROCESS_USER_INPUT.value):
                         await _launch_transition(self.entity_service, tid, self.auth_service, None, t)
                     return True
                 return False
 
             if not entity.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) or is_root:
-                for t in (const.TransitionKey.MANUAL_RETRY.value, const.TransitionKey.UNLOCK_CHAT.value, const.TransitionKey.PROCESS_USER_INPUT.value):
+                for t in (const.TransitionKey.MANUAL_RETRY.value, const.TransitionKey.UNLOCK_CHAT.value,
+                          const.TransitionKey.PROCESS_USER_INPUT.value):
                     await _launch_transition(self.entity_service, tid, self.auth_service, None, t)
                 return True
             return False
@@ -370,9 +391,12 @@ class ChatService:
             return (True, "Consider the file contents") if user_file else (False, "Invalid entity")
         return True, answer
 
-    async def _process_message(self, finished_flow: List[FlowEdgeMessage], auth_header, dialogue: list) -> list:
+    async def _process_message(self, finished_flow: List[FlowEdgeMessage], auth_header, dialogue: list,
+                               child_entities: set) -> Tuple[
+        list, set]:
+
         for msg in finished_flow:
-            if msg.type in ("question","notification","answer") and msg.publish:
+            if msg.type in ("question", "notification", "answer") and msg.publish:
                 content = await self.entity_service.get_item(
                     token=self.auth_service,
                     entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
@@ -392,11 +416,68 @@ class ChatService:
                     meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
                 )
                 for child_id in content.get("child_entities", []):
+                    child_entities.add(child_id)
                     child = await self.entity_service.get_item(
                         token=self.auth_service,
                         entity_model=const.ModelName.CHAT_ENTITY.value,
                         entity_version=config.ENTITY_VERSION,
                         technical_id=child_id
                     )
-                    await self._process_message(child.chat_flow.finished_flow, auth_header, dialogue)
-        return dialogue
+                    await self._process_message(finished_flow=child.chat_flow.finished_flow,
+                                                auth_header=auth_header,
+                                                dialogue=dialogue,
+                                                child_entities=child_entities)
+        return dialogue, child_entities
+
+    async def _get_entities_processing_data(self, technical_id, child_entities):
+        """
+        Fetch processing data (versions and possible transitions) for a parent entity and its child entities.
+        Returns a dict mapping entity IDs to their data.
+        """
+        try:
+            # Retrieve processor remote address
+            resp = await send_cyoda_request(
+                cyoda_auth_service=self.cyoda_auth_service,
+                method="get",
+                path=const.ApiV1Endpoint.PROCESSOR_REMOTE_ADDRESS_PATH.value
+            )
+            nodes = resp.get('json', {}).get('pmNodes', [])
+            if not nodes:
+                raise ValueError('No processor nodes found')
+            remote_address = nodes[0].get('hostname')
+
+            # Prepare to fetch events for parent and child entities
+            entity_events = {}
+            entity_ids = [technical_id] + list(child_entities)
+
+            for entity_id in entity_ids:
+                path = const.ApiV1Endpoint.PROCESSOR_ENTITY_EVENTS_PATH.value.format(
+                    processor_node_address=remote_address,
+                    entity_class=const.JavaClasses.TREE_NODE_ENTITY.value,
+                    entity_id=entity_id
+                )
+                resp = await send_cyoda_request(
+                    cyoda_auth_service=self.cyoda_auth_service,
+                    method="get",
+                    path=path
+                )
+                data = resp.get('json', {})
+                #todo need to improve - no need to fetch the whole entity to get workflow_name
+                entity: AgenticFlowEntity = await self.entity_service.get_item(
+                    token=self.auth_service,
+                    entity_model=const.ModelName.AGENTIC_FLOW_ENTITY.value,
+                    entity_version=config.ENTITY_VERSION,
+                    technical_id=entity_id
+                )
+                entity_events[entity_id] = {
+                    'workflow_name': entity.workflow_name,
+                    'entity_versions': data.get('entityVersions', []),
+                    'next_transitions': data.get('possibleTransitions', [])
+                }
+
+            return entity_events
+
+        except Exception as exc:
+            # Log the error and re-raise for upstream handling
+            logger.exception("Failed to retrieve processing data for entity %s: %s", technical_id, exc)
+        return {}

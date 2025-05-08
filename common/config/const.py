@@ -42,6 +42,8 @@ class ApiV1Endpoint(str, Enum):
     CYODA = "api/v1/cyoda"
     WORKFLOWS = "api/v1/workflows"
     RANDOM = "api/v1/random"
+    PROCESSOR_REMOTE_ADDRESS_PATH = "platform-processing/pm-cluster-stats-full.do"
+    PROCESSOR_ENTITY_EVENTS_PATH = "platform-processing/transactions/view/entity-state-machine?node={processor_node_address}&type={entity_class}&id={entity_id}"
 
 
 # === Agents & modes ===
