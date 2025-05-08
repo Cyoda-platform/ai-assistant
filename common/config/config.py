@@ -65,7 +65,7 @@ class Config:
     AUTH_SECRET_KEY: str = field(default_factory=lambda: _get_env("AUTH_SECRET_KEY", required=True))
     CLOUD_MANAGER_HOST: str = field(default_factory=lambda: _get_env("CLOUD_MANAGER_HOST", required=True))
     CLIENT_HOST: str = field(default_factory=lambda: _get_env("CLIENT_HOST", required=True))
-    CONFIG_URL: str = field(default_factory=lambda: _get_env("CONFIG_URL", required=True))
+
 
     # Optional strings with defaults
     CYODA_AI_URL: str = field(init=False)
@@ -102,6 +102,10 @@ class Config:
     CLIENT_QUART_TEMPLATE_REPOSITORY_URL: str = field(default_factory=lambda: _get_env(
         "CLIENT_REPOSITORY_URL",
         default="https://github.com/Cyoda-platform/quart-client-template.git"
+    ))
+    CONFIG_URL: str = field(default_factory=lambda: _get_env(
+        "CONFIG_URL",
+        default="https://raw.githubusercontent.com/Cyoda-platform/cyoda-ai/refs/heads/main/ai-assistant/config"
     ))
     UI_LABELS_CONFIG_FILE_NAME: str = field(default="labels_config.json")
 
