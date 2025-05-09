@@ -163,8 +163,6 @@ async def _launch_transition(entity_service,
 
     if next_transition == const.TransitionKey.MANUAL_RETRY.value and const.TransitionKey.ROLLBACK.value in next_transitions:
         next_transition = const.TransitionKey.ROLLBACK.value
-    elif next_transition == const.TransitionKey.MANUAL_RETRY.value and const.TransitionKey.PROCESS_USER_INPUT.value in next_transitions:
-        next_transition = const.TransitionKey.PROCESS_USER_INPUT.value
     if not next_transition:
         logger.exception('Sorry, no valid transitions found')
         return False

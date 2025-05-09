@@ -10,9 +10,12 @@ from common.grpc_client.grpc_client import GrpcClient
 from common.repository.cyoda.cyoda_repository import CyodaRepository
 from common.repository.in_memory_db import InMemoryRepository
 from common.service.service import EntityServiceImpl
+#from entity.chat.workflow.openapi_functions import OpenAPIFunctions
 from entity.model_registry import model_registry
 from entity.chat.workflow.helper_functions import WorkflowHelperService
 from entity.chat.workflow.workflow import ChatWorkflow
+from services.chat_service import ChatService
+from services.labels_config_service import LabelsConfigService
 from services.scheduler import Scheduler
 from entity.workflow import Workflow
 from entity.workflow_dispatcher import WorkflowDispatcher
@@ -48,12 +51,15 @@ class ServicesFactory:
                                                              cyoda_auth_service=self.cyoda_auth_service)
             self.entity_service = EntityServiceImpl(repository=self.entity_repository, model_registry=model_registry)
             self.scheduler = Scheduler(entity_service=self.entity_service, cyoda_auth_service=self.cyoda_auth_service)
+
+
             self.chat_workflow = ChatWorkflow(
                 dataset=self.dataset,
                 workflow_helper_service=self.workflow_helper_service,
                 entity_service=self.entity_service,
                 scheduler=self.scheduler,
-                cyoda_auth_service=self.cyoda_auth_service
+                cyoda_auth_service=self.cyoda_auth_service,
+                #openapi_functions=OpenAPIFunctions()
             )
             self.openai_client = AsyncOpenAIClient()
             self.ai_agent = OpenAiAgent(client=self.openai_client)
@@ -65,8 +71,14 @@ class ServicesFactory:
                 entity_service=self.entity_service,
                 cyoda_auth_service=self.cyoda_auth_service
             )
-
-            self.grpc_client = GrpcClient(workflow_dispatcher=self.workflow_dispatcher, auth=self.cyoda_auth_service)
+            self.chat_service = ChatService(entity_service=self.entity_service,
+                                            cyoda_auth_service=self.cyoda_auth_service,
+                                            chat_lock=self.chat_lock,
+                                            ai_agent=self.ai_agent)
+            self.labels_config_service = LabelsConfigService()
+            self.grpc_client = GrpcClient(workflow_dispatcher=self.workflow_dispatcher,
+                                          auth=self.cyoda_auth_service,
+                                          chat_service=self.chat_service)
 
         except Exception as e:
             # Replace print with a proper logging framework in production.
@@ -96,6 +108,8 @@ class ServicesFactory:
         """
         return {
             "fsm": const.FsmTarget.CYODA.value,
+            "chat_service": self.chat_service,
+            "labels_config_service": self.labels_config_service,
             "grpc_client": self.grpc_client,
             "chat_lock": self.chat_lock,
             "entity_repository": self.entity_repository,
@@ -121,3 +135,5 @@ chat_lock = _services['chat_lock']
 fsm_implementation = _services['fsm']
 grpc_client = _services['grpc_client']
 cyoda_auth_service = _services['cyoda_auth_service']
+chat_service = _services['chat_service']
+labels_config_service = _services['labels_config_service']

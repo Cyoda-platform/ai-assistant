@@ -1374,7 +1374,7 @@
     },
     "finished_app_generation_flow": {
       "transitions": {
-        "update_rotes_file": {
+        "update_routes_file": {
           "next": "updated_routes_file",
           "action": {
             "name": "process_event",
@@ -1383,7 +1383,7 @@
               "publish": false,
               "model": {},
               "memory_tags": [
-                "update_rotes_file"
+                "update_routes_file"
               ],
               "messages": [
                 {

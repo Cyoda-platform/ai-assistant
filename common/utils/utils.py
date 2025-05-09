@@ -5,7 +5,7 @@ import queue
 import jwt
 import time
 import re
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 import aiofiles
@@ -1091,3 +1091,14 @@ def _post_process_response(response: str, config: dict) -> str:
 
     # Wrap based on extension
     return wrap_response_by_extension(filename, response)
+
+def get_current_timestamp_num(lower_timedelta=0):
+    time_now = datetime.now(timezone.utc)
+    if lower_timedelta > 0:
+        time_ago = time_now - timedelta(seconds=lower_timedelta)
+        epoch_millis = int(time_ago.timestamp() * 1000)
+        return epoch_millis
+    else:
+        epoch_millis = int(time_now.timestamp() * 1000)
+        return epoch_millis
+

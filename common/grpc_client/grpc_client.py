@@ -30,9 +30,10 @@ logger = logging.getLogger(__name__)
 
 
 class GrpcClient:
-    def __init__(self, workflow_dispatcher, auth):
+    def __init__(self, workflow_dispatcher, auth, chat_service):
         self.workflow_dispatcher = workflow_dispatcher
         self.auth = auth
+        self.chat_service = chat_service
 
     def metadata_callback(self, context, callback):
         """
@@ -197,6 +198,7 @@ class GrpcClient:
                             await self.process_calc_req_event(data, queue, response.type)
                         elif response.type == GREET_EVENT_TYPE:
                             logger.info("Greet event received")
+                            asyncio.create_task(self.rollback_failed_workflows())
                         else:
                             logger.error(f"Unhandled event type: {response.type}")
 
@@ -233,3 +235,12 @@ class GrpcClient:
         Entry point: keeps the bidirectional stream alive, reconnecting on token revocations.
         """
         await self.consume_stream()
+
+
+    async def rollback_failed_workflows(self):
+        logger.info("restarting entities workflows....")
+        try:
+            await self.chat_service.rollback_failed_workflows()
+        except Exception as e:
+            logger.error("Failed to restart entities")
+            logger.exception(e)

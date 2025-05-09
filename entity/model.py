@@ -7,6 +7,7 @@ from common.config.config import config
 class WorkflowEntity(BaseModel):
     model_config = ConfigDict(extra="ignore")
     technical_id: Optional[str] = None
+    last_modified: Optional[int] = 1715182245000 #for backwards compatibility
     current_transition: Optional[str] = None
     current_state: Optional[str] = None
     user_id: str

@@ -10,7 +10,7 @@ from common.config.config import config as env_config
 from common.utils.batch_parallel_code import batch_process_file
 
 from common.utils.chat_util_functions import enrich_config_message
-from common.utils.utils import _save_file, _post_process_response
+from common.utils.utils import _save_file, _post_process_response, get_current_timestamp_num
 from entity.chat.model.chat import AgenticFlowEntity
 from entity.model import FlowEdgeMessage, ChatMemory, AIMessage, WorkflowEntity, ModelConfig
 
@@ -74,16 +74,18 @@ class WorkflowDispatcher:
                 response = await self._execute_method(method_name=action_name,
                                                       technical_id=technical_id,
                                                       entity=entity)
+
             else:
                 raise ValueError(f"Unknown processing step: {action_name}")
 
         except Exception as e:
             entity.failed = True
+            entity.last_modified = get_current_timestamp_num()
             entity.error = f"Error: {e}"
             logger.exception(f"Exception occurred while processing event: {e}")
 
         logger.info(f"{action}: {response}")
-
+        entity.last_modified = get_current_timestamp_num()
         return entity, response
 
     async def _execute_method(self, method_name, technical_id, entity: WorkflowEntity):
@@ -122,6 +124,21 @@ class WorkflowDispatcher:
                                                                            technical_id=technical_id,
                                                                            entity=entity,
                                                                            **params)
+            if response:
+                chat_memory: ChatMemory = await self.entity_service.get_item(token=self.cyoda_auth_service,
+                                                                             entity_model=const.ModelName.CHAT_MEMORY.value,
+                                                                             entity_version=env_config.ENTITY_VERSION,
+                                                                             technical_id=entity.memory_id)
+                edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
+                                                                     entity_model=const.ModelName.AI_MEMORY_EDGE_MESSAGE.value,
+                                                                     entity_version=env_config.ENTITY_VERSION,
+                                                                     entity={"role": "assistant",
+                                                                             "content": response},
+                                                                     meta={
+                                                                         "type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                memory_tags = config.get("memory_tags", [env_config.GENERAL_MEMORY_TAG])
+                for memory_tag in memory_tags:
+                    chat_memory.messages.get(memory_tag).append(AIMessage(edge_message_id=edge_message_id))
         elif config_type in ("prompt", "agent", "batch"):
             chat_memory: ChatMemory = await self.entity_service.get_item(token=self.cyoda_auth_service,
                                                                          entity_model=const.ModelName.CHAT_MEMORY.value,

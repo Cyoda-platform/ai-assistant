@@ -9,13 +9,16 @@ from common.utils.utils import parse_entity
 
 logger = logging.getLogger('quart')
 
+
 class EntityServiceImpl(EntityService):
+
+
     _instance = None
     _lock = threading.Lock()
     _repository: CrudRepository = None
     _model_registry: None
 
-    def __new__(cls, repository: CrudRepository = None, model_registry = None, mock=False):
+    def __new__(cls, repository: CrudRepository = None, model_registry=None, mock=False):
         logger.info("initializing CyodaService")
         # Ensuring only one instance is created
         if cls._instance is None:
@@ -25,7 +28,7 @@ class EntityServiceImpl(EntityService):
                     # Only initialize _repository during the first instantiation
                     if repository is not None:
                         cls._instance._repository = repository
-                    cls._model_registry=model_registry
+                    cls._model_registry = model_registry
         return cls._instance
 
     def __init__(self, repository: CrudRepository, model_registry):
@@ -33,7 +36,7 @@ class EntityServiceImpl(EntityService):
         # or add additional initialization app_init here if needed.
         pass
 
-    async def get_item(self, token: str, entity_model: str, entity_version: str, technical_id: str, meta = None) -> Any:
+    async def get_item(self, token: str, entity_model: str, entity_version: str, technical_id: str, meta=None) -> Any:
         """Retrieve a single item based on its ID."""
         repository_meta = await self._repository.get_meta(token, entity_model, entity_version)
         if meta:
@@ -65,7 +68,8 @@ class EntityServiceImpl(EntityService):
         resp = parse_entity(model_cls, resp)
         return resp
 
-    async def get_items_by_condition(self, token: str, entity_model: str, entity_version: str, condition: Any) -> List[Any]:
+    async def get_items_by_condition(self, token: str, entity_model: str, entity_version: str, condition: Any,
+                                     meta=None) -> List[Any]:
         """Retrieve multiple items based on their IDs."""
         resp = await self._find_by_criteria(token, entity_model, entity_version, condition.get(config.CHAT_REPOSITORY))
         if resp and isinstance(resp, dict) and resp.get("errorMessage"):
@@ -82,7 +86,8 @@ class EntityServiceImpl(EntityService):
         resp = await self._repository.save(repository_meta, entity)
         return resp
 
-    async def update_item(self, token: str, entity_model: str, entity_version: str, technical_id: str, entity: Any, meta: Any) -> Any:
+    async def update_item(self, token: str, entity_model: str, entity_version: str, technical_id: str, entity: Any,
+                          meta: Any) -> Any:
         """Update an existing item in the repository."""
         repository_meta = await self._repository.get_meta(token, entity_model, entity_version)
         meta.update(repository_meta)
@@ -96,7 +101,8 @@ class EntityServiceImpl(EntityService):
         resp = parse_entity(model_cls, resp)
         return resp
 
-    async def delete_item(self, token: str, entity_model: str, entity_version: str, technical_id: str, meta: Any) -> Any:
+    async def delete_item(self, token: str, entity_model: str, entity_version: str, technical_id: str,
+                          meta: Any) -> Any:
         """Update an existing item in the repository."""
         repository_meta = await self._repository.get_meta(token, entity_model, entity_version)
         meta.update(repository_meta)
@@ -107,7 +113,3 @@ class EntityServiceImpl(EntityService):
         """Get next transitions"""
         resp = await self._repository.get_transitions(meta=meta, technical_id=technical_id)
         return resp
-
-
-
-

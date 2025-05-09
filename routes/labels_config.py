@@ -5,18 +5,16 @@ from quart_rate_limiter import rate_limit
 
 import common.config.const as const
 from common.config.config import config
-from services.labels_config_service import LabelsConfigService
+from services.factory import labels_config_service
 
 labels_config_bp = Blueprint('labels_config', __name__, url_prefix=f"{config.API_PREFIX}/labels_config")
 logger = logging.getLogger(__name__)
-
-_labels_config_service = LabelsConfigService()
 
 @labels_config_bp.route('', methods=['GET'])
 @rate_limit(const.RATE_LIMIT, timedelta(seconds=15))
 async def labels_config_full_map():
     """Return the entire structured TEXT_MAP as JSON."""
-    labels_config = await _labels_config_service.get_all()
+    labels_config = await labels_config_service.get_all()
     return jsonify(labels_config)
 
 
@@ -30,7 +28,7 @@ async def labels_config_item(key):
     """
     # normalize URL segment into our key format
     identifier = key.replace('-', '_')
-    value = await _labels_config_service.get(identifier=identifier)
+    value = await labels_config_service.get(identifier=identifier)
     if value is None:
         return jsonify({
             "error": f"Key '{key}' not found"
@@ -46,7 +44,7 @@ async def refresh_labels_config():
     Rate-limited to avoid hammering the upstream, and requires authentication.
     """
     try:
-        await _labels_config_service.refresh()
+        await labels_config_service.refresh()
         return jsonify({
             "success": True,
             "message": "Labels configuration refreshed successfully."

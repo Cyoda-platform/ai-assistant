@@ -3,7 +3,7 @@ import json
 import logging
 import time
 import asyncio
-from typing import List, Any, Optional
+from typing import List, Any, Optional, Tuple, Dict
 import common.config.const as const
 from common.config.config import config
 from common.repository.crud_repository import CrudRepository
@@ -91,6 +91,7 @@ class CyodaRepository(CrudRepository):
     async def exists_by_key(self, meta, key: Any) -> bool:
         return (await self.find_by_key(meta, key)) is not None
 
+    #does not return current_state!
     async def find_all(self, meta) -> List[Any]:
         path = f"entity/{meta['entity_model']}/{meta['entity_version']}?pageSize={const.CYODA_PAGE_SIZE}"
         resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="get", path=path)
@@ -175,6 +176,7 @@ class CyodaRepository(CrudRepository):
                 tree = node.get("data", {})
                 if not tree.get("technical_id"):
                     tree["technical_id"] = node.get("meta", {}).get("id")
+                    tree["current_state"] = node.get("meta", {}).get("state")
                 entities.append(tree)
 
         # process page 0
@@ -194,6 +196,64 @@ class CyodaRepository(CrudRepository):
             _extract(resp_json.get("_embedded", {}).get("objectNodes", []))
 
         return entities
+
+    async def search_snapshot(
+        self,
+        meta: Dict[str, str],
+        criteria: Any
+    ) -> Optional[str]:
+        snap_path = f"search/snapshot/{meta['entity_model']}/{meta['entity_version']}"
+        resp = await send_cyoda_request(
+            cyoda_auth_service=self._cyoda_auth_service,
+            method="post",
+            path=snap_path,
+            data=json.dumps(criteria),
+        )
+
+        if resp.get("status") == 404:
+            return None
+
+        snapshot_id = resp.get("json")
+        await self._wait_for_search_completion(snapshot_id)
+        return snapshot_id
+
+
+    async def get_search_results_page(
+        self,
+        snapshot_id: str,
+        page_number: int = 0,
+        page_size: int = 100
+    ) -> List[Dict[str, Any]]:
+        """
+        Given a ready snapshot_id, fetch exactly one page of results.
+        Returns an empty list on any non-200 response or if the page is empty.
+        """
+        path = (
+            f"search/snapshot/{snapshot_id}"
+            f"?pageSize={page_size}&pageNumber={page_number}"
+        )
+        resp = await send_cyoda_request(
+            cyoda_auth_service=self._cyoda_auth_service,
+            method="get",
+            path=path,
+        )
+
+        if resp.get("status") != 200:
+            return []
+
+        body = json.loads(resp.get("json", "{}"))
+        nodes = body.get("_embedded", {}).get("objectNodes", [])
+        results: List[Dict[str, Any]] = []
+
+        for node in nodes:
+            data = node.get("data", {})
+            if not data.get("technical_id"):
+                data["technical_id"] = node.get("meta", {}).get("id")
+                data["current_state"] = node.get("meta", {}).get("state")
+            results.append(data)
+
+        return results
+
 
     async def save(self, meta, entity: Any) -> Any:
         if meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE:
