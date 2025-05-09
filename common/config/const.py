@@ -140,7 +140,7 @@ class Notifications(str, Enum):
         "⚠️ Sorry, this action is not available right now. Please try again or wait for new questions ⚠️"
     )
     OPERATION_NOT_SUPPORTED = "⚠️ Sorry, this operation is not supported ⚠️"
-    DESIGN_PLEASE_WAIT = "Please give me a moment to think everything over 🤔⏳"
+    DESIGN_PLEASE_WAIT = "Sorry, I haven't come up with an answer to the previous question yet. Please give me one more minute to think everything over 🤔⏳"
     FAILED_WORKFLOW = (
         "⚠️ We encountered an error while processing the workflow **{technical_id}**. "
         "Our team will look into it shortly.\n\nTo continue, please start a new chat.\n\n"
@@ -154,6 +154,15 @@ class Notifications(str, Enum):
         "Sorry, you cannot skip this question. If you're unsure about anything, "
         "please refer to the example answers for guidance."
     )
+    APPROVE_INSTRUCTION_MESSAGE = "Hit ✅ to approve or escape the 🔁 loop. 🙈 No turning back!"
+
+    class ApproveAnswer(Enum):
+        FINE_BY_ME = "fine by me 👌"
+        HAPPY_WITH_THAT = "happy with that 😎"
+        DONE_NEXT = "done, next ➡️"
+        SOLID_MOVE_ON = "solid. move on ✅"
+        SORTED = "Sorted👌"
+        MOVE_ON = "Cool with the result 😎 Let’s move."
 
 
 # === Push changes template ===
@@ -192,25 +201,7 @@ FILES_NOTIFICATIONS = {
     },
 }
 
-BRANCH_READY_NOTIFICATION = """🎉 **Your branch is ready!** Please update the project and check it out when you get a chance. 😊
-
-To get started:
-
-1. **Clone the repository** using the following command:  
-   git clone https://github.com/Cyoda-platform/quart-client-template/ 🚀
-
-2. **Checkout your branch** using:  
-   git checkout {chat_id} 🔄
-
-You can access your branch directly on GitHub here: [Cyoda Platform GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{chat_id}) 😄
-
-This repository is a **starter template** for your app and has two main modules:
-
-- **Common Module**: This is all about integration with Cyoda! You don’t need to edit it unless you want to – it’s all done for you! 🎉  
-- **Entity Module**: This is where your business logic and custom files will go. We'll add your files here, and you can track your progress. 📈 Feel free to **add or edit** anything in the Entity module. I’ll be pulling changes now and then, so just push your updates to let me know! 🚀
-
-You can ask **questions in the chat** or in your project files anytime. When I make changes, I’ll let you know, and you can simply **pull** to sync with me! 🔄💬
-"""
+BRANCH_READY_NOTIFICATION = "🎉 **Your branch is live!**\n\nJust clone and check it out when you’re ready. 😎\n\n1. Clone it:\n```bash\ngit clone https://github.com/Cyoda-platform/quart-client-template/\n```\n\n2. Jump to your branch:\n```bash\ngit checkout {branch_name}\n```\n\nPeek at it here if you're the curious type: [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{chat_id}) 👀\n\nYou've got two modules:\n- **Common** – Already wired up. Touch it only if you're feeling brave. 🛠️\n- **Entity** – Your playground. Add, edit, and push. I’ll keep an eye out. \n\nGot questions? Ping me here or drop a comment in the code 😸"
 
 # === Miscellaneous design strings ===
 LOGIC_CODE_DESIGN_STR = "Additional logic code design"

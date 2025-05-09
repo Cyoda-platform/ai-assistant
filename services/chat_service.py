@@ -1,4 +1,5 @@
 import logging
+import random
 
 import jwt
 import json
@@ -407,6 +408,10 @@ class ChatService:
                     meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
                 )
                 content["technical_id"] = msg.edge_message_id
+                if content.get("question") and content.get("approve"):
+                    content["question"] = f"{content["question"]}\n{const.Notifications.APPROVE_INSTRUCTION_MESSAGE}"
+                if content.get("answer") and content["answer"] == const.Notifications.APPROVE:
+                    content["answer"] = random.choice(list(const.Notifications.ApproveAnswer)).value
                 dialogue.append(content)
 
             if msg.type == "child_entities":

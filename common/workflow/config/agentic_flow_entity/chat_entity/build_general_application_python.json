@@ -195,7 +195,7 @@
                     " You're building a backend application.",
                     " Currently you are focusing on functional requirements, and will cover any non-functional requirement later.",
                     " Let's analyse this request for application building, and clarify any important functional requirements that necessary.",
-                    " Ask questions if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations.",
+                    " Make suggestions and ask to validate them if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations.",
                     " Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. Max tokens = 300.",
                     " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
                     " Here is my requirement: "
@@ -351,7 +351,7 @@
                     " You're building a backend application.",
                     " Currently you are focusing on functional requirements, and will cover any non-functional requirement later.",
                     " Let's analyse this request for application building, and clarify any important functional requirements that necessary.",
-                    " Ask questions if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations.",
+                    " Make suggestions that will help us formulate formal specification in the next iterations.",
                     " Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. Max tokens = 300.",
                     " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
                     " Here is my requirement: "
@@ -389,7 +389,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "Let's proceed to functional requirements. ⏳ Please, give me a moment to think everything over. 🤔",
+              "notification": "Next up: functional requirements.\nStay tuned — thoughtful thinking in progress. \uD83E\uDDE0✨",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -433,7 +433,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "Let's review the API for your application together. Are you interested in enhancing the current version?",
+              "question": "Let’s review your API side by side.\nGot ideas to enhance it? I’m all ears, well... sort of\uD83D\uDE0F. \uD83D\uDC42\uD83D\uDC42",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -606,7 +606,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification":  "Let's proceed to generating the first prototype. ⏳ Please, give me a moment to think everything over: I will finalise the functional requirements first, and then proceed to generating the first prototype. \uD83E\uDD14",
+              "notification":  "Let’s proceed to generating the first prototype.\nJust give me a moment to think everything over — I’ll wrap up the functional requirements first, then move on to prototype generation. \uD83E\uDDE0✨",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -747,7 +747,7 @@
                     "Always put validation first for GET requests, and last for POST requests. Reason about this issue and make correct decision.",
                     "Also put a comment that it is an issue workaround, so that everyone knows the logic behind.",
                     "",
-                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting. Please, make sure there is no markdown (e.g. ```)"
                   ]
                 }
               ]
@@ -764,7 +764,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "First Prototype Ready for Validation\n\nWe’re excited to share that the initial prototype based on your functional requirements is now complete.\n\nTo validate the API, please follow the steps below:\n\n**1. Run the Application**\n\nUse the command below to start the application:\n\n```python\npython entity/prototype.py\n```\n\n**2. Validate the API**\n\nOnce the application is running, open your browser and go to:\n```\nhttp://localhost:8000/docs\nor\nhttp://localhost:8000/scalar\n```\n\nYou can find example requests and responses in `entity/functional_requirement.md`.\n\nThis will help you validate the API responses. Let me know once you're happy with the results or if you'd like to make any adjustments.",
+              "question": "✅ First Prototype Ready\\n\\nThe initial prototype based on your functional requirements is ready!\\n\\nTo test it:\\n\\n1. **Run the app**\\n```bash\\npython entity/prototype.py\\n```\\n\\n2. **Open your browser** and go to:\\n- [http://localhost:8000/docs](http://localhost:8000/docs)\\n- or [http://localhost:8000/scalar](http://localhost:8000/scalar)\\n\\n3. **Make sure you're on the correct branch and up to date**\\n```bash\\ngit checkout {branch_name}\\ngit pull\\n```\\n\\nYou’ll find example requests and responses in `entity/functional_requirement.md`.\\n\\nLet me know if everything looks good or if you’d like to make changes. 🙌",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -999,7 +999,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "Congratulations on successfully completing your application prototype! 🥳\n\nYou’ve put in a lot of hard work to bring your idea to life, and it’s truly exciting to see it in action.\n\n🧐🧐🧐 This is an important milestone—well done! 🧐🧐🧐\n\nThat said, while your prototype is impressive, it’s not yet fully robust. A few critical components are still missing:\n\n**Scalability and High Availability**\n\n**Persistence and Data Integrity**\n\n**Production-Ready Features**\n\nTo address these gaps and ensure your application can handle real-world demands, we recommend refactoring your solution using the Cyoda Framework. By deploying to a High Availability (HA) cluster on Cyoda Cloud, you’ll gain access to:\n\n**Enterprise-grade reliability and failover capabilities**\n\n**Seamless data persistence**\n\n**Streamlined deployment and scaling processes**\n\n**A comprehensive suite of production-ready tools and services**\n\nWe believe this transformation will empower your application to reach its full potential.\n\nWould you like to proceed with refactoring your prototype to make it robust, production-ready, and fully deployable on Cyoda Cloud?\n\nJust give me a thumbs up! 👍\n\nIf you'd like to get more info about Cyoda, don't hesitate to ask!",
+              "question": "\"\uD83C\uDF89 **Congratulations on completing your application prototype!**\\n\\nYou've done an incredible job bringing your idea to life — it's exciting to see it in action. \uD83E\uDD73\\n\\n**\uD83E\uDDD0 This is a major milestone — well done!**\\nThat said, while your prototype is impressive, it's not quite production-ready yet. A few key areas still need attention:\\n\\n- **Scalability & High Availability**\\n- **Data Persistence & Integrity**\\n- **Production-Ready Features**\\n\\nTo bridge these gaps, we recommend refactoring your solution using the **Cyoda Framework** and deploying to a **High Availability (HA)** cluster on **Cyoda Cloud**. This will give you:\\n\\n✅ Enterprise-grade reliability & failover  \\n✅ Seamless data persistence  \\n✅ Effortless deployment & scaling  \\n✅ A full suite of production-ready tools  \\n\\n**Ready to take it to the next level?**  \\nGive me a \uD83D\uDC4D and we’ll start refactoring to make your app robust, scalable, and fully deployable on Cyoda Cloud.\\n\\nIf you’d like to learn more about Cyoda, just ask!\"\n",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -1011,13 +1011,231 @@
     "migration_confirmation_requested": {
       "transitions": {
         "process_user_input": {
+          "next": "migration_confirmation_requested",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_file",
+                    "description": "Read the contents of entity/prototype.py file.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "filename": {
+                          "type": "string",
+                          "enum": [
+                            "entity/prototype.py"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "filename"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "save_file",
+                    "description": "Save changes to entity/prototype.py to the repository so that the user can view the changes to the entity/prototype.py. Apply this function if you make changes to entity/prototype.py (fix issues, make improvements, adjustments according to the user request). No need to apply this function if the code does not require changes and you're answering a general question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "new_content": {
+                          "type": "string"
+                        },
+                        "filename": {
+                          "type": "string",
+                          "enum": [
+                            "entity/prototype.py"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "new_content",
+                        "filename"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Read the entity/prototype.py code to answer the user's questions or make improvements. Reading file should be your first action if the user refers to the code",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "migration_confirmation"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "require_additional_question_flag",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Hello! Please do your best to help the user with just generated prototype.py code.",
+                    " If the user asks you to make any improvements or fix any issues please first read the file entity/prototype.py to get the latest version.",
+                    " Then use your own judgement to introduce changes necessary for the user",
+                    " Finally save the changes to the prototype.py file. And let the user know what changes you introduced and why.",
+                    " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case."
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        },
+        "transition_to_migration_confirmation_success": {
+          "next": "migration_confirmation_completed",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "description": "Clones template repository",
+                "parameters": {
+                  "transition": "migration_confirmation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "migration_confirmation_completed": {
+      "transitions": {
+        "process_user_input": {
           "next": "migration_confirmation_notified",
           "manual": true,
           "action": {
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "🚀 Awesome! Let's dive into generating your application code.\n\nI’ll take care of everything and notify you once the process is complete—no interruptions needed.\n\nIn the meantime, feel free to grab a coffee ☕ and relax—this will take about 5 minutes.\n\nWe're about to walk through the full cycle of building your application, from requirements to implementation.\n\n### 🛠️ Here's what’s happening behind the scenes:\n\n1. **Entity Design**  \n   Defining the JSON data structure for each entity.  \n   _📄 Output: `entity/*`_\n\n2. **Workflow Design**  \n   Structuring how each entity behaves and transitions.  \n   _📄 Output: `entity/*/workflow.json`_\n\n3. **Workflow Processor Implementation**  \n   Writing the Python code that powers your workflows.  \n   _📄 Output: `entity/*/workflow.py`_\n\nSit back and let me do the work. I’ll let you know as soon as everything’s ready to go! ✅",
+              "notification": "\"\uD83D\uDE80 **Let’s generate your application code!**\\n\\nI’ll take care of everything — no need to lift a finger.\\n\\n⏳ While the code is being generated (~5 min), feel free to grab a coffee ☕ and relax.\\n\\n**Here’s what’s happening behind the scenes:**\\n- **Entity Design:** Defining JSON structures for your entities (`entity/*`)\\n- **Workflow Design:** Mapping transitions (`entity/*/workflow.json`)\\n- **Workflow Processor:** Python logic that powers it all (`entity/*/workflow.py`)\\n\\n\uD83D\uDEE0\uFE0F This step brings your app to life — from requirements to real, running code.\\n\\n✅ I’ll notify you as soon as everything’s ready to review.\"\n",
               "publish": true
             }
           }
@@ -1429,21 +1647,6 @@
         }
       }
     },
-    "updated_routes_file": {
-      "transitions": {
-        "finished_app_generation_flow_notify": {
-          "next": "finished_app_generation_flow_notified",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "notification",
-              "notification": "\uD83C\uDF89 **Chat flow has been saved!** \uD83C\uDF89\n\nThe chat flow has been successfully saved to `entity/chat.json`. Now you can run `app.py` to start the application. \uD83D\uDE80\n\nOnce you run it, both the **workflow** and **entities** will be imported to the Cyoda environment automatically. \uD83C\uDF1F\n\nAny updates or changes to the entities will trigger the workflow, so you’re all set to go! \uD83D\uDD04\n\nWe are available in the **Google Tech Channel** to support you. If you spot any bugs or need additional features, feel free to submit tickets at [GitHub Issues](https://github.com/Cyoda-platform/ai-assistant). You’re also most welcome to contribute to the project! \uD83D\uDCBB \n\nFor any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re here to help! \uD83D\uDE0A",
-              "publish": true
-            }
-          }
-        }
-      }
-    },
     "finished_app_generation_flow_notified": {
       "transitions": {
         "save_env_file": {
@@ -1465,21 +1668,6 @@
         }
       }
     },
-    "saved_env_file": {
-      "transitions": {
-        "saved_env_file_notify": {
-          "next": "saved_env_file_notified",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "notification",
-              "notification": "### Setup Instructions for Your Application\n\nYour application is ready! Please fetch the changes and follow the steps below to configure it:\n\n1. **Move the `.env.template` to `.env`**:\n    Rename the `.env.template` file to `.env`:\n    ```bash\n    mv .env.template .env\n    ```\n\n2. **Update the `.env` file**:\n    Open the `.env` file and replace the placeholder values with your actual environment variables and credentials. For example, replace `CHAT_ID_VAR` with `$chat_id` and fill in other necessary values.\n\n    You might need to specify the path to .env file in your IDE run configurations.\n\n3. **Start Your Application**:\n    Once you've updated the `.env` file, you can start your application by running:\n    ```bash\n    python app.py\n    ```\n    or just run the app.py in your IDE.\nYour application should now be up and running! \uD83C\uDF89\n\nYou can check the api with http://localhost:8000/docs",
-              "publish": true
-            }
-          }
-        }
-      }
-    },
     "saved_env_file_notified": {
       "transitions": {
         "question_to_proceed_with_generated_app_editing": {
@@ -1488,7 +1676,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "question": "🎉 Your application is now complete—congratulations! \n\nYou've done the hard part—now let’s get it running and unlock its full potential. 🚀\n\n---\n\n**🧠 How It Works**\nYour app is powered by the **Cyoda Finite State Machine (FSM)**, which orchestrates workflows, events, and processors through a robust gRPC-based engine. \n\nYou can run the app locally or deploy it to the cloud—either way, setup is straightforward.\n\n---\n\n**▶️ Running Your App Locally**\nTo run your application on your machine:\n\n1. **Make sure your Cyoda environment is up and running.**\n   - Ask in chat:\n     ```\n     deploy cyoda env\n     ```\n   - We’ll deploy it for you and share a link once it’s ready.\n   - 🔐 *Note: This feature is only available to logged-in users.*\n\n2. **Start your app with:**\n   ```\n   python app.py\n   ```\n   ✅ At startup, your app will automatically:\n   - Connect to your Cyoda environment via gRPC (no setup needed)\n   - Import workflow configurations from `entity/workflow/`\n   - Register your workflows and get ready to process events\n\n3. **Access your Cyoda environment:**\n   - Use the link we provide to verify that your workflows have been successfully registered.\n\n4. **Test your app end-to-end:**\n   - Perform actions (like saving entities) as defined in your app logic.\n   - The `commons` module will dispatch events to your processors (`entity/workflow/workflow.py`).\n   - Events will be handled by Cyoda FSM seamlessly.\n\n---\n\n**☁️ Want to Deploy Your App?**\nSimply ask:\n```\ndeploy user app\n```\nWe’ll handle the deployment and provide a public link once it’s live.\n\n---\n\n**🧭 What You Can Do Next**\nHere are some prompt starters to guide your next steps:\n\n- Add a new feature\n- Create a new entity with `{entity_name}`\n- Update the API as per requirements\n- Update or add entity workflows\n- Modify existing processors\n- Search the web / read content from a URL / scrape data\n- Save or read files (e.g., `app.py`, `workflow.py`)\n- Deploy or refresh your environment\n- Ask general questions\n\n---\n\n**📈 Ready to Take It Further?**\nYou can:\n- Edit your API\n- Add or modify entities and workflows\n- Refactor processor logic\n\nSubmit a feature request in chat, and I’ll walk you through the next steps with a tailored plan.\n\nIf you'd like to learn more about Cyoda and how it works behind the scenes, just ask. I'm here to help! 💬",
+              "question": "✅ Your application is ready in the `{branch_name}` branch!\\n\\nLet’s bring it to life — together.\\n\\nI’ll guide you through setting up your local environment and deploying to **Cyoda Cloud** ☁️, including any troubleshooting along the way.\\n\\nHere’s what you’ll get:\\n- High availability & scalability\\n- Seamless deployment and monitoring\\n- Built-in production tools and support\\n\\nWould you like me to walk you through the setup?",
               "publish": true
             }
           }

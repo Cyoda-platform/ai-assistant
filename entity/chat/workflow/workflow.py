@@ -112,7 +112,7 @@ class ChatWorkflow(Workflow):
         )
         entity.scheduled_entities.append(scheduled_entity_id)
 
-        return f"Successfully scheduled {scheduled_action.value.replace('_', ' ')} with build ID {build_id}"
+        return f"Successfully scheduled {scheduled_action.value.replace('_', ' ')} with build ID {build_id}. Would you like to discuss anything else while my assistant is working on the job?"
 
     async def schedule_deploy_env(
             self,
@@ -173,7 +173,8 @@ class ChatWorkflow(Workflow):
         # Call the async _save_file function
         await _save_file(technical_id, technical_id, 'README.txt')
         # todo - need to get from memory
-        return const.BRANCH_READY_NOTIFICATION.format(chat_id=technical_id)
+        entity.workflow_cache['branch_name'] = technical_id
+        return const.BRANCH_READY_NOTIFICATION.format(branch_name=technical_id)
 
     async def init_chats(self, technical_id, entity: ChatEntity, **params):
         if config.MOCK_AI == "true":
@@ -617,7 +618,7 @@ class ChatWorkflow(Workflow):
             workflow_cache=workflow_cache,
             edge_messages_store=edge_messages_store)
 
-        return f"Successfully scheduled workflow for updating user application {child_technical_id}"
+        return f"Successfully scheduled workflow for updating user application {child_technical_id}. I'll be right back - please don't ask anything else."
 
     # ========== general function
 
@@ -666,7 +667,7 @@ class ChatWorkflow(Workflow):
         )
 
         return (
-            f"Successfully scheduled workflow to implement the task "
+            f"Successfully scheduled workflow to implement the task. I'll be right back with a new dialogue plan. Please don't ask anything just yet i'm back."
             f"{child_technical_id}"
         )
 
