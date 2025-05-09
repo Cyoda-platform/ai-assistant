@@ -17,7 +17,7 @@ from common.utils.chat_util_functions import _launch_transition, add_answer_to_f
 from common.utils.function_extractor import extract_function
 from common.utils.result_validator import validate_ai_result
 from common.utils.utils import get_project_file_name, _git_push, _save_file, clone_repo, \
-     parse_from_string, read_file_util, send_cyoda_request
+    parse_from_string, read_file_util, send_cyoda_request
 from common.utils.workflow_enricher import enrich_workflow
 from common.utils.workflow_extractor import analyze_code_with_libcst
 from common.workflow.workflow_to_state_diagram_converter import convert_to_mermaid
@@ -34,13 +34,20 @@ entry_point_to_stack = {
 
 
 class ChatWorkflow(Workflow):
-    def __init__(self, dataset, workflow_helper_service, entity_service, scheduler, cyoda_auth_service, mock=False):
+    def __init__(self, dataset,
+                 workflow_helper_service,
+                 entity_service,
+                 scheduler,
+                 cyoda_auth_service,
+                 #openapi_functions,  # todo will need factory soon
+                 mock=False):
         self.dataset = dataset
         self.workflow_helper_service = workflow_helper_service
         self.entity_service = entity_service
         self.mock = mock
         self.scheduler = scheduler
         self.cyoda_auth_service = cyoda_auth_service
+        #self.openapi_functions = openapi_functions
 
     async def finish_app_generation_flow(self, technical_id, entity: ChatEntity, **params):
         pass
@@ -58,8 +65,7 @@ class ChatWorkflow(Workflow):
             await new_file.write(updated_content)
         await _git_push(technical_id, [file_name], "Added env file template")
 
-
-#todo need to refactor and add a different service for cloud manager integration
+    # todo need to refactor and add a different service for cloud manager integration
     async def _schedule_deploy(
             self,
             technical_id: str,
@@ -448,7 +454,8 @@ class ChatWorkflow(Workflow):
                                                                          entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
                                                                          entity_version=config.ENTITY_VERSION,
                                                                          entity=entity_value.get("code"),
-                                                                         meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                                         meta={
+                                                                             "type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
                     edge_messages_store = {
                         'code': edge_message_id,
                     }
@@ -476,11 +483,9 @@ class ChatWorkflow(Workflow):
             entity.error = f"Error: {e}"
             logger.exception(e)
 
-
     async def reset_failed_entity(self, technical_id, entity: AgenticFlowEntity, **params):
         entity.failed = False
         return "Retrying last step"
-
 
     async def validate_workflow_design(self, technical_id, entity: AgenticFlowEntity, **params):
         edge_message_id = entity.edge_messages_store.get(params.get("transition"))
@@ -596,7 +601,8 @@ class ChatWorkflow(Workflow):
                                                                      entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
                                                                      entity_version=config.ENTITY_VERSION,
                                                                      entity=json.dumps(entities_description),
-                                                                     meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                                     meta={
+                                                                         "type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
 
         edge_messages_store = {
             'app_api': app_api_id,
@@ -606,7 +612,7 @@ class ChatWorkflow(Workflow):
             entity_service=self.entity_service,
             technical_id=technical_id,
             entity=entity,
-            entity_model=const.ModelName.CHAT_MODEL_NAME.value,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
             workflow_name=const.ModelName.ADD_NEW_FEATURE.value,
             workflow_cache=workflow_cache,
             edge_messages_store=edge_messages_store)
@@ -622,7 +628,6 @@ class ChatWorkflow(Workflow):
         return await self._fetch_data(url=url)
 
     # ==========
-
 
     async def _schedule_workflow(
             self,
@@ -665,23 +670,21 @@ class ChatWorkflow(Workflow):
             f"{child_technical_id}"
         )
 
-
-    #==========================deploy================================
+    # ==========================deploy================================
     async def deploy_cyoda_env(
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
         if entity.user_id.startswith('guest'):
             raise GuestChatsLimitExceededException()
-        #todo cloud manager needs to return namespace
+        # todo cloud manager needs to return namespace
         params['cyoda_env_name'] = f"{entity.user_id.lower()}.{config.CLIENT_HOST}"
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
-            entity_model=const.ModelName.CHAT_MODEL_NAME.value,
-            workflow_name=const.ModelName.DEPLOY_CYODA_ENV_FLOW.value,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
+            workflow_name=const.DeploymentFlow.DEPLOY_CYODA_ENV.value,
             params=params,
         )
-
 
     async def deploy_user_application(
             self, technical_id: str, entity: AgenticFlowEntity, **params
@@ -695,11 +698,10 @@ class ChatWorkflow(Workflow):
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
-            entity_model=const.ModelName.CHAT_MODEL_NAME.value,
-            workflow_name=const.ModelName.DEPLOY_USER_APP_FLOW.value,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
+            workflow_name=const.DeploymentFlow.DEPLOY_USER_APPLICATION.value,
             params=params,
         )
-
 
     # ==========================editing========================================
     async def add_new_entity_for_existing_app(
@@ -766,7 +768,6 @@ class ChatWorkflow(Workflow):
     ) -> str:
         logger.exception(f"failed workflow {technical_id}")
         return const.Notifications.FAILED_WORKFLOW.value.format(technical_id=technical_id)
-
 
     async def get_entities_list(self, branch_id: str) -> list:
         entity_dir = f"{config.PROJECT_DIR}/{branch_id}/{config.REPOSITORY_NAME}/entity"
