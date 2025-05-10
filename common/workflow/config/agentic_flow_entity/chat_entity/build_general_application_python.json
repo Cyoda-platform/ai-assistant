@@ -587,7 +587,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification":  "🌟 Let’s get started on the first prototype! 🛠️\n\nJust give me a moment to think everything through... 🤔💭\n\nI'll finalize the functional requirements first, then dive into prototype generation. 🧠✨\n\n🚧 Initial prototype is now in progress... 🚀💡",
+              "notification": "🌟 Let’s get started on the first prototype! 🛠️\n\nJust give me a moment to think everything through... 🤔💭\n\nI'll finalize the functional requirements first, then dive into prototype generation. 🧠✨\n\n🚧 Initial prototype is now in progress... 🚀💡\n\nWant to learn more about entity databases and event-driven architectures?\nCheck these out:\n- [What’s an Entity Database?](https://medium.com/@paul_42036/whats-an-entity-database-11f8538b631a)\n\n- [Entity Workflows for Event-Driven Architectures](https://medium.com/@paul_42036/entity-workflows-for-event-driven-architectures-4d491cf898a5)",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -1211,12 +1211,11 @@
       "transitions": {
         "process_user_input": {
           "next": "migration_confirmation_notified",
-          "manual": true,
           "action": {
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "\"\uD83D\uDE80 **Let’s generate your application code!**\n\nI’ll take care of everything — no need to lift a finger.\n\n⏳ While the code is being generated (~5 min), feel free to grab a coffee ☕ and relax.\n\n**Here’s what’s happening behind the scenes:**\n- **Entity Design:** Defining JSON structures for your entities (`entity/*`)\n- **Workflow Design:** Mapping transitions (`entity/*/workflow.json`)\n- **Workflow Processor:** Python logic that powers it all (`entity/*/workflow.py`)\n\n\uD83D\uDEE0\uFE0F This step brings your app to life — from requirements to real, running code.\n\n✅ I’ll notify you as soon as everything’s ready to review.\"\n",
+              "notification": "🚀 **Let’s generate your application code!**\n\nI’ll take care of everything — no need to lift a finger.\n\n⏳ While the code is being generated (~5 min), feel free to grab a coffee ☕ and relax.\n\n**Here’s what’s happening behind the scenes:**\n- **Entity Design:** Defining JSON structures for your entities (`entity/*`)\n- **Workflow Design:** Mapping transitions (`entity/*/workflow.json`)\n- **Workflow Processor:** Python logic that powers it all (`entity/*/workflow.py`)\n\n🛠️ This step brings your app to life — from requirements to real, running code.\n\n✅ I’ll notify you as soon as everything’s ready to review.\n\nWant to dive deeper into the concepts?\nCheck these out:\n- [What’s an Entity Database?](https://medium.com/@paul_42036/whats-an-entity-database-11f8538b631a)\n- [Entity Workflows for Event-Driven Architectures](https://medium.com/@paul_42036/entity-workflows-for-event-driven-architectures-4d491cf898a5)",
               "publish": true
             }
           }

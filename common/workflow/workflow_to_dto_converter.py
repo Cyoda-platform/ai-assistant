@@ -214,12 +214,12 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
     for state_name, state_data in input_json["states"].items():
         start_state = save_new_state(state_name, state_map, default_param_values, class_name, state_data)
         state_name_to_id[state_name] = start_state
-        state_data["transitions"][const.TransitionKey.MANUAL_RETRY] = {
+        state_data["transitions"][const.TransitionKey.MANUAL_RETRY.value] = {
             "next": state_name,
             "manual": True
         }
-        state_data["transitions"][const.TransitionKey.FAIL] = {
-            "next": f"{const.TransitionKey.LOCKED_CHAT}_{state_name}",
+        state_data["transitions"][const.TransitionKey.FAIL.value] = {
+            "next": f"{const.TransitionKey.LOCKED_CHAT.value}_{state_name}",
             "action": {
                 "name": "process_event",
                 "config": {
@@ -240,7 +240,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
             if transition_criteria_id:
                 criteria_ids = [transition_criteria_id]
             else:
-                if transition_name != const.TransitionKey.FAIL:
+                if transition_name != const.TransitionKey.FAIL.value:
                     # if active
                     if not transition_data.get("manual", False):
                         criteria_ids = [proceed_chat_criteria_id]

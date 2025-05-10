@@ -257,16 +257,27 @@ class WorkflowDispatcher:
         input_data = config.get("input")
         if input_data:
             branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
-            local_fs = input_data.get("local_fs")
-            for file_name in local_fs:
-                try:
-                    formatted_filename = file_name.format(**entity.workflow_cache)
-                except Exception as e:
-                    formatted_filename = file_name
-                    logger.exception(e)
-                file_contents = await self._read_local_file(file_name=formatted_filename, technical_id=branch_id)
-                messages.append({"role": "user", "content": f"Reference: {file_name}: \n {file_contents}"})
-            #todo add edge messages
+            if input_data.get("local_fs"):
+                local_fs = input_data.get("local_fs")
+                for file_name in local_fs:
+                    try:
+                        formatted_filename = file_name.format(**entity.workflow_cache)
+                    except Exception as e:
+                        formatted_filename = file_name
+                        logger.exception(e)
+                    file_contents = await self._read_local_file(file_name=formatted_filename, technical_id=branch_id)
+                    messages.append({"role": "user", "content": f"Reference: {file_name}: \n {file_contents}"})
+            elif input_data.get("cyoda_edge_message"):
+                edge_messages = input_data.get("cyoda_edge_message")
+                for edge_message in edge_messages:
+                    message_content = await self.entity_service.get_item(token=self.cyoda_auth_service,
+                                                                                        entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
+                                                                                        entity_version=env_config.ENTITY_VERSION,
+                                                                                        technical_id=entity.edge_messages_store.get(edge_message),
+                                                                                        meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+
+                    messages.append({"role": "user", "content": f"Reference: {message_content}"})
+
         return messages
 
     async def _read_local_file(self, file_name, technical_id):
