@@ -496,7 +496,7 @@ async def send_get_request(token: str, api_url: str, path: str) -> Optional[Any]
     try:
         response = await send_request(headers, url, 'GET', None, None)
         # Raise an error for bad status codes
-        logger.info(f"GET request to {url} successful.")
+        logger.debug(f"GET request to {url} successful.")
         return response
     except Exception as err:
         logger.error(f"Error during GET request to {url}: {err}")

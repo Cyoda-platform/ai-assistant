@@ -10,7 +10,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "\uD83D\uDC4B Welcome to Cyoda Application Builder! We’re excited to build something amazing with you! \n\n \uD83C\uDF1F Your branch will be ready soon, and I’ll notify you when I push changes. If you have suggestions, message me or use Canvas! \uD83D\uDE0A  \n\nIn Canvas, you can code, edit, and improve around the main app build flow! \uD83D\uDCBB  \n\nIf something goes wrong, no worries—just roll back! \uD83D\uDE2C Your app will be live on Cyoda Platform GitHub soon! \uD83D\uDE80 Let’s build your branch together! \uD83C\uDF3F",
+              "notification": "\uD83D\uDC4B Welcome to Cyoda Application Builder! We’re excited to build something amazing with you! \n\n \uD83C\uDF1F Your branch will be ready soon, and I’ll notify you when I push changes. If you have suggestions, message me or use Canvas! \uD83D\uDE0A  \n\nIn Canvas, you can code, edit, and improve around the main app build flow! \uD83D\uDCBB  \n\nIf something goes wrong, no worries—just roll back! \n\n\uD83D\uDE2C Your app will be live on Cyoda Platform GitHub soon! \n\n\uD83D\uDE80 Let’s build your branch together! \uD83C\uDF3F",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -414,7 +414,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "Let’s review your API side by side.\nGot ideas to enhance it? I’m all ears\uD83D\uDC42\uD83D\uDC42, well... sort of\uD83D\uDE0F.",
+              "question": "Let’s review your API side by side.\nOpen to feedback if you’ve got any ideas — I’m all ears\uD83D\uDC42\uD83D\uDC42, well... sort of\uD83D\uDE0F.",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -745,7 +745,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "✅ First Prototype Ready\n\nThe initial prototype based on your functional requirements is ready!\n\nTo test it:\n\n1. **Run the app**\n```bash\npython entity/prototype.py\n```\n\n2. **Open your browser** and go to:\n- [http://localhost:8000/docs](http://localhost:8000/docs)\n- or [http://localhost:8000/scalar](http://localhost:8000/scalar)\n\n3. **Make sure you're on the correct branch and up to date**\n```bash\ngit checkout {branch_name}\ngit pull\n```\n\nYou’ll find example requests and responses in `entity/functional_requirement.md`.\n\nLet me know if everything looks good or if you’d like to make changes. 🙌",
+              "question": "✅ First Prototype Ready\n\nThe initial prototype based on your functional requirements is ready!\n\nTo test it:\n\n1. **Run the app**\n```bash\npython entity/prototype.py\n```\n\n2. **Open your browser** and go to:\n- [http://localhost:8000/docs](http://localhost:8000/docs)\n- or [http://localhost:8000/scalar](http://localhost:8000/scalar)\n\n3. **Make sure you're on the correct branch and up to date** \n\n [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) \uD83D\uDC40 \n\n```bash\ngit checkout {branch_name}\ngit pull\n```\n\nYou’ll find example requests and responses in `entity/functional_requirement.md`.\n\nLet me know if everything looks good or if you’d like to make changes. 🙌",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -1648,7 +1648,7 @@
         }
       }
     },
-    "saved_env_file_notified": {
+    "saved_env_file": {
       "transitions": {
         "question_to_proceed_with_generated_app_editing": {
           "next": "questioned_to_proceed_with_generated_app_editing",
@@ -1656,7 +1656,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "question": "✅ Your application is ready in the `{branch_name}` branch!\n\nLet’s bring it to life — together.\n\nI’ll guide you through setting up your local environment and deploying to **Cyoda Cloud** ☁️, including any troubleshooting along the way.\n\nHere’s what you’ll get:\n- High availability & scalability\n- Seamless deployment and monitoring\n- Built-in production tools and support\n\nWould you like me to walk you through the setup?",
+              "question": "✅ Your application is ready in the `{branch_name}` branch!\n\n [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) \uD83D\uDC40 \n\nLet’s bring it to life — together.\n\nI’ll guide you through setting up your local environment and deploying to **Cyoda Cloud** ☁️, including any troubleshooting along the way.\n\nHere’s what you’ll get:\n- High availability & scalability\n- Seamless deployment and monitoring\n- Built-in production tools and support\n\nWould you like me to walk you through the setup?",
               "publish": true
             }
           }

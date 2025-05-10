@@ -142,6 +142,7 @@ class ChatService:
                                                                auth_header=auth_header,
                                                                dialogue=[],
                                                                child_entities=set())
+        dialogue = self._post_process_dialogue(dialogue)
         entities_data = await self._get_entities_processing_data(technical_id=technical_id,
                                                                  child_entities=child_entities)
         return {
@@ -368,7 +369,8 @@ class ChatService:
                     if not child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value):
                         await _launch_transition(self.entity_service, child.technical_id, self.cyoda_auth_service, None,
                                                  const.TransitionKey.MANUAL_RETRY.value)
-                        if chat.chat_flow.finished_flow and chat.chat_flow.finished_flow[-1].type=="answer" and not chat.chat_flow.finished_flow[-1].consumed:
+                        if chat.chat_flow.finished_flow and chat.chat_flow.finished_flow[-1].type == "answer" and not \
+                        chat.chat_flow.finished_flow[-1].consumed:
                             await _launch_transition(self.entity_service, child.technical_id, self.cyoda_auth_service,
                                                      None,
                                                      const.TransitionKey.PROCESS_USER_INPUT.value)
@@ -394,6 +396,7 @@ class ChatService:
             return (True, "Consider the file contents") if user_file else (False, "Invalid entity")
         return True, answer
 
+    # todo i'm changing the question visibility as a temporary solution - need to look at it later
     async def _process_message(self, finished_flow: List[FlowEdgeMessage], auth_header, dialogue: list,
                                child_entities: set) -> Tuple[
         list, set]:
@@ -437,6 +440,35 @@ class ChatService:
                                                 dialogue=dialogue,
                                                 child_entities=child_entities)
         return dialogue, child_entities
+
+    def _post_process_dialogue(self, dialogue: list) -> list:
+        return self._suppress_middle_questions(dialogue)
+
+
+    def _suppress_middle_questions(self, dialogue: list) -> list:
+        """
+        Suppress the middle question in a visible sequence of:
+        answer, question, question|notification
+        by setting 'visible' = False on the middle question.
+        """
+        i = 0
+        while i < len(dialogue) - 2:
+            first = dialogue[i]
+            second = dialogue[i + 1]
+            third = dialogue[i + 2]
+
+            # Check visibility and type pattern: answer, question, (question|notification)
+            if (
+                    first.get("publish", True) and first.get("type") == "answer" and
+                    second.get("publish", True) and second.get("type") == "question" and
+                    third.get("publish", True) and third.get("type") in {"question", "notification"}
+            ):
+                # Suppress the middle question
+                second["publish"] = False
+
+            i += 1
+
+        return dialogue
 
     async def _get_entities_processing_data(self, technical_id, child_entities):
         """
@@ -504,7 +536,7 @@ class ChatService:
         whose last update was more than 5 minutes ago.
         """
         # threshold: workflows modified more than 5 minutes ago
-        #todo this timing logic is incomplete
+        # todo this timing logic is incomplete
         timestamp_threshold = get_current_timestamp_num(lower_timedelta=600)
 
         # Gather entities from both workflow types

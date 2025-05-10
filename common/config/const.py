@@ -203,7 +203,7 @@ FILES_NOTIFICATIONS = {
     },
 }
 
-BRANCH_READY_NOTIFICATION = "🎉 **Your branch is live!**\n\nJust clone and check it out when you’re ready. 😎\n\n1. Clone it:\n```bash\ngit clone https://github.com/Cyoda-platform/quart-client-template/\n```\n\n2. Jump to your branch:\n```bash\ngit checkout {branch_name}\n```\n\nPeek at it here if you're the curious type: [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) 👀\n\nYou've got two modules:\n- **Common** – Already wired up. Touch it only if you're feeling brave. 🛠️\n- **Entity** – Your playground. Add, edit, and push. I’ll keep an eye out. \n\nGot questions? Ping me here or drop a comment in the code 😸"
+BRANCH_READY_NOTIFICATION = "🎉 **Your branch is live!**\n\nJust clone and check it out when you’re ready. 😎\n\n1. Clone quart-client-template:\n```bash\ngit clone https://github.com/Cyoda-platform/quart-client-template/\n```\n\n2. Jump to your branch:\n```bash\ngit checkout {branch_name}\n```\n\nPeek at it here if you're the curious type: [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) 👀\n\nYou've got two modules:\n- **Common** – Already wired up. Touch it only if you're feeling brave. 🛠️\n- **Entity** – Your playground. Add, edit, and push. I’ll keep an eye out. \n\nJust ping me here if you’ve got any questions!😸"
 
 # === Miscellaneous design strings ===
 LOGIC_CODE_DESIGN_STR = "Additional logic code design"
