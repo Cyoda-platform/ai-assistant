@@ -10,7 +10,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "\uD83D\uDC4B Welcome to Cyoda Application Builder! We’re excited to build something amazing with you! \uD83D\uDE04  \n\nWe’re here to help with building and deploying on Cyoda Cloud! Reach out anytime! \uD83C\uDF1F Your branch will be ready soon, and I’ll notify you when I push changes. If you have suggestions, message me or use Canvas! \uD83D\uDE0A  \n\nIn Canvas, you can code, edit, and improve around the main app build flow! It’s a great way to collaborate and make changes! \uD83D\uDCBB  \n\nIf you’re happy with the progress or want me to pull your changes, just give me a thumbs up! \uD83D\uDC4D  (currently approve button in the top panel)\n\nIf something goes wrong, no worries—just roll back! \uD83D\uDE2C Your app will be live on Cyoda Platform GitHub soon! \uD83D\uDE80 Let’s build your branch together! \uD83C\uDF3F",
+              "notification": "\uD83D\uDC4B Welcome to Cyoda Application Builder! We’re excited to build something amazing with you! \n\n \uD83C\uDF1F Your branch will be ready soon, and I’ll notify you when I push changes. If you have suggestions, message me or use Canvas! \uD83D\uDE0A  \n\nIn Canvas, you can code, edit, and improve around the main app build flow! \uD83D\uDCBB  \n\nIf something goes wrong, no worries—just roll back! \uD83D\uDE2C Your app will be live on Cyoda Platform GitHub soon! \uD83D\uDE80 Let’s build your branch together! \uD83C\uDF3F",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -158,33 +158,6 @@
                       "additionalProperties": false
                     }
                   }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "transition": {
-                          "type": "string",
-                          "enum": [
-                            "process_application_requirement"
-                          ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "require_additional_question_flag",
-                        "transition"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
                 }
               ],
               "messages": [
@@ -195,9 +168,13 @@
                     " You're building a backend application.",
                     " Currently you are focusing on functional requirements, and will cover any non-functional requirement later.",
                     " Let's analyse this request for application building, and clarify any important functional requirements that necessary.",
-                    " Make suggestions and ask to validate them if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations.",
-                    " Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. Max tokens = 300.",
+                    " Max 3 questions and suggestions at a time - ask only if absolutely necessary. Keep it short so that the user is kept engaged. It is better to say something like - Would you like to A or B, Do i understand correct and you'd prefer A to B - etc",
                     " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
+                    " Do not ask about any specific frameworks or technologies, the final application will be in quart python on Cyoda platform - no other choices.",
+                    " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. format it with markdown ",
+                    " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
+                    " Call set_additional_question_flag with true immediately after 6 attempts. Do not hold the user too long they will bored",
+                    " Be polite, please ",
                     " Here is my requirement: "
                   ]
                 }
@@ -319,7 +296,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. Summarise the requirement in a couple of sentences and set to true if the user chooses your example answers or after 6 attempts! Do not hold the user too long",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -351,9 +328,13 @@
                     " You're building a backend application.",
                     " Currently you are focusing on functional requirements, and will cover any non-functional requirement later.",
                     " Let's analyse this request for application building, and clarify any important functional requirements that necessary.",
-                    " Make suggestions that will help us formulate formal specification in the next iterations.",
-                    " Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. Max tokens = 300.",
+                    " Max 3 questions and suggestions at a time - ask only if absolutely necessary. Keep it short so that the user is kept engaged. It is better to say something like - Would you like to A or B, Do i understand correct and you'd prefer A to B - etc",
                     " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
+                    " Do not ask about any specific frameworks or technologies, the final application will be in quart python on Cyoda platform - no other choices.",
+                    " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. format it with markdown ",
+                    " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
+                    " Call set_additional_question_flag with true immediately after 6 attempts. Do not hold the user too long they will bored",
+                    " Be polite, please ",
                     " Here is my requirement: "
                   ]
                 }
@@ -606,7 +587,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification":  "Let’s proceed to generating the first prototype.\nJust give me a moment to think everything over — I’ll wrap up the functional requirements first, then move on to prototype generation. \uD83E\uDDE0✨",
+              "notification":  "🌟 Let’s get started on the first prototype! 🛠️\n\nJust give me a moment to think everything through... 🤔💭\n\nI'll finalize the functional requirements first, then dive into prototype generation. 🧠✨\n\n🚧 Initial prototype is now in progress... 🚀💡",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -764,7 +745,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "✅ First Prototype Ready\\n\\nThe initial prototype based on your functional requirements is ready!\\n\\nTo test it:\\n\\n1. **Run the app**\\n```bash\\npython entity/prototype.py\\n```\\n\\n2. **Open your browser** and go to:\\n- [http://localhost:8000/docs](http://localhost:8000/docs)\\n- or [http://localhost:8000/scalar](http://localhost:8000/scalar)\\n\\n3. **Make sure you're on the correct branch and up to date**\\n```bash\\ngit checkout {branch_name}\\ngit pull\\n```\\n\\nYou’ll find example requests and responses in `entity/functional_requirement.md`.\\n\\nLet me know if everything looks good or if you’d like to make changes. 🙌",
+              "question": "✅ First Prototype Ready\n\nThe initial prototype based on your functional requirements is ready!\n\nTo test it:\n\n1. **Run the app**\n```bash\npython entity/prototype.py\n```\n\n2. **Open your browser** and go to:\n- [http://localhost:8000/docs](http://localhost:8000/docs)\n- or [http://localhost:8000/scalar](http://localhost:8000/scalar)\n\n3. **Make sure you're on the correct branch and up to date**\n```bash\ngit checkout {branch_name}\ngit pull\n```\n\nYou’ll find example requests and responses in `entity/functional_requirement.md`.\n\nLet me know if everything looks good or if you’d like to make changes. 🙌",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -999,7 +980,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "\"\uD83C\uDF89 **Congratulations on completing your application prototype!**\\n\\nYou've done an incredible job bringing your idea to life — it's exciting to see it in action. \uD83E\uDD73\\n\\n**\uD83E\uDDD0 This is a major milestone — well done!**\\nThat said, while your prototype is impressive, it's not quite production-ready yet. A few key areas still need attention:\\n\\n- **Scalability & High Availability**\\n- **Data Persistence & Integrity**\\n- **Production-Ready Features**\\n\\nTo bridge these gaps, we recommend refactoring your solution using the **Cyoda Framework** and deploying to a **High Availability (HA)** cluster on **Cyoda Cloud**. This will give you:\\n\\n✅ Enterprise-grade reliability & failover  \\n✅ Seamless data persistence  \\n✅ Effortless deployment & scaling  \\n✅ A full suite of production-ready tools  \\n\\n**Ready to take it to the next level?**  \\nGive me a \uD83D\uDC4D and we’ll start refactoring to make your app robust, scalable, and fully deployable on Cyoda Cloud.\\n\\nIf you’d like to learn more about Cyoda, just ask!\"\n",
+              "question": "\"\uD83C\uDF89 **Congratulations on completing your application prototype!**\n\nYou've done an incredible job bringing your idea to life — it's exciting to see it in action. \uD83E\uDD73\n\n**\uD83E\uDDD0 This is a major milestone — well done!**\nThat said, while your prototype is impressive, it's not quite production-ready yet. A few key areas still need attention:\n\n- **Scalability & High Availability**\n- **Data Persistence & Integrity**\n- **Production-Ready Features**\n\nTo bridge these gaps, we recommend refactoring your solution using the **Cyoda Framework** and deploying to a **High Availability (HA)** cluster on **Cyoda Cloud**. This will give you:\n\n✅ Enterprise-grade reliability & failover  \n✅ Seamless data persistence  \n✅ Effortless deployment & scaling  \n✅ A full suite of production-ready tools  \n\n**Ready to take it to the next level?**  \nGive me a \uD83D\uDC4D and we’ll start refactoring to make your app robust, scalable, and fully deployable on Cyoda Cloud.\n\nIf you’d like to learn more about Cyoda, just ask!\"\n",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -1235,7 +1216,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "\"\uD83D\uDE80 **Let’s generate your application code!**\\n\\nI’ll take care of everything — no need to lift a finger.\\n\\n⏳ While the code is being generated (~5 min), feel free to grab a coffee ☕ and relax.\\n\\n**Here’s what’s happening behind the scenes:**\\n- **Entity Design:** Defining JSON structures for your entities (`entity/*`)\\n- **Workflow Design:** Mapping transitions (`entity/*/workflow.json`)\\n- **Workflow Processor:** Python logic that powers it all (`entity/*/workflow.py`)\\n\\n\uD83D\uDEE0\uFE0F This step brings your app to life — from requirements to real, running code.\\n\\n✅ I’ll notify you as soon as everything’s ready to review.\"\n",
+              "notification": "\"\uD83D\uDE80 **Let’s generate your application code!**\n\nI’ll take care of everything — no need to lift a finger.\n\n⏳ While the code is being generated (~5 min), feel free to grab a coffee ☕ and relax.\n\n**Here’s what’s happening behind the scenes:**\n- **Entity Design:** Defining JSON structures for your entities (`entity/*`)\n- **Workflow Design:** Mapping transitions (`entity/*/workflow.json`)\n- **Workflow Processor:** Python logic that powers it all (`entity/*/workflow.py`)\n\n\uD83D\uDEE0\uFE0F This step brings your app to life — from requirements to real, running code.\n\n✅ I’ll notify you as soon as everything’s ready to review.\"\n",
               "publish": true
             }
           }
@@ -1676,7 +1657,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "question": "✅ Your application is ready in the `{branch_name}` branch!\\n\\nLet’s bring it to life — together.\\n\\nI’ll guide you through setting up your local environment and deploying to **Cyoda Cloud** ☁️, including any troubleshooting along the way.\\n\\nHere’s what you’ll get:\\n- High availability & scalability\\n- Seamless deployment and monitoring\\n- Built-in production tools and support\\n\\nWould you like me to walk you through the setup?",
+              "question": "✅ Your application is ready in the `{branch_name}` branch!\n\nLet’s bring it to life — together.\n\nI’ll guide you through setting up your local environment and deploying to **Cyoda Cloud** ☁️, including any troubleshooting along the way.\n\nHere’s what you’ll get:\n- High availability & scalability\n- Seamless deployment and monitoring\n- Built-in production tools and support\n\nWould you like me to walk you through the setup?",
               "publish": true
             }
           }

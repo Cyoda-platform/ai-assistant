@@ -106,8 +106,8 @@ class WorkflowDispatcher:
         child_entities_size_before = len(entity.child_entities)
 
         if config_type in ("notification", "question") and config.get(config_type):
-            message_content = self._format_message(config, entity.workflow_cache, config_type)
-            await self._append_to_memory(entity, message_content, config.get("memory_tags"))
+            config[config_type] = self._format_message(message=config[config_type], cache=entity.workflow_cache)
+            await self._append_to_ai_memory(entity, config[config_type], config.get("memory_tags"))
 
         elif config_type == "function":
             params = config["function"].get("parameters", {})
@@ -118,7 +118,7 @@ class WorkflowDispatcher:
                 **params
             )
             if response and isinstance(response, str):
-                await self._append_to_memory(entity, response, config.get("memory_tags"))
+                await self._append_to_ai_memory(entity, response, config.get("memory_tags"))
 
         elif config_type in ("prompt", "agent", "batch"):
             chat_memory = await self._get_chat_memory(entity.memory_id)
@@ -353,12 +353,12 @@ class WorkflowDispatcher:
                                                                          meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
                     entity.edge_messages_store[edge_message] = edge_message_id
 
-    def _format_message(self, config, workflow_cache, key):
+    def _format_message(self, message, cache):
         try:
-            return config[key].format(**workflow_cache)
+            return message.format(**cache)
         except Exception as e:
             logger.exception(e)
-            return config[key]
+            return message
 
     async def _get_chat_memory(self, memory_id):
         return await self.entity_service.get_item(
@@ -368,7 +368,7 @@ class WorkflowDispatcher:
             technical_id=memory_id
         )
 
-    async def _append_to_memory(self, entity, content, memory_tags=None):
+    async def _append_to_ai_memory(self, entity, content, memory_tags=None):
         chat_memory = await self._get_chat_memory(entity.memory_id)
         edge_message_id = await self.entity_service.add_item(
             token=self.cyoda_auth_service,
