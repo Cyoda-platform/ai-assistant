@@ -451,21 +451,38 @@ class ChatService:
         answer, question, question|notification
         by setting 'visible' = False on the middle question.
         """
+        removed_messages = []
         i = 0
-        while i < len(dialogue) - 2:
-            first = dialogue[i]
-            second = dialogue[i + 1]
-            third = dialogue[i + 2]
+        filtered_dialogue = []
 
-            # Check visibility and type pattern: answer, question, (question|notification)
-            if (
-                    first.get("publish", True) and first.get("type") == "answer" and
-                    second.get("publish", True) and second.get("type") == "question" and
-                    third.get("publish", True) and third.get("type") in {"question", "notification"}
-            ):
-                # Suppress the middle question
-                second["publish"] = False
+        while i < len(dialogue):
+            # Try to check ahead 2 items if possible
+            if i + 2 < len(dialogue):
+                first = dialogue[i]
+                second = dialogue[i + 1]
+                third = dialogue[i + 2]
 
+                if (
+                        first.get("publish", True) and first.get("type") == "answer" and
+                        second.get("publish", True) and second.get("type") == "question" and
+                        third.get("publish", True) and third.get("type") in {"question", "notification"}
+                ):
+                    # Add first, skip second, continue from third
+                    filtered_dialogue.append(first)
+                    removed_messages.append(second)
+                    # Skip the second (suppressed) item
+                    i += 1
+                else:
+                    filtered_dialogue.append(first)
+            else:
+                # For last two or single messages, just copy them over
+                filtered_dialogue.append(dialogue[i])
+
+            i += 1
+
+        # In case the final two messages were not processed due to i+2 check
+        while i < len(dialogue):
+            filtered_dialogue.append(dialogue[i])
             i += 1
 
         return dialogue
