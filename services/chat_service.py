@@ -409,9 +409,9 @@ class ChatService:
                 )
                 content["technical_id"] = msg.edge_message_id
                 if content.get("question") and content.get("approve"):
-                    content["question"] = f"{content["question"]}\n{const.Notifications.APPROVE_INSTRUCTION_MESSAGE}"
-                if content.get("answer") and content["answer"] == const.Notifications.APPROVE:
-                    content["answer"] = random.choice(list(const.Notifications.ApproveAnswer)).value
+                    content["question"] = f"{content["question"]}\n{const.Notifications.APPROVE_INSTRUCTION_MESSAGE.value}"
+                if content.get("answer") and content["answer"] == const.Notifications.APPROVE.value:
+                    content["answer"] = random.choice(list(const.ApproveAnswer)).value
                 dialogue.append(content)
 
             if msg.type == "child_entities":

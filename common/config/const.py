@@ -156,13 +156,14 @@ class Notifications(str, Enum):
     )
     APPROVE_INSTRUCTION_MESSAGE = "Hit ✅ to approve or escape the 🔁 loop. 🙈 No turning back!"
 
-    class ApproveAnswer(Enum):
-        FINE_BY_ME = "fine by me 👌"
-        HAPPY_WITH_THAT = "happy with that 😎"
-        DONE_NEXT = "done, next ➡️"
-        SOLID_MOVE_ON = "solid. move on ✅"
-        SORTED = "Sorted👌"
-        MOVE_ON = "Cool with the result 😎 Let’s move."
+@unique
+class ApproveAnswer(str, Enum):
+    FINE_BY_ME = "Fine by me 👌"
+    HAPPY_WITH_THAT = "Happy with that 😎"
+    DONE_NEXT = "Done, next ➡️"
+    SOLID_MOVE_ON = "Solid. move on ✅"
+    SORTED = "Sorted👌"
+    MOVE_ON = "Cool with the result 😎 Let’s move."
 
 
 # === Push changes template ===
