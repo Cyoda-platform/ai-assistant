@@ -41,9 +41,17 @@ def auth_required(func):
 def auth_optional(func):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
-        if config.ENABLE_AUTH:
-            header = request.headers.get('Authorization')
-            if header:
-                await validate_with_cyoda(extract_bearer_token(header))
+        if not config.ENABLE_AUTH:
+            return await func(*args, **kwargs)
+
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            raise InvalidTokenException("Auth data is missing")
+
+        user_id = await get_user_id(auth_header)
+        if not user_id.startswith('guest.'):
+            await validate_with_cyoda(extract_bearer_token(auth_header))
+
         return await func(*args, **kwargs)
+
     return wrapper

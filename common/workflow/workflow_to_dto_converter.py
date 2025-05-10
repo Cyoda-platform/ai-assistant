@@ -5,8 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from common.config.config import ENTITY_VERSION, GRPC_PROCESSOR_TAG
-
+from common.config.config import config
 
 
 def generate_id():
@@ -215,11 +214,11 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
     for state_name, state_data in input_json["states"].items():
         start_state = save_new_state(state_name, state_map, default_param_values, class_name, state_data)
         state_name_to_id[state_name] = start_state
-        state_data["transitions"][const.MANUAL_RETRY_TRANSITION] = {
+        state_data["transitions"][const.TransitionKey.MANUAL_RETRY] = {
             "next": state_name,
             "manual": True
         }
-        state_data["transitions"][const.FAIL_TRANSITION] = {
+        state_data["transitions"][const.TransitionKey.FAIL] = {
             "next": f"{const.TransitionKey.LOCKED_CHAT}_{state_name}",
             "action": {
                 "name": "process_event",
@@ -241,7 +240,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
             if transition_criteria_id:
                 criteria_ids = [transition_criteria_id]
             else:
-                if transition_name != const.FAIL_TRANSITION:
+                if transition_name != const.TransitionKey.FAIL:
                     # if active
                     if not transition_data.get("manual", False):
                         criteria_ids = [proceed_chat_criteria_id]
@@ -623,9 +622,9 @@ if __name__ == "__main__":
         convert(
             input_file_path=input_file,
             output_file_path=str(output_file),
-            calculation_node_tags=GRPC_PROCESSOR_TAG,
+            calculation_node_tags=config.GRPC_PROCESSOR_TAG,
             model_name=model_name,
-            model_version=int(ENTITY_VERSION),
+            model_version=int(config.ENTITY_VERSION),
             workflow_name=workflow_name
         )
 

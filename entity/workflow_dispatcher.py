@@ -252,7 +252,7 @@ class WorkflowDispatcher:
                                                                      entity_version=env_config.ENTITY_VERSION,
                                                                      technical_id=entity_message.edge_message_id,
                                                                      meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
-                messages.append(message_content)
+                messages.append(str(message_content))
             # todo verify that the copy is deep
         input_data = config.get("input")
         if input_data:

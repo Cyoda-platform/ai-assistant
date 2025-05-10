@@ -72,7 +72,7 @@ async def submit_question(technical_id):
 
 @chat_bp.route('/<technical_id>/text-answers', methods=['POST'])
 @rate_limit(const.RATE_LIMIT, timedelta(minutes=1))
-@auth_required
+@auth_optional
 async def submit_text_answer(technical_id):
     header = request.headers.get('Authorization')
     data = await request.get_json()
@@ -81,7 +81,7 @@ async def submit_text_answer(technical_id):
 
 @chat_bp.route('/<technical_id>/answers', methods=['POST'])
 @rate_limit(const.RATE_LIMIT, timedelta(minutes=1))
-@auth_required
+@auth_optional
 async def submit_answer(technical_id):
     header = request.headers.get('Authorization')
     form = (await request.form).to_dict()
