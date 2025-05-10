@@ -107,7 +107,7 @@ class WorkflowDispatcher:
 
         if config_type in ("notification", "question") and config.get(config_type):
             message_content = self._format_message(config, entity.workflow_cache, config_type)
-            await self._append_to_memory(entity, str(message_content), config.get("memory_tags"))
+            await self._append_to_memory(entity, message_content, config.get("memory_tags"))
 
         elif config_type == "function":
             params = config["function"].get("parameters", {})
@@ -118,7 +118,7 @@ class WorkflowDispatcher:
                 **params
             )
             if response and isinstance(response, str):
-                await self._append_to_memory(entity, str(response), config.get("memory_tags"))
+                await self._append_to_memory(entity, response, config.get("memory_tags"))
 
         elif config_type in ("prompt", "agent", "batch"):
             chat_memory = await self._get_chat_memory(entity.memory_id)

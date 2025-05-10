@@ -154,7 +154,8 @@ class Notifications(str, Enum):
         "Sorry, you cannot skip this question. If you're unsure about anything, "
         "please refer to the example answers for guidance."
     )
-    APPROVE_INSTRUCTION_MESSAGE = "Hit ✅ to approve or escape the 🔁 loop. 🙈 No turning back!"
+    APPROVE_INSTRUCTION_MESSAGE = "*Hit ✅ to approve or escape the 🔁 loop. 🙈 No turning back!*"
+
 
 @unique
 class ApproveAnswer(str, Enum):

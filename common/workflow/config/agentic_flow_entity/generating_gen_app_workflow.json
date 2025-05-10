@@ -148,7 +148,11 @@
               "type": "prompt",
               "publish": false,
               "model": {},
-              "input": {},
+              "input": {
+                "cyoda_edge_message": [
+                  "extracted_function"
+                ]
+              },
               "output": {
                 "cyoda_edge_message": [
                   "design_workflow_from_code"
@@ -158,7 +162,58 @@
                 {
                   "role": "user",
                   "content": [
-                    "Please construct workflow json from this code using a typical finite-state machine (FSM) model.\nThe FSM consists of states and transitions between them, which can be represented as a directed graph where states are nodes, and transitions are edges.\nEach transition may have processes. You need to add them if the user explicitly specifies them. Currently there can be only one transition coming from a single state.\nEach state, except for the initial state (None), should be reachable from exactly one transition, ensuring that there are no isolated (disconnected) states in the workflow. Additionally, each transition must have both a start state and an end state.\n\nBegin with an initial state labeled \"None\", which serves as the origin point.\nDefine transitions between states, with each state being an endpoint (i.e., target) of exactly one transition.\nEnsure that all states (except \"None\") serve as the destination for exactly one transition to guarantee the graph remains fully connected.\n\nJSON Example of the Workflow:\njson\n{{\n  \"name\": \"specify_name_that_describes_the_workflow\",\n  \"description\": \"describe_the_workflow\",\n  \"transitions\": [\n    {{\n      \"name\": \"spark_happy_message\",\n      \"description\": \"Spark the happy message\",\n      \"start_state\": \"None\",\n      \"start_state_description\": \"Initial state\",\n      \"end_state\": \"Happy_message_sparked\",\n      \"end_state_description\": \"A happy message has been sparked\",\n      \"automated\": true\n    }},\n    {{\n      \"name\": \"send_happy_message\",\n      \"description\": \"Send the happy message\",\n      \"start_state\": \"Happy_message_sparked\",\n      \"start_state_description\": \"A happy message has been sparked\",\n      \"end_state\": \"Message_sent\",\n      \"end_state_description\": \"The happy message has been sent\",\n      \"automated\": true #always put automated true\n      \"processes\": {{\n        \"schedule_transition_processors\": [],\n        \"externalized_processors\": [\n          {{\n            \"name\": \"process_example\",\n            \"description\": \"\"\n          }}\n        ]\n      }}\n    }}\n  ]\n}}\nPlease ensure that each process function is referenced in processes.externalized_processors \n\n{code}\n\nPlease return only valid json without any additional information."
+                    "Please construct workflow JSON using a typical FSM model.",
+                    "The FSM has states and transitions.",
+                    "Represent it as a directed graph.",
+                    "States are nodes.",
+                    "Transitions are edges.",
+                    "Each transition may have processes.",
+                    "Add processes if explicitly specified.",
+                    "Only one transition can originate from a state.",
+                    "Each state (except None) must be reachable by one transition.",
+                    "No isolated states allowed.",
+                    "Each transition needs a start and end state.",
+                    "Begin with initial state \"None\".",
+                    "Define transitions between states.",
+                    "Each non-None state is the destination of one transition.",
+                    "Ensure full connectivity of the graph.",
+                    "Processes names should be the same as functions names in the attached code",
+                    "JSON Example:",
+                    "{",
+                    "  \"name\": \"specify_name_that_describes_the_workflow\",",
+                    "  \"description\": \"describe_the_workflow\",",
+                    "  \"transitions\": [",
+                    "    {",
+                    "      \"name\": \"spark_happy_message\",",
+                    "      \"description\": \"Spark the happy message\",",
+                    "      \"start_state\": \"None\",",
+                    "      \"start_state_description\": \"Initial state\",",
+                    "      \"end_state\": \"Happy_message_sparked\",",
+                    "      \"end_state_description\": \"A happy message has been sparked\",",
+                    "      \"automated\": true",
+                    "    },",
+                    "    {",
+                    "      \"name\": \"send_happy_message\",",
+                    "      \"description\": \"Send the happy message\",",
+                    "      \"start_state\": \"Happy_message_sparked\",",
+                    "      \"start_state_description\": \"A happy message has been sparked\",",
+                    "      \"end_state\": \"Message_sent\",",
+                    "      \"end_state_description\": \"The happy message has been sent\",",
+                    "      \"automated\": true,",
+                    "      \"processes\": {",
+                    "        \"schedule_transition_processors\": [],",
+                    "        \"externalized_processors\": [",
+                    "          {",
+                    "            \"name\": \"process_example\",",
+                    "            \"description\": \"\"",
+                    "          }",
+                    "        ]",
+                    "      }",
+                    "    }",
+                    "  ]",
+                    "}",
+                    "Ensure each process function is in externalized_processors.",
+                    "Return only valid JSON without extra information."
                   ]
                 }
               ],
