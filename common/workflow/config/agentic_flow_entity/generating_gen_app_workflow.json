@@ -21,8 +21,8 @@
               "model": {},
               "input": {},
               "output": {
-                "cyoda_edge_message": [
-                  "design_workflow_from_code"
+                "local_fs": [
+                  "entity/{entity_name}/workflow.py"
                 ]
               },
               "messages": [
@@ -35,8 +35,8 @@
                     "No more additional arguments can be passed.",
                     "Also, all workflow orchestration should be inside {workflow_function}. {workflow_function} should have only workflow orchestration code and no business logic. no other function can have workflow orchestration code.",
                     "{code}",
-                    "You cannot apply entity_service.add/update/delete on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity['attribute'].  The new state will be persisted. Do not any test/extra code.",
-                    "Please return only compiled python code without additional information. If you'd like to add any comments please use # comment"
+                    "You cannot apply entity_service.add/update/delete on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity['attribute'].  The new state will be persisted. Do not add any test/extra code.",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
                   ]
                 }
               ]
@@ -45,99 +45,7 @@
         }
       }
     },
-    "designed_workflow_from_code": {
-      "transitions": {
-        "validate_workflow_design": {
-          "next": "validated_workflow_design",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "function",
-              "function": {
-                "name": "validate_workflow_design",
-                "description": "",
-                "parameters": {
-                  "transition": "design_workflow_from_code"
-                }
-              },
-              "output": {
-                "cyoda_edge_message": [
-                  "validate_workflow_design"
-                ]
-              },
-              "publish": false
-            }
-          }
-        }
-      }
-    },
-    "validated_workflow_design": {
-      "transitions": {
-        "fail_validation": {
-          "next": "validation_failed",
-          "condition": {
-            "config": {
-              "type": "function",
-              "function": {
-                "name": "has_workflow_code_validation_failed",
-                "description": "",
-                "parameters": {
-                  "transition": "validate_workflow_design"
-                }
-              }
-            }
-          }
-        },
-        "succeed_validation": {
-          "next": "validation_succeeds",
-          "condition": {
-            "config": {
-              "type": "function",
-              "function": {
-                "name": "has_workflow_code_validation_succeeded",
-                "description": "",
-                "parameters": {
-                  "transition": "validate_workflow_design"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "validation_failed": {
-      "transitions": {
-        "retry_workflow_code_design": {
-          "next": "started_workflow_generation"
-        }
-      }
-    },
-    "validation_succeeds": {
-      "transitions": {
-        "save_extracted_workflow_code": {
-          "next": "saved_extracted_workflow_code",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "function",
-              "function": {
-                "name": "save_extracted_workflow_code",
-                "description": "",
-                "parameters": {
-                  "transition": "validate_workflow_design"
-                }
-              },
-              "output": {
-                "cyoda_edge_message": [
-                  "extracted_function"
-                ]
-              },
-              "publish": false
-            }
-          }
-        }
-      }
-    },
+
     "saved_extracted_workflow_code": {
       "transitions": {
         "design_workflow_from_code": {
@@ -149,13 +57,13 @@
               "publish": false,
               "model": {},
               "input": {
-                "cyoda_edge_message": [
-                  "extracted_function"
+                "local_fs": [
+                  "entity/{entity_name}/workflow.py"
                 ]
               },
               "output": {
-                "cyoda_edge_message": [
-                  "design_workflow_from_code"
+                "local_fs": [
+                  "entity/{entity_name}/workflow.json"
                 ]
               },
               "messages": [
@@ -285,27 +193,6 @@
                   }
                 }
               }
-            }
-          }
-        }
-      }
-    },
-    "generated_workflow_configuration": {
-      "transitions": {
-        "save_workflow_configuration": {
-          "next": "saved_workflow_configuration",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "function",
-              "function": {
-                "name": "save_workflow_configuration",
-                "description": "",
-                "parameters": {
-                  "transition": "design_workflow_from_code"
-                }
-              },
-              "publish": false
             }
           }
         }

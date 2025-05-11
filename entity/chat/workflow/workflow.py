@@ -49,9 +49,6 @@ class ChatWorkflow(Workflow):
         self.cyoda_auth_service = cyoda_auth_service
         #self.openapi_functions = openapi_functions
 
-    async def finish_app_generation_flow(self, technical_id, entity: ChatEntity, **params):
-        pass
-
     async def save_env_file(self, technical_id, entity: ChatEntity, **params):
         file_name = get_project_file_name(chat_id=technical_id, file_name=params.get("filename"))
         async with aiofiles.open(file_name, 'r') as template_file:
@@ -406,55 +403,26 @@ class ChatWorkflow(Workflow):
 
     async def register_workflow_with_app(self, technical_id, entity: AgenticFlowEntity, **params):
         filename = params.get("filename")
-        code_without_workflow, workflow_json = "", {}
         try:
             file_path = get_project_file_name(technical_id, filename)
             async with aiofiles.open(file_path, 'r') as f:
-                input_code = await f.read()
-            try:
-                input_code = input_code.replace("```python", "")
-                input_code = input_code.replace("```", "")
-                # todo might return empty
-                code_without_workflow, workflow_json = analyze_code_with_libcst(input_code)
-            except Exception as e:
-                # todo add retry here
-                entity.failed = True
-                entity.error = f"Error: {e}"
-                entity.error_code = const.AiErrorCodes.WRONG_GENERATED_CONTENT.value
-                error_message = "Validation failed. Please regenerate as no process_{entity_name} has been found. Make sure you use lowercase underscore entity names"
-
-                # Append to finished_flow and get the edge ID
-                edge_message_id = await add_answer_to_finished_flow(
-                    entity_service=self.entity_service,
-                    answer=error_message,
-                    cyoda_auth_service=self.cyoda_auth_service
-                )
-                entity.chat_flow.finished_flow.append(
-                    FlowEdgeMessage(
-                        type="answer",
-                        publish=True,
-                        edge_message_id=edge_message_id,
-                        consumed=False,
-                        user_id=entity.user_id
-                    )
-                )
-                logger.exception(e)
-
+                content = await f.read()
+                input_json = json.load(content)
             await _save_file(chat_id=technical_id,
-                             _data=app_post_process(code_without_workflow),
+                             _data=input_json.get("file_without_workflow").get("code"),
                              item=f"routes/routes.py")
             awaited_entity_ids = []
-            for item in workflow_json:
+            for item in input_json.get("entity_models"):
                 # For each key-value pair in the dictionary, where key is the entity name and value is the code snippet
-                for entity_name, entity_value in item.items():
+                for entity_model_name, workflow_function in item.items():
                     workflow_cache = {
-                        'workflow_function': entity_value.get("workflow_function"),  # f"process_{entity_name}",
-                        'entity_name': entity_name
+                        'workflow_function': workflow_function.get("name"),
+                        'entity_name': entity_model_name
                     }
                     edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                                          entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
                                                                          entity_version=config.ENTITY_VERSION,
-                                                                         entity=entity_value.get("code"),
+                                                                         entity=json.dumps(workflow_function),
                                                                          meta={
                                                                              "type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
                     edge_messages_store = {
@@ -786,3 +754,6 @@ class ChatWorkflow(Workflow):
         entity_names = await self.get_entities_list(branch_id=branch_id)
         resolved_name = get_most_similar_entity(target=entity_name, entity_list=entity_names)
         return resolved_name if resolved_name else entity_name
+
+
+

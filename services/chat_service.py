@@ -142,7 +142,7 @@ class ChatService:
                                                                auth_header=auth_header,
                                                                dialogue=[],
                                                                child_entities=set())
-        dialogue = self._post_process_dialogue(dialogue)
+        #dialogue = self._post_process_dialogue(dialogue)
         entities_data = await self._get_entities_processing_data(technical_id=technical_id,
                                                                  child_entities=child_entities)
         return {
@@ -396,7 +396,6 @@ class ChatService:
             return (True, "Consider the file contents") if user_file else (False, "Invalid entity")
         return True, answer
 
-    # todo i'm changing the question visibility as a temporary solution - need to look at it later
     async def _process_message(self, finished_flow: List[FlowEdgeMessage], auth_header, dialogue: list,
                                child_entities: set) -> Tuple[
         list, set]:
@@ -440,52 +439,6 @@ class ChatService:
                                                 dialogue=dialogue,
                                                 child_entities=child_entities)
         return dialogue, child_entities
-
-    def _post_process_dialogue(self, dialogue: list) -> list:
-        return self._suppress_middle_questions(dialogue)
-
-
-    def _suppress_middle_questions(self, dialogue: list) -> list:
-        """
-        Suppress the middle question in a visible sequence of:
-        answer, question, question|notification
-        by setting 'visible' = False on the middle question.
-        """
-        removed_messages = []
-        i = 0
-        filtered_dialogue = []
-
-        while i < len(dialogue):
-            # Try to check ahead 2 items if possible
-            if i + 2 < len(dialogue):
-                first = dialogue[i]
-                second = dialogue[i + 1]
-                third = dialogue[i + 2]
-
-                if (
-                        first.get("publish", True) and first.get("type") == "answer" and
-                        second.get("publish", True) and second.get("type") == "question" and
-                        third.get("publish", True) and third.get("type") in {"question", "notification"}
-                ):
-                    # Add first, skip second, continue from third
-                    filtered_dialogue.append(first)
-                    removed_messages.append(second)
-                    # Skip the second (suppressed) item
-                    i += 1
-                else:
-                    filtered_dialogue.append(first)
-            else:
-                # For last two or single messages, just copy them over
-                filtered_dialogue.append(dialogue[i])
-
-            i += 1
-
-        # In case the final two messages were not processed due to i+2 check
-        while i < len(dialogue):
-            filtered_dialogue.append(dialogue[i])
-            i += 1
-
-        return dialogue
 
     async def _get_entities_processing_data(self, technical_id, child_entities):
         """
@@ -614,3 +567,4 @@ class ChatService:
                         )
             except Exception as e:
                 logger.exception(f"Failed to rollback workflow for entity {entity.technical_id}: {e}")
+

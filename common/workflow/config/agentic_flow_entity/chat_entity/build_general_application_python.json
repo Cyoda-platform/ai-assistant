@@ -1479,8 +1479,8 @@
     },
     "generated_improved_prototype_cyoda_workflow": {
       "transitions": {
-        "finish_prototype_cyoda_workflow": {
-          "next": "finished_prototype_cyoda_workflow",
+        "finished_prototype_cyoda_workflow": {
+          "next": "transform_prototype_cyoda_workflow",
           "action": {
             "name": "process_event",
             "config": {
@@ -1513,8 +1513,121 @@
     },
     "finished_prototype_cyoda_workflow": {
       "transitions": {
-        "launch_register_workflow_with_app": {
-          "next": "launched_register_workflow_with_app",
+        "transform_prototype_cyoda_workflow": {
+          "next": "finished_prototype_cyoda_workflow_json",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": false,
+              "model": {},
+              "memory_tags": [
+                "generate_prototype_cyoda_workflow"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "You have a Python code with certain components related to an entity_model node and a file_without_workflow node.",
+                    " The goal is to simplify the code and organize it into a structured JSON format with the following steps:",
+                    "1. Entity Model Node:",
+                    "Identify all the entity_model arguments of entity_service from the code.",
+                    "The Python code likely has a function or class (entity_service) that accepts entity_model as an argument.",
+                    " We need to identify and collect all such instances where entity_model is used in relation to entity_service.",
+                    "Extract the name of the function that was used as the workflow argument.",
+                    "There is a workflow argument in the code. ",
+                    "We need to extract the name of the function that is passed as the value for this workflow argument.",
+                    "Include the full content of the workflow function as part of this entity model.",
+                    "The code has a workflow function that is passed into the entity_service.",
+                    " We need to extract the full content of this workflow function and include it in the JSON structure under the entity model node.",
+                    "2. File Without Workflow Node:",
+                    "Provide the entire Python code, but remove all references to the workflow argument.",
+                    "The idea here is to remove any references to the workflow argument,",
+                    " but not modify the structure or logic of the code otherwise.",
+                    " This means any calls to functions that use workflow as an argument should be stripped of that argument,",
+                    " but the rest of the code stays the same.",
+                    "In summary, you want:",
+                    "A structured JSON representation that contains an entity_model node with references to entity_model and the workflow function's name and content.",
+                    "A separate file_without_workflow node, which is the original Python code with all references to workflow removed."
+                  ]
+                }
+              ],
+              "response_format": {
+                "name": "workflow_schema",
+                "description": "Schema for entity models and workflow functions",
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "entity_models": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "entity_model_name": {
+                            "type": "string"
+                          },
+                          "workflow_function": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "code_with_necessary_imports_and_constants": {
+                                "type": "string"
+                              },
+                              "content": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "name",
+                              "content"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "entity_model_name",
+                          "workflow_function"
+                        ]
+                      }
+                    },
+                    "file_without_workflow": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "entity_models",
+                    "file_without_workflow"
+                  ]
+                }
+              },
+              "input": {
+                "local_fs": [
+                  "entity/prototype_cyoda_workflow.py"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "entity/prototype_cyoda_workflow.json"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "finished_prototype_cyoda_workflow_json": {
+      "transitions": {
+        "register_workflow_with_app": {
+          "next": "finished_app_generation_flow",
           "action": {
             "name": "process_event",
             "config": {
@@ -1523,7 +1636,7 @@
                 "name": "register_workflow_with_app",
                 "description": "register_workflow_with_app",
                 "parameters": {
-                  "filename": "entity/prototype_cyoda_workflow.py"
+                  "filename": "entity/prototype_cyoda_workflow.json"
                 }
               },
               "publish": false
@@ -1538,42 +1651,11 @@
         }
       ]
     },
-    "launched_register_workflow_with_app": {
-      "transitions": {
-        "finish_app_generation_flow": {
-          "next": "finished_app_generation_flow",
-          "manual": true,
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "function",
-              "function": {
-                "name": "finish_app_generation_flow",
-                "description": "finish_flow",
-                "parameters": {
-                  "filename": "entity/chat.json"
-                }
-              },
-              "publish": true
-            }
-          }
-        },
-        "rollback": {
-          "next": "finished_prototype_cyoda_workflow",
-          "manual": true
-        }
-      },
-      "error_codes": [
-        {
-          "error_code": "wrong_generated_content",
-          "next_state": "generated_entities_data_design"
-        }
-      ]
-    },
     "finished_app_generation_flow": {
       "transitions": {
         "update_routes_file": {
           "next": "updated_routes_file",
+          "manual": true,
           "action": {
             "name": "process_event",
             "config": {
