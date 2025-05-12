@@ -45,17 +45,20 @@ class OpenAiAgent:
     ):
         messages = self.adapt_messages(messages)
         schema = response_format.get("schema") if response_format else None
-        max_retries = 3
+        max_retries = self.max_calls
 
         for attempt in range(1, max_retries + 1):
             ai_response_format = (
-                {"type": "json_schema", "json_schema": schema}
-                if schema else None
+                {"type": "json_schema", "json_schema": response_format}
+                if response_format else None
             )
 
             completion = await self.client.create_completion(
-                model=model, messages=messages, tools=tools,
-                tool_choice=tool_choice, response_format=ai_response_format
+                model=model,
+                messages=messages,
+                tools=tools,
+                tool_choice=tool_choice,
+                response_format=ai_response_format
             )
             resp = completion.choices[0].message
 

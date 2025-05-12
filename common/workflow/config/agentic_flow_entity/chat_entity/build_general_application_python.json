@@ -414,7 +414,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "Let’s review your API side by side.\nOpen to feedback if you’ve got any ideas — I’m all ears\uD83D\uDC42\uD83D\uDC42, well... sort of\uD83D\uDE0F.",
+              "question": "Would you like to improve or make adjustments to the functional requirements and the API?\nOpen to feedback if you’ve got any ideas — I’m all ears\uD83D\uDC42\uD83D\uDC42, well... sort of\uD83D\uDE0F.",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
