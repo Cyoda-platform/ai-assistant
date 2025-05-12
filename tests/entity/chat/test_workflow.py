@@ -71,12 +71,17 @@ async def test_save_env_file(tmp_path, monkeypatch, workflow):
     # create template
     template = tmp_path / "env.template"
     template.write_text("ID=CHAT_ID_VAR\n")
-    # stub get_project_file_name to return that path
+
+    # stub get_project_file_name to return the template path
+    async def mock_get_project_file_name(chat_id, file_name, git_branch_id=None):
+        return str(template)
+
     monkeypatch.setattr(
         "entity.chat.workflow.get_project_file_name",
-        lambda chat_id, file_name: str(template)
+        mock_get_project_file_name
     )
-    # stub git_push
+
+    # stub _git_push
     monkeypatch.setattr("entity.chat.workflow._git_push", AsyncMock())
 
     await workflow.save_env_file(
@@ -87,7 +92,7 @@ async def test_save_env_file(tmp_path, monkeypatch, workflow):
 
     # confirm replacement
     content = template.read_text()
-    assert "ID=chat123" in content
+    assert content == "ID=chat123\n"
 
 @pytest.mark.asyncio
 async def test_web_search_success(monkeypatch, workflow):
@@ -270,22 +275,34 @@ async def test_convert_json_to_state_diagram(workflow, tmp_path, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_save_entity_templates(tmp_project_dir, workflow, monkeypatch):
-    # place design file under PROJECT_DIR/repo/entity
+    # Place design file under PROJECT_DIR/repo/entity
     design_dir = tmp_project_dir / "myrepo" / "entity"
     design_dir.mkdir(parents=True, exist_ok=True)
     design_file = design_dir / "entities_data_design.json"
-    design = {"entities":[{"entity_name":"E1","entity_data_example":{"x":1}},{"entity_name":None}]}
+    design = {
+        "entities": [
+            {"entity_name": "E1", "entity_data_example": {"x": 1}},
+            {"entity_name": None}
+        ]
+    }
     design_file.write_text(json.dumps(design))
+
+    # Patch get_project_file_name to accept the git_branch_id argument
+    async def mock_get_project_file_name(chat_id, fn, git_branch_id=None):
+        return str(design_file)
 
     monkeypatch.setattr(
         "entity.chat.workflow.get_project_file_name",
-        lambda chat_id, fn: str(design_file)
+        mock_get_project_file_name
     )
+
+    # Patch _save_file
     sf = AsyncMock()
     monkeypatch.setattr("entity.chat.workflow._save_file", sf)
 
     await workflow.save_entity_templates("id", DummyChatEntity())
-    # should have been called once for E1
+
+    # Verify _save_file called once with correct params
     assert sf.await_count == 1
     args = sf.await_args_list[0][1]
     assert args["item"] == "entity/E1/E1.json"

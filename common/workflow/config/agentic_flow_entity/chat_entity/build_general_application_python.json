@@ -1800,6 +1800,27 @@
     },
     "questioned_to_proceed_with_generated_app_editing": {
       "transitions": {
+        "launch_setup_assistant": {
+          "next": "launched_setup_assistant",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "init_setup_workflow",
+                "description": "init_setup_workflow",
+                "parameters": {
+                  "user_request": "Hello! Please help me start my new application."
+                }
+              },
+              "publish": false
+            }
+          }
+        }
+      }
+    },
+    "launched_setup_assistant": {
+      "transitions": {
         "lock_chat": {
           "next": "locked_chat"
         }

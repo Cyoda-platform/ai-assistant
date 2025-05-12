@@ -629,7 +629,7 @@ class ChatWorkflow(Workflow):
             resolve_entity_name: bool = False,
     ) -> str:
         # Clone the repo based on branch ID if provided
-        git_branch_id: str = params.get(const.GIT_BRANCH_PARAM)
+        git_branch_id: str = params.get(const.GIT_BRANCH_PARAM, entity.workflow_cache.get(const.GIT_BRANCH_PARAM))
         if git_branch_id:
             if git_branch_id == "main":
                 logger.exception("Modifications to main branch are not allowed")
