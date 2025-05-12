@@ -1,0 +1,1296 @@
+{
+  "initial_state": "none",
+  "workflow_name": "build_general_application_java",
+  "states": {
+    "none": {
+      "transitions": {
+        "welcome_user": {
+          "next": "greeting_sent",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "\uD83D\uDC4B Welcome to Cyoda Application Builder! We’re excited to build something amazing with you! \uD83D\uDE04  \n\nWe’re here to help with building and deploying on Cyoda Cloud! Reach out anytime! \uD83C\uDF1F Your branch will be ready soon, and I’ll notify you when I push changes. If you have suggestions, message me or use Canvas! \uD83D\uDE0A  \n\nIn Canvas, you can code, edit, and improve around the main app build flow! It’s a great way to collaborate and make changes! \uD83D\uDCBB  \n\nIf you’re happy with the progress or want me to pull your changes, just give me a thumbs up! \uD83D\uDC4D  (currently approve button in the top panel)\n\nIf something goes wrong, no worries—just roll back! \uD83D\uDE2C Your app will be live on Cyoda Platform GitHub soon! \uD83D\uDE80 Let’s build your branch together! \uD83C\uDF3F",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "greeting_sent": {
+      "transitions": {
+        "clone_repo": {
+          "next": "repository_cloned",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "clone_repo",
+                "description": "Clones template repository"
+              },
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "repository_cloned": {
+      "transitions": {
+        "init_chats": {
+          "next": "chats_initialized",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "init_chats",
+                "description": "Initialises ai service"
+              },
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "chats_initialized": {
+      "transitions": {
+        "process_initial_question": {
+          "next": "app_requirements_requested",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_application_requirement"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "require_additional_question_flag",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Hello! You are a Java Spring Boot developer.",
+                    " You're building a backend application.",
+                    " Currently you are focusing on functional requirements, and will cover any non-functional requirement later.",
+                    " Let's analyse this request for application building, and clarify any important functional requirements that are necessary.",
+                    " Ask questions if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations.",
+                    " Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. Max tokens = 300.",
+                    " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
+                    " Here is my requirement: "
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_requested": {
+      "transitions": {
+        "process_application_requirement": {
+          "next": "app_requirements_requested",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_application_requirement"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "require_additional_question_flag",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Hello! You are a Java Spring Boot developer.",
+                    " You're building a backend application.",
+                    " Currently you are focusing on functional requirements, and will cover any non-functional requirement later.",
+                    " Let's analyse this request for application building, and clarify any important functional requirements that necessary.",
+                    " Ask questions if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations.",
+                    " Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. Max tokens = 300.",
+                    " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
+                    " Here is my requirement: "
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        },
+        "process_application_requirement_success": {
+          "next": "app_requirements_finalized",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "description": "Clones template repository",
+                "parameters": {
+                  "transition": "process_application_requirement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_finalized": {
+      "transitions": {
+        "ask_about_api": {
+          "next": "proceeded_to_functional_requirements",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "Let's proceed to functional requirements. Please, give me a moment to think everything over.",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "proceeded_to_functional_requirements": {
+      "transitions": {
+        "define_functional_requirements": {
+          "next": "functional_requirements_specified",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Please, help me define the functional requirements for my project.",
+                    "Outline the necessary API endpoints (adhering to Restful rules, any business logic that invokes external data source, retrieves data or does any calculations needs to be done in POST endpoint, GET is used only for my application results retrieval (external data retrieval should be implemented in POST endpoint)),",
+                    "including details on request/response formats. Additionally, provide a visual representation of the user-app interaction using Mermaid diagrams (e.g. journey/sequence).",
+                    "Please return markdown document without any additional information.",
+                    "Each diagram should be wrapped into ```mermaid ...```"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "functional_requirements_specified": {
+      "transitions": {
+        "ask_about_api": {
+          "next": "api_inquired",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "question",
+              "question": "Let's discuss the API for your application together. Would you like to enhance the current version?",
+              "publish": true,
+              "approve": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "api_inquired": {
+      "transitions": {
+        "discuss_api": {
+          "next": "api_inquired",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Set true if the discussion with the user is not complete and the user has additional questions/requirements, set false if the user asks to proceed or if the user is satisfied with the current result (e.g. says it is correct, valid, works for them). If set to false notify the user you're going to proceed with prototype generation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "discuss_api"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "require_additional_question_flag",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        },
+        "transition_to_asked_about_api_success": {
+          "next": "api_discussion_completed",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "description": "Verifies stage is complete",
+                "parameters": {
+                  "transition": "discuss_api"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "api_discussion_completed": {
+      "transitions": {
+        "notify_prototype_generation": {
+          "next": "prototype_generation_notified",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "Let's proceed to generating the first prototype. Please, give me a moment to think everything over: i will finalise the functional requirements first and then proceed to generation the first prototype.",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "prototype_generation_notified": {
+      "transitions": {
+        "generate_functional_requirements": {
+          "next": "functional_requirements_generated",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": false,
+              "allow_anonymous_users": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Please return well-formatted final version of the functional requirements which was confirmed by the user."
+                  ]
+                }
+              ],
+              "input": {},
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/functional_requirement.md"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "functional_requirements_generated": {
+      "transitions": {
+        "generate_prototype_sketch": {
+          "next": "prototype_sketch_generated",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": false,
+              "allow_anonymous_users": true,
+              "model": {},
+              "input": {},
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/EntityControllerPrototype.java"
+                ]
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Now that we’ve finalized the API design, please provide the code for the EntityControllerPrototype.java file for a Spring Boot application.",
+                    "The implementation should be a working prototype rather than a production-ready solution.",
+                    "Incorporate any details I’ve already specified—such as entity model classes, external APIs, or specific logic—and use mocks or placeholders only where requirements are unclear or incomplete.",
+                    "Please use real API endpoints where possible. If you introduce mocks or placeholders, clearly mark them with a TODO comment indicating what should be replaced.",
+                    "The goal is to validate the UX and the overall structure of the API before proceeding with a full implementation.",
+                    "Use Spring Web (`@RestController`, `@RequestMapping`, etc.) and annotate endpoints clearly with HTTP verbs like `@GetMapping`, `@PostMapping`, etc.",
+                    "Do not include persistence or service layer implementations unless required for clarity—mock them with `Map` or `ConcurrentHashMap`.",
+                    "Include proper logging using SLF4J (e.g., `Logger logger = LoggerFactory.getLogger(EntityControllerPrototype.class);`) and use `logger.info(...)` or `logger.error(...)` appropriately.",
+                    "Lombok is already configured in the project via io.freefair.lombok plugin. Please use Lombok annotations like @Data, @Getter, @Setter, @AllArgsConstructor, @NoArgsConstructor, etc., instead of manually writing getters, setters, and constructors, and make sure to include the necessary Lombok imports in the generated code.",
+                    "For asynchronous or background tasks, you may use `@Async` methods or `CompletableFuture.runAsync(...)`, and add TODO comments where fire-and-forget logic is used.",
+                    "Add basic error handling using `@ExceptionHandler` where relevant, but keep it minimal.",
+                    "When handling ResponseStatusException, always use getStatusCode() instead of getStatus(), because getStatus() does not exist in this class.\n",
+                    "You are welcome to use patterns like `entityJobs.put(jobId, new JobStatus(\"processing\", requestedAt)); // fire-and-forget the processing` if relevant.",
+                    "Avoid configuration files, focus only on controller logic in a single file.",
+                    "When fetching and parsing JSON responses from external APIs, use ObjectMapper.readTree(...) to convert the raw response into a JsonNode, instead of deserializing directly into a Map or a List. This ensures compatibility with both JSON objects and arrays, and gives more flexibility during prototyping.",
+                    "Use `package com.java_template.entity;` as the package declaration for this file.",
+                    "Please double-check that you are using all the information provided earlier."
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "prototype_sketch_generated": {
+      "transitions": {
+        "generate_prototype": {
+          "next": "prototype_completed",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "input": {},
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/EntityControllerPrototype.java"
+                ]
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Please, add validation annotations for request bodies and query parameters using javax/jakarta validation annotations:",
+                    "import jakarta.validation.constraints.*;",
+                    "Use @Validated on the controller class if needed to enable validation.",
+                    "Use @Valid on method parameters that are request bodies.",
+                    "Use @NotNull, @Size, @Pattern, etc. inside DTO classes for validation. Please use only primitives or String, no nested objects.",
+                    "",
+                    "For POST and PUT requests:",
+                    "Use @PostMapping(\"/test\") or @PutMapping(\"/test\") at the top of the method.",
+                    "Use @RequestBody @Valid for input DTOs.",
+                    "Example:",
+                    "@PostMapping(\"/test\") // must be first",
+                    "public ResponseEntity<String> createTodo(@RequestBody @Valid Todo todo) { ... }",
+                    "",
+                    "For GET requests with query parameters:",
+                    "Use @GetMapping(\"/test\") at the top of the method.",
+                    "Use @RequestParam with constraint annotations directly on method parameters, or bind a DTO using @ModelAttribute + @Valid.",
+                    "DO NOT use @RequestBody in GET methods – it will throw an error.",
+                    "Correct example:",
+                    "@GetMapping(\"/test\") // must be first",
+                    "public ResponseEntity<String> getTodo(@RequestParam @NotBlank String task) { ... }",
+                    "",
+                    "Alternative correct example with DTO:",
+                    "public class TodoQuery {",
+                    "    @NotBlank",
+                    "    private String task;",
+                    "    // Getters and setters",
+                    "}",
+                    "",
+                    "@GetMapping(\"/test\") // must be first",
+                    "public ResponseEntity<String> getTodo(@Valid @ModelAttribute TodoQuery query) { ... }",
+                    "",
+                    "Wrong example:",
+                    "public ResponseEntity<String> getTodo(@RequestBody Todo todo) // this will not work for GET requests",
+                    "",
+                    "Please follow the rule:",
+                    "Always place @PostMapping/@GetMapping as the first annotation.",
+                    "Use @Valid with @RequestBody for POST/PUT, and with @ModelAttribute for GET.",
+                    "Add a comment explaining the workaround where needed, especially if using @ModelAttribute in GET.",
+                    "",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Java comments are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```."
+                ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "prototype_completed": {
+      "transitions": {
+        "ask_to_discuss_prototype": {
+          "next": "prototype_discussion_requested",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "question",
+              "question": "First Prototype Ready for Validation\n\nWe have completed the first prototype for your functional requirements. \n\nTo validate the API, please follow the steps below:\n\n**1. Run the Application**\n\nExecute the following command to start the application:\n\n```python \npython entity/prototype.py\n```\n\n2. Validate the API\nOnce the application is running, open your browser and navigate to:\n```\nhttp://localhost:8000/docs or http://localhost:8000/scalar\n```\nRequest and response examples are available in src/main/java/com/java_template/entity/functional_requirement.md\n\nThis will allow you to validate the API response. Please let me know when you are happy with the result.",
+              "publish": true,
+              "approve": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "prototype_discussion_requested": {
+      "transitions": {
+        "discuss_prototype": {
+          "next": "prototype_discussion_requested",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_file",
+                    "description": "Read the contents of src/main/java/com/java_template/entity/EntityControllerPrototype.java file.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "filename": {
+                          "type": "string",
+                          "enum": [
+                            "src/main/java/com/java_template/entity/EntityControllerPrototype.java"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "filename"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "save_file",
+                    "description": "Save changes to src/main/java/com/java_template/entity/EntityControllerPrototype.java to the repository so that the user can view the changes to the src/main/java/com/java_template/entity/EntityControllerPrototype.java. Apply this function if you make changes to src/main/java/com/java_template/entity/EntityControllerPrototype.java (fix issues, make improvements, adjustments according to the user request). No need to apply this function if the code does not require changes and you're answering a general question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "new_content": {
+                          "type": "string"
+                        },
+                        "filename": {
+                          "type": "string",
+                          "enum": [
+                            "src/main/java/com/java_template/entity/EntityControllerPrototype.java"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "new_content",
+                        "filename"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Read the src/main/java/com/java_template/entity/EntityControllerPrototype.java code to answer the user's questions or make improvements. Reading file should be your first action if the user refers to the code",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "discuss_prototype"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "require_additional_question_flag",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Hello! Please do your best to help the user with just generated EntityControllerPrototype.java code.",
+                    " If the user asks you to make any improvements or fix any issues please first read the file src/main/java/com/java_template/entity/EntityControllerPrototype.java to get the latest version.",
+                    " Then use your own judgement to introduce changes necessary for the user",
+                    " Finally save the changes to the EntityControllerPrototype.java file. And let the user know what changes you introduced and why.",
+                    " If the user just asks any general question or a question about the code, read the EntityControllerPrototype.java file if necessary, answer the question, no save needed in this case."
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        },
+        "transition_to_asked_about_api_success": {
+          "next": "prototype_discussion_completed",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "description": "Clones template repository",
+                "parameters": {
+                  "transition": "discuss_prototype"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "prototype_discussion_completed": {
+      "transitions": {
+        "ask_to_confirm_migration": {
+          "next": "migration_confirmation_requested",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "question",
+              "question": "Congratulations on successfully completing your application prototype!\uD83E\uDD73\n \nYou’ve put in a lot of hard work to bring your idea to life, and it’s truly exciting to see it in action. \n\n\uD83E\uDE85\uD83E\uDE85\uD83E\uDE85This is an important milestone—well done!\uD83E\uDE85\uD83E\uDE85\uD83E\uDE85\n\nHowever, as impressive as your prototype is, it’s not yet fully robust. A few critical components are missing:\n\n**Scalability and High Availability**\n\n**Persistence and Data Integrity**\n\n**Production-Ready Features**\n\nTo address these gaps and ensure your application can handle real-world demands, we recommend refactoring your solution using the Cyoda Framework. By deploying to a High Availability (HA) cluster on Cyoda Cloud, you’ll benefit from:\n\n**Enterprise-grade reliability and failover capabilities**\n\n**Seamless data persistence**\n\n**Streamlined deployment and scaling processes**\n\n**A comprehensive set of production-ready tools and services**\n\nWe believe this transformation will empower your application to reach its full potential. Would you like to proceed with refactoring your prototype to make it robust, production-ready, and fully deployable on Cyoda Cloud?\n\nJust give me a thumbs up! \uD83D\uDC4D ",
+              "publish": true,
+              "approve": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "migration_confirmation_requested": {
+      "transitions": {
+        "notify_confirmed_migration": {
+          "next": "migration_confirmation_notified",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "Awesome! Let's dive into generating your application code! \uD83D\uDE80 \n\nI'll keep you updated with notifications on my progress, and let you know when it's time to discuss any changes.\n \nFeel free to grab a coffee ☕ while I work—it's going to take about 2 minutes. \n \nJust relax and wait for the update!\n\nIn this process, we will walk through each stage of building an application, from gathering initial requirements to designing, coding, and implementing the final logic.\n\n### The stages of the process are as follows:\n\n1. **Entities design**:  \n   Let's define the JSON data structure for each entity.\n   *Output documents*: entity/*\n\n2. **Workflow design**:  \n   Let's ensure our entity workflow is correctly defined.\n   *Output documents*: entity/*/workflow.json\n\n3. **Workflow processors code design**:  \n   Let's implement the workflow processors.\n   *Output documents*: entity/*/workflow.py ",
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "migration_confirmation_notified": {
+      "transitions": {
+        "generate_initial_cyoda_prototype": {
+          "next": "generated_initial_cyoda_prototype",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": false,
+              "model": {},
+              "memory_tags": [
+                "generate_initial_cyoda_prototype"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "You are provided with a Java codebase that implements a REST API (using Spring Boot framework).",
+                    "Currently, the code uses local in‑memory dictionaries (and counters) to store and manage data for one or more entity types.",
+                    "Your task is to refactor the code so that all interactions with the local cache are replaced by calls to an external service called EntityService (from com.java_template.common.service).",
+                    "You can use only these functions for replacement - if this is not enough just skip and leave as is",
+                    "1. CompletableFuture<UUID> idFuture = entityService.addItem(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,  # always use this constant",
+                    "    entity=data  # the validated data object",
+                    ")",
+                    "Note: entityService.addItem returns technicalId of the created entity.",
+                    "CompletableFuture<List<UUID>> addItems idsFuture = entityService.addItems(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,  # always use this constant",
+                    "    entities=data",
+                    ")",
+                    "Note: entityService.addItems returns a list of technicalIds of the created entities.",
+                    "2. Data retrieval:",
+                    "CompletableFuture<ObjectNode> itemFuture = entityService.getItem(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,",
+                    "    technicalId=<id>",
+                    ")",
+                    "CompletableFuture<ArrayNode> itemsFuture = entityService.getItems(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,",
+                    ")",
+                    "CompletableFuture<ArrayNode> filteredItemsFuture = entityService.getItemsByCondition(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,",
+                    "    condition=condition",
+                    ")",
+                    "Note: when retrieving or returning entities via entityService.getItem / getItems / getItemsByCondition, the unique identifier is stored in the field \"technicalId\" (not \"id\"). Use \"technicalId\" to extract or compare entity IDs.\n",
+                    "3. CompletableFuture<UUID> updatedItemId = entityService.updateItem(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,  # always use this constant",
+                    "    technicalId=id, #technicalId is required",
+                    "    entity=data,",
+                    ")",
+                    "Note: entityService.updateItem returns technicalId of the updated entity.",
+                    "Use @JsonIgnore on fields like 'technicalId' and pass the original Java object directly to addItem or updateItem without converting to ObjectNode.",
+                    "4. CompletableFuture<UUID> deletedItemId = entityService.deleteItem(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,  # always use this constant",
+                    "    technicalId=id,",
+                    ")",
+                    "Note: entityService.deleteItem returns technicalId of the deleted entity.",
+                    "use 'import static com.java_template.common.config.Config.*;' to import ENTITY_VERSION",
+                    "use 'import com.java_template.common.service.EntityService;' to import entityService",
+                    "Add this code:",
+                    "package com.java_template.entity;",
+                    "use this class name 'CyodaEntityControllerPrototype'",
+                    "Lombok is already configured in the project via io.freefair.lombok plugin. Please use Lombok annotations like @Data, @Getter, @Setter, @AllArgsConstructor, @NoArgsConstructor, etc., instead of manually writing getters, setters, and constructors, and make sure to include the necessary Lombok imports in the generated code.",
+                    "Make sure to assign a unique @RequestMapping path to each controller to avoid conflicts. Do not reuse the same base path (e.g., \"/entity\") across multiple controllers.\n",
+                    "Preserve the endpoint routes and any other essential business logic.",
+                    "Generate a controller that calls service methods directly and lets exceptions propagate. Do not use try-catch. Let the service throw ResponseStatusException when needed.",
+                    "Please make sure you keep all the necessary business logic, like data ingestion, calling any external apis, mocks, calculations etc.",
+                    "Please take into account that entity ObjectNode has 'technicalId'",
+                    "Please return only Java code without additional information. If you'd like to add any comments please use // comment",
+                    "Please use correct logging, e.g.:",
+                    "import org.slf4j.Logger;",
+                    "import org.slf4j.LoggerFactory;",
+                    "Logger logger = LoggerFactory.getLogger(CyodaEntityControllerPrototype.class);",
+                    "",
+                    "",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```."
+                  ]
+                }
+              ],
+              "input": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/EntityControllerPrototype.java"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/CyodaEntityControllerPrototype.java"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "generated_initial_cyoda_prototype": {
+      "transitions": {
+        "generate_prototype_cyoda_workflow": {
+          "next": "generated_prototype_cyoda_workflow",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": false,
+              "model": {},
+              "memory_tags": [
+                "generate_prototype_cyoda_workflow"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Hello, entityService.addItem has changed, now it additionally expects entity workflow function as an argument. This function will be applied to the entity before it is persisted.",
+                    "e.g.",
+                    "CompletableFuture<UUID> idFuture = entityService.addItem(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,  // always use this constant",
+                    "    entity=data,  // the validated data object",
+                    "    workflow=process{entity_name} // Workflow function applied to the entity asynchronously before persistence. This function takes this entity data as the only argument and returns it back. You can change entity state inside this function, get and add entities with a different entityModel (but cannot add/update/delete entity of the same entityModel - it will cause infinite recursion)",
+                    ")",
+                    "workflow=process{entity_name}, this function should have a prefix 'process' which is followed by the entity name.",
+                    "Could you please update this code: add workflow function as a parameter and implement it. Return complete Java code."
+                  ]
+                }
+              ],
+              "input": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/CyodaEntityControllerPrototype.java"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "generated_prototype_cyoda_workflow": {
+      "transitions": {
+        "generate_improved_prototype_cyoda_workflow": {
+          "next": "generated_improved_prototype_cyoda_workflow",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": false,
+              "model": {},
+              "memory_tags": [
+                "generate_prototype_cyoda_workflow"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "What do you think, can we move any logic from the endpoint inside newly added functions (workflow=process{entity_name}) that will be invoked right before persisting entity.",
+                    "It will make our code more robust and will 'free' the controllers from excessive logic.",
+                    "Any async task (including fire and forget functions) is definitely a candidate to be replaced with process{entity_name} function as workflow function supports asynchronous code and is a direct alternative for such tasks. It is the right approach - this is required.",
+                    "Please do your best to move all the async functions to workflow=process{entity_name} functions.",
+                    "Workflow function applied to the entity asynchronously before persistence. This function takes this entity data as the only argument. You can change entity state inside this function e.g. entity.put(...).",
+                    "You can get and add secondary/supplementary/raw data entities of a different entityModel.",
+                    "You cannot apply entityService.addItem/updateItem/deleteItem on the current entity! The entity is an ObjectNode. If you need to change this entity state - modify directly e.g. entity.put(...). The new state will be persisted."
+                  ]
+                }
+              ],
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "generated_improved_prototype_cyoda_workflow": {
+      "transitions": {
+        "separate_workflow_and_controller": {
+          "next": "separated_workflow_and_controller",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": false,
+              "memory_tags": [
+                "generate_prototype_cyoda_workflow"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Analyze the following Java code and generate a JSON with two main sections:",
+                    "\"workflow\" — a map where keys are entity model names (like User, Order) and values are:",
+                    "a string with method source code, if there is only one method matching the process{EntityModel} pattern.",
+                    "a list of strings, if there are multiple workflow methods like process{EntityModel}* (e.g., processOrder, processOrderValidation) — each list item must contain the full source code of the corresponding method.",
+                    "\"controller\" — a string containing all other Java code unrelated to workflow methods.",
+                    "Return a valid JSON.",
+                    "Use compact JSON format and preserve method formatting as strings."
+                  ]
+                }
+              ],
+              "input": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/separatedWorkflowAndController.json"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "separated_workflow_and_controller": {
+      "transitions": {
+        "finish_prototype_cyoda_workflow": {
+          "next": "finished_prototype_cyoda_workflow",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": false,
+              "model": {},
+              "memory_tags": [
+                "generate_prototype_cyoda_workflow"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Please return complete refactored application with all functions implemented.",
+                    "No detail can be missed. Reason about potential issues and prevent them.",
+                    "",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting."
+                  ]
+                }
+              ],
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/FinalPrototypeCyodaWorkflow.java"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "finished_prototype_cyoda_workflow": {
+      "transitions": {
+        "launch_register_workflow_with_app": {
+          "next": "launched_register_workflow_with_app",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "register_workflow_with_app",
+                "description": "register_workflow_with_app",
+                "parameters": {
+                  "filename": "src/main/java/com/java_template/entity/FinalPrototypeCyodaWorkflow.java"
+                }
+              },
+              "publish": false
+            }
+          }
+        }
+      }
+    },
+    "launched_register_workflow_with_app": {
+      "transitions": {
+        "finish_app_generation_flow": {
+          "next": "finished_app_generation_flow",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "finish_app_generation_flow",
+                "description": "finish_flow",
+                "parameters": {
+                  "filename": "src/main/java/com/java_template/entity/chat.json"
+                }
+              },
+              "publish": true
+            }
+          }
+        },
+        "rollback": {
+          "next": "finished_prototype_cyoda_workflow",
+          "manual": true
+        }
+      }
+    },
+    "finished_app_generation_flow": {
+      "transitions": {
+        "finished_app_generation_flow_notify": {
+          "next": "finished_app_generation_flow_notified",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "\uD83C\uDF89 **Chat flow has been saved!** \uD83C\uDF89\n\nThe chat flow has been successfully saved to `src/main/java/com/java_template/entity/chat.json`. Now you can run `app.py` to start the application. \uD83D\uDE80\n\nOnce you run it, both the **workflow** and **entities** will be imported to the Cyoda environment automatically. \uD83C\uDF1F\n\nAny updates or changes to the entities will trigger the workflow, so you’re all set to go! \uD83D\uDD04\n\nWe are available in the **Google Tech Channel** to support you. If you spot any bugs or need additional features, feel free to submit tickets at [GitHub Issues](https://github.com/Cyoda-platform/ai-assistant). You’re also most welcome to contribute to the project! \uD83D\uDCBB \n\nFor any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re here to help! \uD83D\uDE0A",
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "finished_app_generation_flow_notified": {
+      "transitions": {
+        "save_env_file": {
+          "next": "saved_env_file",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "save_env_file",
+                "description": "save_env_file",
+                "parameters": {
+                  "filename": ".env.template"
+                }
+              },
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "saved_env_file": {
+      "transitions": {
+        "saved_env_file_notify": {
+          "next": "saved_env_file_notified",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "### Setup Instructions for Your Application\n\nYour application is ready! Please fetch the changes and follow the steps below to configure it:\n\n1. **Move the `.env.template` to `.env`**:\n    Rename the `.env.template` file to `.env`:\n    ```bash\n    mv .env.template .env\n    ```\n\n2. **Update the `.env` file**:\n    Open the `.env` file and replace the placeholder values with your actual environment variables and credentials. For example, replace `CHAT_ID_VAR` with `$chat_id` and fill in other necessary values.\n\n    You might need to specify the path to .env file in your IDE run configurations.\n\n3. **Start Your Application**:\n    Once you've updated the `.env` file, you can start your application by running:\n    ```bash\n    python app.py\n    ```\n    or just run the app.py in your IDE.\nPlease also update your api.py files to use cyoda_token until authentication featute is fully implemented. Sorry for inconvenience!\nYour application should now be up and running! \uD83C\uDF89\n\nYou can check the api with http://localhost:8000/docs",
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "saved_env_file_notified": {
+      "transitions": {
+        "question_to_proceed_with_generated_app_editing": {
+          "next": "questioned_to_proceed_with_generated_app_editing",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "question": "Your application is now complete! Thank you!\n\nIf you need any further assistance, please let me know.\n\nTo proceed with your application, you can use the following prompt starters:\nAdd a new feature\nCreate a new entity with {entity_name}\nUpdate the API as per requirements\n\nSearch the web\nRead content from a URL\nScrape webpage content using a CSS selector\nSave data to a file (e.g. entity/entity_name/workflow.py, app.py)\nRead data from a file\nUpdate an entity workflow\nAdd an entity workflow\nModify existing processors\n\nRefresh the context\nDeploy the Cyoda environment or application\n\nAnswer general questions\n\nLet me know how I can assist further! \uD83D\uDE80",
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "questioned_to_proceed_with_generated_app_editing": {
+      "transitions": {
+        "lock_chat": {
+          "next": "locked_chat"
+        }
+      }
+    }
+  }
+}
