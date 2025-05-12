@@ -11,7 +11,7 @@
     },
     "started_chat": {
       "transitions": {
-        "process_request": {
+        "process_user_input": {
           "next": "started_chat",
           "manual": true,
           "action": {
@@ -337,11 +337,11 @@
               ],
               "tool_choice": "auto",
               "max_iteration": 30,
-              "approve": true
+              "approve": false
             }
           }
         },
-        "process_requestsuccess": {
+        "process_request_success": {
           "next": "chat_finalized",
           "condition": {
             "config": {

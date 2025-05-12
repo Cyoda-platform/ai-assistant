@@ -502,7 +502,7 @@ async def send_get_request(token: str, api_url: str, path: str) -> Optional[Any]
         logger.error(f"Error during GET request to {url}: {err}")
         raise
 
-async def send_request(headers, url, method, data=None, json=None):
+async def send_request(headers, url, method, data=None, json_data=None):
     """
     Send an HTTP request with the given headers and payload.
     Behaves as before: for GET/POST, returns content on 200 or 404;
@@ -513,14 +513,18 @@ async def send_request(headers, url, method, data=None, json=None):
     if method not in {'GET', 'POST', 'PUT', 'DELETE'}:
         raise ValueError(f"Unsupported HTTP method: {method}")
 
-    async with httpx.AsyncClient(timeout=150.0) as client:
-        # use the generic request interface to handle all verbs
+    timeout = httpx.Timeout(150.0, connect=60.0)
+
+    async with httpx.AsyncClient(
+            timeout=timeout,
+            trust_env=False,          # ← don’t read proxy vars from the environment
+    ) as client:
         response = await client.request(
             method,
             url,
             headers=headers,
             data=data,
-            json=json
+            json=json_data,
         )
 
     status = response.status_code
@@ -539,9 +543,9 @@ async def send_request(headers, url, method, data=None, json=None):
         else:
             content = response.text
     else:
-        response.raise_for_status()
+        logger.error(f"url={url}, method = {method},data={json.dumps(data)}")
         content = None
-
+        response.raise_for_status()
     return {
         "status": status,
         "json": content
