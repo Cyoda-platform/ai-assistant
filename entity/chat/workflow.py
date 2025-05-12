@@ -695,14 +695,14 @@ class ChatWorkflow(Workflow):
 
     # ==========================editing========================================
 
-    async def init_cyoda_setup(
+    async def init_setup_workflow(
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
             entity_model=const.ModelName.CHAT_ENTITY.value,
-            workflow_name=const.ModelName.INIT_CYODA_SETUP.value,
+            workflow_name=const.ModelName.INIT_SETUP_WORKFLOW.value,
             params=params,
         )
 

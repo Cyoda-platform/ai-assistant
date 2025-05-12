@@ -268,7 +268,7 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "init_cyoda_setup",
+                    "name": "init_setup_workflow",
                     "description": "Launches workflow that is necessary to help the user to do initial setup and launch locally their client (user) application.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
@@ -643,7 +643,7 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "init_cyoda_setup",
+                    "name": "init_setup_workflow",
                     "description": "Launches workflow that is necessary to help the user to do initial setup and launch locally their client (user) application.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {

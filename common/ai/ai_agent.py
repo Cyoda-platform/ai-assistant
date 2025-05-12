@@ -1,5 +1,6 @@
 import json
-
+import jsonschema
+from jsonschema import ValidationError
 from common.config.config import config
 from entity.chat.chat import ChatEntity
 from entity.model import ModelConfig
@@ -23,49 +24,100 @@ class OpenAiAgent:
                     message["content"] = " ".join(content)
         return messages
 
-    async def run_agent(self, methods_dict, technical_id, cls_instance, entity: ChatEntity, tools, model: ModelConfig, messages, tool_choice="auto", response_format=None):
-        # Loop until a final answer is received or maximum calls are reached.
+
+    async def _validate_with_schema(
+            self,
+            messages: list,
+            content: str,
+            schema: dict,
+            attempt: int,
+            max_retries: int
+    ):
+        """
+        Try parsing & validating `content` against `schema`.
+        On success, return (parsed_obj, None).
+        On failure, append an error note to messages and return (None, error_msg).
+        """
+        try:
+            parsed = json.loads(content)
+            jsonschema.validate(instance=parsed, schema=schema)
+            return parsed, None
+        except (json.JSONDecodeError, ValidationError) as e:
+            error_msg = (
+                f"Validation failed on attempt {attempt}/{max_retries}: {e}. "
+                "Retrying..."
+            )
+            messages.append({"role": "assistant", "content": error_msg})
+            return None, error_msg
+
+
+    async def run_agent(
+            self,
+            methods_dict,
+            technical_id,
+            cls_instance,
+            entity: ChatEntity,
+            tools,
+            model: ModelConfig,
+            messages,
+            tool_choice="auto",
+            response_format=None,
+    ):
         messages = self.adapt_messages(messages)
-        ai_response_format = {"type": "json_schema",
-                              "json_schema": response_format} if response_format else None
-        for call_number in range(self.max_calls):
+        schema = response_format.get("schema") if response_format else None
+        max_retries = 3
+
+        for attempt in range(1, max_retries + 1):
+            ai_response_format = (
+                {"type": "json_schema", "json_schema": response_format}
+                if response_format
+                else None
+            )
+
             completion = await self.client.create_completion(
                 model=model,
                 messages=messages,
                 tools=tools,
                 tool_choice=tool_choice,
-                response_format=ai_response_format
-
+                response_format=ai_response_format,
             )
 
-            # Get the response message.
             response_message = completion.choices[0].message
 
-            # If there are tool calls, process each one.
+            # --- existing tool-call handling ---
             if hasattr(response_message, "tool_calls") and response_message.tool_calls:
-                # Append the assistant's message (which contains tool_calls) to the conversation.
                 messages.append(response_message)
-
-                # Process every tool call in the message.
                 for tool_call in response_message.tool_calls:
-                    # Extract the arguments from the tool call (assumed to be JSON).
                     args = json.loads(tool_call.function.arguments)
-
-                    # Look up the actual function implementation in the original tools list.
-                    result = await methods_dict[tool_call.function.name](cls_instance, technical_id=technical_id, entity=entity, **args)
-
-                    # Append a separate tool message for this tool call.
+                    result = await methods_dict[tool_call.function.name](
+                        cls_instance, technical_id=technical_id, entity=entity, **args
+                    )
                     messages.append({
                         "role": "tool",
                         "tool_call_id": tool_call.id,
                         "content": str(result)
                     })
+                # loop around for the next assistant reply
+                continue
+
+            # --- got a final assistant message ---
+            content = response_message.content
+            messages.append({"role": "assistant", "content": content})
+
+            # If schema present, validate via helper
+            if schema:
+                valid_obj, error = await self._validate_with_schema(
+                    messages, content, schema, attempt, max_retries
+                )
+                if valid_obj is not None:
+                    return valid_obj
+                # else: error appended, retry unless out of attempts
             else:
-                messages.append({"role": "assistant", "content": response_message.content})
-                return response_message.content
+                # no schema: just return text
+                return content
 
-        # Return the last message if max_calls is reached.
-        response = "Max iterations limit reached. Let's proceed to the next iteration"
-        messages.append({"role": "assistant", "content": response})
-        return response
-
+        # out of retries
+        return {
+            "error": "Max validation retries reached",
+            "last_response": messages[-1]["content"]
+        }

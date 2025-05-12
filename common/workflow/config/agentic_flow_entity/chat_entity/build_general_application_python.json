@@ -1526,7 +1526,7 @@
                 "max_tokens": 10000
               },
               "memory_tags": [
-                "generate_prototype_cyoda_workflow"
+                "generate_prototype_cyoda_workflow_json"
               ],
               "messages": [
                 {

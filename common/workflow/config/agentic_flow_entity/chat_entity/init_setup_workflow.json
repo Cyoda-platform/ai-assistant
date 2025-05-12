@@ -18,8 +18,35 @@
     },
     "started_chat": {
       "transitions": {
+        "initial_notification": {
+          "next": "app_requirements_requested",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+                "model_name": "gpt-4o-mini",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Please introduce yourself as Cyoda assistance and ask if the user is ready to move forward."
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_requested": {
+      "transitions": {
         "process_user_input": {
-          "next": "started_chat",
+          "next": "app_requirements_requested",
           "manual": true,
           "action": {
             "name": "process_event",
@@ -293,7 +320,7 @@
                         "transition": {
                           "type": "string",
                           "enum": [
-                            "process_user_input"
+                            "process_app_setup"
                           ]
                         },
                         "require_additional_question_flag": {
@@ -313,51 +340,50 @@
                 {
                   "role": "user",
                   "content": [
-                    "Hello! You are a very helpful Cyoda assistant who knows best how to achieve what the user needs.",
-                    "We've just finished our great Cyoda application! Let's congratulate the user on this and help them start it both locally and remotely.",
-                    "First important detail: The code is available in branch **{branch_name}**. Please make it clear. And use only this branch for this interaction.",
+                    "Hello You are a very helpful Cyoda assistant who knows best how to achieve what the user needs.",
+                    "We've just finished our great Cyoda application Lets congratulate the user on this and help them start it both locally and remotely.",
+                    "First important detail The code is available in branch {branch_name}. Please make it clear. And use only this branch for this interaction.",
                     "Second, here is how to start the Cyoda application. I will give you instructions, but you need to guide the user step by step.",
                     "Communicate no more than 1 instruction at a time and make sure the user understands and is successful with the step.",
-                    "Instruction:",
-
-                    "Hello! Congratulations on your new Cyoda application!\n\nWe'll go step-by-step to get it running smoothly.Please make sure you’re using **branch `{branch_name}`**. This is the only valid branch for now.\n\nLet’s start with the first step. Ready?",
-                    "Step 1: Locate the `.env.template` file in your project root. Once found, rename it to `.env` and open it in a text editor.✅ Tip: Use your code editor’s file tree or terminal to confirm it's in the root directory.\n\n",
-                    "Troubleshooting:\n- Can’t find `.env.template`? Make sure you’ve checked out the correct branch `{branch_name}`.\n- File still missing?\nCheck your `.gitignore`, or ensure the repo was cloned fully (with submodules if needed).",
-                    "Step 2: Edit your new `.env` file with the required environment-specific values (API keys, GRPC host, ports, etc.).Tip: These values are often provided by your team or in project onboarding docs.",
-                    "Troubleshooting:\n- Missing values may cause runtime errors later.\n- Make sure there are no spaces around `=` and that values are quoted only when needed.",
-                    "Step 3: Launch the application using:\n\n```bash\npython app.py\n# or\nquart run\n```\n\n✅ Tip: Activate your virtual environment first, e.g. `source venv/bin/activate`",
-                    "Troubleshooting:\n- `ModuleNotFoundError`?\nRun `pip install -r requirements.txt`\n- `quart` not found?\nInstall with `pip install quart`\n- Permission errors?\nTry running with `python3` instead of `python`.",
-                    "🌐 Step 4: Does the project start OK?\nPlease check for any errors in the terminal before moving on.\n\n",
-                    "Troubleshooting:\n- If the server crashes immediately, recheck your `.env` file values.\n- Use `print()` statements or a debugger to identify issues in `app.py`.",
-                    "Step 5: Now let’s configure your Cyoda Cloud instance.\n\nDo you already have an environment?\nIf yes, do you want to redeploy it or connect to the existing one?",
-                    "Troubleshooting:\n- GRPC connection failures?\nEnsure the `GRPC_HOST` and `GRPC_PORT` in your `.env` are correct.\n- If you're behind a proxy, verify outbound port access.",
-                    "Step 6: With your env configured, it's time to import the workflows.\n\nDo you have your workflow files ready (e.g., .yaml or .json)?\nIf yes, import them now via the UI or CLI.",
-                    "Troubleshooting:\n- If the import fails, verify the format and version of your workflow files.\n- Watch Cyoda Cloud logs for import errors.",
-                    "Step 7: Now restart the application to ensure it connects to the Cyoda GRPC server properly.\n\nLet me know if the connection succeeds or if you hit any issues.",
-                    "Troubleshooting:\n- On restart, check logs for any GRPC-related errors.\n- Missing workflow mappings can also cause silent failures—confirm setup.",
-                    "Step 8: Let’s test your API.\n\nGo to http://localhost:5000 (or your configured port), and ensure everything looks good.",
-                    "Troubleshooting:\n- Can't access the local server?\nCheck if the app is still running and if your firewall settings allow local traffic.",
-                    "Step 9: Navigate to the route `routes/routes`.\n\nYou’ll find an endpoint called `add_entity` there.\nTry submitting an entity.\nOnce submitted, it should trigger a GRPC event that makes the data available in Cyoda.\n\n",
-                    "Troubleshooting:\n- No event in Cyoda?\nEnsure the endpoint properly triggers GRPC and that workflow routing is correctly set.\n- Use logs to trace the request and confirm GRPC payload was sent."
+                    "Instruction",
+                    "Hello Congratulations on your new Cyoda application We will go step by step to get it running smoothly. Please make sure which branch you're using. This is the only valid branch for now. Lets start with the first step. Ready.",
+                    "Step 1 Locate the .env.template file in your project root. Once found, rename it to .env and open it in a text editor. Tip Use your code editors file tree or terminal to confirm its in the root directory.",
+                    "Troubleshooting Can t find .env.template. Make sure you've checked out the correct branch. File still missing Check your .gitignore, or ensure the repo was cloned fully with submodules if needed.",
+                    "Step 2 Edit your new .env file with the required environment specific values API keys, GRPC host, ports, etc. Tip These values are often provided by your team or in project onboarding docs.",
+                    "Troubleshooting Missing values may cause runtime errors later. Make sure there are no spaces around and that values are quoted only when needed.",
+                    "Step 3 Launch the application using python app.py or quart run. Tip Activate your virtual environment first e.g. source .venv/bin/activate.",
+                    "Troubleshooting ModuleNotFoundError. Run pip install r requirementstxt. quart not found. Install with pip install quart. Permission errors. Try running with python3 instead of python.",
+                    "Step 4 Does the project start OK Please check for any errors in the terminal before moving on.",
+                    "Troubleshooting If the server crashes immediately, recheck your .env file values. Use print statements or a debugger to identify issues in app.py.",
+                    "Step 5 Now lets configure your Cyoda Cloud instance. Do you already have an environment If yes, do you want to redeploy it or connect to the existing one",
+                    "Troubleshooting GRPC connection failures. Ensure the GRPCHOST and GRPCPORT in your .env are correct. If youre behind a proxy, verify outbound port access.",
+                    "Step 6 With your env configured, its time to import the workflows. Do you have your workflow files ready e.g., .yaml or .json. If yes, import them now via the UI or CLI.",
+                    "Troubleshooting If the import fails, verify the format and version of your workflow files. Watch Cyoda Cloud logs for import errors.",
+                    "Step 7 Now restart the application to ensure it connects to the Cyoda GRPC server properly. Let me know if the connection succeeds or if you hit any issues.",
+                    "Troubleshooting On restart, check logs for any GRPC related errors. Missing workflow mappings can also cause silent failures confirm setup.",
+                    "Step 8 Let s test your API. Go to http://localhost:5000 or your configured port, and ensure everything looks good.",
+                    "Troubleshooting Cant access the local server Check if the app is still running and if your firewall settings allow local traffic.",
+                    "Step 9 Navigate to the route routes/routes. You'll find an endpoint called add entity there. Try submitting an entity. Once submitted, it should trigger a GRPC event that makes the data available in Cyoda.",
+                    "Troubleshooting No event in Cyoda Ensure the endpoint properly triggers GRPC and that workflow routing is correctly set. Use logs to trace the request and confirm GRPC payload was sent."
                   ]
                 }
               ],
               "tool_choice": "auto",
               "max_iteration": 30,
-              "approve": false
+              "approve": true
             }
           }
         },
-        "process_request_success": {
-          "next": "chat_finalized",
+        "process_application_requirement_success": {
+          "next": "app_requirements_finalized",
           "condition": {
             "config": {
               "type": "function",
               "function": {
                 "name": "is_stage_completed",
-                "description": "Verifies is_stage_completed",
+                "description": "is_stage_completed",
                 "parameters": {
-                  "transition": "process_user_input"
+                  "transition": "process_app_setup"
                 }
               }
             }
@@ -365,25 +391,19 @@
         }
       }
     },
-    "chat_finalized": {
+    "app_requirements_finalized": {
       "transitions": {
-        "notify_success": {
-          "next": "ready_to_lock_chat",
+        "ask_about_api": {
+          "next": "proceeded_to_functional_requirements",
           "action": {
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "Next up: add new features for your application or deploy your client application to Cyoda Cloud! Stay tuned!",
-              "publish": true
+              "notification": "Next up: functional requirements.\nStay tuned — thoughtful thinking in progress. \uD83E\uDDE0✨",
+              "publish": true,
+              "allow_anonymous_users": true
             }
           }
-        }
-      }
-    },
-    "ready_to_lock_chat": {
-      "transitions": {
-        "lock_chat": {
-          "next": "locked_chat"
         }
       }
     }
