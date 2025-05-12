@@ -1,7 +1,7 @@
 import json
 
 from common.config.config import config
-from entity.chat.model.chat import ChatEntity
+from entity.chat.chat import ChatEntity
 from entity.model import ModelConfig
 
 

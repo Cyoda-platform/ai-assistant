@@ -416,9 +416,10 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
             add_transition(transition_name=transition_name, transition_data=transition_data)
         if state_data.get("error_codes", []):
             for state in state_data["error_codes"]:
-                transition_name = "process_error"
+                transition_name = const.TransitionKey.ROLLBACK.value
                 transition_data = {
                     "next": state["next_state"],  # f"{LOCKED_CHAT}_{state_name}",
+                    "manual": state["manual"],
                     "action": {
                         "name": "process_event",
                         "config": {

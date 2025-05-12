@@ -1479,8 +1479,8 @@
     },
     "generated_improved_prototype_cyoda_workflow": {
       "transitions": {
-        "finished_prototype_cyoda_workflow": {
-          "next": "transform_prototype_cyoda_workflow",
+        "finish_prototype_cyoda_workflow": {
+          "next": "finished_prototype_cyoda_workflow",
           "action": {
             "name": "process_event",
             "config": {
@@ -1643,13 +1643,7 @@
             }
           }
         }
-      },
-      "error_codes": [
-        {
-          "error_code": "wrong_generated_content",
-          "next_state": "generated_entities_data_design"
-        }
-      ]
+      }
     },
     "finished_app_generation_flow": {
       "transitions": {
@@ -1706,6 +1700,10 @@
               }
             }
           }
+        },
+        "rollback": {
+          "next": "finished_prototype_cyoda_workflow_json",
+          "manual": true
         }
       }
     },
@@ -1737,7 +1735,7 @@
           "action": {
             "name": "process_event",
             "config": {
-              "type": "notification",
+              "type": "question",
               "question": "✅ Your application is ready in the {branch_name} branch!\n\n [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) \uD83D\uDC40 \n\nLet’s bring it to life — together.\n\nI’ll guide you through setting up your local environment and deploying to **Cyoda Cloud** ☁️, including any troubleshooting along the way.\n\nHere’s what you’ll get:\n- High availability & scalability\n- Seamless deployment and monitoring\n- Built-in production tools and support\n\nWould you like me to walk you through the setup?",
               "publish": true
             }

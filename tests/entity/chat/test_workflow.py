@@ -1,21 +1,15 @@
-import asyncio
-
 import pytest
 import pytest_asyncio
 import json
-import os
-from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
-
 import httpx
-import aiofiles
 
 import common.config.const as const
 from common.config.config import config
 from common.exception.exceptions import GuestChatsLimitExceededException
-from entity.chat.workflow.workflow import ChatWorkflow
-from entity.chat.workflow import workflow as wf_mod
+from entity.chat.workflow import ChatWorkflow
+from entity.chat import workflow as wf_mod
 # ─── Fixtures ───────────────────────────────────────────────────────────────
 
 @pytest_asyncio.fixture
@@ -79,11 +73,11 @@ async def test_save_env_file(tmp_path, monkeypatch, workflow):
     template.write_text("ID=CHAT_ID_VAR\n")
     # stub get_project_file_name to return that path
     monkeypatch.setattr(
-        "entity.chat.workflow.workflow.get_project_file_name",
+        "entity.chat.workflow.get_project_file_name",
         lambda chat_id, file_name: str(template)
     )
     # stub git_push
-    monkeypatch.setattr("entity.chat.workflow.workflow._git_push", AsyncMock())
+    monkeypatch.setattr("entity.chat.workflow._git_push", AsyncMock())
 
     await workflow.save_env_file(
         technical_id="chat123",
@@ -172,10 +166,10 @@ async def test_web_scrape_no_match(workflow, monkeypatch):
 @pytest.mark.asyncio
 async def test_save_file_success(workflow, monkeypatch):
     monkeypatch.setattr(
-        "entity.chat.workflow.workflow.parse_from_string",
+        "entity.chat.workflow.parse_from_string",
         lambda escaped_code: "decoded"
     )
-    monkeypatch.setattr("entity.chat.workflow.workflow._save_file", AsyncMock())
+    monkeypatch.setattr("entity.chat.workflow._save_file", AsyncMock())
     ent = DummyChatEntity()
     out = await workflow.save_file("id", ent, new_content="xyz", filename="f.txt")
     assert out == "File saved successfully"
@@ -185,7 +179,7 @@ async def test_save_file_error(workflow, monkeypatch):
     def bad_parse(*args, **kwargs):
         raise ValueError("bad")
     monkeypatch.setattr(
-        "entity.chat.workflow.workflow.parse_from_string",
+        "entity.chat.workflow.parse_from_string",
         bad_parse
     )
     ent = DummyChatEntity()
@@ -196,7 +190,7 @@ async def test_save_file_error(workflow, monkeypatch):
 @pytest.mark.asyncio
 async def test_read_file(workflow, monkeypatch):
     monkeypatch.setattr(
-        "entity.chat.workflow.workflow.read_file_util",
+        "entity.chat.workflow.read_file_util",
         AsyncMock(return_value="OK")
     )
     out = await workflow.read_file("id", DummyChatEntity(), filename="any")
@@ -230,7 +224,7 @@ async def test_convert_diagram_and_processed_dataset(workflow, monkeypatch):
     # verify convert_state_diagram_to_jsonl_dataset is called
     mock_convert = MagicMock()
     monkeypatch.setattr(
-        "entity.chat.workflow.workflow.convert_state_diagram_to_jsonl_dataset",
+        "entity.chat.workflow.convert_state_diagram_to_jsonl_dataset",
         mock_convert
     )
     await workflow.convert_diagram_to_dataset(
@@ -243,11 +237,11 @@ async def test_convert_diagram_and_processed_dataset(workflow, monkeypatch):
     mock_build = AsyncMock(return_value="RES")
     mock_save = AsyncMock()
     monkeypatch.setattr(
-        "entity.chat.workflow.workflow.build_workflow_from_jsonl",
+        "entity.chat.workflow.build_workflow_from_jsonl",
         mock_build
     )
     monkeypatch.setattr(
-        "entity.chat.workflow.workflow._save_file",
+        "entity.chat.workflow._save_file",
         mock_save
     )
 
@@ -265,7 +259,7 @@ async def test_convert_json_to_state_diagram(workflow, tmp_path, monkeypatch):
     p = tmp_path / "data.json"
     p.write_text(json.dumps(data))
     monkeypatch.setattr(
-        "entity.chat.workflow.workflow.convert_to_mermaid",
+        "entity.chat.workflow.convert_to_mermaid",
         lambda d: "MERMAID"
     )
     out = await workflow.convert_workflow_json_to_state_diagram(
@@ -284,11 +278,11 @@ async def test_save_entity_templates(tmp_project_dir, workflow, monkeypatch):
     design_file.write_text(json.dumps(design))
 
     monkeypatch.setattr(
-        "entity.chat.workflow.workflow.get_project_file_name",
+        "entity.chat.workflow.get_project_file_name",
         lambda chat_id, fn: str(design_file)
     )
     sf = AsyncMock()
-    monkeypatch.setattr("entity.chat.workflow.workflow._save_file", sf)
+    monkeypatch.setattr("entity.chat.workflow._save_file", sf)
 
     await workflow.save_entity_templates("id", DummyChatEntity())
     # should have been called once for E1
@@ -330,7 +324,7 @@ async def test_resolve_entity_name(workflow, monkeypatch):
     # stub the list and the similarity function in module under test
     monkeypatch.setattr(workflow, "get_entities_list", AsyncMock(return_value=["Foo","Bar"]))
     monkeypatch.setattr(
-        "entity.chat.workflow.workflow.get_most_similar_entity",
+        "entity.chat.workflow.get_most_similar_entity",
         lambda target, entity_list: "Bar"
     )
     out = await workflow._resolve_entity_name("Brr", branch_id="x")

@@ -12,8 +12,8 @@ from common.repository.in_memory_db import InMemoryRepository
 from common.service.service import EntityServiceImpl
 #from entity.chat.workflow.openapi_functions import OpenAPIFunctions
 from entity.model_registry import model_registry
-from entity.chat.workflow.helper_functions import WorkflowHelperService
-from entity.chat.workflow.workflow import ChatWorkflow
+from entity.chat.helper_functions import WorkflowHelperService
+from entity.chat.workflow import ChatWorkflow
 from services.chat_service import ChatService
 from services.labels_config_service import LabelsConfigService
 from services.scheduler import Scheduler

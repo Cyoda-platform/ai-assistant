@@ -11,8 +11,8 @@
     },
     "started_workflow_generation": {
       "transitions": {
-        "design_workflow_from_code": {
-          "next": "designed_workflow_from_code",
+        "save_workflow_code": {
+          "next": "saved_workflow_code",
           "action": {
             "name": "process_event",
             "config": {
@@ -46,10 +46,10 @@
       }
     },
 
-    "saved_extracted_workflow_code": {
+    "saved_workflow_code": {
       "transitions": {
-        "design_workflow_from_code": {
-          "next": "generated_workflow_configuration",
+        "design_workflow_config_from_code": {
+          "next": "designed_workflow_config_from_code",
           "action": {
             "name": "process_event",
             "config": {
@@ -198,7 +198,7 @@
         }
       }
     },
-    "saved_workflow_configuration": {
+    "designed_workflow_config_from_code": {
       "transitions": {
         "lock_chat": {
           "next": "locked_chat"

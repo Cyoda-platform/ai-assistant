@@ -638,14 +638,6 @@ def clean_formatting(text):
 #
 #     return text
 
-
-def get_project_file_name(chat_id, file_name, folder_name=None):
-    if folder_name:
-        return f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}/{folder_name}/{file_name}"
-    else:
-        return f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}/{file_name}"
-
-
 def current_timestamp():
     now = datetime.now(ZoneInfo("UTC"))
     return now.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + now.strftime("%z")[:3] + ":" + now.strftime("%z")[3:]
@@ -671,12 +663,77 @@ def format_json_if_needed(data, key):
         print(f"Data at {key} is not a valid JSON object: {value}")  # Optionally log this or handle it
     return data
 
+async def clone_repo(chat_id: str):
+    """
+    Clone the GitHub repository to the target directory.
+    If the repository should not be copied, it ensures the target directory exists.
+    """
+    clone_dir = f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}"
 
-async def _save_file(chat_id, _data, item, folder_name=None) -> str:
+    if await repo_exists(clone_dir):
+        await git_pull(chat_id=chat_id)
+        return
+
+    if config.CLONE_REPO != "true":
+        # Create the directory asynchronously using asyncio.to_thread
+        await asyncio.to_thread(os.makedirs, clone_dir, exist_ok=True)
+        logger.info(f"Target directory '{clone_dir}' is created.")
+        return
+
+    # Asynchronously clone the repository using subprocess
+    clone_process = await asyncio.create_subprocess_exec(
+        'git', 'clone', config.REPOSITORY_URL, clone_dir,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    stdout, stderr = await clone_process.communicate()
+
+    if clone_process.returncode != 0:
+        logger.error(f"Error during git clone: {stderr.decode()}")
+        return
+
+    # Asynchronously checkout the branch using subprocess
+    checkout_process = await asyncio.create_subprocess_exec(
+        'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+        'checkout', '-b', str(chat_id),
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    stdout, stderr = await checkout_process.communicate()
+
+    if checkout_process.returncode != 0:
+        logger.error(f"Error during git checkout: {stderr.decode()}")
+        return
+
+    logger.info(f"Repository cloned to {clone_dir}")
+
+    os.chdir(clone_dir)
+    await set_upstream_tracking(chat_id=chat_id)
+    await run_git_config_command()
+    await git_pull(chat_id=chat_id)
+
+
+async def get_project_file_name(chat_id, file_name, git_branch_id, folder_name=None):
+    if folder_name:
+        project_file_name = f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}/{folder_name}/{file_name}"
+    else:
+        project_file_name = f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}/{file_name}"
+    await clone_repo(chat_id=git_branch_id)
+    return project_file_name
+
+
+async def get_project_file_name_path(technical_id, git_branch_id, file_name):
+    await clone_repo(chat_id=git_branch_id)
+    target_dir = os.path.join(f"{config.PROJECT_DIR}/{technical_id}/{config.REPOSITORY_NAME}", "")
+    file_path = os.path.join(target_dir, file_name)
+    return file_path
+
+async def _save_file(chat_id, _data, item, git_branch_id, folder_name=None) -> str:
     """
     Save a file (text or binary) inside a specific directory.
     Handles FileStorage objects directly.
     """
+    await clone_repo(chat_id=git_branch_id)
     target_dir = os.path.join(f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}", folder_name or "")
     file_path = os.path.join(target_dir, item)
     logger.info(f"Saving to {file_path}")
@@ -906,56 +963,6 @@ async def set_upstream_tracking(chat_id):
         print(f"Error setting upstream: {stderr.decode().strip()}")
     else:
         print(f"Successfully set upstream tracking for branch {branch}.")
-
-
-async def clone_repo(chat_id: str):
-    """
-    Clone the GitHub repository to the target directory.
-    If the repository should not be copied, it ensures the target directory exists.
-    """
-    clone_dir = f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}"
-
-    if await repo_exists(clone_dir):
-        await git_pull(chat_id=chat_id)
-        return
-
-    if config.CLONE_REPO != "true":
-        # Create the directory asynchronously using asyncio.to_thread
-        await asyncio.to_thread(os.makedirs, clone_dir, exist_ok=True)
-        logger.info(f"Target directory '{clone_dir}' is created.")
-        return
-
-    # Asynchronously clone the repository using subprocess
-    clone_process = await asyncio.create_subprocess_exec(
-        'git', 'clone', config.REPOSITORY_URL, clone_dir,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
-    )
-    stdout, stderr = await clone_process.communicate()
-
-    if clone_process.returncode != 0:
-        logger.error(f"Error during git clone: {stderr.decode()}")
-        return
-
-    # Asynchronously checkout the branch using subprocess
-    checkout_process = await asyncio.create_subprocess_exec(
-        'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-        'checkout', '-b', str(chat_id),
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
-    )
-    stdout, stderr = await checkout_process.communicate()
-
-    if checkout_process.returncode != 0:
-        logger.error(f"Error during git checkout: {stderr.decode()}")
-        return
-
-    logger.info(f"Repository cloned to {clone_dir}")
-
-    os.chdir(clone_dir)
-    await set_upstream_tracking(chat_id=chat_id)
-    await run_git_config_command()
-
 
 def validate_token(token):
     try:

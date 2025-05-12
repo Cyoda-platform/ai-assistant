@@ -1,5 +1,5 @@
 import common.config.const as const
-from entity.chat.model.chat import ChatEntity
+from entity.chat.chat import ChatEntity
 from entity.model import QuestionsQueue, SchedulerEntity, AgenticFlowEntity, ChatMemory
 
 model_registry = {

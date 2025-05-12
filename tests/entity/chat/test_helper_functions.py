@@ -3,8 +3,8 @@ import pytest_asyncio
 from unittest.mock import AsyncMock, MagicMock
 import common.config.const as const
 from common.config.config import config
-import entity.chat.workflow.helper_functions as hf
-from entity.chat.model.chat import ChatEntity
+import entity.chat.helper_functions as hf
+from entity.chat.chat import ChatEntity
 from entity.model import SchedulerEntity, FlowEdgeMessage
 
 # A minimal stand-in for the parent chat entity

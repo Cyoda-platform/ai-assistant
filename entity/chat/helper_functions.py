@@ -6,7 +6,7 @@ from common.config.config import config
 import common.config.const as const
 from common.utils.chat_util_functions import add_answer_to_finished_flow
 from common.utils.utils import current_timestamp
-from entity.chat.model.chat import ChatEntity
+from entity.chat.chat import ChatEntity
 from entity.model import SchedulerEntity, FlowEdgeMessage
 
 # Configure logging

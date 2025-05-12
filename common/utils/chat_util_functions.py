@@ -4,7 +4,7 @@ from typing import Tuple
 
 from common.config.config import config
 from common.utils.file_reader import read_file_content
-from entity.chat.model.chat import ChatEntity
+from entity.chat.chat import ChatEntity
 from entity.model import FlowEdgeMessage
 
 logger = logging.getLogger(__name__)

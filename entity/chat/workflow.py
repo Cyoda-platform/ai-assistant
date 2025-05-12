@@ -10,19 +10,17 @@ from typing import Any
 from common.ai.nltk_service import get_most_similar_entity
 from common.config.config import config
 from common.exception.exceptions import GuestChatsLimitExceededException
-from common.utils.app_postprocessor import app_post_process
 from common.utils.batch_converter import convert_state_diagram_to_jsonl_dataset
 from common.utils.batch_parallel_code import build_workflow_from_jsonl
-from common.utils.chat_util_functions import _launch_transition, add_answer_to_finished_flow
+from common.utils.chat_util_functions import _launch_transition
 from common.utils.function_extractor import extract_function
 from common.utils.result_validator import validate_ai_result
 from common.utils.utils import get_project_file_name, _git_push, _save_file, clone_repo, \
     parse_from_string, read_file_util, send_cyoda_request
 from common.utils.workflow_enricher import enrich_workflow
-from common.utils.workflow_extractor import analyze_code_with_libcst
 from common.workflow.workflow_to_state_diagram_converter import convert_to_mermaid
-from entity.chat.model.chat import ChatEntity
-from entity.model import AgenticFlowEntity, SchedulerEntity, FlowEdgeMessage
+from entity.chat.chat import ChatEntity
+from entity.model import AgenticFlowEntity, SchedulerEntity
 from entity.workflow import Workflow
 
 # Configure logging
@@ -50,7 +48,7 @@ class ChatWorkflow(Workflow):
         #self.openapi_functions = openapi_functions
 
     async def save_env_file(self, technical_id, entity: ChatEntity, **params):
-        file_name = get_project_file_name(chat_id=technical_id, file_name=params.get("filename"))
+        file_name = await get_project_file_name(chat_id=technical_id, file_name=params.get("filename"), git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id))
         async with aiofiles.open(file_name, 'r') as template_file:
             content = await template_file.read()
 
@@ -168,7 +166,10 @@ class ChatWorkflow(Workflow):
         await clone_repo(chat_id=technical_id)
 
         # Call the async _save_file function
-        await _save_file(technical_id, technical_id, 'README.txt')
+        await _save_file(chat_id=technical_id,
+                         _data=technical_id,
+                         item='README.txt',
+                         git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id))
         # todo - need to get from memory
         entity.workflow_cache['branch_name'] = technical_id
         return const.BRANCH_READY_NOTIFICATION.format(branch_name=technical_id)
@@ -256,7 +257,10 @@ class ChatWorkflow(Workflow):
         """
         try:
             new_content = parse_from_string(escaped_code=params.get("new_content"))
-            await _save_file(chat_id=technical_id, _data=new_content, item=params.get("filename"))
+            await _save_file(chat_id=technical_id,
+                             _data=new_content,
+                             item=params.get("filename"),
+                             git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id))
             return "File saved successfully"
         except Exception as e:
             entity.failed = True
@@ -330,7 +334,10 @@ class ChatWorkflow(Workflow):
         input_file_path = params.get("input_file_path")
         output_file_path = params.get("output_file_path")
         result = await build_workflow_from_jsonl(input_file_path=input_file_path)
-        await _save_file(chat_id=technical_id, _data=result, item=output_file_path)
+        await _save_file(chat_id=technical_id,
+                         _data=result,
+                         item=output_file_path,
+                         git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id))
 
     async def convert_workflow_json_to_state_diagram(self, technical_id, entity: ChatEntity, **params):
         input_file_path = params.get("input_file_path")
@@ -340,7 +347,7 @@ class ChatWorkflow(Workflow):
         return mermaid_diagram
 
     async def save_entity_templates(self, technical_id, entity: ChatEntity, **params):
-        file_path = get_project_file_name(technical_id, "entity/entities_data_design.json")
+        file_path = await get_project_file_name(technical_id, "entity/entities_data_design.json", git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id))
 
         try:
             async with aiofiles.open(file_path, 'r') as f:
@@ -370,7 +377,10 @@ class ChatWorkflow(Workflow):
                                   sort_keys=True) if entity_data_example is not None else "{}"
 
             # Save the file asynchronously
-            await _save_file(chat_id=technical_id, _data=data_str, item=target_item)
+            await _save_file(chat_id=technical_id,
+                             _data=data_str,
+                             item=target_item,
+                             git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id))
 
     async def is_chat_locked(self, technical_id: str, entity: ChatEntity, **params: Any) -> bool:
         return entity.locked
@@ -404,40 +414,42 @@ class ChatWorkflow(Workflow):
     async def register_workflow_with_app(self, technical_id, entity: AgenticFlowEntity, **params):
         filename = params.get("filename")
         try:
-            file_path = get_project_file_name(technical_id, filename)
+            file_path = await get_project_file_name(technical_id, filename, git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id))
             async with aiofiles.open(file_path, 'r') as f:
                 content = await f.read()
-                input_json = json.load(content)
+                input_json = json.loads(content)
             await _save_file(chat_id=technical_id,
                              _data=input_json.get("file_without_workflow").get("code"),
-                             item=f"routes/routes.py")
+                             item=f"routes/routes.py",
+                             git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id))
             awaited_entity_ids = []
             for item in input_json.get("entity_models"):
                 # For each key-value pair in the dictionary, where key is the entity name and value is the code snippet
-                for entity_model_name, workflow_function in item.items():
-                    workflow_cache = {
-                        'workflow_function': workflow_function.get("name"),
-                        'entity_name': entity_model_name
-                    }
-                    edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
-                                                                         entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
-                                                                         entity_version=config.ENTITY_VERSION,
-                                                                         entity=json.dumps(workflow_function),
-                                                                         meta={
-                                                                             "type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
-                    edge_messages_store = {
-                        'code': edge_message_id,
-                    }
+                entity_model_name = item.get("entity_model_name")
+                workflow_function = item.get("workflow_function")
+                workflow_cache = {
+                    'workflow_function': workflow_function.get('name'),
+                    'entity_name': entity_model_name
+                }
+                edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
+                                                                     entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
+                                                                     entity_version=config.ENTITY_VERSION,
+                                                                     entity=json.dumps(workflow_function),
+                                                                     meta={
+                                                                         "type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                edge_messages_store = {
+                    'code': edge_message_id,
+                }
 
-                    child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
-                        entity_service=self.entity_service,
-                        technical_id=technical_id,
-                        entity=entity,
-                        entity_model=const.ModelName.AGENTIC_FLOW_ENTITY.value,
-                        workflow_name=const.ModelName.GENERATING_GEN_APP_WORKFLOW.value,
-                        workflow_cache=workflow_cache,
-                        edge_messages_store=edge_messages_store)
-                    awaited_entity_ids.append(child_technical_id)
+                child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
+                    entity_service=self.entity_service,
+                    technical_id=technical_id,
+                    entity=entity,
+                    entity_model=const.ModelName.AGENTIC_FLOW_ENTITY.value,
+                    workflow_name=const.ModelName.GENERATING_GEN_APP_WORKFLOW.value,
+                    workflow_cache=workflow_cache,
+                    edge_messages_store=edge_messages_store)
+                awaited_entity_ids.append(child_technical_id)
 
             if awaited_entity_ids:
                 scheduled_entity_id = await self.workflow_helper_service.launch_scheduled_workflow(
@@ -503,7 +515,8 @@ class ChatWorkflow(Workflow):
         await _save_file(
             chat_id=entity.parent_id,
             _data=code_without_function,
-            item=f"entity/{entity.workflow_cache.get("entity_name")}/workflow.py"
+            item=f"entity/{entity.workflow_cache.get("entity_name")}/workflow.py",
+            git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
         )
         return extracted_function
 
@@ -520,7 +533,8 @@ class ChatWorkflow(Workflow):
         await _save_file(
             chat_id=entity.parent_id,
             _data=json.dumps(workflow, indent=4, sort_keys=True),  # Prettified JSON
-            item=f"entity/{entity.workflow_cache.get('entity_name')}/workflow.json"
+            item=f"entity/{entity.workflow_cache.get('entity_name')}/workflow.json",
+            git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
         )
 
     # =================================== generating_gen_app_workflow end =============================

@@ -26,7 +26,7 @@ from common.utils.utils import (
     clone_repo,
     validate_token, send_cyoda_request, get_current_timestamp_num,
 )
-from entity.chat.model.chat import ChatEntity
+from entity.chat.chat import ChatEntity
 from entity.model import FlowEdgeMessage, ChatMemory, ModelConfig, AgenticFlowEntity
 
 logger = logging.getLogger(__name__)
