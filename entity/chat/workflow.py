@@ -425,8 +425,14 @@ class ChatWorkflow(Workflow):
             awaited_entity_ids = []
             for item in input_json.get("entity_models"):
                 # For each key-value pair in the dictionary, where key is the entity name and value is the code snippet
+                if not isinstance(item, dict):
+                    continue
                 entity_model_name = item.get("entity_model_name")
+                if not isinstance(entity_model_name, str):
+                    continue
                 workflow_function = item.get("workflow_function")
+                if not isinstance(workflow_function, dict):
+                    continue
                 workflow_cache = {
                     'workflow_function': workflow_function.get('name'),
                     'entity_name': entity_model_name,

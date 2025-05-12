@@ -419,7 +419,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                 transition_name = const.TransitionKey.ROLLBACK.value
                 transition_data = {
                     "next": state["next_state"],  # f"{LOCKED_CHAT}_{state_name}",
-                    "manual": state["manual"],
+                    "manual": True, #always manual to prevent loops
                     "action": {
                         "name": "process_event",
                         "config": {
