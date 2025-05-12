@@ -429,7 +429,8 @@ class ChatWorkflow(Workflow):
                 workflow_function = item.get("workflow_function")
                 workflow_cache = {
                     'workflow_function': workflow_function.get('name'),
-                    'entity_name': entity_model_name
+                    'entity_name': entity_model_name,
+                    const.GIT_BRANCH_PARAM: entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
                 }
                 edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                                      entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
