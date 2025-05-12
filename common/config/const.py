@@ -102,6 +102,7 @@ class ModelName(str, Enum):
     EDIT_API_EXISTING_APP = "edit_api_existing_app"
     EDIT_EXISTING_WORKFLOW = "edit_existing_workflow"
     EDIT_EXISTING_PROCESSORS = "edit_existing_processors"
+    INIT_CYODA_SETUP = "init_cyoda_setup"
 
 # === Deployment flows ===
 @unique

@@ -189,7 +189,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_api_existing_app",
-                    "description": "Launches workflow that is necessary to help the user edit/update existing routes (routes.py). Key factor is that an application already exists and the user explicitly asks to add changes to its routes/api/routes.py  (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user edit/update existing api (routes.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/routes/routes.py  (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -260,6 +260,30 @@
                         "user_request",
                         "git_branch",
                         "entity_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "init_cyoda_setup",
+                    "description": "Launches workflow that is necessary to help the user to do initial setup and launch locally their client (user) application.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch"
                       ],
                       "additionalProperties": false
                     }
@@ -611,6 +635,30 @@
                         "user_request",
                         "git_branch",
                         "entity_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "init_cyoda_setup",
+                    "description": "Launches workflow that is necessary to help the user to do initial setup and launch locally their client (user) application.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch"
                       ],
                       "additionalProperties": false
                     }

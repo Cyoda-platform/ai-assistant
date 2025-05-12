@@ -428,10 +428,10 @@ class ChatWorkflow(Workflow):
                 if not isinstance(item, dict):
                     continue
                 entity_model_name = item.get("entity_model_name")
-                if not isinstance(entity_model_name, str):
+                if not entity_model_name or not isinstance(entity_model_name, str):
                     continue
                 workflow_function = item.get("workflow_function")
-                if not isinstance(workflow_function, dict):
+                if not workflow_function or not isinstance(workflow_function, dict):
                     continue
                 workflow_cache = {
                     'workflow_function': workflow_function.get('name'),
@@ -694,6 +694,19 @@ class ChatWorkflow(Workflow):
         )
 
     # ==========================editing========================================
+
+    async def init_cyoda_setup(
+            self, technical_id: str, entity: AgenticFlowEntity, **params
+    ) -> str:
+        return await self._schedule_workflow(
+            technical_id=technical_id,
+            entity=entity,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
+            workflow_name=const.ModelName.INIT_CYODA_SETUP.value,
+            params=params,
+        )
+
+
     async def add_new_entity_for_existing_app(
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
