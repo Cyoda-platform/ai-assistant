@@ -5,6 +5,13 @@
     "none": {
       "transitions": {
         "start_chat": {
+          "next": "ready_to_start_chat"
+        }
+      }
+    },
+    "ready_to_start_chat": {
+      "transitions": {
+        "starting_chat": {
           "next": "started_chat"
         }
       }
