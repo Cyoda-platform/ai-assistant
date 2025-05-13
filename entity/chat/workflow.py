@@ -389,7 +389,7 @@ class ChatWorkflow(Workflow):
         return not entity.locked
 
     async def build_general_application(self, technical_id: str, entity: ChatEntity, **params: Any):
-        workflow_name = const.ModelName.GEN_APP_ENTITY.value
+        workflow_name = const.ModelName.GEN_APP_ENTITY_JAVA.value
         user_request = params.get("user_request")
         if not user_request:
             return "parameter user_request is required"

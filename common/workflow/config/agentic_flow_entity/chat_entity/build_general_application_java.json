@@ -1260,7 +1260,7 @@
                 "name": "register_workflow_with_app",
                 "description": "register_workflow_with_app",
                 "parameters": {
-                  "filename": "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
+                  "filename": "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.json"
                 }
               },
               "publish": false

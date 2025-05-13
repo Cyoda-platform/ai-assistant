@@ -93,6 +93,7 @@ class ModelName(str, Enum):
     CHAT_ENTITY = "chat_entity"
     AGENTIC_FLOW_ENTITY = "agentic_flow_entity"
     GEN_APP_ENTITY = "build_general_application_python"
+    GEN_APP_ENTITY_JAVA = "build_general_application_java"
     GENERATING_GEN_APP_WORKFLOW = "generating_gen_app_workflow"
     SCHEDULER_ENTITY = "scheduler_entity"
     TRANSFER_CHATS_ENTITY = "transfer_chats_entity"
