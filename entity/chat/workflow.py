@@ -665,7 +665,8 @@ class ChatWorkflow(Workflow):
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
         if entity.user_id.startswith('guest'):
-            raise GuestChatsLimitExceededException()
+            #raise GuestChatsLimitExceededException()
+            return "Sorry, deploying Cyoda env is available only to logged in users. Please sign up or login!"
         # todo cloud manager needs to return namespace
         params['cyoda_env_name'] = f"{entity.user_id.lower()}.{config.CLIENT_HOST}"
         return await self._schedule_workflow(
@@ -680,7 +681,9 @@ class ChatWorkflow(Workflow):
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
         if entity.user_id.startswith('guest'):
-            raise GuestChatsLimitExceededException()
+            #raise GuestChatsLimitExceededException()
+            return "Sorry, deploying client application is available only to logged in users. Please sign up or login!"
+
 
         # todo cloud manager needs to return namespace
         params['user_env_name'] = f"client-{entity.user_id.lower()}.{config.CLIENT_HOST}"

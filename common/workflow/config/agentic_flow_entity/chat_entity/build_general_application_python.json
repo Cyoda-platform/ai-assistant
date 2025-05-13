@@ -654,7 +654,7 @@
                     "Please double-check you are using all the information provided earlier. Use httpx.AsyncClient for http requests, and Quart api.",
                     "Use QuartSchema(app) but do not add any @validate_request as our data is dynamic, just add QuartSchema(app) one line.",
                     "Use this entry point: if __name__ == '__main__':app.run(use_reloader=False, debug=True, host='0.0.0.0', port=8000, threaded=True).",
-                    "Mock any persistence, do not use any particular implementation, just local cache (e.g. you cannot use sqlalchemy in the prototype or any external implementation for persistence or cache).",
+                    "Mock any persistence, do not use any particular implementation, just local cache (e.g. you cannot use sqlalchemy in the prototype or any external implementation for persistence or cache, avoid using global keyword as we're using asyncio).",
                     "Please use real APIs.",
                     "You are most welcome to use such pattern where it is reasonable:",
                     "entity_job[job_id] = {\"status\": \"processing\", \"requestedAt\": requested_at}\n# Fire and forget the processing task.",
@@ -678,7 +678,9 @@
               "type": "prompt",
               "publish": true,
               "allow_anonymous_users": true,
-              "model": {},
+              "model": {
+                "model_name": "o4-mini"
+              },
               "input": {},
               "output": {
                 "local_fs": [
@@ -727,6 +729,7 @@
                     "I know this iss confusing - i think there is an issue in quart schema library so we have to workaround this issue:",
                     "Always put validation first for GET requests, and last for POST requests. Reason about this issue and make correct decision.",
                     "Also put a comment that it is an issue workaround, so that everyone knows the logic behind.",
+                    " Important note: validate_request have defect so be very careful in placing these annotations",
                     "",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting. Please, make sure there is no markdown (e.g. ```)"
                   ]
@@ -1244,6 +1247,7 @@
                     "Your task is to refactor the code so that all interactions with the local cache are replaced by calls to an external service called entity_service (from app_init.app_init import entity_service).",
                     "You can use only these functions for replacement - if this is not enough just skip and leave as is",
                     "entity name should always be underscore lowercase",
+                    " Make sure that get item by id endpoint can now be only string. If you used numeric value before - please now use string, as technical id is string",
                     "1. id = await entity_service.add_item(",
                     "    token=cyoda_auth_service,",
                     "    entity_model=\"{entity_name}\",",
@@ -1299,6 +1303,33 @@
                     "logger.exception(e)",
                     "",
                     "",
+                    "Condition example:",
+                    "Available operatorType values:",
+                    "\"EQUALS\", \"NOT_EQUAL\", \"IEQUALS\", \"INOT_EQUAL\", \"IS_NULL\", \"NOT_NULL\",",
+                    "\"GREATER_THAN\", \"GREATER_OR_EQUAL\", \"LESS_THAN\", \"LESS_OR_EQUAL\",",
+                    "\"ICONTAINS\", \"ISTARTS_WITH\", \"IENDS_WITH\", \"INOT_CONTAINS\",",
+                    "\"INOT_STARTS_WITH\", \"INOT_ENDS_WITH\", \"MATCHES_PATTERN\",",
+                    "\"BETWEEN\", \"BETWEEN_INCLUSIVE\"",
+                    "{",
+                    "  \"cyoda\": {",
+                    "    \"type\": \"group\",",
+                    "    \"operator\": \"AND\",",
+                    "    \"conditions\": [",
+                    "      {",
+                    "        \"jsonPath\": \"$.failed\",",
+                    "        \"operatorType\": \"EQUALS\",",
+                    "        \"value\": false,",
+                    "        \"type\": \"simple\"",
+                    "      },",
+                    "      {",
+                    "        \"jsonPath\": \"$.last_modified\",",
+                    "        \"operatorType\": \"GREATER_THAN\",",
+                    "        \"value\": 1,",
+                    "        \"type\": \"simple\"",
+                    "      }",
+                    "    ]",
+                    "  }",
+                    "}",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
                   ]
                 }

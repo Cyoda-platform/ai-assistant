@@ -126,6 +126,9 @@ class CyodaRepository(CrudRepository):
         path = f"entity/{_uuid}"
         resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="get", path=path)
         payload = resp.get("json", {})
+        if not isinstance(payload, dict):
+            logger.error(payload)
+            raise Exception("find_by_id payload is not dict!")
         data = payload.get("data", {})
         data["current_state"] = payload.get("meta", {}).get("state")
         data["technical_id"] = _uuid
