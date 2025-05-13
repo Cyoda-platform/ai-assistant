@@ -823,7 +823,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Read the src/main/java/com/java_template/entity/EntityControllerPrototype.java code to answer the user's questions or make improvements. Reading file should be your first action if the user refers to the code",
+                    "description": "Finish the iteration if the user is happy with the result and has no more questions. Read the src/main/java/com/java_template/entity/EntityControllerPrototype.java code to answer the user's questions or make improvements. Reading file should be your first action if the user refers to the code",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -984,7 +984,7 @@
                     "package com.java_template.entity;",
                     "use this class name 'CyodaEntityControllerPrototype'",
                     "Lombok is already configured in the project via io.freefair.lombok plugin. Please use Lombok annotations like @Data, @Getter, @Setter, @AllArgsConstructor, @NoArgsConstructor, etc., instead of manually writing getters, setters, and constructors, and make sure to include the necessary Lombok imports in the generated code.",
-                    "Make sure to assign a unique @RequestMapping path to each controller to avoid conflicts. Do not reuse the same base path (e.g., \"/entity\") across multiple controllers.\n",
+                    "Make sure to assign a unique @RequestMapping path to each controller to avoid conflicts. Do not reuse the same base path across multiple controllers.\n",
                     "Preserve the endpoint routes and any other essential business logic.",
                     "Generate a controller that calls service methods directly and lets exceptions propagate. Do not use try-catch. Let the service throw ResponseStatusException when needed.",
                     "Please make sure you keep all the necessary business logic, like data ingestion, calling any external apis, mocks, calculations etc.",
@@ -1099,47 +1099,6 @@
     },
     "generated_improved_prototype_cyoda_workflow": {
       "transitions": {
-        "separate_workflow_and_controller": {
-          "next": "separated_workflow_and_controller",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "prompt",
-              "publish": false,
-              "memory_tags": [
-                "generate_prototype_cyoda_workflow"
-              ],
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "Analyze the following Java code and generate a JSON with two main sections:",
-                    "\"workflow\" — a map where keys are entity model names (like User, Order) and values are:",
-                    "a string with method source code, if there is only one method matching the process{EntityModel} pattern.",
-                    "a list of strings, if there are multiple workflow methods like process{EntityModel}* (e.g., processOrder, processOrderValidation) — each list item must contain the full source code of the corresponding method.",
-                    "\"controller\" — a string containing all other Java code unrelated to workflow methods.",
-                    "Return a valid JSON.",
-                    "Use compact JSON format and preserve method formatting as strings."
-                  ]
-                }
-              ],
-              "input": {
-                "local_fs": [
-                  "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
-                ]
-              },
-              "output": {
-                "local_fs": [
-                  "src/main/java/com/java_template/entity/separatedWorkflowAndController.json"
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "separated_workflow_and_controller": {
-      "transitions": {
         "finish_prototype_cyoda_workflow": {
           "next": "finished_prototype_cyoda_workflow",
           "action": {
@@ -1164,7 +1123,7 @@
               ],
               "output": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/FinalPrototypeCyodaWorkflow.java"
+                  "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
                 ]
               }
             }
@@ -1174,8 +1133,125 @@
     },
     "finished_prototype_cyoda_workflow": {
       "transitions": {
-        "launch_register_workflow_with_app": {
-          "next": "launched_register_workflow_with_app",
+        "transform_prototype_cyoda_workflow": {
+          "next": "finished_prototype_cyoda_workflow_json",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": false,
+              "model": {
+                "model_name": "gpt-4o",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "memory_tags": [
+                "generate_prototype_cyoda_workflow"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "You have a Java code with certain components related to an entity_model node and a file_without_workflow node.",
+                    " The goal is to simplify the code and organize it into a structured JSON format with the following steps:",
+                    "1. Entity Model Node:",
+                    "Identify all the entity_model arguments of entity_service from the code.",
+                    "The Java code likely has a function or class (EntityService) that accepts entity_model as an argument.",
+                    " We need to identify and collect all such instances where entity_model is used in relation to EntityService.",
+                    "Extract the name of the function that was used as the workflow argument.",
+                    "There is a workflow argument in the code. ",
+                    "We need to extract the name of the function that is passed as the value for this workflow argument.",
+                    "Include the full content of the workflow function as part of this entity model.",
+                    "The code has a workflow function that is passed into the EntityService.",
+                    " We need to extract the full content of this workflow function and include it in the JSON structure under the entity model node.",
+                    "2. File Without Workflow Node:",
+                    "Provide the entire Java code, but remove all references to the workflow argument.",
+                    "The idea here is to remove any references to the workflow argument,",
+                    " but not modify the structure or logic of the code otherwise.",
+                    " This means any calls to functions that use workflow as an argument should be stripped of that argument,",
+                    " but the rest of the code stays the same.",
+                    "In summary, you want:",
+                    "A structured JSON representation that contains an entity_model node with references to entity_model and the workflow function's name and content.",
+                    "A separate file_without_workflow node, which is the original Java code with all references to workflow removed."
+                  ]
+                }
+              ],
+              "response_format": {
+                "name": "workflow_schema",
+                "description": "Schema for entity models and workflow functions",
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "entity_models": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "entity_model_name": {
+                            "type": "string"
+                          },
+                          "workflow_function": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "code_with_necessary_imports_and_constants": {
+                                "type": "string"
+                              },
+                              "content": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "name",
+                              "content"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "entity_model_name",
+                          "workflow_function"
+                        ]
+                      }
+                    },
+                    "file_without_workflow": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "entity_models",
+                    "file_without_workflow"
+                  ]
+                }
+              },
+              "input": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.json"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "finished_prototype_cyoda_workflow_json": {
+      "transitions": {
+        "register_workflow_with_app": {
+          "next": "finished_app_generation_flow",
           "action": {
             "name": "process_event",
             "config": {
@@ -1184,7 +1260,7 @@
                 "name": "register_workflow_with_app",
                 "description": "register_workflow_with_app",
                 "parameters": {
-                  "filename": "src/main/java/com/java_template/entity/FinalPrototypeCyodaWorkflow.java"
+                  "filename": "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
                 }
               },
               "publish": false
