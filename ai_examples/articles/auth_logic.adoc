@@ -1,0 +1,116 @@
+= User Authentication and Session Handling Logic
+:toc:
+:sectnums:
+:plantuml-server-url: https://www.plantuml.com/plantuml
+
+== Overview
+
+This document explains how we manage two types of users: *Guest Users* and *Signed-In Users*. It covers session handling, guest token rate limiting, chat migration upon sign-up, and UX best practices.
+
+== User Types
+
+=== 1. Guest Users
+
+==== Session Initialization
+
+When a guest user accesses the application, the following flow occurs:
+
+```mermaid
+flowchart TD
+    A[User Opens App] --> B[Frontend Requests Guest Token]
+    B --> C[Backend Issues Guest Token]
+    C --> D[Token Identifies Device / IP]
+```
+
+*Token Characteristics:*
+
+- Perpetual (no expiration or refresh)
+- Non-secure (not used for authorization)
+- Used to identify the physical device or user
+
+==== Rate Limiting
+
+To prevent abuse such as multiple incognito sessions:
+
+```mermaid
+flowchart TD
+    A[Request for Guest Token] --> B{Token Rate Limit Exceeded?}
+    B -- Yes --> C[Reject Request]
+    B -- No --> D[Issue Token]
+```
+
+*Rate limiting is based on:*
+
+- IP address
+- Device/user heuristics (e.g., user-agent, fingerprinting)
+
+==== Chat and Workflow Restrictions
+
+Guest users have the following limitations:
+
+- Limited number of chat sessions
+- Cannot access certain workflows (e.g., Cyoda environment deployment)
+
+==== Design Goals
+
+1. Identify physical users (via persistent guest token)
+2. Enforce user-level rate limits to prevent abuse
+
+=== 2. Signed-In Users
+
+==== Transition from Guest to Signed-In
+
+When a user signs up:
+
+```mermaid
+flowchart TD
+    A[Guest User Signs Up] --> B[Guest Token Replaced with Auth0 Token]
+    B --> C[One-Time Guest Chat Transfer]
+```
+
+- Guest token is replaced with an Auth0 secure token.
+- A one-time chat migration occurs to retain conversation history.
+
+==== One-Time Chat Transfer
+
+Chat transfer occurs only *once* at sign-up.
+
+Reasons for one-time migration:
+
+- ✅ Maintains data integrity (avoids duplicates or corrupted states)
+- ✅ Ensures a consistent user experience
+- ✅ Prevents leakage of anonymous session data
+- ✅ Follows industry best practices (e.g., ChatGPT does not support transferring anonymous sessions)
+
+== UX & Communication Gaps
+
+Currently, the UI does not clearly distinguish whether the user is in a *guest* or *signed-in* state.
+
+=== Recommendations
+
+- Display clear visual indicators of session status.
+- Notify users when chats are migrated at sign-up.
+- Ensure session separation is obvious and intuitive.
+
+== Summary Table
+
+[cols="1,1,1", options="header"]
+|===
+| Feature | Guest Users | Signed-In Users
+
+| Token Type | Perpetual guest token | Auth0 secure token
+| Purpose | Identification only | Authentication + Identification
+| Rate Limiting | Yes (IP & heuristics) | No
+| Chat Access | Limited | Full
+| Workflow Access | Restricted (e.g., no Cyoda deployment) | Full access
+| Chat Migration | One-time only | Not repeated
+| Session Clarity (UX) | Needs improvement | Should be clear
+|===
+
+== Best Practices
+
+* Allow only *one-time chat transfer* upon sign-up.
+* Do not allow repeat migrations from guest sessions.
+* Keep *anonymous and authenticated sessions* separated clearly.
+* Improve session visibility through *strong UI cues*.
+* Follow industry conventions (e.g., ChatGPT behavior).

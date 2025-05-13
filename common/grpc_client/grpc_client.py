@@ -6,13 +6,13 @@ import grpc
 
 from cloudevents_pb2 import CloudEvent
 from common.config import config
-from common.config.config import GRPC_PROCESSOR_TAG
+from common.config.config import config
 from cyoda_cloud_api_pb2_grpc import CloudEventsServiceStub
-from entity.model.model import WorkflowEntity
-from entity.model.model_registry import model_registry
+from entity.model import WorkflowEntity
+from entity.model_registry import model_registry
 
 # These tags/configs from your original snippet
-TAGS = [GRPC_PROCESSOR_TAG]
+TAGS = [config.GRPC_PROCESSOR_TAG]
 OWNER = "PLAY"
 SPEC_VERSION = "1.0"
 SOURCE = "SimpleSample"
@@ -30,9 +30,10 @@ logger = logging.getLogger(__name__)
 
 
 class GrpcClient:
-    def __init__(self, workflow_dispatcher, auth):
+    def __init__(self, workflow_dispatcher, auth, chat_service):
         self.workflow_dispatcher = workflow_dispatcher
         self.auth = auth
+        self.chat_service = chat_service
 
     def metadata_callback(self, context, callback):
         """
@@ -42,6 +43,7 @@ class GrpcClient:
         try:
             token = self.auth.get_access_token()
         except Exception as e:
+            logger.exception(e)
             logger.warning("Access‑token fetch failed, invalidating and retrying", exc_info=e)
             self.auth.invalidate_tokens()
             token = self.auth.get_access_token()
@@ -151,52 +153,94 @@ class GrpcClient:
                 technical_id=data['entityId']
             )
             data['payload']['data'] = model_cls.model_dump(entity)
-        except Exception:
+        except Exception as e:
             logger.exception("Error processing entity")
+            logger.exception(e)
+            entity.failed = True
+            data['payload']['data'] = model_cls.model_dump(entity)
             resp = None
 
         notif = self.create_notification_event(data=data, response=resp, type=type)
         await queue.put(notif)
 
     async def consume_stream(self):
-        creds = self.get_grpc_credentials()
-        queue = asyncio.Queue()
+        backoff = 1
+        while True:
+            creds = self.get_grpc_credentials()
+            queue = asyncio.Queue()
 
-        try:
-            async with grpc.aio.secure_channel(config.GRPC_ADDRESS, creds) as channel:
-                stub = CloudEventsServiceStub(channel)
-                call = stub.startStreaming(self.event_generator(queue))
+            try:
+                # 1) Define keep-alive options (milliseconds unless noted)
+                keepalive_opts = [
+                    ('grpc.keepalive_time_ms', 15_000),  # PING every 30 s
+                    ('grpc.keepalive_timeout_ms', 10_000),  # wait 10 s for PONG
+                    ('grpc.keepalive_permit_without_calls', 1),  # even if idle
+                ]
 
-                async for response in call:
-                    if response.type == KEEP_ALIVE_EVENT_TYPE:
-                        await self.handle_keep_alive_event(response, queue)
-                    elif response.type == EVENT_ACK_TYPE:
-                        logger.debug(response)
-                    elif response.type in (CALC_REQ_EVENT_TYPE, CRITERIA_CALC_REQ_EVENT_TYPE):
-                        logger.info(f"Calc request: {response.type}")
-                        data = json.loads(response.text_data)
-                        await self.process_calc_req_event(data, queue, response.type)
-                    elif response.type == GREET_EVENT_TYPE:
-                        logger.info("Greet event received")
-                    else:
-                        logger.error(f"Unhandled event type: {response.type}")
-        except grpc.RpcError as e:
-            if e.code() == grpc.StatusCode.UNAUTHENTICATED:
-                logger.warning("Stream got UNAUTHENTICATED—invalidating tokens and retrying", exc_info=e)
-                self.auth.invalidate_tokens()
-                # backoff briefly before reconnecting
-                await asyncio.sleep(1)
-                return await self.consume_stream()
-            else:
-                logger.exception("gRPC error in consume_stream")
-                await asyncio.sleep(1)
-                await self.consume_stream()
+                # 2) Pass them into secure_channel alongside your creds
+                async with grpc.aio.secure_channel(
+                        config.GRPC_ADDRESS,
+                        creds,
+                        options=keepalive_opts
+                ) as channel:
+                    stub = CloudEventsServiceStub(channel)
+                    call = stub.startStreaming(self.event_generator(queue))
+                    # … then await call or iterate its stream as needed
+
+                    async for response in call:
+                        if response.type == KEEP_ALIVE_EVENT_TYPE:
+                            await self.handle_keep_alive_event(response, queue)
+                        elif response.type == EVENT_ACK_TYPE:
+                            logger.debug(response)
+                        elif response.type in (CALC_REQ_EVENT_TYPE, CRITERIA_CALC_REQ_EVENT_TYPE):
+                            logger.info(f"Calc request: {response.type}")
+                            data = json.loads(response.text_data)
+                            await self.process_calc_req_event(data, queue, response.type)
+                        elif response.type == GREET_EVENT_TYPE:
+                            logger.info("Greet event received")
+                            asyncio.create_task(self.rollback_failed_workflows())
+                        else:
+                            logger.error(f"Unhandled event type: {response.type}")
+
+                # If we exit the stream cleanly, break out of the retry loop
+                logger.info("Stream closed by server—reconnecting")
+                backoff = 1  # reset your backoff if you like
+                continue
+
+            except grpc.RpcError as e:
+                logger.exception(e)
+                # UNAUTHENTICATED → invalidate tokens, then retry with fresh creds
+                if getattr(e, "code", lambda: None)() == grpc.StatusCode.UNAUTHENTICATED:
+                    logger.warning(
+                        "Stream got UNAUTHENTICATED—invalidating tokens and retrying",
+                        exc_info=e,
+                    )
+                    self.auth.invalidate_tokens()
+                else:
+                    # Log everything else and retry
+                    logger.exception("gRPC RpcError in consume_stream", exc_info=e)
+
+
+            except Exception as e:
+                # Catch-all for anything unexpected
+                logger.exception(e)
+                logger.exception("Unexpected error in consume_stream", exc_info=e)
+
+            # back off and retry
+            await asyncio.sleep(backoff)
+            backoff = min(backoff * 2, 30)  # exponential backoff up to 30s
 
     async def grpc_stream(self):
         """
         Entry point: keeps the bidirectional stream alive, reconnecting on token revocations.
         """
-        while True:
-            await self.consume_stream()
-            logger.info("Reconnecting to gRPC stream")
-            await asyncio.sleep(1)  # brief backoff before retry
+        await self.consume_stream()
+
+
+    async def rollback_failed_workflows(self):
+        logger.info("restarting entities workflows....")
+        try:
+            await self.chat_service.rollback_failed_workflows()
+        except Exception as e:
+            logger.error("Failed to restart entities")
+            logger.exception(e)

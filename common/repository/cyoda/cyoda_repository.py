@@ -3,14 +3,11 @@ import json
 import logging
 import time
 import asyncio
-from typing import List, Any, Optional
-
-from common.config.config import (
-    CYODA_ENTITY_TYPE_EDGE_MESSAGE,
-)
-from common.config.conts import EDGE_MESSAGE_CLASS, TREE_NODE_ENTITY_CLASS, UPDATE_TRANSITION
+from typing import List, Any, Optional, Tuple, Dict
+import common.config.const as const
+from common.config.config import config
 from common.repository.crud_repository import CrudRepository
-from common.util.utils import (
+from common.utils.utils import (
     custom_serializer,
     send_cyoda_request,
 )
@@ -94,8 +91,9 @@ class CyodaRepository(CrudRepository):
     async def exists_by_key(self, meta, key: Any) -> bool:
         return (await self.find_by_key(meta, key)) is not None
 
+    #does not return current_state!
     async def find_all(self, meta) -> List[Any]:
-        path = f"entity/{meta['entity_model']}/{meta['entity_version']}"
+        path = f"entity/{meta['entity_model']}/{meta['entity_version']}?pageSize={const.CYODA_PAGE_SIZE}"
         resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="get", path=path)
         return resp.get("json", [])
 
@@ -114,7 +112,7 @@ class CyodaRepository(CrudRepository):
         return entities[0] if entities else None
 
     async def find_by_id(self, meta, _uuid: Any) -> Optional[Any]:
-        if meta and meta.get("type") == CYODA_ENTITY_TYPE_EDGE_MESSAGE:
+        if meta and meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE:
             if _uuid in _edge_messages_cache:
                 return _edge_messages_cache[_uuid]
             path = f"message/get/{_uuid}"
@@ -136,37 +134,129 @@ class CyodaRepository(CrudRepository):
     async def find_all_by_criteria(self, meta, criteria: Any) -> List[Any]:
         # 1) trigger snapshot
         snap_path = f"search/snapshot/{meta['entity_model']}/{meta['entity_version']}"
-        resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="post", path=snap_path, data=json.dumps(criteria))
+        resp = await send_cyoda_request(
+            cyoda_auth_service=self._cyoda_auth_service,
+            method="post",
+            path=snap_path,
+            data=json.dumps(criteria)
+        )
         snapshot_id = resp.get("json")
+        if resp.get('status') == 404:
+            return []
 
         # 2) poll until ready
         await self._wait_for_search_completion(snapshot_id)
 
-        # 3) fetch results (first page)
+        # 3) fetch all results, page by page
+        entities: List[Any] = []
+        page_number = 0
+        page_size = 100  # match your initial request
+
+        # first request so we can read totalElements/totalPages
         result_resp = await send_cyoda_request(
             cyoda_auth_service=self._cyoda_auth_service,
             method="get",
-            path=f"search/snapshot/{snapshot_id}"
+            path=f"search/snapshot/{snapshot_id}?pageSize={page_size}&pageNumber={page_number}"
         )
         if result_resp.get("status") != 200:
             return []
-        resp_json = json.loads(result_resp.get("json", "{}"))
 
-        if resp_json.get("page", {}).get("totalElements", 0) == 0:
+        resp_json = json.loads(result_resp.get("json", "{}"))
+        page_info = resp_json.get("page", {})
+
+        # **zero‐results guard**
+        if page_info.get("totalElements", 0) == 0:
             return []
 
-        nodes = resp_json.get("_embedded", {}).get("objectNodes", [])
-        entities = []
-        for node in nodes:
-            tree = node.get("data", {})
-            if not tree.get("technical_id"):
-                tree["technical_id"] = node.get("meta", {}).get("id")
-            entities.append(tree)
+        total_pages = page_info.get("totalPages", 1)
+
+        # helper to extract & normalize nodes
+        def _extract(nodes):
+            for node in nodes:
+                tree = node.get("data", {})
+                if not tree.get("technical_id"):
+                    tree["technical_id"] = node.get("meta", {}).get("id")
+                    tree["current_state"] = node.get("meta", {}).get("state")
+                entities.append(tree)
+
+        # process page 0
+        _extract(resp_json.get("_embedded", {}).get("objectNodes", []))
+
+        # fetch remaining pages (1 through total_pages-1)
+        for page_number in range(1, total_pages):
+            result_resp = await send_cyoda_request(
+                cyoda_auth_service=self._cyoda_auth_service,
+                method="get",
+                path=f"search/snapshot/{snapshot_id}?pageSize={page_size}&pageNumber={page_number}"
+            )
+            if result_resp.get("status") != 200:
+                break  # or continue, per your error‐handling policy
+
+            resp_json = json.loads(result_resp.get("json", "{}"))
+            _extract(resp_json.get("_embedded", {}).get("objectNodes", []))
 
         return entities
 
+    async def search_snapshot(
+        self,
+        meta: Dict[str, str],
+        criteria: Any
+    ) -> Optional[str]:
+        snap_path = f"search/snapshot/{meta['entity_model']}/{meta['entity_version']}"
+        resp = await send_cyoda_request(
+            cyoda_auth_service=self._cyoda_auth_service,
+            method="post",
+            path=snap_path,
+            data=json.dumps(criteria),
+        )
+
+        if resp.get("status") == 404:
+            return None
+
+        snapshot_id = resp.get("json")
+        await self._wait_for_search_completion(snapshot_id)
+        return snapshot_id
+
+
+    async def get_search_results_page(
+        self,
+        snapshot_id: str,
+        page_number: int = 0,
+        page_size: int = 100
+    ) -> List[Dict[str, Any]]:
+        """
+        Given a ready snapshot_id, fetch exactly one page of results.
+        Returns an empty list on any non-200 response or if the page is empty.
+        """
+        path = (
+            f"search/snapshot/{snapshot_id}"
+            f"?pageSize={page_size}&pageNumber={page_number}"
+        )
+        resp = await send_cyoda_request(
+            cyoda_auth_service=self._cyoda_auth_service,
+            method="get",
+            path=path,
+        )
+
+        if resp.get("status") != 200:
+            return []
+
+        body = json.loads(resp.get("json", "{}"))
+        nodes = body.get("_embedded", {}).get("objectNodes", [])
+        results: List[Dict[str, Any]] = []
+
+        for node in nodes:
+            data = node.get("data", {})
+            if not data.get("technical_id"):
+                data["technical_id"] = node.get("meta", {}).get("id")
+                data["current_state"] = node.get("meta", {}).get("state")
+            results.append(data)
+
+        return results
+
+
     async def save(self, meta, entity: Any) -> Any:
-        if meta.get("type") == CYODA_ENTITY_TYPE_EDGE_MESSAGE:
+        if meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE:
             payload = {
                 "meta-data": {"source": "ai_assistant"},
                 "payload": {"edge_message_content": entity},
@@ -184,7 +274,7 @@ class CyodaRepository(CrudRepository):
         if isinstance(result, list) and result:
             technical_id = result[0].get("entityIds", [None])[0]
 
-        if meta.get("type") == CYODA_ENTITY_TYPE_EDGE_MESSAGE and technical_id:
+        if meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE and technical_id:
             _edge_messages_cache[technical_id] = entity
 
         return technical_id
@@ -206,7 +296,7 @@ class CyodaRepository(CrudRepository):
         if entity is None:
             return await self._launch_transition(meta=meta, technical_id=technical_id)
 
-        transition = meta.get("update_transition", UPDATE_TRANSITION)
+        transition = meta.get("update_transition", const.TransitionKey.UPDATE.value)
         path = (
             f"entity/JSON/{technical_id}/{transition}"
             "?transactional=true&waitForConsistencyAfter=true"
@@ -224,7 +314,7 @@ class CyodaRepository(CrudRepository):
         for ent in entities:
             payload.append({
                 "id": meta.get("technical_id"),
-                "transition": meta.get("update_transition", UPDATE_TRANSITION),
+                "transition": meta.get("update_transition", const.TransitionKey.UPDATE.value),
                 "payload": json.dumps(ent, default=custom_serializer),
             })
         data = json.dumps(payload)
@@ -238,9 +328,9 @@ class CyodaRepository(CrudRepository):
 
     async def get_transitions(self, meta, technical_id: Any) -> Any:
         entity_class = (
-            EDGE_MESSAGE_CLASS
-            if meta.get("type") == CYODA_ENTITY_TYPE_EDGE_MESSAGE
-            else TREE_NODE_ENTITY_CLASS
+            const.JavaClasses.EDGE_MESSAGE.value
+            if meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE
+            else const.JavaClasses.TREE_NODE_ENTITY.value
         )
         path = (
             f"platform-api/entity/fetch/transitions?entityClass={entity_class}"
@@ -251,14 +341,14 @@ class CyodaRepository(CrudRepository):
 
     async def _launch_transition(self, meta, technical_id):
         entity_class = (
-            EDGE_MESSAGE_CLASS
-            if meta.get("type") == CYODA_ENTITY_TYPE_EDGE_MESSAGE
-            else TREE_NODE_ENTITY_CLASS
+            const.JavaClasses.EDGE_MESSAGE.value
+            if meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE
+            else const.JavaClasses.TREE_NODE_ENTITY.value
         )
         path = (
             f"platform-api/entity/transition?entityId={technical_id}"
             f"&entityClass={entity_class}&transitionName="
-            f"{meta.get('update_transition', UPDATE_TRANSITION)}"
+            f"{meta.get('update_transition', const.TransitionKey.UPDATE.value)}"
         )
         resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="put", path=path)
         return resp.get("json")

@@ -202,7 +202,7 @@
             "name": "notify_user",
             "config": {
               "type": "question",
-              "question": "Please let me know if I can help!",
+              "question": "The workflow has been successfully added. Please don’t hesitate to get in touch if I can assist further.",
               "publish": true
             }
           }

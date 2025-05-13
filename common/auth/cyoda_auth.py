@@ -6,7 +6,7 @@ from typing import Optional
 import requests
 
 from common.config import config
-from common.config.config import CYODA_API_URL
+from common.config.config import config
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -37,7 +37,7 @@ class CyodaAuthService:
         """
         Perform login to obtain a new refresh token.
         """
-        login_url = f"{CYODA_API_URL}/auth/login"
+        login_url = f"{config.CYODA_API_URL}/auth/login"
         headers = {
             'X-Requested-With': 'XMLHttpRequest',
             'Content-Type': 'application/json'
@@ -69,7 +69,7 @@ class CyodaAuthService:
         if not self._refresh_token:
             self._refresh_token = self._login()
 
-        token_url = f"{CYODA_API_URL}/auth/token"
+        token_url = f"{config.CYODA_API_URL}/auth/token"
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self._refresh_token}'

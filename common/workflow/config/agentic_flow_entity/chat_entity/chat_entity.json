@@ -11,7 +11,7 @@
     },
     "initialized_chat": {
       "transitions": {
-        "submit_chat_question": {
+        "process_user_input": {
           "next": "submitted_workflow_question",
           "action": {
             "name": "process_event",
@@ -19,7 +19,11 @@
               "type": "agent",
               "publish": true,
               "allow_anonymous_users": true,
-              "model": {},
+              "model": {
+                "model_name": "gpt-4o",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
               "tools": [
                 {
                   "type": "function",
@@ -189,7 +193,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_api_existing_app",
-                    "description": "Launches workflow that is necessary to help the user edit/update existing api (app.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/app.py  (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user edit/update existing api (routes.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/routes/routes.py  (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -268,6 +272,74 @@
                 {
                   "type": "function",
                   "function": {
+                    "name": "init_setup_workflow",
+                    "description": "Launches workflow that is necessary to help the user to do initial setup and launch locally their client (user) application.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "deploy_cyoda_env",
+                    "description": "Launches workflow that is necessary to deploy Cyoda environment for the user. User needs to explicitly ask for deployment of Cyoda environment.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "deploy_user_application",
+                    "description": "Launches workflow that is necessary to deploy user client application (external calculation node). User needs to explicitly ask for deployment of their application. Branch is required.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
                     "name": "get_cyoda_guidelines",
                     "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
                     "strict": true,
@@ -299,6 +371,7 @@
                   "role": "user",
                   "content": [
                     " Hello! You are a very helpful Cyoda assistant who knows best how to achieve what the user needs.",
+                    " If you are asked to build an application, just choose the proper tool without any more questions.",
                     " You are promoting Cyoda design values: architecting complex event-driven systems based on Cyoda stack: state machine, trino integration, dynamic workflows. Core design component in Cyoda is an entity. It has a workflow that is triggered by some event. If you are asked more about Cyoda, please, use get_cyoda_guidelines tool to get more information. ",
                     " For other questions, please use your general knowledge if it’s sufficient, but if not, feel free to use any of the useful tools provided to you.",
                     " If you're unsure, don't hesitate to ask the user for more information.",
@@ -308,7 +381,7 @@
               ],
               "tool_choice": "auto",
               "max_iteration": 30,
-              "approve": true
+              "approve": false
             }
           }
         }
@@ -316,7 +389,7 @@
     },
     "submitted_workflow_question": {
       "transitions": {
-        "process_question": {
+        "process_user_input": {
           "next": "processed_question",
           "manual": true,
           "action": {
@@ -325,7 +398,11 @@
               "type": "agent",
               "publish": true,
               "allow_anonymous_users": true,
-              "model": {},
+              "model": {
+                "model_name": "gpt-4o",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
               "tools": [
                 {
                   "type": "function",
@@ -495,7 +572,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_api_existing_app",
-                    "description": "Launches workflow that is necessary to help the user edit/update existing api (app.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/app.py  (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user edit/update existing api (routes.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/routes/routes.py  (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -574,6 +651,74 @@
                 {
                   "type": "function",
                   "function": {
+                    "name": "init_setup_workflow",
+                    "description": "Launches workflow that is necessary to help the user to do initial setup and launch locally their client (user) application.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "deploy_cyoda_env",
+                    "description": "Launches workflow that is necessary to deploy Cyoda environment for the user. User needs to explicitly ask for deployment of Cyoda environment.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "deploy_user_application",
+                    "description": "Launches workflow that is necessary to deploy user client application (external calculation node). User needs to explicitly ask for deployment of their application. Branch is required.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
                     "name": "get_cyoda_guidelines",
                     "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
                     "strict": true,
@@ -605,6 +750,7 @@
                   "role": "user",
                   "content": [
                     " Hello! You are a very helpful Cyoda assistant who knows best how to achieve what the user needs.",
+                    " If you are asked to build an application, just choose the proper tool without any more questions.",
                     " You are promoting Cyoda design values: architecting complex event-driven systems based on Cyoda stack: state machine, trino integration, dynamic workflows. Core design component in Cyoda is an entity. It has a workflow that is triggered by some event. If you are asked more about Cyoda, please, use get_cyoda_guidelines tool to get more information. ",
                     " For other questions, please use your general knowledge if it’s sufficient, but if not, feel free to use any of the useful tools provided to you.",
                     " If you're unsure, don't hesitate to ask the user for more information.",
@@ -614,7 +760,7 @@
               ],
               "tool_choice": "auto",
               "max_iteration": 30,
-              "approve": true
+              "approve": false
             }
           }
         },
@@ -634,6 +780,10 @@
     },
     "processed_question": {
       "transitions": {
+        "rollback": {
+          "next": "locked_chat",
+          "manual": true
+        },
         "lock_chat": {
           "next": "locked_chat",
           "condition": {
@@ -673,7 +823,7 @@
               "name": "unlock_chat",
               "description": "",
               "max_iteration": 30,
-              "approve": true
+              "approve": false
             }
           }
         }

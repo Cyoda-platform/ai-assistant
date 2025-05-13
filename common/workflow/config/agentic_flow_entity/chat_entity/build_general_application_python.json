@@ -10,7 +10,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "\uD83D\uDC4B Welcome to Cyoda Application Builder! We’re excited to build something amazing with you! \uD83D\uDE04  \n\nWe’re here to help with building and deploying on Cyoda Cloud! Reach out anytime! \uD83C\uDF1F Your branch will be ready soon, and I’ll notify you when I push changes. If you have suggestions, message me or use Canvas! \uD83D\uDE0A  \n\nIn Canvas, you can code, edit, and improve around the main app build flow! It’s a great way to collaborate and make changes! \uD83D\uDCBB  \n\nIf you’re happy with the progress or want me to pull your changes, just give me a thumbs up! \uD83D\uDC4D  (currently approve button in the top panel)\n\nIf something goes wrong, no worries—just roll back! \uD83D\uDE2C Your app will be live on Cyoda Platform GitHub soon! \uD83D\uDE80 Let’s build your branch together! \uD83C\uDF3F",
+              "notification": "\uD83D\uDC4B Welcome to Cyoda Application Builder! We’re excited to build something amazing with you! \n\n \uD83C\uDF1F Your branch will be ready soon, and I’ll notify you when I push changes. If you have suggestions, message me or use Canvas! \uD83D\uDE0A  \n\nIn Canvas, you can code, edit, and improve around the main app build flow! \uD83D\uDCBB  \n\nIf something goes wrong, no worries—just roll back! \n\n\uD83D\uDE2C Your app will be live on Cyoda Platform GitHub soon! \n\n\uD83D\uDE80 Let’s build your branch together! \uD83C\uDF3F",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -70,6 +70,34 @@
                 {
                   "type": "function",
                   "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
                     "name": "web_search",
                     "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
                     "strict": true,
@@ -130,33 +158,6 @@
                       "additionalProperties": false
                     }
                   }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "transition": {
-                          "type": "string",
-                          "enum": [
-                            "process_application_requirement"
-                          ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "require_additional_question_flag",
-                        "transition"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
                 }
               ],
               "messages": [
@@ -167,9 +168,13 @@
                     " You're building a backend application.",
                     " Currently you are focusing on functional requirements, and will cover any non-functional requirement later.",
                     " Let's analyse this request for application building, and clarify any important functional requirements that necessary.",
-                    " Ask questions if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations.",
-                    " Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. Max tokens = 300.",
+                    " Max 3 questions and suggestions at a time - ask only if absolutely necessary. Keep it short so that the user is kept engaged. It is better to say something like - Would you like to A or B, Do i understand correct and you'd prefer A to B - etc",
                     " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
+                    " Do not ask about any specific frameworks or technologies, the final application will be in quart python on Cyoda platform - no other choices.",
+                    " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. format it with markdown ",
+                    " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
+                    " Call set_additional_question_flag with true immediately after 6 attempts. Do not hold the user too long they will bored",
+                    " Be polite, please ",
                     " Here is my requirement: "
                   ]
                 }
@@ -184,7 +189,7 @@
     },
     "app_requirements_requested": {
       "transitions": {
-        "process_application_requirement": {
+        "process_user_input": {
           "next": "app_requirements_requested",
           "manual": true,
           "action": {
@@ -195,6 +200,34 @@
               "allow_anonymous_users": true,
               "model": {},
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -263,7 +296,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. Summarise the requirement in a couple of sentences and set to true if the user chooses your example answers or after 6 attempts! Do not hold the user too long",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -295,9 +328,13 @@
                     " You're building a backend application.",
                     " Currently you are focusing on functional requirements, and will cover any non-functional requirement later.",
                     " Let's analyse this request for application building, and clarify any important functional requirements that necessary.",
-                    " Ask questions if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations.",
-                    " Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. Max tokens = 300.",
+                    " Max 3 questions and suggestions at a time - ask only if absolutely necessary. Keep it short so that the user is kept engaged. It is better to say something like - Would you like to A or B, Do i understand correct and you'd prefer A to B - etc",
                     " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
+                    " Do not ask about any specific frameworks or technologies, the final application will be in quart python on Cyoda platform - no other choices.",
+                    " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. format it with markdown ",
+                    " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
+                    " Call set_additional_question_flag with true immediately after 6 attempts. Do not hold the user too long they will bored",
+                    " Be polite, please ",
                     " Here is my requirement: "
                   ]
                 }
@@ -333,7 +370,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "Let's proceed to functional requirements. Please, give me a moment to think everything over.",
+              "notification": "Next up: functional requirements.\nStay tuned — thoughtful thinking in progress. \uD83E\uDDE0✨",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -377,7 +414,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "Let's discuss the API for your application together. Would you like to enhance the current version?",
+              "question": "Would you like to improve or make adjustments to the functional requirements and the API?\nOpen to feedback if you’ve got any ideas — I’m all ears\uD83D\uDC42\uD83D\uDC42, well... sort of\uD83D\uDE0F.",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -388,7 +425,7 @@
     },
     "api_inquired": {
       "transitions": {
-        "discuss_api": {
+        "process_user_input": {
           "next": "api_inquired",
           "manual": true,
           "action": {
@@ -399,6 +436,34 @@
               "allow_anonymous_users": true,
               "model": {},
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -522,7 +587,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "Let's proceed to generating the first prototype. Please, give me a moment to think everything over: i will finalise the functional requirements first and then proceed to generation the first prototype.",
+              "notification": "🌟 Let’s get started on the first prototype! 🛠️\n\nJust give me a moment to think everything through... 🤔💭\n\nI'll finalize the functional requirements first, then dive into prototype generation. 🧠✨\n\n🚧 Initial prototype is now in progress... 🚀💡\n\nWant to learn more about entity databases and event-driven architectures?\nCheck these out:\n- [What’s an Entity Database?](https://medium.com/@paul_42036/whats-an-entity-database-11f8538b631a)\n\n- [Entity Workflows for Event-Driven Architectures](https://medium.com/@paul_42036/entity-workflows-for-event-driven-architectures-4d491cf898a5)",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -663,7 +728,7 @@
                     "Always put validation first for GET requests, and last for POST requests. Reason about this issue and make correct decision.",
                     "Also put a comment that it is an issue workaround, so that everyone knows the logic behind.",
                     "",
-                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting. Please, make sure there is no markdown (e.g. ```)"
                   ]
                 }
               ]
@@ -680,7 +745,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "First Prototype Ready for Validation\n\nWe have completed the first prototype for your functional requirements. \n\nTo validate the API, please follow the steps below:\n\n**1. Run the Application**\n\nExecute the following command to start the application:\n\n```python \npython entity/prototype.py\n```\n\n2. Validate the API\nOnce the application is running, open your browser and navigate to:\n```\nhttp://localhost:8000/docs or http://localhost:8000/scalar\n```\nRequest and response examples are available in entity/functional_requirement.md\n\nThis will allow you to validate the API response. Please let me know when you are happy with the result.",
+              "question": "✅ First Prototype Ready!\n\nThe initial prototype based on your functional requirements is now ready! You can run and test it locally or directly in **GitHub Codespaces**.\n\n---\n\n### ▶️ How to Run the Prototype\n\n#### **Option 1: GitHub Codespaces **\nYou can open the repo in GitHub Codespaces and launch the prototype there:\n\n1. Open the repository in [GitHub Codespaces](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}).\n2. In the Codespace terminal, run:\n\n```bash\npython entity/prototype.py\n```\n\n3. Preview the app in the browser:\n   - `/docs` → Swagger: `https://<your-codespace-url>/docs`\n   - `/scalar` → Scalar UI: `https://<your-codespace-url>/scalar`\n\n> *Codespaces will provide a forwarded port URL — just append `/docs` or `/scalar` to it.*\n\n---\n\n#### **Option 2: Local Environment**\n\n1. Make sure you're on the correct branch and up to date:\n\n```bash\ngit checkout {branch_name}\ngit pull\n```\n\n2. Run the app:\n\n```bash\npython entity/prototype.py\n```\n\n3. Open your browser and go to:\n- [http://localhost:8000/docs](http://localhost:8000/docs)\n- or [http://localhost:8000/scalar](http://localhost:8000/scalar)\n\n---\n\n### 🧪 Testing\n\nYou’ll find example requests and responses in:\n📄 `entity/functional_requirement.md`\n\nUse these to test the API via the Swagger or Scalar UI.\n\n---\n\n### ✅ Approval or Feedback\n\nIf everything looks good, feel free to approve it.\nIf anything’s off or you’d like changes, just ping me here. 🙌\n\n> ⚠️ **Note:** We're using the `quart-schema` library, which is sensitive to the positioning of annotations. If you run into issues related to schema validation, let me know — I’ll sort it out quickly.",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -691,7 +756,7 @@
     },
     "prototype_discussion_requested": {
       "transitions": {
-        "discuss_prototype": {
+        "process_user_input": {
           "next": "prototype_discussion_requested",
           "manual": true,
           "action": {
@@ -702,6 +767,34 @@
               "allow_anonymous_users": true,
               "model": {},
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -820,7 +913,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Read the entity/prototype.py code to answer the user's questions or make improvements. Reading file should be your first action if the user refers to the code",
+                    "description": "Finish the iteration if the user is happy with the result and has no more questions",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -887,7 +980,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "Congratulations on successfully completing your application prototype!\uD83E\uDD73\n \nYou’ve put in a lot of hard work to bring your idea to life, and it’s truly exciting to see it in action. \n\n\uD83E\uDE85\uD83E\uDE85\uD83E\uDE85This is an important milestone—well done!\uD83E\uDE85\uD83E\uDE85\uD83E\uDE85\n\nHowever, as impressive as your prototype is, it’s not yet fully robust. A few critical components are missing:\n\n**Scalability and High Availability**\n\n**Persistence and Data Integrity**\n\n**Production-Ready Features**\n\nTo address these gaps and ensure your application can handle real-world demands, we recommend refactoring your solution using the Cyoda Framework. By deploying to a High Availability (HA) cluster on Cyoda Cloud, you’ll benefit from:\n\n**Enterprise-grade reliability and failover capabilities**\n\n**Seamless data persistence**\n\n**Streamlined deployment and scaling processes**\n\n**A comprehensive set of production-ready tools and services**\n\nWe believe this transformation will empower your application to reach its full potential. Would you like to proceed with refactoring your prototype to make it robust, production-ready, and fully deployable on Cyoda Cloud?\n\nJust give me a thumbs up! \uD83D\uDC4D ",
+              "question": "\"\uD83C\uDF89 **Congratulations on completing your application prototype!**\n\nYou've done an incredible job bringing your idea to life — it's exciting to see it in action. \uD83E\uDD73\n\n**\uD83E\uDDD0 This is a major milestone — well done!**\nThat said, while your prototype is impressive, it's not quite production-ready yet. A few key areas still need attention:\n\n- **Scalability & High Availability**\n- **Data Persistence & Integrity**\n- **Production-Ready Features**\n\nTo bridge these gaps, we recommend refactoring your solution using the **Cyoda Framework** and deploying to a **High Availability (HA)** cluster on **Cyoda Cloud**. This will give you:\n\n✅ Enterprise-grade reliability & failover  \n✅ Seamless data persistence  \n✅ Effortless deployment & scaling  \n✅ A full suite of production-ready tools  \n\n**Ready to take it to the next level?**  \nGive me a \uD83D\uDC4D and we’ll start refactoring to make your app robust, scalable, and fully deployable on Cyoda Cloud.\n\nIf you’d like to learn more about Cyoda, just ask!\"\n",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -898,14 +991,231 @@
     },
     "migration_confirmation_requested": {
       "transitions": {
-        "notify_confirmed_migration": {
-          "next": "migration_confirmation_notified",
+        "process_user_input": {
+          "next": "migration_confirmation_requested",
           "manual": true,
           "action": {
             "name": "process_event",
             "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_file",
+                    "description": "Read the contents of entity/prototype.py file.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "filename": {
+                          "type": "string",
+                          "enum": [
+                            "entity/prototype.py"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "filename"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "save_file",
+                    "description": "Save changes to entity/prototype.py to the repository so that the user can view the changes to the entity/prototype.py. Apply this function if you make changes to entity/prototype.py (fix issues, make improvements, adjustments according to the user request). No need to apply this function if the code does not require changes and you're answering a general question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "new_content": {
+                          "type": "string"
+                        },
+                        "filename": {
+                          "type": "string",
+                          "enum": [
+                            "entity/prototype.py"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "new_content",
+                        "filename"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Finish the iteration if the user is happy with the result and has no more questions",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "migration_confirmation"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "require_additional_question_flag",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Hello! Please do your best to help the user with just generated prototype.py code.",
+                    " If the user asks you to make any improvements or fix any issues please first read the file entity/prototype.py to get the latest version.",
+                    " Then use your own judgement to introduce changes necessary for the user",
+                    " Finally save the changes to the prototype.py file. And let the user know what changes you introduced and why.",
+                    " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case."
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        },
+        "transition_to_migration_confirmation_success": {
+          "next": "migration_confirmation_completed",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "description": "Completes iteration",
+                "parameters": {
+                  "transition": "migration_confirmation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "migration_confirmation_completed": {
+      "transitions": {
+        "process_user_input": {
+          "next": "migration_confirmation_notified",
+          "action": {
+            "name": "process_event",
+            "config": {
               "type": "notification",
-              "notification": "Awesome! Let's dive into generating your application code! \uD83D\uDE80 \n\nI'll keep you updated with notifications on my progress, and let you know when it's time to discuss any changes.\n \nFeel free to grab a coffee ☕ while I work—it's going to take about 2 minutes. \n \nJust relax and wait for the update!\n\nIn this process, we will walk through each stage of building an application, from gathering initial requirements to designing, coding, and implementing the final logic.\n\n### The stages of the process are as follows:\n\n1. **Entities design**:  \n   Let's define the JSON data structure for each entity.\n   *Output documents*: entity/*\n\n2. **Workflow design**:  \n   Let's ensure our entity workflow is correctly defined.\n   *Output documents*: entity/*/workflow.json\n\n3. **Workflow processors code design**:  \n   Let's implement the workflow processors.\n   *Output documents*: entity/*/workflow.py ",
+              "notification": "🚀 **Let’s generate your application code!**\n\nI’ll take care of everything — no need to lift a finger.\n\n⏳ While the code is being generated (~5 min), feel free to grab a coffee ☕ and relax.\n\n**Here’s what’s happening behind the scenes:**\n- **Entity Design:** Defining JSON structures for your entities (`entity/*`)\n- **Workflow Design:** Mapping transitions (`entity/*/workflow.json`)\n- **Workflow Processor:** Python logic that powers it all (`entity/*/workflow.py`)\n\n🛠️ This step brings your app to life — from requirements to real, running code.\n\n✅ I’ll notify you as soon as everything’s ready to review.\n\nWant to dive deeper into the concepts?\nCheck these out:\n- [What’s an Entity Database?](https://medium.com/@paul_42036/whats-an-entity-database-11f8538b631a)\n- [Entity Workflows for Event-Driven Architectures](https://medium.com/@paul_42036/entity-workflows-for-event-driven-architectures-4d491cf898a5)",
               "publish": true
             }
           }
@@ -933,8 +1243,9 @@
                     "Currently, the code uses local in‑memory dictionaries (and counters) to store and manage data for one or more entity types.",
                     "Your task is to refactor the code so that all interactions with the local cache are replaced by calls to an external service called entity_service (from app_init.app_init import entity_service).",
                     "You can use only these functions for replacement - if this is not enough just skip and leave as is",
+                    "entity name should always be underscore lowercase",
                     "1. id = await entity_service.add_item(",
-                    "    token=cyoda_token,",
+                    "    token=cyoda_auth_service,",
                     "    entity_model=\"{entity_name}\",",
                     "    entity_version=ENTITY_VERSION,  # always use this constant",
                     "    entity=data  # the validated data object",
@@ -942,24 +1253,24 @@
                     "just return id in the response - you cannot immediately retrieve the result - it should be retrieved via separate endpoint",
                     "2. Data retrieval:",
                     "await entity_service.get_item(",
-                    "    token=cyoda_token,",
+                    "    token=cyoda_auth_service,",
                     "    entity_model=\"{entity_name}\",",
                     "    entity_version=ENTITY_VERSION,",
                     "    technical_id=<id>",
                     ")",
                     "await entity_service.get_items(",
-                    "    token=cyoda_token,",
+                    "    token=cyoda_auth_service,",
                     "    entity_model=\"{entity_name}\",",
                     "    entity_version=ENTITY_VERSION,",
                     ")",
                     "await entity_service.get_items_by_condition(",
-                    "    token=cyoda_token,",
+                    "    token=cyoda_auth_service,",
                     "    entity_model=\"{entity_name}\",",
                     "    entity_version=ENTITY_VERSION,",
                     "    condition=condition",
                     ")",
                     "3. await entity_service.update_item(",
-                    "    token=cyoda_token,",
+                    "    token=cyoda_auth_service,",
                     "    entity_model=\"{entity_name}\",",
                     "    entity_version=ENTITY_VERSION,  # always use this constant",
                     "    entity=data,",
@@ -967,24 +1278,22 @@
                     "    meta={}",
                     ")",
                     "4. await entity_service.delete_item(",
-                    "    token=cyoda_token,",
+                    "    token=cyoda_auth_service,",
                     "    entity_model=\"{entity_name}\",",
                     "    entity_version=ENTITY_VERSION,  # always use this constant",
                     "    technical_id=id,",
                     "    meta={}",
                     ")",
                     "use 'from common.config.config import ENTITY_VERSION' to import ENTITY_VERSION",
-                    "Add this code:",
-                    "from common.repository.cyoda.cyoda_init import init_cyoda",
-                    "from app_init.app_init import cyoda_token",
-                    "@app.before_serving",
-                    "async def startup():",
-                    "    await init_cyoda(cyoda_token)",
                     "Preserve the endpoint routes and any other essential business logic.",
                     "Please make sure you keep all the necessary business logic, like data ingestion, calling any external apis, mocks, calculations etc.",
                     "Please return only compiled python code without additional information. If you'd like to add any comments please use # comment",
                     "Please use correct logging, e.g.:",
                     "import logging",
+                    "from app_init.app_init import BeanFactory",
+                    "factory = BeanFactory(config={'CHAT_REPOSITORY': 'cyoda'})",
+                    "entity_service: EntityService = factory.get_services()['entity_service']",
+                    "cyoda_auth_service = factory.get_services()[\"cyoda_auth_service\"]",
                     "logger = logging.getLogger(__name__)",
                     "logger.setLevel(logging.INFO)",
                     "logger.exception(e)",
@@ -1086,24 +1395,6 @@
     },
     "generated_entities_data_design": {
       "transitions": {
-        "save_entity_templates": {
-          "next": "saved_entity_templates",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "function",
-              "function": {
-                "name": "save_entity_templates",
-                "description": "Clones template repository"
-              },
-              "publish": true
-            }
-          }
-        }
-      }
-    },
-    "saved_entity_templates": {
-      "transitions": {
         "generate_prototype_cyoda_workflow": {
           "next": "generated_prototype_cyoda_workflow",
           "action": {
@@ -1122,13 +1413,14 @@
                     "Hello, entity_service.add_item has changed, now it additionally expects entity workflow function as an argument. This function will be applied to the entity before it is persisted.",
                     "e.g.",
                     "entity_id = await entity_service.add_item(",
-                    "    token=cyoda_token,",
+                    "    token=cyoda_auth_service,",
                     "    entity_model=\"{entity_name}\",",
                     "    entity_version=ENTITY_VERSION,  # always use this constant",
                     "    entity=data,  # the validated data object",
                     "    workflow=process_{entity_name} # Workflow function applied to the entity asynchronously before persistence. This function takes this entity data as the only argument. You can change entity state inside this function, get and add entities with a different entity_model (but cannot add/update/delete entity of the same entity_model - it will cause infinite recursion)",
                     ")",
                     "workflow=process_{entity_name}, this function should have a prefix 'process_' which is followed by the entity name.",
+                    "entity name should always be underscore lowercase",
                     "Could you please update this code: add workflow function as a parameter and implement it. Return complete code."
                   ]
                 }
@@ -1168,7 +1460,7 @@
                     "What do you think, can we move any logic from the endpoint inside newly added functions (workflow=process_{entity_name}) that will be invoked right before persisting entity.",
                     "It will make our code more robust and will 'free' the controllers from excessive logic.",
                     "Any async task (including fire and forget functions) is definitely a candidate to be replaced with process_{entity_name} function as workflow function supports asynchronous code and is a direct alternative for such tasks. It is the right approach - this is required.",
-                    "Please do your best to move all the async functions to workflow=process_{entity_name} functions.",
+                    "Please do your best to move all the async functions to workflow=process_{entity_name} (lowercase-underscore) functions.",
                     "Workflow function applied to the entity asynchronously before persistence. This function takes this entity data as the only argument. You can change entity state inside this function e.g. entity['attribute'] = new_value.",
                     "You can get and add secondary/supplementary/raw data entities of a different entity_model.",
                     "You cannot apply entity_service.add/update/delete on the current entity! If you need to change this entity state - modify directly e.g. entity['attribute']. The new state will be persisted."
@@ -1221,8 +1513,176 @@
     },
     "finished_prototype_cyoda_workflow": {
       "transitions": {
-        "launch_register_workflow_with_app": {
-          "next": "launched_register_workflow_with_app",
+        "transform_prototype_cyoda_workflow": {
+          "next": "finished_prototype_cyoda_workflow_json",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": false,
+              "model": {
+                "model_name": "gpt-4o",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "memory_tags": [
+                "generate_prototype_cyoda_workflow_json"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "You are given a Python code that includes definitions and usage of an `entity_service` class or function.",
+                    "This service add method accepts an `entity_model` argument and optionally a `workflow` argument.",
+
+                    "## 1. Entity Model Node:",
+                    "Task: Extract all `entity_model` references passed to `entity_service`.",
+                    "Example Python code:",
+                    "```python",
+                    "import requests",
+                    "def my_workflow(data):",
+                    "    # Sample processing",
+                    "    return {'processed': True}",
+                    "",
+                    "service = entity_service(entity_model='example', workflow=my_workflow)",
+                    "```",
+                    "- Here, `entity_model` is `'example'`",
+                    "- `workflow` is a reference to `my_workflow`, which must be fully extracted",
+
+                    "You must extract:",
+                    "- `entity_model_name`: e.g. `'example'`",
+                    "- Workflow function details:",
+                    "    - `name`: the function name, e.g. `my_workflow`",
+                    "    - `content`: the full code block of the function",
+                    "    - `code_with_necessary_imports_and_constants`: include any top-level imports or constants used by the function, if applicable",
+
+                    "JSON Output Example for `entity_models`:",
+                    "```json",
+                    "{",
+                    "  \"entity_model_name\": \"example\",",
+                    "  \"workflow_function\": {",
+                    "    \"name\": \"my_workflow\",",
+                    "    \"content\": \"def my_workflow(data):\\n    return {'processed': True}\",",
+                    "    \"code_with_necessary_imports_and_constants\": \"import requests\"",
+                    "  }",
+                    "}",
+                    "```",
+
+                    "## 2. File Without Workflow Node:",
+                    "Task: Return the full original Python code, but with all `workflow` arguments removed.",
+                    "For the above code, this means:",
+                    "- Original:",
+                    "```python",
+                    "service = entity_service(entity_model='example', workflow=my_workflow)",
+                    "```",
+                    "- Becomes:",
+                    "```python",
+                    "service = entity_service(entity_model='example')",
+                    "```",
+
+                    "Do not change anything else in the code, even if the `workflow` function is no longer used.",
+
+                    "JSON Output Example for `file_without_workflow`:",
+                    "```json",
+                    "{",
+                    "  \"code\": \"service = entity_service(entity_model='example')\"",
+                    "}",
+                    "```",
+
+                    "## Combined JSON Structure Example (Final Output):",
+                    "{",
+                    "  \"entity_models\": [",
+                    "    {",
+                    "      \"entity_model_name\": \"example\",",
+                    "      \"workflow_function\": {",
+                    "        \"name\": \"my_workflow\",",
+                    "        \"content\": \"def my_workflow(data):\\n    return {'processed': True}\",",
+                    "        \"code_with_necessary_imports_and_constants\": \"import requests\"",
+                    "      }",
+                    "    }",
+                    "  ],",
+                    "  \"file_without_workflow\": {",
+                    "    \"code\": \"service = entity_service(entity_model='example')\"",
+                    "  }"
+                  ]
+                }
+              ],
+              "response_format": {
+                "name": "workflow_schema",
+                "description": "Schema for entity models and workflow functions",
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "entity_models": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "entity_model_name": {
+                            "type": "string"
+                          },
+                          "workflow_function": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "code_with_necessary_imports_and_constants": {
+                                "type": "string"
+                              },
+                              "content": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "name",
+                              "content"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "entity_model_name",
+                          "workflow_function"
+                        ]
+                      }
+                    },
+                    "file_without_workflow": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "entity_models",
+                    "file_without_workflow"
+                  ]
+                }
+              },
+              "input": {
+                "local_fs": [
+                  "entity/prototype_cyoda_workflow.py"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "entity/prototype_cyoda_workflow.json"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "finished_prototype_cyoda_workflow_json": {
+      "transitions": {
+        "register_workflow_with_app": {
+          "next": "finished_app_generation_flow",
           "action": {
             "name": "process_event",
             "config": {
@@ -1231,7 +1691,7 @@
                 "name": "register_workflow_with_app",
                 "description": "register_workflow_with_app",
                 "parameters": {
-                  "filename": "entity/prototype_cyoda_workflow.py"
+                  "filename": "entity/prototype_cyoda_workflow.json"
                 }
               },
               "publish": false
@@ -1240,48 +1700,69 @@
         }
       }
     },
-    "launched_register_workflow_with_app": {
+    "finished_app_generation_flow": {
       "transitions": {
-        "finish_app_generation_flow": {
-          "next": "finished_app_generation_flow",
+        "update_routes_file": {
+          "next": "updated_routes_file",
           "manual": true,
           "action": {
             "name": "process_event",
             "config": {
-              "type": "function",
-              "function": {
-                "name": "finish_app_generation_flow",
-                "description": "finish_flow",
-                "parameters": {
-                  "filename": "entity/chat.json"
+              "type": "prompt",
+              "publish": false,
+              "model": {},
+              "memory_tags": [
+                "update_routes_file"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "hello, please update routes.py file contents converting it to blueprint and fixing imports",
+                    "reference for update:",
+                    "",
+                    "from datetime import timezone, datetime",
+                    "import logging",
+                    "from quart import Blueprint, request, abort",
+                    "from quart_schema import validate, validate_querystring, tag, operation_id",
+                    "from app_init.app_init import BeanFactory",
+                    "logger = logging.getLogger(__name__)",
+                    "FINAL_STATES = {'FAILURE', 'SUCCESS', 'CANCELLED', 'CANCELLED_BY_USER', 'UNKNOWN', 'FINISHED'}",
+                    "PROCESSING_STATE = 'PROCESSING'",
+                    "routes_bp = Blueprint('routes', __name__)",
+                    "factory = BeanFactory(config={'CHAT_REPOSITORY': 'cyoda'})",
+                    "entity_service: EntityService = factory.get_services()['entity_service']",
+                    "cyoda_auth_service = factory.get_services()[\"cyoda_auth_service\"]",
+                    "",
+                    "all endpoints and annotations (except for the blueprint ones) should stay intact with the same position",
+                    "main app logic will be in app.py- so this file should not contain one",
+                    "no startup, shutdown logic necessary - it will also by in app.py",
+                    "pay attention at how services should be imported (look at the beanfactory example)",
+                    "",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
+                  ]
                 }
+              ],
+              "input": {
+                "local_fs": [
+                  "routes/routes.py"
+                ]
               },
-              "publish": true
+              "output": {
+                "local_fs": [
+                  "routes/routes.py"
+                ]
+              }
             }
           }
         },
         "rollback": {
-          "next": "finished_prototype_cyoda_workflow",
+          "next": "finished_prototype_cyoda_workflow_json",
           "manual": true
         }
       }
     },
-    "finished_app_generation_flow": {
-      "transitions": {
-        "finished_app_generation_flow_notify": {
-          "next": "finished_app_generation_flow_notified",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "notification",
-              "notification": "\uD83C\uDF89 **Chat flow has been saved!** \uD83C\uDF89\n\nThe chat flow has been successfully saved to `entity/chat.json`. Now you can run `app.py` to start the application. \uD83D\uDE80\n\nOnce you run it, both the **workflow** and **entities** will be imported to the Cyoda environment automatically. \uD83C\uDF1F\n\nAny updates or changes to the entities will trigger the workflow, so you’re all set to go! \uD83D\uDD04\n\nWe are available in the **Google Tech Channel** to support you. If you spot any bugs or need additional features, feel free to submit tickets at [GitHub Issues](https://github.com/Cyoda-platform/ai-assistant). You’re also most welcome to contribute to the project! \uD83D\uDCBB \n\nFor any direct inquiries, reach out to **ksenia.lukonina@cyoda.com**. We’re here to help! \uD83D\uDE0A",
-              "publish": true
-            }
-          }
-        }
-      }
-    },
-    "finished_app_generation_flow_notified": {
+    "updated_routes_file": {
       "transitions": {
         "save_env_file": {
           "next": "saved_env_file",
@@ -1304,28 +1785,13 @@
     },
     "saved_env_file": {
       "transitions": {
-        "saved_env_file_notify": {
-          "next": "saved_env_file_notified",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "notification",
-              "notification": "### Setup Instructions for Your Application\n\nYour application is ready! Please fetch the changes and follow the steps below to configure it:\n\n1. **Move the `.env.template` to `.env`**:\n    Rename the `.env.template` file to `.env`:\n    ```bash\n    mv .env.template .env\n    ```\n\n2. **Update the `.env` file**:\n    Open the `.env` file and replace the placeholder values with your actual environment variables and credentials. For example, replace `CHAT_ID_VAR` with `$chat_id` and fill in other necessary values.\n\n    You might need to specify the path to .env file in your IDE run configurations.\n\n3. **Start Your Application**:\n    Once you've updated the `.env` file, you can start your application by running:\n    ```bash\n    python app.py\n    ```\n    or just run the app.py in your IDE.\nPlease also update your api.py files to use cyoda_token until authentication featute is fully implemented. Sorry for inconvenience!\nYour application should now be up and running! \uD83C\uDF89\n\nYou can check the api with http://localhost:8000/docs",
-              "publish": true
-            }
-          }
-        }
-      }
-    },
-    "saved_env_file_notified": {
-      "transitions": {
         "question_to_proceed_with_generated_app_editing": {
           "next": "questioned_to_proceed_with_generated_app_editing",
           "action": {
             "name": "process_event",
             "config": {
-              "type": "notification",
-              "question": "Your application is now complete! Thank you!\n\nIf you need any further assistance, please let me know.\n\nTo proceed with your application, you can use the following prompt starters:\nAdd a new feature\nCreate a new entity with {entity_name}\nUpdate the API as per requirements\n\nSearch the web\nRead content from a URL\nScrape webpage content using a CSS selector\nSave data to a file (e.g. entity/entity_name/workflow.py, app.py)\nRead data from a file\nUpdate an entity workflow\nAdd an entity workflow\nModify existing processors\n\nRefresh the context\nDeploy the Cyoda environment or application\n\nAnswer general questions\n\nLet me know how I can assist further! \uD83D\uDE80",
+              "type": "question",
+              "question": "✅ Your application is ready in the {branch_name} branch!\n\n [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) \uD83D\uDC40 \n\nLet’s bring it to life — together.\n\n ",
               "publish": true
             }
           }
@@ -1333,6 +1799,27 @@
       }
     },
     "questioned_to_proceed_with_generated_app_editing": {
+      "transitions": {
+        "launch_setup_assistant": {
+          "next": "launched_setup_assistant",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "init_setup_workflow",
+                "description": "init_setup_workflow",
+                "parameters": {
+                  "user_request": "Hello! Please help me start my new application."
+                }
+              },
+              "publish": false
+            }
+          }
+        }
+      }
+    },
+    "launched_setup_assistant": {
       "transitions": {
         "lock_chat": {
           "next": "locked_chat"

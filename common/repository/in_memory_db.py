@@ -1,9 +1,9 @@
 import threading
-from typing import List, Any
+from typing import List
 
 from common.repository.crud_repository import CrudRepository
-from common.util.utils import *
-from entity.model.model import AgenticFlowEntity
+from common.utils.utils import *
+from entity.model import AgenticFlowEntity
 
 logger = logging.getLogger('django')
 

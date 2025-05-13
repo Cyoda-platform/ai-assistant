@@ -1,21 +1,19 @@
 import json
 import os
-
+import common.config.const as const
 import aiofiles
 import inspect
 import logging
 from typing import List
 
-from common.config.config import GENERAL_MEMORY_TAG, PROJECT_DIR, REPOSITORY_NAME, ENTITY_VERSION, \
-    CYODA_ENTITY_TYPE_EDGE_MESSAGE
-from common.config.conts import FLOW_EDGE_MESSAGE_MODEL_NAME, \
-    AI_MEMORY_EDGE_MESSAGE_MODEL_NAME, UPDATE_TRANSITION, MEMORY_MODEL_NAME, EDGE_MESSAGE_STORE_MODEL_NAME, \
-    GIT_BRANCH_PARAM
-from common.util.chat_util_functions import enrich_config_message
-from common.util.utils import _save_file, _post_process_response
-from entity.chat.data.workflow_prototype.batch_parallel_code import batch_process_file
-from entity.chat.model.chat import AgenticFlowEntity
-from entity.model.model import FlowEdgeMessage, ChatMemory, AIMessage, WorkflowEntity, ModelConfig
+from common.config.config import config as env_config
+from common.utils.batch_parallel_code import batch_process_file
+
+from common.utils.chat_util_functions import enrich_config_message
+from common.utils.utils import _save_file, _post_process_response, get_current_timestamp_num, clone_repo, \
+    get_project_file_name_path
+from entity.chat.chat import AgenticFlowEntity
+from entity.model import FlowEdgeMessage, ChatMemory, AIMessage, WorkflowEntity, ModelConfig
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -51,14 +49,14 @@ class WorkflowDispatcher:
             return response
         except Exception as e:
             logger.exception(e)
-            logger.info(f"Error processing event: {e}")
+            logger.error(f"Error processing event: {e}")
+            return None
 
     async def process_event(self, entity: WorkflowEntity, action, technical_id):
 
         response = "returned empty response"
-        config = action.get("config")
-
         try:
+            config = action.get("config")
             action_name = action.get("name")
 
             if config and config.get("type") and isinstance(entity, AgenticFlowEntity):
@@ -77,13 +75,18 @@ class WorkflowDispatcher:
                 response = await self._execute_method(method_name=action_name,
                                                       technical_id=technical_id,
                                                       entity=entity)
+
             else:
                 raise ValueError(f"Unknown processing step: {action_name}")
 
         except Exception as e:
+            entity.failed = True
+            entity.last_modified = get_current_timestamp_num()
+            entity.error = f"Error: {e}"
             logger.exception(f"Exception occurred while processing event: {e}")
 
         logger.info(f"{action}: {response}")
+        entity.last_modified = get_current_timestamp_num()
         return entity, response
 
     async def _execute_method(self, method_name, technical_id, entity: WorkflowEntity):
@@ -92,29 +95,34 @@ class WorkflowDispatcher:
                                                         technical_id=technical_id,
                                                         entity=entity)
         except Exception as e:
-            logger.info(f"Error executing method '{method_name}': {e}")
+            logger.exception(f"Error executing method '{method_name}': {e}")
+            entity.failed = True
+            entity.error = f"Error executing method '{method_name}': {e}"
             raise
 
     async def _handle_config_based_event(self, config, entity: AgenticFlowEntity, technical_id):
         response = None
-
         config_type = config.get("type")
         finished_flow = entity.chat_flow.finished_flow
         child_entities_size_before = len(entity.child_entities)
 
-        if config_type == "function":
+        if config_type in ("notification", "question") and config.get(config_type):
+            config[config_type] = self._format_message(message=config[config_type], cache=entity.workflow_cache)
+            await self._append_to_ai_memory(entity, config[config_type], config.get("memory_tags"))
+
+        elif config_type == "function":
             params = config["function"].get("parameters", {})
-            response = await self.methods_dict[config["function"]["name"]](self.cls_instance,
-                                                                           technical_id=technical_id,
-                                                                           entity=entity,
-                                                                           **params)
+            response = await self.methods_dict[config["function"]["name"]](
+                self.cls_instance,
+                technical_id=technical_id,
+                entity=entity,
+                **params
+            )
+            if response and isinstance(response, str):
+                await self._append_to_ai_memory(entity, response, config.get("memory_tags"))
+
         elif config_type in ("prompt", "agent", "batch"):
-            chat_memory: ChatMemory = await self.entity_service.get_item(token=self.cyoda_auth_service,
-                                                                         entity_model=MEMORY_MODEL_NAME,
-                                                                         entity_version=ENTITY_VERSION,
-                                                                         technical_id=entity.memory_id)
-
-
+            chat_memory = await self._get_chat_memory(entity.memory_id)
             response = await self._run_ai_agent(
                 config=config,
                 entity=entity,
@@ -122,23 +130,19 @@ class WorkflowDispatcher:
                 finished_flow=finished_flow,
                 technical_id=technical_id
             )
-
-            await self.entity_service.update_item(token=self.cyoda_auth_service,
-                                                  entity_model=MEMORY_MODEL_NAME,
-                                                  entity_version=ENTITY_VERSION,
-                                                  technical_id=entity.memory_id,
-                                                  entity=chat_memory,
-                                                  meta={UPDATE_TRANSITION: "update"})
+            await self._update_chat_memory(entity.memory_id, chat_memory)
 
         new_entities = entity.child_entities[child_entities_size_before:] if child_entities_size_before < len(
             entity.child_entities) else []
 
-        await self._finalize_response(technical_id=technical_id,
-                                      config=config,
-                                      entity=entity,
-                                      finished_flow=finished_flow,
-                                      new_entities=new_entities,
-                                      response=response)
+        await self._finalize_response(
+            technical_id=technical_id,
+            config=config,
+            entity=entity,
+            finished_flow=finished_flow,
+            new_entities=new_entities,
+            response=response
+        )
         return entity, response
 
     async def _run_ai_agent(self, config, entity: AgenticFlowEntity, chat_memory: ChatMemory, finished_flow, technical_id):
@@ -166,7 +170,7 @@ class WorkflowDispatcher:
         return False
 
     async def _append_messages(self, entity, config, memory: ChatMemory, finished_flow: List[FlowEdgeMessage]):
-        memory_tags = config.get("memory_tags", [GENERAL_MEMORY_TAG])
+        memory_tags = config.get("memory_tags", [env_config.GENERAL_MEMORY_TAG])
         if config.get("messages"):
             config_messages: List[AIMessage] = []
             for config_message in config.get("messages"):
@@ -179,10 +183,10 @@ class WorkflowDispatcher:
                     logger.exception(e)
                     logger.error(config_message)
                 edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
-                                                                     entity_model=AI_MEMORY_EDGE_MESSAGE_MODEL_NAME,
-                                                                     entity_version=ENTITY_VERSION,
+                                                                     entity_model=const.ModelName.AI_MEMORY_EDGE_MESSAGE.value,
+                                                                     entity_version=env_config.ENTITY_VERSION,
                                                                      entity=config_message,
-                                                                     meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                                     meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
                 config_messages.append(AIMessage(edge_message_id=edge_message_id))
             for memory_tag in memory_tags:
                 memory.messages.setdefault(memory_tag, []).extend(config_messages)
@@ -193,18 +197,18 @@ class WorkflowDispatcher:
             )
             if latest_message and latest_message.type == "answer" and not latest_message.consumed:
                 message_content = await self.entity_service.get_item(token=self.cyoda_auth_service,
-                                                                     entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
-                                                                     entity_version=ENTITY_VERSION,
+                                                                     entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
+                                                                     entity_version=env_config.ENTITY_VERSION,
                                                                      technical_id=latest_message.edge_message_id,
-                                                                     meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                                     meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
                 answer_content = message_content.get("answer")
                 for memory_tag in memory_tags:
                     edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
-                                                                         entity_model=AI_MEMORY_EDGE_MESSAGE_MODEL_NAME,
-                                                                         entity_version=ENTITY_VERSION,
+                                                                         entity_model=const.ModelName.AI_MEMORY_EDGE_MESSAGE.value,
+                                                                         entity_version=env_config.ENTITY_VERSION,
                                                                          entity={"role": "user",
                                                                                  "content": answer_content},
-                                                                         meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                                         meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
                     memory.messages.get(memory_tag).append(AIMessage(edge_message_id=edge_message_id))
                 latest_message.consumed = True
 
@@ -229,41 +233,56 @@ class WorkflowDispatcher:
             response_format=config.get("response_format")
         )
         edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
-                                                             entity_model=AI_MEMORY_EDGE_MESSAGE_MODEL_NAME,
-                                                             entity_version=ENTITY_VERSION,
+                                                             entity_model=const.ModelName.AI_MEMORY_EDGE_MESSAGE.value,
+                                                             entity_version=env_config.ENTITY_VERSION,
                                                              entity={"role": "assistant", "content": ai_agent_resp},
-                                                             meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
-        memory_tags = config.get("memory_tags", [GENERAL_MEMORY_TAG])
+                                                             meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+        memory_tags = config.get("memory_tags", [env_config.GENERAL_MEMORY_TAG])
         for memory_tag in memory_tags:
             memory.messages.get(memory_tag).append(AIMessage(edge_message_id=edge_message_id))
         return ai_agent_resp
 
     async def _get_ai_memory(self, entity, config, memory: ChatMemory, technical_id):
-        memory_tags = config.get("memory_tags", [GENERAL_MEMORY_TAG])
+        memory_tags = config.get("memory_tags", [env_config.GENERAL_MEMORY_TAG])
         messages = []
         for memory_tag in memory_tags:
             entity_messages: List[AIMessage] = memory.messages.get(memory_tag)
             for entity_message in entity_messages:
                 message_content = await self.entity_service.get_item(token=self.cyoda_auth_service,
-                                                                     entity_model=AI_MEMORY_EDGE_MESSAGE_MODEL_NAME,
-                                                                     entity_version=ENTITY_VERSION,
+                                                                     entity_model=const.ModelName.AI_MEMORY_EDGE_MESSAGE.value,
+                                                                     entity_version=env_config.ENTITY_VERSION,
                                                                      technical_id=entity_message.edge_message_id,
-                                                                     meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                                     meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
                 messages.append(message_content)
             # todo verify that the copy is deep
         input_data = config.get("input")
         if input_data:
-            branch_id = entity.workflow_cache.get(GIT_BRANCH_PARAM, technical_id)
-            local_fs = input_data.get("local_fs")
-            for file_name in local_fs:
-                file_contents = await self._read_local_file(file_name=file_name, technical_id=branch_id)
-                messages.append({"role": "user", "content": f"Reference: {file_name}: \n {file_contents}"})
-            #todo add edge messages
+            branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
+            if input_data.get("local_fs"):
+                local_fs = input_data.get("local_fs")
+                for file_name in local_fs:
+                    try:
+                        formatted_filename = file_name.format(**entity.workflow_cache)
+                    except Exception as e:
+                        formatted_filename = file_name
+                        logger.exception(e)
+                    file_contents = await self._read_local_file(file_name=formatted_filename, technical_id=branch_id, branch_name_id=branch_id)
+                    messages.append({"role": "user", "content": f"Reference: {file_name}: \n {file_contents}"})
+            elif input_data.get("cyoda_edge_message"):
+                edge_messages = input_data.get("cyoda_edge_message")
+                for edge_message in edge_messages:
+                    message_content = await self.entity_service.get_item(token=self.cyoda_auth_service,
+                                                                                        entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
+                                                                                        entity_version=env_config.ENTITY_VERSION,
+                                                                                        technical_id=entity.edge_messages_store.get(edge_message),
+                                                                                        meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+
+                    messages.append({"role": "user", "content": f"Reference: {message_content}"})
+
         return messages
 
-    async def _read_local_file(self, file_name, technical_id):
-        target_dir = os.path.join(f"{PROJECT_DIR}/{technical_id}/{REPOSITORY_NAME}", "")
-        file_path = os.path.join(target_dir, file_name)
+    async def _read_local_file(self, file_name, technical_id, branch_name_id):
+        file_path = await get_project_file_name_path(technical_id=technical_id, git_branch_id=branch_name_id, file_name=file_name)
         try:
             async with aiofiles.open(file_path, 'r') as file:
                 file_contents = await file.read()
@@ -302,10 +321,10 @@ class WorkflowDispatcher:
 
     async def add_edge_message(self, message: dict, flow: List[FlowEdgeMessage], user_id) -> FlowEdgeMessage:
         edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
-                                                             entity_model=FLOW_EDGE_MESSAGE_MODEL_NAME,
-                                                             entity_version=ENTITY_VERSION,
+                                                             entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
+                                                             entity_version=env_config.ENTITY_VERSION,
                                                              entity=message,
-                                                             meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                             meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
         flow_edge_message = FlowEdgeMessage(type=message["type"],
                                             publish=message.get("publish", False),
                                             edge_message_id=edge_message_id,
@@ -324,9 +343,13 @@ class WorkflowDispatcher:
                             response = json.dumps(parsed_json, indent=4, sort_keys=True)
                         except json.JSONDecodeError as err:
                             logger.error(f"Invalid JSON format for file {cache_key}: {err}")
-                    formatted_filename = cache_key.format(**entity.workflow_cache)
-                    branch_id = entity.workflow_cache.get(GIT_BRANCH_PARAM, technical_id)
-                    await _save_file(chat_id=branch_id, _data=response, item=formatted_filename)
+                    try:
+                        formatted_filename = cache_key.format(**entity.workflow_cache)
+                    except Exception as e:
+                        formatted_filename = cache_key
+                        logger.exception(e)
+                    branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
+                    await _save_file(chat_id=branch_id, _data=response, item=formatted_filename, git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id))
             if config.get("output").get("workflow_cache"):
                 cache_keys = config.get("output").get("workflow_cache")
                 for cache_key in cache_keys:
@@ -335,11 +358,54 @@ class WorkflowDispatcher:
                 edge_messages = config.get("output").get("cyoda_edge_message")
                 for edge_message in edge_messages:
                     edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
-                                                                         entity_model=EDGE_MESSAGE_STORE_MODEL_NAME,
-                                                                         entity_version=ENTITY_VERSION,
+                                                                         entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
+                                                                         entity_version=env_config.ENTITY_VERSION,
                                                                          entity=response,
-                                                                         meta={"type": CYODA_ENTITY_TYPE_EDGE_MESSAGE})
+                                                                         meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
                     entity.edge_messages_store[edge_message] = edge_message_id
+
+    def _format_message(self, message, cache):
+        try:
+            return message.format(**cache)
+        except Exception as e:
+            logger.exception(e)
+            return message
+
+    async def _get_chat_memory(self, memory_id):
+        return await self.entity_service.get_item(
+            token=self.cyoda_auth_service,
+            entity_model=const.ModelName.CHAT_MEMORY.value,
+            entity_version=env_config.ENTITY_VERSION,
+            technical_id=memory_id
+        )
+
+    async def _append_to_ai_memory(self, entity, content, memory_tags=None):
+        chat_memory = await self._get_chat_memory(entity.memory_id)
+        edge_message_id = await self.entity_service.add_item(
+            token=self.cyoda_auth_service,
+            entity_model=const.ModelName.AI_MEMORY_EDGE_MESSAGE.value,
+            entity_version=env_config.ENTITY_VERSION,
+            entity={"role": "assistant", "content": content},
+            meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+        )
+
+        tags = memory_tags or [env_config.GENERAL_MEMORY_TAG]
+        for tag in tags:
+            if not chat_memory.messages:
+                chat_memory.messages = {}
+            chat_memory.messages.setdefault(tag, []).append(AIMessage(edge_message_id=edge_message_id))
+
+        await self._update_chat_memory(entity.memory_id, chat_memory)
+
+    async def _update_chat_memory(self, memory_id, chat_memory):
+        await self.entity_service.update_item(
+            token=self.cyoda_auth_service,
+            entity_model=const.ModelName.CHAT_MEMORY.value,
+            entity_version=env_config.ENTITY_VERSION,
+            technical_id=memory_id,
+            entity=chat_memory,
+            meta={const.TransitionKey.UPDATE.value: "update"}
+        )
 
 
 

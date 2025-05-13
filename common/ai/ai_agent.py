@@ -1,13 +1,14 @@
 import json
-
-from common.config.config import MAX_AI_AGENT_ITERATIONS
-from entity.chat.model.chat import ChatEntity
-from entity.model.model import ModelConfig
+import jsonschema
+from jsonschema import ValidationError
+from common.config.config import config
+from entity.chat.chat import ChatEntity
+from entity.model import ModelConfig
 
 
 #todo add react, prompt chaining etc - other techniques, add more implementations
 class OpenAiAgent:
-    def __init__(self, client, max_calls=MAX_AI_AGENT_ITERATIONS):
+    def __init__(self, client, max_calls=config.MAX_AI_AGENT_ITERATIONS):
         """
         Initialize the AiAgent with a maximum number of API calls and a model name.
         """
@@ -23,49 +24,74 @@ class OpenAiAgent:
                     message["content"] = " ".join(content)
         return messages
 
-    async def run_agent(self, methods_dict, technical_id, cls_instance, entity: ChatEntity, tools, model: ModelConfig, messages, tool_choice="auto", response_format=None):
-        # Loop until a final answer is received or maximum calls are reached.
+
+    async def _validate_with_schema(
+            self, messages: list, content: str, schema: dict, attempt: int, max_retries: int
+    ):
+        try:
+            parsed = json.loads(content)
+            jsonschema.validate(instance=parsed, schema=schema)
+            # Return the original string on success
+            return content, None
+        except (json.JSONDecodeError, ValidationError) as e:
+            msg = f"Validation failed on attempt {attempt}/{max_retries}: {e}. Retrying..."
+            messages.append({"role": "assistant", "content": msg})
+            return None, msg
+
+
+    async def run_agent(
+            self, methods_dict, technical_id, cls_instance, entity, tools, model,
+            messages, tool_choice="auto", response_format=None
+    ):
         messages = self.adapt_messages(messages)
-        ai_response_format = {"type": "json_schema",
-                              "json_schema": response_format} if response_format else None
-        for call_number in range(self.max_calls):
+        schema = response_format.get("schema") if response_format else None
+        max_retries = self.max_calls
+
+        for attempt in range(1, max_retries + 1):
+            ai_response_format = (
+                {"type": "json_schema", "json_schema": response_format}
+                if response_format else None
+            )
+
             completion = await self.client.create_completion(
                 model=model,
                 messages=messages,
                 tools=tools,
                 tool_choice=tool_choice,
                 response_format=ai_response_format
-
             )
+            resp = completion.choices[0].message
 
-            # Get the response message.
-            response_message = completion.choices[0].message
-
-            # If there are tool calls, process each one.
-            if hasattr(response_message, "tool_calls") and response_message.tool_calls:
-                # Append the assistant's message (which contains tool_calls) to the conversation.
-                messages.append(response_message)
-
-                # Process every tool call in the message.
-                for tool_call in response_message.tool_calls:
-                    # Extract the arguments from the tool call (assumed to be JSON).
-                    args = json.loads(tool_call.function.arguments)
-
-                    # Look up the actual function implementation in the original tools list.
-                    result = await methods_dict[tool_call.function.name](cls_instance, technical_id=technical_id, entity=entity, **args)
-
-                    # Append a separate tool message for this tool call.
+            if hasattr(resp, "tool_calls") and resp.tool_calls:
+                messages.append(resp)
+                for call in resp.tool_calls:
+                    args = json.loads(call.function.arguments)
+                    result = await methods_dict[call.function.name](
+                        cls_instance, technical_id=technical_id, entity=entity, **args
+                    )
                     messages.append({
                         "role": "tool",
-                        "tool_call_id": tool_call.id,
+                        "tool_call_id": call.id,
                         "content": str(result)
                     })
+                continue
+
+            content = resp.content
+            messages.append({"role": "assistant", "content": content})
+
+            if schema:
+                valid_str, error = await self._validate_with_schema(
+                    messages, content, schema, attempt, max_retries
+                )
+                if valid_str is not None:
+                    # Always return the JSON string
+                    return valid_str
+                # otherwise retry
             else:
-                messages.append({"role": "assistant", "content": response_message.content})
-                return response_message.content
+                # No schema: return string as before
+                return content
 
-        # Return the last message if max_calls is reached.
-        response = "Max iterations limit reached. Let's proceed to the next iteration"
-        messages.append({"role": "assistant", "content": response})
-        return response
-
+        return {
+            "error": "Max validation retries reached",
+            "last_response": messages[-1]["content"]
+        }

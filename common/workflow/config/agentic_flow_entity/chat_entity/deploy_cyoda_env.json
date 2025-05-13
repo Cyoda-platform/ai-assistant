@@ -1,0 +1,110 @@
+{
+  "initial_state": "none",
+  "workflow_name": "chat_entity",
+  "states": {
+    "none": {
+      "transitions": {
+        "notify_env_deployment": {
+          "next": "notified_env_deployment",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "Hello! Let's start deploying your Cyoda environment. I will let you know once it's ready",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "notified_env_deployment": {
+      "transitions": {
+        "schedule_deploy_env": {
+          "next": "scheduled_deploy_env",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "publish": true,
+              "function": {
+                "name": "schedule_deploy_env",
+                "description": "",
+                "max_iteration": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "scheduled_deploy_env": {
+      "transitions": {
+        "lock_chat": {
+          "next": "locked_chat",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "publish": true,
+              "function": {
+                "name": "lock_chat",
+                "description": "",
+                "max_iteration": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "locked_chat": {
+      "transitions": {
+        "finish_deployment_success": {
+          "next": "deployed_env",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "✅ Your Cyoda environment **{cyoda_env_name}** has been successfully deployed!\n\nYou can now start your application locally using:\n```bash\npython app.py\n```\n\nAt startup, your app will automatically connect to this environment, import your workflows, and establish a gRPC connection.\n\n🔗 A link to access your environment will be provided shortly.\n\nNeed help testing or deploying your application? Just ask!",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        },
+        "finish_deployment_failure": {
+          "next": "deployed_env",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "⚠️ Sorry, we encountered internal issues while deploying your Cyoda environment.\n\nOur team has been notified and is looking into it. Please try again shortly, or reach out if the issue persists.",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "deployed_env": {
+      "transitions": {
+        "lock_chat": {
+          "next": "locked_chat",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "publish": true,
+              "function": {
+                "name": "lock_chat",
+                "description": "",
+                "max_iteration": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from enum import Enum
-from typing import List, Any, Optional
+from typing import List, Any, Optional, Dict
 
 from common.repository.repository import Repository
 
@@ -104,6 +104,42 @@ class CrudRepository(Repository):
     async def find_all_by_criteria(self, meta, criteria: Any) -> Optional[Any]:
         """
         Retrieves an entity by its technical id.
+        """
+        pass
+
+    @abstractmethod
+    async def search_snapshot(
+            self,
+            meta: Dict[str, str],
+            criteria: Any
+    ) -> Optional[str]:
+        """
+        Kick off a new snapshot search for the given entity model/version
+        with the provided criteria.
+
+        Returns:
+         - snapshot_id (str) once it’s ready
+         - None if the server returns 404 (no data)
+        """
+        pass
+
+    @abstractmethod
+    async def get_search_results_page(
+            self,
+            snapshot_id: str,
+            page_number: int = 0,
+            page_size: int = 100
+    ) -> List[Dict[str, Any]]:
+        """
+        Given a ready snapshot_id, fetch exactly one page of results.
+
+        Args:
+          - snapshot_id: the ID returned by create_search_snapshot
+          - page_number: 0-based page index to retrieve
+          - page_size: number of items per page
+
+        Returns:
+          - list of entity dicts (empty on non-200 or no data)
         """
         pass
 
