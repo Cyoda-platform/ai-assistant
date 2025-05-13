@@ -296,7 +296,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. Summarise the requirement in a couple of sentences and set to true if the user chooses your example answers or after 6 attempts! Do not hold the user too long. If you use this tool just tel the user: Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. (no other message is allowed for this tool)",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. Summarise the requirement in a couple of sentences and set to true if the user chooses your example answers or after 6 attempts! Do not hold the user too long. Response format (do not add any other text): Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -333,7 +333,7 @@
                     " Do not ask about any specific frameworks or technologies, the final application will be in quart python on Cyoda platform - no other choices.",
                     " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. format it with markdown ",
                     " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
-                    " Call set_additional_question_flag with true immediately after 6 attempts. Do not hold the user too long they will bored",
+                    " Call set_additional_question_flag with true immediately after 6 attempts. Do not hold the user too long they will bored. If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer.",
                     " Be polite, please ",
                     " Here is my requirement: "
                   ]
@@ -532,7 +532,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Set true if the discussion with the user is not complete and the user has additional questions/requirements, set false if the user asks to proceed or if the user is satisfied with the current result (e.g. says it is correct, valid, works for them). If set to false notify the user you're going to proceed with prototype generation.  If you use this tool just tel the user: Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. (no other message is allowed for this tool)",
+                    "description": "Set true if the discussion with the user is not complete and the user has additional questions/requirements, set false if the user asks to proceed or if the user is satisfied with the current result (e.g. says it is correct, valid, works for them). If set to false notify the user you're going to proceed with prototype generation. Response format (do not add any other text): Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -659,7 +659,8 @@
                     "You are most welcome to use such pattern where it is reasonable:",
                     "entity_job[job_id] = {\"status\": \"processing\", \"requestedAt\": requested_at}\n# Fire and forget the processing task.",
                     "await asyncio.create_task(process_entity(entity_job, data.__dict__))",
-                    "please use correct logging, e.g.:\nimport logging\nlogger = logging.getLogger(__name__)\nlogger.setLevel(logging.INFO)\nlogger.exception(e)"
+                    "please use correct logging, e.g.:\nimport logging\nlogger = logging.getLogger(__name__)\nlogger.setLevel(logging.INFO)\nlogger.exception(e)",
+                  "If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer."
                   ]
                 }
               ]
@@ -916,7 +917,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Finish the iteration if the user is happy with the result and has no more questions. If you use this tool just tel the user: Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. (no other message is allowed for this tool)",
+                    "description": "Finish the iteration if the user is happy with the result and has no more questions. Response format (do not add any other text)r: Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -948,7 +949,9 @@
                     " If the user asks you to make any improvements or fix any issues please first read the file entity/prototype.py to get the latest version.",
                     " Then use your own judgement to introduce changes necessary for the user",
                     " Finally save the changes to the prototype.py file. And let the user know what changes you introduced and why.",
-                    " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case."
+                    " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case.",
+                    "If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer."
+
                   ]
                 }
               ],
@@ -1151,7 +1154,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Finish the iteration if the user is happy with the result and has no more questions. If you use this tool just tel the user: Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. (no other message is allowed for this tool)",
+                    "description": "Finish the iteration if the user is happy with the result and has no more questions. Response format (do not add any other text): Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1183,7 +1186,8 @@
                     " If the user asks you to make any improvements or fix any issues please first read the file entity/prototype.py to get the latest version.",
                     " Then use your own judgement to introduce changes necessary for the user",
                     " Finally save the changes to the prototype.py file. And let the user know what changes you introduced and why.",
-                    " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case."
+                    " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case.",
+                    "If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer."
                   ]
                 }
               ],
