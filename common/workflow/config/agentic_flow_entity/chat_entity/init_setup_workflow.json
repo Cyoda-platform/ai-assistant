@@ -338,7 +338,6 @@
               ],
               "messages": [
                 {
-                  "role": "user",
                   "content": [
                     "Hello You are a very helpful Cyoda assistant who knows best how to achieve what the user needs.",
                     "We've just finished our great Cyoda application Lets congratulate the user on this and help them start it both locally and remotely.",
@@ -349,23 +348,26 @@
                     "Hello Congratulations on your new Cyoda application We will go step by step to get it running smoothly. Please make sure which branch you're using. This is the only valid branch for now. Lets start with the first step. Ready.",
                     "Step 1 Locate the .env.template file in your project root. Once found, rename it to .env and open it in a text editor. Tip Use your code editors file tree or terminal to confirm its in the root directory.",
                     "Troubleshooting Can t find .env.template. Make sure you've checked out the correct branch. File still missing Check your .gitignore, or ensure the repo was cloned fully with submodules if needed.",
-                    "Step 2 Edit your new .env file with the required environment specific values API keys, GRPC host, ports, etc. Tip These values are often provided by your team or in project onboarding docs.",
+                    "Step 2 Launch the application using python app.py or in your IDE using IDE (Recommended) run configurations. Tip Activate your virtual environment first e.g. source .venv/bin/activate. Tip export PYTHONPATH=/your_path/quart-client-template:$PYTHONPATH",
+                    "At this stage you should get ERROR:common.auth.cyoda_auth:Login failed (404) as you do not have Cyoda environment configured yet. If you have any other errors let's troubleshoot",
+                    "Troubleshooting ModuleNotFoundError. Run pip install -r requirements.txt. quart not found. Install with pip install quart. Permission errors. Try running with python3 instead of python.",
+                    "Step 3 Now lets configure your Cyoda Cloud instance. Do you already have an environment. If yes, do you want to redeploy it or connect to the existing one. If you have an env and do not want to redeploy it - let's continue to the next step.",
+                    "If the user doesn't have Cyoda environment yet or wants to redeploy it - please deploy Cyoda environment (call necessary tool) - let the user know that redeployment of existing env might disrupt work for other members of their organisation if they use corporate account.",
+                    "Step 4 Edit your .env file with the required environment specific values for CYODA_HOST. Use your just deployed env host name.",
+                    "You can leave defaults for all properties. Your branch name is used for GRPC_PROCESSOR_TAG. You can adjust it to any other value if you like.",
+                    "Now your application should start without any errors and you should see grpc_client:Greet event received log which shows that your grpc connection has been established and you are ready to receive events from Cyoda grpc server.",
                     "Troubleshooting Missing values may cause runtime errors later. Make sure there are no spaces around and that values are quoted only when needed.",
-                    "Step 3 Launch the application using python app.py or quart run. Tip Activate your virtual environment first e.g. source .venv/bin/activate.",
-                    "Troubleshooting ModuleNotFoundError. Run pip install r requirementstxt. quart not found. Install with pip install quart. Permission errors. Try running with python3 instead of python.",
-                    "Step 4 Does the project start OK Please check for any errors in the terminal before moving on.",
-                    "Troubleshooting If the server crashes immediately, recheck your .env file values. Use print statements or a debugger to identify issues in app.py.",
-                    "Step 5 Now lets configure your Cyoda Cloud instance. Do you already have an environment If yes, do you want to redeploy it or connect to the existing one",
-                    "Troubleshooting GRPC connection failures. Ensure the GRPCHOST and GRPCPORT in your .env are correct. If youre behind a proxy, verify outbound port access.",
-                    "Step 6 With your env configured, its time to import the workflows. Do you have your workflow files ready e.g., .yaml or .json. If yes, import them now via the UI or CLI.",
+                    "Step 5 With your env configured, its time to import the workflows. Run python common/repository/cyoda/cyoda_init.py to import workflows. They should be available in your Cyoda UI env. If you make changes to workflow json configuarions they are not applied automatically. You need to manually deactivate your existing workflows first in the UI and then run import again, we are working on improving UX.",
                     "Troubleshooting If the import fails, verify the format and version of your workflow files. Watch Cyoda Cloud logs for import errors.",
-                    "Step 7 Now restart the application to ensure it connects to the Cyoda GRPC server properly. Let me know if the connection succeeds or if you hit any issues.",
-                    "Troubleshooting On restart, check logs for any GRPC related errors. Missing workflow mappings can also cause silent failures confirm setup.",
-                    "Step 8 Let s test your API. Go to http://localhost:5000 or your configured port, and ensure everything looks good.",
-                    "Troubleshooting Cant access the local server Check if the app is still running and if your firewall settings allow local traffic.",
-                    "Step 9 Navigate to the route routes/routes. You'll find an endpoint called add entity there. Try submitting an entity. Once submitted, it should trigger a GRPC event that makes the data available in Cyoda.",
+                    "Step 7 Let's test your API. Go to http://localhost:8000 or your configured port, and ensure everything looks good. We kept the functional requirements like in the prototype.py and also introduced non-functional requirements.",
+                    "Now your application is event-driven, when you save {entity_name} an event is sent by Cyoda to process the newly added entity. All processing logic is moved to workflow processors that you can find in entity/{entity_name}/workflow.py and .json for workflow configuration",
+                    "I can help you visualise your workflow configurations. Tell me entity name and i will visualise your configuration with markdown flow diagram",
+                    " You can also view your workflows in Cyoda UI ",
+                    "Troubleshooting: Can't access the local server Check if the app is still running and if your firewall settings allow local traffic.",
+                    "Navigate to the route routes/routes. You'll find an endpoint called add entity there. Try submitting an entity. Once submitted, it should trigger a GRPC event that makes the data available in Cyoda.",
                     "Troubleshooting No event in Cyoda Ensure the endpoint properly triggers GRPC and that workflow routing is correctly set. Use logs to trace the request and confirm GRPC payload was sent."
-                  ]
+                  ],
+                  "role": "user"
                 }
               ],
               "tool_choice": "auto",

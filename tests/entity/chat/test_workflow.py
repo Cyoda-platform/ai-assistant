@@ -1014,25 +1014,34 @@ async def test_has_validation_succeeded_and_failed(monkeypatch, chat_entity, wor
 @pytest.mark.asyncio
 async def test_save_extracted_workflow_code(monkeypatch, chat_entity, workflow):
     chat_entity.parent_id = "parent123"
-    chat_entity.workflow_cache = {"entity_name": "MyEnt"}
+    chat_entity.workflow_cache = {
+        "entity_name": "MyEnt",
+        "workflow_function": "my_func",
+        const.GIT_BRANCH_PARAM: "branch123"  # use the actual constant key
+    }
     chat_entity.edge_messages_store = {"go": "edge-xyz"}
 
     monkeypatch.setattr(
         workflow.entity_service, "get_item", AsyncMock(return_value="SRC_CODE")
     )
+
     monkeypatch.setattr(
         wf_mod, "extract_function", lambda source, function_name: ("no_fn_body", "fn_body")
     )
-    monkeypatch.setattr(wf_mod, "_save_file", AsyncMock())
+
+    mock_save_file = AsyncMock()
+    monkeypatch.setattr(wf_mod, "_save_file", mock_save_file)
 
     out = await workflow.save_extracted_workflow_code("tech", chat_entity, transition="go")
-    wf_mod._save_file.assert_awaited_once_with(
+
+    mock_save_file.assert_awaited_once_with(
         chat_id="parent123",
         _data="no_fn_body",
-        item="entity/MyEnt/workflow.py"
+        item="entity/MyEnt/workflow.py",
+        git_branch_id="branch123"
     )
-    assert out == "fn_body"
 
+    assert out == "fn_body"
 
 # ─── edit_existing_workflow & fail_workflow ───────────────────────────────────
 

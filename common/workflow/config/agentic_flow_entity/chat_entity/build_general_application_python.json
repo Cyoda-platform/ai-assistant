@@ -745,7 +745,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "✅ First Prototype Ready\n\nThe initial prototype based on your functional requirements is ready!\n\nTo test it:\n\n1. **Run the app**\n```bash\npython entity/prototype.py\n```\n\n2. **Open your browser** and go to:\n- [http://localhost:8000/docs](http://localhost:8000/docs)\n- or [http://localhost:8000/scalar](http://localhost:8000/scalar)\n\n3. **Make sure you're on the correct branch and up to date** \n\n [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) \uD83D\uDC40 \n\n```bash\ngit checkout {branch_name}\ngit pull\n```\n\nYou’ll find example requests and responses in `entity/functional_requirement.md`.\n\nLet me know if everything looks good or if you’d like to make changes. 🙌",
+              "question": "✅ First Prototype Ready!\n\nThe initial prototype based on your functional requirements is now ready! You can run and test it locally or directly in **GitHub Codespaces**.\n\n---\n\n### ▶️ How to Run the Prototype\n\n#### **Option 1: GitHub Codespaces **\nYou can open the repo in GitHub Codespaces and launch the prototype there:\n\n1. Open the repository in [GitHub Codespaces](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}).\n2. In the Codespace terminal, run:\n\n```bash\npython entity/prototype.py\n```\n\n3. Preview the app in the browser:\n   - `/docs` → Swagger: `https://<your-codespace-url>/docs`\n   - `/scalar` → Scalar UI: `https://<your-codespace-url>/scalar`\n\n> *Codespaces will provide a forwarded port URL — just append `/docs` or `/scalar` to it.*\n\n---\n\n#### **Option 2: Local Environment**\n\n1. Make sure you're on the correct branch and up to date:\n\n```bash\ngit checkout {branch_name}\ngit pull\n```\n\n2. Run the app:\n\n```bash\npython entity/prototype.py\n```\n\n3. Open your browser and go to:\n- [http://localhost:8000/docs](http://localhost:8000/docs)\n- or [http://localhost:8000/scalar](http://localhost:8000/scalar)\n\n---\n\n### 🧪 Testing\n\nYou’ll find example requests and responses in:\n📄 `entity/functional_requirement.md`\n\nUse these to test the API via the Swagger or Scalar UI.\n\n---\n\n### ✅ Approval or Feedback\n\nIf everything looks good, feel free to approve it.\nIf anything’s off or you’d like changes, just ping me here. 🙌\n\n> ⚠️ **Note:** We're using the `quart-schema` library, which is sensitive to the positioning of annotations. If you run into issues related to schema validation, let me know — I’ll sort it out quickly.",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -1791,7 +1791,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "✅ Your application is ready in the {branch_name} branch!\n\n [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) \uD83D\uDC40 \n\nLet’s bring it to life — together.\n\n Would you like me to walk you through the setup? Please ask for the Cyoda initial setup assistant.",
+              "question": "✅ Your application is ready in the {branch_name} branch!\n\n [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) \uD83D\uDC40 \n\nLet’s bring it to life — together.\n\n ",
               "publish": true
             }
           }
