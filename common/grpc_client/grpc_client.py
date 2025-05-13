@@ -25,7 +25,12 @@ GREET_EVENT_TYPE = "CalculationMemberGreetEvent"
 KEEP_ALIVE_EVENT_TYPE = "CalculationMemberKeepAliveEvent"
 EVENT_ACK_TYPE = "EventAckResponse"
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
 logger = logging.getLogger(__name__)
 
 

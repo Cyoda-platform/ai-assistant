@@ -128,12 +128,12 @@ class CyodaRepository(CrudRepository):
 
         resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method=method, path=path)
         if not isinstance(resp, dict):
-            logger.error(f"method = {method}, path = {path}")
+            logger.exception(f"method = {method}, path = {path}")
             logger.error(f"resp = {resp} ")
             raise Exception("find_by_id resp is not dict!")
         payload = resp.get("json", {})
         if not isinstance(payload, dict):
-            logger.error(f"method = {method}, path = {path}")
+            logger.exception(f"method = {method}, path = {path}")
             logger.error(f"payload = {payload} ")
             logger.error(f"resp = {resp} ")
             raise Exception("find_by_id payload is not dict!")

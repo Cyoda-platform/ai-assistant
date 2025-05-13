@@ -7,7 +7,12 @@ from common.utils.chat_util_functions import _launch_transition
 from common.utils.utils import send_cyoda_request
 from entity.model import SchedulerEntity
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
 logger = logging.getLogger(__name__)
 
 class WorkflowTask:

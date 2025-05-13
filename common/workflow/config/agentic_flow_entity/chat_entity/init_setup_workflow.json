@@ -5,35 +5,38 @@
     "none": {
       "transitions": {
         "start_chat": {
-          "next": "ready_to_start_chat"
+          "next": "app_requirements_requested"
         }
       }
     },
-    "ready_to_start_chat": {
+    "app_requirements_requested": {
       "transitions": {
         "starting_chat": {
-          "next": "started_chat"
+          "next": "prompt_app_requirements_step1"
         }
       }
     },
-    "started_chat": {
+    "prompt_app_requirements_step1": {
       "transitions": {
-        "initial_notification": {
-          "next": "app_requirements_requested",
+        "prompt_sent": {
+          "next": "app_requirements_step1",
           "action": {
             "name": "process_event",
             "config": {
               "type": "prompt",
-              "model": {
-                "model_name": "gpt-4o-mini",
-                "temperature": 0.7,
-                "max_tokens": 10000
-              },
+              "approve": true,
+              "model": {},
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "Please introduce yourself as Cyoda assistance and ask if the user is ready to move forward."
+                    "Hello! You’re the Cyoda client app setup assistant, and you’re here to help the user every step of the way.",
+                    "Congratulate the user first—they’ve built the Cyoda application! Now, help the user get it started both locally and remotely.",
+                    "Let the user know: the code they’ll be working with is in the branch {branch_name}. Make sure they use only this branch for the next steps.",
+                    "You’ll guide them through the process one step at a time to ensure everything works smoothly. Let’s begin with the first step.",
+                    "",
+                    "**Step 1:** Let the user know: they should pull changes from remote and locate the .env.template file in the project’s root directory. Once they’ve found it, rename it to .env and open it in a text editor.",
+                    "_Tip: Let the user know: they can confirm it’s in the root directory by using their code editor’s file tree or by running `ls` in the terminal._"
                   ]
                 }
               ],
@@ -43,10 +46,861 @@
         }
       }
     },
-    "app_requirements_requested": {
+    "app_requirements_step1": {
       "transitions": {
         "process_user_input": {
-          "next": "app_requirements_requested",
+          "next": "app_requirements_step1",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.  If you use this tool just tel the user: Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_app_setup_1"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "require_additional_question_flag",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Troubleshooting:** Let the user know: if they can’t find the .env.template file, make sure they’re on the correct branch. If it’s still missing, check their .gitignore or ensure the repo was cloned fully, including any submodules."
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        },
+        "process_step1_success": {
+          "next": "prompt_app_requirements_step2",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "prompt_app_requirements_step2": {
+      "transitions": {
+        "prompt_sent": {
+          "next": "app_requirements_step2",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "approve": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Step 2:** Let the user know: they should activate their virtual environment (e.g. `source .venv/bin/activate`), then launch the app with `python app.py` or via their IDE run configuration.",
+                    "_Let the user know: they should see `ERROR:common.auth.cyoda_auth:Login failed (404)` as Cyoda isn’t configured yet._",
+                    "- Let the user know: if they encounter `ModuleNotFoundError`, they should run `export PYTHONPATH=/your_dir/quart-client-template:$PYTHONPATH\n`.",
+                    "- Let the user know: if they encounter `ModuleNotFoundError`, they should run `pip install -r requirements.txt`.",
+                    "- Let the user know: they should use `python3 app.py` instead of `python app.py` in case of common errors."
+
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_step2": {
+      "transitions": {
+        "process_user_input": {
+          "next": "app_requirements_step2",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.  If you use this tool just tel the user: Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_app_setup_2"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "require_additional_question_flag",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Troubleshooting:**",
+                    "- Let the user know: if they encounter `ModuleNotFoundError`, they should run `pip install -r requirements.txt`.",
+                    "- Let the user know: if `quart` isn’t found, they should install it with `pip install quart`.",
+                    "- Let the user know: if they see permission errors, they should try `python3 app.py` instead of `python app.py`."
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        },
+        "process_step2_success": {
+          "next": "prompt_app_requirements_step3",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_2"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "prompt_app_requirements_step3": {
+      "transitions": {
+        "prompt_sent": {
+          "next": "app_requirements_step3",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "deploy_cyoda_env",
+                    "description": "Launches workflow that is necessary to deploy Cyoda environment for the user. User needs to explicitly ask for deployment of Cyoda environment.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Step 3:** Let the user know: now let’s configure their Cyoda Cloud instance.",
+                    "- Let the user know: do they already have an environment?",
+                    "  • Let the user know: if they do, let them decide whether they want to redeploy it. If they choose to redeploy, call the deploy cyoda env tool; otherwise, call set_additional_question_flag with False.  If you use this tool just tel the user: Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now (this may disrupt others!).",
+                    "",
+                    "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes."
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_step3": {
+      "transitions": {
+        "process_user_input": {
+          "next": "app_requirements_step3",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "deploy_cyoda_env",
+                    "description": "Launches workflow that is necessary to deploy Cyoda environment for the user. User needs to explicitly ask for deployment of Cyoda environment.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.  If you use this tool just tel the user: Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_app_setup_3"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "require_additional_question_flag",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "- Clarify if the user already has an environment",
+                    "  • Let the user know: if they do, let them decide whether they want to redeploy it (this may disrupt others!). If they choose to redeploy, call the deploy cyoda env tool; otherwise, call set_additional_question_flag with False.  If you use this tool just tel the user: Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now .",
+                    "",
+                    "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes.",
+                    " Ask the user confirm that their environment is deployed and they are happy with the result. ",
+                    " Once the user tells you the env is ready/they are happy/done/ready to proceed set_additional_question_flag to False immediately",
+                    "**Troubleshooting:** Let the user know: N/A (deployment errors will be surfaced by the deployment tool)."
+
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30
+            }
+          }
+        },
+        "process_step3_success": {
+          "next": "prompt_app_requirements_step4",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_3"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "prompt_app_requirements_step4": {
+      "transitions": {
+        "prompt_sent": {
+          "next": "app_requirements_step4",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "approve": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Step 4:** Let the user know: they should edit their `.env` file with the required environment-specific value for `CYODA_HOST` (use their newly deployed host name).",
+                    "- Let the user know: all other properties can stay at their defaults.",
+                    "- Let the user know: their branch name is used for `GRPC_PROCESSOR_TAG` (they can change it if they like)."
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_step4": {
+      "transitions": {
+        "process_user_input": {
+          "next": "app_requirements_step4",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.  If you use this tool just tel the user: Proceeded to the next step.Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_app_setup_4"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "require_additional_question_flag",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Troubleshooting:** Let the user know: missing or malformed values may cause runtime errors—ensure there are no stray spaces and quotes only where needed."
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        },
+        "process_step4_success": {
+          "next": "prompt_app_requirements_step5",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_4"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "prompt_app_requirements_step5": {
+      "transitions": {
+        "prompt_sent": {
+          "next": "app_requirements_step5",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "approve": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Step 5:** Let the user know: with their env configured, they should import the workflows by running:",
+                    "```bash",
+                    "python common/repository/cyoda/cyoda_init.py",
+                    "```",
+                    "Let the user know: the workflows should appear in their Cyoda UI once the import completes."
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_step5": {
+      "transitions": {
+        "process_user_input": {
+          "next": "app_requirements_step5",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_new_entity_for_existing_app",
+                    "description": "Launches workflow that is necessary to help the user add a new entity to the existing application. Key factor is that an application already exists and the user explicitly asks to add a new entity (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_new_workflow",
+                    "description": "Launches workflow that is necessary to help the user add a new workflow. Key factor is that an application already exists and the user explicitly asks to add a new workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_api_existing_app",
+                    "description": "Launches workflow that is necessary to help the user edit/update existing api (routes.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/routes/routes.py  (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_existing_workflow",
+                    "description": "Launches workflow that is necessary to help the user edit an existing workflow/workflow json. Key factor is that an application already exists and the user explicitly asks to update a workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_existing_processors",
+                    "description": "Launches workflow that is necessary to help the user update workflow processors code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/workflow.py code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_python_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.  If you use this tool just tel the user: Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_app_setup_5"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "require_additional_question_flag",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Troubleshooting:** Let the user know: if the import fails, they should verify their JSON formats and version compatibility, and check the Cloud logs for detailed import errors."
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        },
+        "process_step5_success": {
+          "next": "prompt_app_requirements_step6",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_5"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "prompt_app_requirements_step6": {
+      "transitions": {
+        "prompt_sent": {
+          "next": "app_requirements_step6",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "approve": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Step 6:** Let the user know: they should test their API by visiting `http://localhost:8000` (or their configured port) and ensure everything looks good.",
+                    "- Let the user know: when they save `{entity_name}`, an event will be sent and processed by their workflow code in `entity/{entity_name}/workflow.py` and the corresponding JSON."
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_step6": {
+      "transitions": {
+        "process_user_input": {
+          "next": "app_requirements_step6",
           "manual": true,
           "action": {
             "name": "process_event",
@@ -239,50 +1093,6 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "deploy_cyoda_env",
-                    "description": "Launches workflow that is necessary to deploy Cyoda environment for the user. User needs to explicitly ask for deployment of Cyoda environment.",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "user_request": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "user_request"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "deploy_user_application",
-                    "description": "Launches workflow that is necessary to deploy user client application (external calculation node). User needs to explicitly ask for deployment of their application. Branch is required.",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "git_branch": {
-                          "type": "string"
-                        },
-                        "user_request": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "user_request",
-                        "git_branch"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                {
-                  "type": "function",
-                  "function": {
                     "name": "get_cyoda_guidelines",
                     "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
                     "strict": true,
@@ -312,7 +1122,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.  If you use this tool just tel the user: Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -320,7 +1130,7 @@
                         "transition": {
                           "type": "string",
                           "enum": [
-                            "process_app_setup"
+                            "process_app_setup_6"
                           ]
                         },
                         "require_additional_question_flag": {
@@ -338,54 +1148,29 @@
               ],
               "messages": [
                 {
+                  "role": "user",
                   "content": [
-                    "Hello You are a very helpful Cyoda assistant who knows best how to achieve what the user needs.",
-                    "We've just finished our great Cyoda application Lets congratulate the user on this and help them start it both locally and remotely.",
-                    "First important detail The code is available in branch {branch_name}. Please make it clear. And use only this branch for this interaction.",
-                    "Second, here is how to start the Cyoda application. I will give you instructions, but you need to guide the user step by step.",
-                    "Communicate no more than 1 instruction at a time and make sure the user understands and is successful with the step.",
-                    "Instruction",
-                    "Hello Congratulations on your new Cyoda application We will go step by step to get it running smoothly. Please make sure which branch you're using. This is the only valid branch for now. Lets start with the first step. Ready.",
-                    "Step 1 Locate the .env.template file in your project root. Once found, rename it to .env and open it in a text editor. Tip Use your code editors file tree or terminal to confirm its in the root directory.",
-                    "Troubleshooting Can t find .env.template. Make sure you've checked out the correct branch. File still missing Check your .gitignore, or ensure the repo was cloned fully with submodules if needed.",
-                    "Step 2 Launch the application using python app.py or in your IDE using IDE (Recommended) run configurations. Tip Activate your virtual environment first e.g. source .venv/bin/activate. Tip export PYTHONPATH=/your_path/quart-client-template:$PYTHONPATH",
-                    "At this stage you should get ERROR:common.auth.cyoda_auth:Login failed (404) as you do not have Cyoda environment configured yet. If you have any other errors let's troubleshoot",
-                    "Troubleshooting ModuleNotFoundError. Run pip install -r requirements.txt. quart not found. Install with pip install quart. Permission errors. Try running with python3 instead of python.",
-                    "Step 3 Now lets configure your Cyoda Cloud instance. Do you already have an environment. If yes, do you want to redeploy it or connect to the existing one. If you have an env and do not want to redeploy it - let's continue to the next step.",
-                    "If the user doesn't have Cyoda environment yet or wants to redeploy it - please deploy Cyoda environment (call necessary tool) - let the user know that redeployment of existing env might disrupt work for other members of their organisation if they use corporate account.",
-                    "Step 4 Edit your .env file with the required environment specific values for CYODA_HOST. Use your just deployed env host name.",
-                    "You can leave defaults for all properties. Your branch name is used for GRPC_PROCESSOR_TAG. You can adjust it to any other value if you like.",
-                    "Now your application should start without any errors and you should see grpc_client:Greet event received log which shows that your grpc connection has been established and you are ready to receive events from Cyoda grpc server.",
-                    "Troubleshooting Missing values may cause runtime errors later. Make sure there are no spaces around and that values are quoted only when needed.",
-                    "Step 5 With your env configured, its time to import the workflows. Run python common/repository/cyoda/cyoda_init.py to import workflows. They should be available in your Cyoda UI env. If you make changes to workflow json configuarions they are not applied automatically. You need to manually deactivate your existing workflows first in the UI and then run import again, we are working on improving UX.",
-                    "Troubleshooting If the import fails, verify the format and version of your workflow files. Watch Cyoda Cloud logs for import errors.",
-                    "Step 7 Let's test your API. Go to http://localhost:8000 or your configured port, and ensure everything looks good. We kept the functional requirements like in the prototype.py and also introduced non-functional requirements.",
-                    "Now your application is event-driven, when you save {entity_name} an event is sent by Cyoda to process the newly added entity. All processing logic is moved to workflow processors that you can find in entity/{entity_name}/workflow.py and .json for workflow configuration",
-                    "I can help you visualise your workflow configurations. Tell me entity name and i will visualise your configuration with markdown flow diagram",
-                    " You can also view your workflows in Cyoda UI ",
-                    "Troubleshooting: Can't access the local server Check if the app is still running and if your firewall settings allow local traffic.",
-                    "Navigate to the route routes/routes. You'll find an endpoint called add entity there. Try submitting an entity. Once submitted, it should trigger a GRPC event that makes the data available in Cyoda.",
-                    "Troubleshooting No event in Cyoda Ensure the endpoint properly triggers GRPC and that workflow routing is correctly set. Use logs to trace the request and confirm GRPC payload was sent."
-                  ],
-                  "role": "user"
+                    "**Troubleshooting:**",
+                    "- Let the user know: if they can’t access the server, they should check that it’s still running and that their firewall allows local traffic.",
+                    "- Let the user know: if no GRPC event occurs, they should verify their endpoint triggers GRPC and inspect the logs to trace payload delivery."
+                  ]
                 }
               ],
               "tool_choice": "auto",
               "max_iteration": 30,
-              "approve": false
+              "approve": true
             }
           }
         },
-        "process_application_requirement_success": {
-          "next": "app_requirements_finalized",
+        "process_step6_success": {
+          "next": "prompt_app_requirements_step7",
           "condition": {
             "config": {
               "type": "function",
               "function": {
                 "name": "is_stage_completed",
-                "description": "is_stage_completed",
                 "parameters": {
-                  "transition": "process_app_setup"
+                  "transition": "process_app_setup_6"
                 }
               }
             }
@@ -393,15 +1178,137 @@
         }
       }
     },
-    "app_requirements_finalized": {
+    "prompt_app_requirements_step7": {
       "transitions": {
-        "ask_about_api": {
-          "next": "proceeded_to_functional_requirements",
+        "prompt_sent": {
+          "next": "app_requirements_step7",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Step 7:** Let the user know: now that the client application is running smoothly on their local machine, ask if they would like to deploy it to their Cyoda Cloud environment.",
+                    "Let the user know: this deployment will provision the app into our Kubernetes cluster using the Helm charts located in the project’s `helm/` directory.",
+                    "Let the user know: if they approve, deploy the user application and pass the session branch name.",
+                    "Let the user know: if they deny, call `set_additional_question_flag` with `False`."
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_step7": {
+      "transitions": {
+        "process_user_input": {
+          "next": "app_requirements_step7",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "deploy_user_application",
+                    "description": "Launches workflow that is necessary to deploy user client application (external calculation node). User needs to explicitly ask for deployment of their application. Branch is required.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.  If you use this tool just tel the user: Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_app_setup_7"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "require_additional_question_flag",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " If the user asks to deploy their application - call deploy user app. ",
+                    "**Troubleshooting:** N/A"
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        },
+        "process_step7_success": {
+          "next": "ready_to_lock_chat",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_7"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ready_to_lock_chat": {
+      "transitions": {
+        "lock_chat": {
+          "next": "locked_chat",
           "action": {
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "Next up: functional requirements.\nStay tuned — thoughtful thinking in progress. \uD83E\uDDE0✨",
+              "notification": "🎉 Congrats on launching your first app! Your hard work paid off—this is just the beginning. Keep iterating, stay creative, and aim high! 🚀 Join our [Discord](https://discord.gg/bwTRS3hA) to share feedback and stay updated. 🙌",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -411,4 +1318,3 @@
     }
   }
 }
-
