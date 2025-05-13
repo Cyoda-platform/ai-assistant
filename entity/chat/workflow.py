@@ -701,6 +701,10 @@ class ChatWorkflow(Workflow):
     async def init_setup_workflow(
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
+        if entity.user_id.startswith('guest'):
+            #raise GuestChatsLimitExceededException()
+            return "Sorry, setting up Cyoda env is available only to logged in users. Please sign up or login!"
+        # todo cloud manager needs to return namespace
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
