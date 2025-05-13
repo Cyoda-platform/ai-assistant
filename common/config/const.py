@@ -141,6 +141,8 @@ class Notifications(str, Enum):
         "⚠️ Sorry, this action is not available right now. Please try again or wait for new questions ⚠️"
     )
     OPERATION_NOT_SUPPORTED = "⚠️ Sorry, this operation is not supported ⚠️"
+    EXIT_LOOP_FUNCTION_NAME = "set_additional_question_flag"
+    PROCEED_TO_THE_NEXT_STEP = "Proceeded to the next step. You will see a notification soon!"
     DESIGN_PLEASE_WAIT = "Sorry, I haven't come up with an answer to the previous question yet. Please give me one more minute to think everything over 🤔⏳"
     FAILED_WORKFLOW = (
         "⚠️ We encountered an error while processing the workflow **{technical_id}**. "

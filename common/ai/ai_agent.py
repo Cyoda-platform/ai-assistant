@@ -1,6 +1,8 @@
 import json
 import jsonschema
 from jsonschema import ValidationError
+
+from common.config import const
 from common.config.config import config
 from entity.chat.chat import ChatEntity
 from entity.model import ModelConfig
@@ -74,6 +76,9 @@ class OpenAiAgent:
                         "tool_call_id": call.id,
                         "content": str(result)
                     })
+                    if call.function.name == const.Notifications.EXIT_LOOP_FUNCTION_NAME.value:
+                        messages.append({"role": "assistant", "content": const.Notifications.PROCEED_TO_THE_NEXT_STEP.value})
+                    return const.Notifications.PROCEED_TO_THE_NEXT_STEP.value
                 continue
 
             content = resp.content

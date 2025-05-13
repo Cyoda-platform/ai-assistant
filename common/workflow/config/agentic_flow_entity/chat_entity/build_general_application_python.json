@@ -296,7 +296,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. Summarise the requirement in a couple of sentences and set to true if the user chooses your example answers or after 6 attempts! Do not hold the user too long. Response format (do not add any other text): Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. Summarise the requirement in a couple of sentences and set to true if the user chooses your example answers or after 6 attempts! Do not hold the user too long.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -333,7 +333,7 @@
                     " Do not ask about any specific frameworks or technologies, the final application will be in quart python on Cyoda platform - no other choices.",
                     " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. format it with markdown ",
                     " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
-                    " Call set_additional_question_flag with true immediately after 6 attempts. Do not hold the user too long they will bored. If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer.",
+                    " Call set_additional_question_flag with true immediately after 6 attempts. Do not hold the user too long they will bored.",
                     " Be polite, please ",
                     " Here is my requirement: "
                   ]
@@ -532,7 +532,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Set true if the discussion with the user is not complete and the user has additional questions/requirements, set false if the user asks to proceed or if the user is satisfied with the current result (e.g. says it is correct, valid, works for them). If set to false notify the user you're going to proceed with prototype generation. Response format (do not add any other text): Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "description": "Set true if the discussion with the user is not complete and the user has additional questions/requirements, set false if the user asks to proceed or if the user is satisfied with the current result (e.g. says it is correct, valid, works for them). If set to false notify the user you're going to proceed with prototype generation.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -659,8 +659,7 @@
                     "You are most welcome to use such pattern where it is reasonable:",
                     "entity_job[job_id] = {\"status\": \"processing\", \"requestedAt\": requested_at}\n# Fire and forget the processing task.",
                     "await asyncio.create_task(process_entity(entity_job, data.__dict__))",
-                    "please use correct logging, e.g.:\nimport logging\nlogger = logging.getLogger(__name__)\nlogger.setLevel(logging.INFO)\nlogger.exception(e)",
-                  "If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer."
+                    "please use correct logging, e.g.:\nimport logging\nlogger = logging.getLogger(__name__)\nlogger.setLevel(logging.INFO)\nlogger.exception(e)"
                   ]
                 }
               ]
@@ -917,7 +916,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Finish the iteration if the user is happy with the result and has no more questions. Response format (do not add any other text)r: Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "description": "Finish the iteration if the user is happy with the result and has no more questions.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -950,8 +949,6 @@
                     " Then use your own judgement to introduce changes necessary for the user",
                     " Finally save the changes to the prototype.py file. And let the user know what changes you introduced and why.",
                     " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case.",
-                    "If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer."
-
                   ]
                 }
               ],
@@ -1154,7 +1151,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Finish the iteration if the user is happy with the result and has no more questions. Response format (do not add any other text): Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "description": "Finish the iteration if the user is happy with the result and has no more questions.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1187,7 +1184,6 @@
                     " Then use your own judgement to introduce changes necessary for the user",
                     " Finally save the changes to the prototype.py file. And let the user know what changes you introduced and why.",
                     " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case.",
-                    "If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer."
                   ]
                 }
               ],
@@ -1569,7 +1565,6 @@
                   "content": [
                     "You are given a Python code that includes definitions and usage of an `entity_service` class or function.",
                     "This service add method accepts an `entity_model` argument and optionally a `workflow` argument.",
-
                     "## 1. Entity Model Node:",
                     "Task: Extract all `entity_model` references passed to `entity_service`.",
                     "Example Python code:",
@@ -1583,14 +1578,12 @@
                     "```",
                     "- Here, `entity_model` is `'example'`",
                     "- `workflow` is a reference to `my_workflow`, which must be fully extracted",
-
                     "You must extract:",
                     "- `entity_model_name`: e.g. `'example'`",
                     "- Workflow function details:",
                     "    - `name`: the function name, e.g. `my_workflow`",
                     "    - `content`: the full code block of the function",
                     "    - `code_with_necessary_imports_and_constants`: include any top-level imports or constants used by the function, if applicable",
-
                     "JSON Output Example for `entity_models`:",
                     "```json",
                     "{",
@@ -1602,7 +1595,6 @@
                     "  }",
                     "}",
                     "```",
-
                     "## 2. File Without Workflow Node:",
                     "Task: Return the full original Python code, but with all `workflow` arguments removed.",
                     "For the above code, this means:",
@@ -1614,16 +1606,13 @@
                     "```python",
                     "service = entity_service(entity_model='example')",
                     "```",
-
                     "Do not change anything else in the code, even if the `workflow` function is no longer used.",
-
                     "JSON Output Example for `file_without_workflow`:",
                     "```json",
                     "{",
                     "  \"code\": \"service = entity_service(entity_model='example')\"",
                     "}",
                     "```",
-
                     "## Combined JSON Structure Example (Final Output):",
                     "{",
                     "  \"entity_models\": [",

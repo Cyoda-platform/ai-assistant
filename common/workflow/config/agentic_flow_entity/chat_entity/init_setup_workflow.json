@@ -111,7 +111,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.  Response format (do not add any other text): Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -139,8 +139,7 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Troubleshooting:** Let the user know: if they can’t find the .env.template file, make sure they’re on the correct branch. If it’s still missing, check their .gitignore or ensure the repo was cloned fully, including any submodules.",
-                    "If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer."
+                    "**Troubleshooting:** Let the user know: if they can’t find the .env.template file, make sure they’re on the correct branch. If it’s still missing, check their .gitignore or ensure the repo was cloned fully, including any submodules."
                   ]
                 }
               ],
@@ -185,7 +184,6 @@
                     "- Let the user know: if they encounter `ModuleNotFoundError`, they should run `export PYTHONPATH=/your_dir/quart-client-template:$PYTHONPATH\n`.",
                     "- Let the user know: if they encounter `ModuleNotFoundError`, they should run `pip install -r requirements.txt`.",
                     "- Let the user know: they should use `python3 app.py` instead of `python app.py` in case of common errors."
-
                   ]
                 }
               ],
@@ -260,7 +258,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.  Response format (do not add any other text): Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -291,8 +289,7 @@
                     "**Troubleshooting:**",
                     "- Let the user know: if they encounter `ModuleNotFoundError`, they should run `pip install -r requirements.txt`.",
                     "- Let the user know: if `quart` isn’t found, they should install it with `pip install quart`.",
-                    "- Let the user know: if they see permission errors, they should try `python3 app.py` instead of `python app.py`.",
-                    "If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer."
+                    "- Let the user know: if they see permission errors, they should try `python3 app.py` instead of `python app.py`."
                   ]
                 }
               ],
@@ -355,11 +352,10 @@
                   "content": [
                     "**Step 3:** Let the user know: now let’s configure their Cyoda Cloud instance.",
                     "- Let the user know: do they already have an environment?",
-                    "  • Let the user know: if they do, let them decide whether they want to redeploy it. If they choose to redeploy, call the deploy cyoda env tool; otherwise, call set_additional_question_flag with False.  If you use this tool just tel the user: Response format (do not add any other text). Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "  • Let the user know: if they do, let them decide whether they want to redeploy it. If they choose to redeploy, call the deploy cyoda env tool; otherwise, call set_additional_question_flag with False.",
                     "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now (this may disrupt others!).",
                     "",
-                    "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes.",
-                    "If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer."
+                    "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes."
                   ]
                 }
               ],
@@ -406,7 +402,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately. Response format (do not add any other text): Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -435,14 +431,14 @@
                   "role": "user",
                   "content": [
                     "- Clarify if the user already has an environment",
-                    "  • Let the user know: if they do, let them decide whether they want to redeploy it (this may disrupt others!). If they choose to redeploy, call the deploy cyoda env tool; otherwise, call set_additional_question_flag with False. Response format (do not add any other text): Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "  • Let the user know: if they do, let them decide whether they want to redeploy it (this may disrupt others!). If they choose to redeploy, call the deploy cyoda env tool; otherwise, call set_additional_question_flag with False.",
                     "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now .",
                     "",
                     "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes.",
                     " Ask the user confirm that their environment is deployed and they are happy with the result. ",
                     " Once the user tells you the env is ready/they are happy/done/ready to proceed set_additional_question_flag to False immediately",
                     "**Troubleshooting:** Let the user know: N/A (deployment errors will be surfaced by the deployment tool).",
-                    "If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer."
+                    " For this and any subsequent requests - if you call tool set_additional_question_flag your "
                   ]
                 }
               ],
@@ -538,7 +534,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately. Response format (do not add any other text): Proceeded to the next step.Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately. ",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -566,9 +562,7 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Troubleshooting:** Let the user know: missing or malformed values may cause runtime errors—ensure there are no stray spaces and quotes only where needed.",
-                    "If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer."
-                  ]
+                    "**Troubleshooting:** Let the user know: missing or malformed values may cause runtime errors—ensure there are no stray spaces and quotes only where needed."]
                 }
               ],
               "tool_choice": "auto",
@@ -822,7 +816,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately. Response format (do not add any other text): Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message.  Work in progress.",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately. ",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -850,9 +844,7 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Troubleshooting:** Let the user know: if the import fails, they should verify their JSON formats and version compatibility, and check the Cloud logs for detailed import errors.",
-                    "If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer."
-                  ]
+                    "**Troubleshooting:** Let the user know: if the import fails, they should verify their JSON formats and version compatibility, and check the Cloud logs for detailed import errors."]
                 }
               ],
               "tool_choice": "auto",
@@ -1127,7 +1119,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately. Response format (do not add any other text): Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately. ",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1157,9 +1149,7 @@
                   "content": [
                     "**Troubleshooting:**",
                     "- Let the user know: if they can’t access the server, they should check that it’s still running and that their firewall allows local traffic.",
-                    "- Let the user know: if no GRPC event occurs, they should verify their endpoint triggers GRPC and inspect the logs to trace payload delivery.",
-                    "If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer."
-                  ]
+                    "- Let the user know: if no GRPC event occurs, they should verify their endpoint triggers GRPC and inspect the logs to trace payload delivery."]
                 }
               ],
               "tool_choice": "auto",
@@ -1251,7 +1241,7 @@
                   "type": "function",
                   "function": {
                     "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately. Response format (do not add any other text): Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress.",
+                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1279,10 +1269,7 @@
                 {
                   "role": "user",
                   "content": [
-                    " If the user asks to deploy their application - call deploy user app. ",
-                    "**Troubleshooting:** N/A",
-                    "If you choose set_additional_question_flag you can only return Proceeded to the next step. Proceeded to the next step. You will see a notification soon! Please wait for the next message. Work in progress. as an answer."
-                  ]
+                    " If the user asks to deploy their application - call deploy user app. "]
                 }
               ],
               "tool_choice": "auto",
