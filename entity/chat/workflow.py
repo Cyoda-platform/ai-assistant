@@ -279,12 +279,12 @@ class ChatWorkflow(Workflow):
         # Await the asynchronous git_pull function.
         return await read_file_util(filename=params.get("filename"), technical_id=technical_id)
 
-    async def set_additional_question_flag(self, technical_id: str, entity: ChatEntity, **params: Any) -> None:
+    async def finish_discussion(self, technical_id: str, entity: ChatEntity, **params: Any) -> None:
         transition = params.get("transition")
         if transition is None:
             raise ValueError("Missing required parameter: 'transition'")
 
-        additional_flag = params.get("require_additional_question_flag")
+        additional_flag = False
 
         # Ensure the nested dictionary for conditions exists.
         conditions = entity.transitions_memory.conditions

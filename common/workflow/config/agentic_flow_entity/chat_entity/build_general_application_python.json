@@ -173,7 +173,6 @@
                     " Do not ask about any specific frameworks or technologies, the final application will be in quart python on Cyoda platform - no other choices.",
                     " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. format it with markdown ",
                     " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
-                    " Call set_additional_question_flag with true immediately after 6 attempts. Do not hold the user too long they will bored",
                     " Be polite, please ",
                     " Here is my requirement: "
                   ]
@@ -295,8 +294,8 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. Summarise the requirement in a couple of sentences and set to true if the user chooses your example answers or after 6 attempts! Do not hold the user too long.",
+                    "name": "finish_discussion",
+                    "description": "Use if you have enough information or the user asks to proceed to the next question. Summarise the requirement in a couple of sentences and set to true if the user chooses your example answers or after 6 attempts! Do not hold the user too long.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -306,13 +305,9 @@
                           "enum": [
                             "process_application_requirement"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false
@@ -333,7 +328,7 @@
                     " Do not ask about any specific frameworks or technologies, the final application will be in quart python on Cyoda platform - no other choices.",
                     " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. format it with markdown ",
                     " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
-                    " Call set_additional_question_flag with true immediately after 6 attempts. Do not hold the user too long they will bored.",
+                    " Call finish_discussion immediately after 6 attempts. Do not hold the user too long they will bored.",
                     " Be polite, please ",
                     " Here is my requirement: "
                   ]
@@ -531,8 +526,8 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Set true if the discussion with the user is not complete and the user has additional questions/requirements, set false if the user asks to proceed or if the user is satisfied with the current result (e.g. says it is correct, valid, works for them). If set to false notify the user you're going to proceed with prototype generation.",
+                    "name": "finish_discussion",
+                    "description": "Use if the user asks to proceed or if the user is satisfied with the current result (e.g. says it is correct, valid, works for them). If set to false notify the user you're going to proceed with prototype generation.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -542,13 +537,9 @@
                           "enum": [
                             "discuss_api"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false
@@ -915,7 +906,7 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
+                    "name": "finish_discussion",
                     "description": "Finish the iteration if the user is happy with the result and has no more questions.",
                     "strict": true,
                     "parameters": {
@@ -926,13 +917,9 @@
                           "enum": [
                             "discuss_prototype"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false
@@ -1150,7 +1137,7 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
+                    "name": "finish_discussion",
                     "description": "Finish the iteration if the user is happy with the result and has no more questions.",
                     "strict": true,
                     "parameters": {
@@ -1161,13 +1148,9 @@
                           "enum": [
                             "migration_confirmation"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false

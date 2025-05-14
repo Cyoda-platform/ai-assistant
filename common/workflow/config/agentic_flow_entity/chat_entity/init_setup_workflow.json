@@ -110,8 +110,8 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.",
+                    "name": "finish_discussion",
+                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -121,13 +121,9 @@
                           "enum": [
                             "process_app_setup_1"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false
@@ -257,8 +253,8 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.",
+                    "name": "finish_discussion",
+                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -268,13 +264,9 @@
                           "enum": [
                             "process_app_setup_2"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false
@@ -352,7 +344,7 @@
                   "content": [
                     "**Step 3:** Let the user know: now let’s configure their Cyoda Cloud instance.",
                     "- Let the user know: do they already have an environment?",
-                    "  • Let the user know: if they do, let them decide whether they want to redeploy it. If they choose to redeploy, call the deploy cyoda env tool; otherwise, call set_additional_question_flag with False.",
+                    "  • Let the user know: if they do, let them decide whether they want to redeploy it. If they choose to redeploy, call the deploy cyoda env tool; otherwise, call finish_discussion.",
                     "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now (this may disrupt others!).",
                     "",
                     "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes."
@@ -401,8 +393,8 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.",
+                    "name": "finish_discussion",
+                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -412,13 +404,9 @@
                           "enum": [
                             "process_app_setup_3"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false
@@ -431,14 +419,13 @@
                   "role": "user",
                   "content": [
                     "- Clarify if the user already has an environment",
-                    "  • Let the user know: if they do, let them decide whether they want to redeploy it (this may disrupt others!). If they choose to redeploy, call the deploy cyoda env tool; otherwise, call set_additional_question_flag with False.",
+                    "  • Let the user know: if they do, let them decide whether they want to redeploy it (this may disrupt others!). If they choose to redeploy, call the deploy cyoda env tool; otherwise, call finish_discussion.",
                     "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now .",
                     "",
                     "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes.",
                     " Ask the user confirm that their environment is deployed and they are happy with the result. ",
-                    " Once the user tells you the env is ready/they are happy/done/ready to proceed set_additional_question_flag to False immediately",
+                    " Once the user tells you the env is ready/they are happy/done/ready to proceed finish_discussion immediately",
                     "**Troubleshooting:** Let the user know: N/A (deployment errors will be surfaced by the deployment tool).",
-                    " For this and any subsequent requests - if you call tool set_additional_question_flag your "
                   ]
                 }
               ],
@@ -533,8 +520,8 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately. ",
+                    "name": "finish_discussion",
+                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -544,13 +531,9 @@
                           "enum": [
                             "process_app_setup_4"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false
@@ -815,8 +798,8 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately. ",
+                    "name": "finish_discussion",
+                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -826,13 +809,9 @@
                           "enum": [
                             "process_app_setup_5"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false
@@ -1118,8 +1097,8 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately. ",
+                    "name": "finish_discussion",
+                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1129,13 +1108,9 @@
                           "enum": [
                             "process_app_setup_6"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false
@@ -1190,7 +1165,7 @@
                     "**Step 7:** Let the user know: now that the client application is running smoothly on their local machine, ask if they would like to deploy it to their Cyoda Cloud environment.",
                     "Let the user know: this deployment will provision the app into our Kubernetes cluster using the Helm charts located in the project’s `helm/` directory.",
                     "Let the user know: if they approve, deploy the user application and pass the session branch name.",
-                    "Let the user know: if they deny, call `set_additional_question_flag` with `False`."
+                    "Let the user know: if they deny, call `finish_discussion`."
                   ]
                 }
               ],
@@ -1240,8 +1215,8 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. If the user wants to go to the next step set False immediately.",
+                    "name": "finish_discussion",
+                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1251,13 +1226,9 @@
                           "enum": [
                             "process_app_setup_7"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false
