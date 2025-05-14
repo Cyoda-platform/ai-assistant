@@ -425,7 +425,7 @@
                     "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes.",
                     " Ask the user confirm that their environment is deployed and they are happy with the result. ",
                     " Once the user tells you the env is ready/they are happy/done/ready to proceed finish_discussion immediately",
-                    "**Troubleshooting:** Let the user know: N/A (deployment errors will be surfaced by the deployment tool).",
+                    "**Troubleshooting:** Let the user know: N/A (deployment errors will be surfaced by the deployment tool)."
                   ]
                 }
               ],
