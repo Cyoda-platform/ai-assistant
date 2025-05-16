@@ -1,5 +1,4 @@
 import json
-import os
 import common.config.const as const
 import aiofiles
 import inspect
@@ -10,14 +9,14 @@ from common.config.config import config as env_config
 from common.utils.batch_parallel_code import batch_process_file
 
 from common.utils.chat_util_functions import enrich_config_message
-from common.utils.utils import _save_file, _post_process_response, get_current_timestamp_num, clone_repo, \
-    get_project_file_name_path
+from common.utils.utils import _save_file, _post_process_response, get_current_timestamp_num, \
+    get_project_file_name_path, get_repository_name
 from entity.chat.chat import AgenticFlowEntity
 from entity.model import FlowEdgeMessage, ChatMemory, AIMessage, WorkflowEntity, ModelConfig
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    format="%(asctime)s [%(levelname)s] [%(threadName)s] %(name)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
 
@@ -271,7 +270,10 @@ class WorkflowDispatcher:
                     except Exception as e:
                         formatted_filename = file_name
                         logger.exception(e)
-                    file_contents = await self._read_local_file(file_name=formatted_filename, technical_id=branch_id, branch_name_id=branch_id)
+                    file_contents = await self._read_local_file(file_name=formatted_filename,
+                                                                technical_id=branch_id,
+                                                                branch_name_id=branch_id,
+                                                                repository_name=get_repository_name(entity))
                     messages.append({"role": "user", "content": f"Reference: {file_name}: \n {file_contents}"})
             elif input_data.get("cyoda_edge_message"):
                 edge_messages = input_data.get("cyoda_edge_message")
@@ -286,8 +288,11 @@ class WorkflowDispatcher:
 
         return messages
 
-    async def _read_local_file(self, file_name, technical_id, branch_name_id):
-        file_path = await get_project_file_name_path(technical_id=technical_id, git_branch_id=branch_name_id, file_name=file_name)
+    async def _read_local_file(self, file_name, technical_id, branch_name_id, repository_name):
+        file_path = await get_project_file_name_path(technical_id=technical_id,
+                                                     git_branch_id=branch_name_id,
+                                                     file_name=file_name,
+                                                     repository_name=repository_name)
         try:
             async with aiofiles.open(file_path, 'r') as file:
                 file_contents = await file.read()
@@ -354,7 +359,11 @@ class WorkflowDispatcher:
                         formatted_filename = cache_key
                         logger.exception(e)
                     branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
-                    await _save_file(chat_id=branch_id, _data=response, item=formatted_filename, git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id))
+                    await _save_file(chat_id=branch_id,
+                                     _data=response,
+                                     item=formatted_filename,
+                                     git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                                     repository_name=get_repository_name(entity))
             if config.get("output").get("workflow_cache"):
                 cache_keys = config.get("output").get("workflow_cache")
                 for cache_key in cache_keys:

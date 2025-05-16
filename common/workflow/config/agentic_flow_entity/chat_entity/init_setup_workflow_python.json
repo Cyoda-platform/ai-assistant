@@ -1,6 +1,6 @@
 {
   "initial_state": "none",
-  "workflow_name": "init_cyoda_setup",
+  "workflow_name": "init_setup_workflow_python",
   "states": {
     "none": {
       "transitions": {

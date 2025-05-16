@@ -12,7 +12,7 @@ from entity.model import SchedulerEntity, FlowEdgeMessage
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    format="%(asctime)s [%(levelname)s] [%(threadName)s] %(name)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
 
@@ -37,7 +37,6 @@ class WorkflowHelperService:
             logger.error(f"Failed to read JSON file {mock_external_data_path}: {e}")
             raise
         json_mock_data = json.loads(data)
-
 
     # =============================
     async def launch_agentic_workflow(self,
@@ -94,14 +93,17 @@ class WorkflowHelperService:
                                         entity_service,
                                         awaited_entity_ids,
                                         triggered_entity_id,
-                                        scheduled_action: config.ScheduledAction = config.ScheduledAction.SCHEDULE_ENTITIES_FLOW):
+                                        triggered_entity_next_transition: str = None,
+                                        scheduled_action: config.ScheduledAction = config.ScheduledAction.SCHEDULE_ENTITIES_FLOW,
+                                        ):
 
         child_entity: SchedulerEntity = SchedulerEntity.model_validate({
             "user_id": "system",
             "workflow_name": const.ModelName.SCHEDULER_ENTITY.value,
             "awaited_entity_ids": awaited_entity_ids,
             "triggered_entity_id": triggered_entity_id,
-            "scheduled_action": scheduled_action.value
+            "scheduled_action": scheduled_action.value,
+            "triggered_entity_next_transition": triggered_entity_next_transition
         })
 
         child_technical_id = await entity_service.add_item(token=self.cyoda_auth_service,

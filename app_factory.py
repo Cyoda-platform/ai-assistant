@@ -12,6 +12,7 @@ from routes.chat import chat_bp
 from routes.labels_config import labels_config_bp
 from routes.token import token_bp
 from services.factory import grpc_client
+from services.factory import scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,20 @@ def create_app():
 
     # --- Error handlers ---
     init_error_handlers(app)
+
+    def start_scheduler_background():
+        loop = asyncio.new_event_loop()
+
+        def run_loop():
+            asyncio.set_event_loop(loop)
+            loop.run_forever()
+
+        # Start loop in background thread
+        threading.Thread(target=run_loop, daemon=True).start()
+        # Schedule the coroutine
+        future = asyncio.run_coroutine_threadsafe(scheduler.start(), loop)
+        logger.info("Started Scheduler background thread.")
+        return loop, future
 
     # --- CORS + OPTIONS hooks ---
     @app.before_serving
@@ -45,6 +60,9 @@ def create_app():
         threading.Thread(target=lambda: (asyncio.set_event_loop(loop), loop.run_forever()), daemon=True).start()
         app.background_task = asyncio.run_coroutine_threadsafe(grpc_client.grpc_stream(), loop)
         logger.info("Started gRPC background stream.")
+        loop, future = start_scheduler_background()
+
+
 
     @app.after_serving
     async def shutdown_grpc():

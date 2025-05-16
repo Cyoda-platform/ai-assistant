@@ -122,6 +122,7 @@ class ServicesFactory:
             "dataset": self.dataset,
             "device_sessions": self.device_sessions,
             "cyoda_auth_service": self.cyoda_auth_service,
+            "scheduler": self.scheduler
         }  # or directly paste the BeanFactory class here, then drop logic.init
 
 
@@ -134,6 +135,7 @@ entity_service = _services['entity_service']
 chat_lock = _services['chat_lock']
 fsm_implementation = _services['fsm']
 grpc_client = _services['grpc_client']
+scheduler = _services['scheduler']
 cyoda_auth_service = _services['cyoda_auth_service']
 chat_service = _services['chat_service']
 labels_config_service = _services['labels_config_service']

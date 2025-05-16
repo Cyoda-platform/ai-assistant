@@ -32,7 +32,7 @@ from entity.model import FlowEdgeMessage, ChatMemory, ModelConfig, AgenticFlowEn
 logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    format="%(asctime)s [%(levelname)s] [%(threadName)s] %(name)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
 
@@ -217,30 +217,30 @@ class ChatService:
             technical_id=technical_id
         )
 
-        if not chat and config.CHAT_REPOSITORY == "local":
-            async with self.chat_lock:
-                chat = await self.entity_service.get_item(
-                    token=self.cyoda_auth_service,
-                    entity_model=const.ModelName.CHAT_ENTITY.value,
-                    entity_version=config.ENTITY_VERSION,
-                    technical_id=technical_id
-                )
-                if not chat:
-                    await clone_repo(chat_id=technical_id)
-                    async with httpx.AsyncClient() as client:
-                        response = await client.get(f"{config.RAW_REPOSITORY_URL}/{technical_id}/entity/chat.json")
-                        response.raise_for_status()  # Optional: ensures error is raised for non-2xx
-                        data = response.text
-                    chat = ChatEntity.model_validate(json.loads(data))
-                    if not chat:
-                        raise ChatNotFoundException()
-                    await self.entity_service.add_item(
-                        token=self.cyoda_auth_service,
-                        entity_model=const.ModelName.CHAT_ENTITY.value,
-                        entity_version=config.ENTITY_VERSION,
-                        entity=chat
-                    )
-        elif not chat:
+        # if not chat and config.CHAT_REPOSITORY == "local":
+        #     async with self.chat_lock:
+        #         chat = await self.entity_service.get_item(
+        #             token=self.cyoda_auth_service,
+        #             entity_model=const.ModelName.CHAT_ENTITY.value,
+        #             entity_version=config.ENTITY_VERSION,
+        #             technical_id=technical_id
+        #         )
+        #         if not chat:
+        #             await clone_repo(chat_id=technical_id)
+        #             async with httpx.AsyncClient() as client:
+        #                 response = await client.get(f"{config.RAW_REPOSITORY_URL}/{technical_id}/entity/chat.json")
+        #                 response.raise_for_status()  # Optional: ensures error is raised for non-2xx
+        #                 data = response.text
+        #             chat = ChatEntity.model_validate(json.loads(data))
+        #             if not chat:
+        #                 raise ChatNotFoundException()
+        #             await self.entity_service.add_item(
+        #                 token=self.cyoda_auth_service,
+        #                 entity_model=const.ModelName.CHAT_ENTITY.value,
+        #                 entity_version=config.ENTITY_VERSION,
+        #                 entity=chat
+        #             )
+        if not chat:
             raise ChatNotFoundException()
 
         await self._validate_chat_owner(chat, user_id)

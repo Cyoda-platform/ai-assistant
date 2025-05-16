@@ -1,6 +1,6 @@
 {
   "initial_state": "none",
-  "workflow_name": "generating_gen_app_workflow",
+  "workflow_name": "generating_gen_app_workflow_python",
   "states": {
     "none": {
       "transitions": {

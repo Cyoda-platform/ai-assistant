@@ -35,7 +35,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "owner": "CYODA",
         "user": "CYODA",
         "attach_entity": "true",
-        "calculation_response_timeout_ms": "900000",
+        "calculation_response_timeout_ms": "300000",
         "retry_policy": "FIXED",  # NONE
         "sync_process": "false",
         "new_transaction_for_async": "true",

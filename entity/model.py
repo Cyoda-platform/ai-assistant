@@ -2,6 +2,7 @@ from typing import Dict, Any, Optional, List, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from common.config.config import config
+from common.config.const import SCHEDULER_STATUS_WAITING
 
 
 class WorkflowEntity(BaseModel):
@@ -73,6 +74,7 @@ class SchedulerEntity(WorkflowEntity):
     triggered_entity_id: str = ""
     scheduled_action: Optional[str] = config.ScheduledAction.SCHEDULE_ENTITIES_FLOW.value
     triggered_entity_next_transition: Optional[str] = None
+    status: Optional[str] = SCHEDULER_STATUS_WAITING
 
 class QuestionsQueue(WorkflowEntity):
     model_config = ConfigDict(extra="ignore")

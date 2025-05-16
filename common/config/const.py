@@ -92,8 +92,10 @@ class ModelName(str, Enum):
     EDGE_MESSAGE_STORE = "edge_message_store"
     CHAT_ENTITY = "chat_entity"
     AGENTIC_FLOW_ENTITY = "agentic_flow_entity"
-    GEN_APP_ENTITY = "build_general_application_python"
-    GENERATING_GEN_APP_WORKFLOW = "generating_gen_app_workflow"
+    GEN_APP_ENTITY_PYTHON = "build_general_application_python"
+    GEN_APP_ENTITY_JAVA = "build_general_application_java"
+    GENERATING_GEN_APP_WORKFLOW_JAVA = "generating_gen_app_workflow_java"
+    GENERATING_GEN_APP_WORKFLOW_PYTHON = "generating_gen_app_workflow_python"
     SCHEDULER_ENTITY = "scheduler_entity"
     TRANSFER_CHATS_ENTITY = "transfer_chats_entity"
     ADD_NEW_FEATURE = "edit_existing_app_design_additional_feature"
@@ -102,7 +104,8 @@ class ModelName(str, Enum):
     EDIT_API_EXISTING_APP = "edit_api_existing_app"
     EDIT_EXISTING_WORKFLOW = "edit_existing_workflow"
     EDIT_EXISTING_PROCESSORS = "edit_existing_processors"
-    INIT_SETUP_WORKFLOW = "init_setup_workflow"
+    INIT_SETUP_WORKFLOW_JAVA = "init_setup_workflow_java"
+    INIT_SETUP_WORKFLOW_PYTHON = "init_setup_workflow_python"
 
 # === Deployment flows ===
 @unique
@@ -135,7 +138,7 @@ class Notifications(str, Enum):
     PUSH_NOTIFICATION = "push_notification"
     APPROVE = (
         "I'm happy with the current result. Let's proceed to the next "
-        "iteration—please call set_additional_question_flag(False) to conclude this discussion."
+        "iteration—please call finish_discussion to conclude this discussion."
     )
     OPERATION_FAILED = (
         "⚠️ Sorry, this action is not available right now. Please try again or wait for new questions ⚠️"
@@ -206,7 +209,7 @@ FILES_NOTIFICATIONS = {
     },
 }
 
-BRANCH_READY_NOTIFICATION = "🎉 **Your branch is live!**\n\nJust clone and check it out when you’re ready. 😎\n\n1. Clone quart-client-template:\n```bash\ngit clone https://github.com/Cyoda-platform/quart-client-template/\n```\n\n2. Jump to your branch:\n```bash\ngit checkout {branch_name}\n```\n\nPeek at it here if you're the curious type: [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) 👀\n\nYou've got two modules:\n- **Common** – Already wired up. Touch it only if you're feeling brave. 🛠️\n- **Entity** – Your playground. Add, edit, and push. I’ll keep an eye out. \n\nJust ping me here if you’ve got any questions!😸"
+BRANCH_READY_NOTIFICATION = "🎉 **Your branch is live!**\n\nJust clone and check it out when you’re ready. 😎\n\n1. Clone {repository_name}:\n```bash\ngit clone https://github.com/Cyoda-platform/{repository_name}/\n```\n\n2. Jump to your branch:\n```bash\ngit checkout {branch_name}\n```\n\nPeek at it here if you're the curious type: [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{branch_name}) 👀\n\nYou've got two modules:\n- **Common** – Already wired up. Touch it only if you're feeling brave. 🛠️\n- **Entity** – Your playground. Add, edit, and push. I’ll keep an eye out. \n\nJust ping me here if you’ve got any questions!😸"
 
 # === Miscellaneous design strings ===
 LOGIC_CODE_DESIGN_STR = "Additional logic code design"
@@ -227,3 +230,4 @@ CYODA_PAGE_SIZE = 100
 MAX_SCHEDULER_POLLS = 120
 MAX_GUEST_CHAT_MESSAGES = 300
 MAX_CHAT_MESSAGES = 1500
+SCHEDULER_STATUS_WAITING = "waiting"
