@@ -39,7 +39,7 @@ async def trigger_manual_transition(
                 type="answer",
                 publish=True,
                 edge_message_id=edge_message_id,
-                consumed=False,
+                consumed=transition==const.TransitionKey.MANUAL_APPROVE.value,
                 user_id=chat.user_id
             )
         )
