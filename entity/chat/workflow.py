@@ -160,7 +160,7 @@ class ChatWorkflow(Workflow):
             **params
     ) -> str:
         repository_name = get_repository_name(entity)
-        repository_url = config.REPOSITORY_URL.format(repository_name=repository_name)
+        repository_url = f"{config.REPOSITORY_URL.format(repository_name=repository_name)}.git"
         extra_payload = {
             "repository_url": repository_url,
             "branch": entity.workflow_cache.get(const.GIT_BRANCH_PARAM),
