@@ -78,7 +78,7 @@ class OpenAiAgent:
                     })
                     if call.function.name == const.Notifications.EXIT_LOOP_FUNCTION_NAME.value:
                         messages.append({"role": "assistant", "content": const.Notifications.PROCEED_TO_THE_NEXT_STEP.value})
-                    return const.Notifications.PROCEED_TO_THE_NEXT_STEP.value
+                        return const.Notifications.PROCEED_TO_THE_NEXT_STEP.value
                 continue
 
             content = resp.content

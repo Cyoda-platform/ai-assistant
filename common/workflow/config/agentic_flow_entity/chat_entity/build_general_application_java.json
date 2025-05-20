@@ -167,9 +167,8 @@
                     " Hello! You are a Java Spring Boot developer.",
                     " You're building a backend application.",
                     " Currently you are focusing on functional requirements, and will cover any non-functional requirement later.",
-                    " Let's analyse this request for application building, and clarify any important functional requirements that are necessary.",
-                    " Ask questions if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations.",
-                    " Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. Max tokens = 300.",
+                    " Let's analyse this request for application building, and clarify any important functional requirements that necessary.",
+                    " Max 3 questions and suggestions at a time - ask only if absolutely necessary. Keep it short so that the user is kept engaged. It is better to say something like - Would you like to A or B, Do i understand correct and you'd prefer A to B - etc",
                     " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
                     " Do not ask about any specific frameworks or technologies, the final application will be in Java Spring Boot on Cyoda platform - no other choices.",
                     " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. format it with markdown ",
@@ -591,6 +590,15 @@
                   }
                 }
               ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Please, adjust the the functional requirements and the API according to the user request. ",
+                    " Once the user is happy with the result or has no more questions, please call finish_discussion. "
+                  ]
+                }
+              ],
               "tool_choice": "auto",
               "max_iteration": 30,
               "approve": true
@@ -1009,7 +1017,8 @@
                     " If the user asks you to make any improvements or fix any issues please first read the file src/main/java/com/java_template/entity/EntityControllerPrototype.java to get the latest version.",
                     " Then use your own judgement to introduce changes necessary for the user",
                     " Finally save the changes to the EntityControllerPrototype.java file. And let the user know what changes you introduced and why.",
-                    " If the user just asks any general question or a question about the code, read the EntityControllerPrototype.java file if necessary, answer the question, no save needed in this case."
+                    " If the user just asks any general question or a question about the code, read the EntityControllerPrototype.java file if necessary, answer the question, no save needed in this case.",
+                    " Call finish_discussion only once the user is happy with the result or asks to proceed. "
                   ]
                 }
               ],
@@ -1268,7 +1277,8 @@
                     " If the user asks you to make any improvements or fix any issues please first read the file src/main/java/com/java_template/entity/EntityControllerPrototype.java to get the latest version.",
                     " Then use your own judgement to introduce changes necessary for the user",
                     " Finally save the changes to the prototype.py file. And let the user know what changes you introduced and why.",
-                    " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case."
+                    " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case.",
+                    " Call finish_discussion only once the user is happy with the result or asks to proceed. "
                   ]
                 }
               ],
@@ -1816,7 +1826,8 @@
                 "name": "init_setup_workflow",
                 "description": "init_setup_workflow",
                 "parameters": {
-                  "user_request": "Hello! Please help me start my new application."
+                  "user_request": "Hello! Please help me start my new application.",
+                  "programming_language": "JAVA"
                 }
               },
               "publish": false

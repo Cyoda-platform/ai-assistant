@@ -374,8 +374,7 @@ class ChatWorkflow(Workflow):
         return mermaid_diagram
 
     async def save_entity_templates(self, technical_id, entity: ChatEntity, **params):
-        file_path = await get_project_file_name(technical_id,
-                                                file_name="entity/entities_data_design.json",
+        file_path = await get_project_file_name(file_name="entity/entities_data_design.json",
                                                 git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
                                                 repository_name=get_repository_name(entity))
 
@@ -754,11 +753,16 @@ class ChatWorkflow(Workflow):
             #raise GuestChatsLimitExceededException()
             return "Sorry, setting up Cyoda env is available only to logged in users. Please sign up or login!"
         # todo cloud manager needs to return namespace
+        programming_language = params.get("programming_language")
+        if not programming_language:
+            return "parameter programming_language is required"
+        workflow_name = const.ModelName.INIT_SETUP_WORKFLOW_JAVA.value if programming_language == "JAVA" else const.ModelName.INIT_SETUP_WORKFLOW_PYTHON.value
+
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
             entity_model=const.ModelName.CHAT_ENTITY.value,
-            workflow_name=const.ModelName.INIT_SETUP_WORKFLOW_JAVA.value if entity.workflow_name.endswith("java") else const.ModelName.INIT_SETUP_WORKFLOW_PYTHON.value,
+            workflow_name=workflow_name,
             params=params,
         )
 
@@ -766,22 +770,34 @@ class ChatWorkflow(Workflow):
     async def add_new_entity_for_existing_app(
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
+        programming_language = params.get("programming_language")
+        if not programming_language:
+            return "parameter programming_language is required"
+        workflow_name = const.ModelName.ADD_NEW_ENTITY_JAVA.value if programming_language == "JAVA" else const.ModelName.ADD_NEW_ENTITY_PYTHON.value
+
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
             entity_model=const.ModelName.CHAT_ENTITY.value,
-            workflow_name=const.ModelName.ADD_NEW_ENTITY.value,
+            workflow_name=workflow_name,
             params=params,
         )
 
     async def add_new_workflow(
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
+
+        programming_language = params.get("programming_language")
+        if not programming_language:
+            return "parameter programming_language is required"
+        workflow_name = const.ModelName.ADD_NEW_WORKFLOW_JAVA.value if programming_language == "JAVA" else const.ModelName.ADD_NEW_WORKFLOW_PYTHON.value
+
+
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
             entity_model=const.ModelName.CHAT_ENTITY.value,
-            workflow_name=const.ModelName.ADD_NEW_WORKFLOW.value,
+            workflow_name=workflow_name,
             params=params,
             resolve_entity_name=True,
         )
@@ -789,11 +805,17 @@ class ChatWorkflow(Workflow):
     async def edit_api_existing_app(
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
+
+        programming_language = params.get("programming_language")
+        if not programming_language:
+            return "parameter programming_language is required"
+        workflow_name = const.ModelName.EDIT_API_EXISTING_APP_JAVA.value if programming_language == "JAVA" else const.ModelName.EDIT_API_EXISTING_APP_PYTHON.value
+
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
             entity_model=const.ModelName.CHAT_ENTITY.value,
-            workflow_name=const.ModelName.EDIT_API_EXISTING_APP.value,
+            workflow_name=workflow_name,
             params=params,
             resolve_entity_name=False,
         )
@@ -801,11 +823,16 @@ class ChatWorkflow(Workflow):
     async def edit_existing_processors(
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
+        programming_language = params.get("programming_language")
+        if not programming_language:
+            return "parameter programming_language is required"
+        workflow_name = const.ModelName.EDIT_EXISTING_PROCESSORS_JAVA.value if programming_language == "JAVA" else const.ModelName.EDIT_EXISTING_PROCESSORS_PYTHON.value
+
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
             entity_model=const.ModelName.CHAT_ENTITY.value,
-            workflow_name=const.ModelName.EDIT_EXISTING_PROCESSORS.value,
+            workflow_name=workflow_name,
             params=params,
             resolve_entity_name=True,
         )
@@ -813,11 +840,17 @@ class ChatWorkflow(Workflow):
     async def edit_existing_workflow(
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
+
+        programming_language = params.get("programming_language")
+        if not programming_language:
+            return "parameter programming_language is required"
+        workflow_name = const.ModelName.EDIT_EXISTING_WORKFLOW_JAVA.value if programming_language == "JAVA" else const.ModelName.EDIT_EXISTING_WORKFLOW_PYTHON.value
+
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
             entity_model=const.ModelName.CHAT_ENTITY.value,
-            workflow_name=const.ModelName.EDIT_EXISTING_WORKFLOW.value,
+            workflow_name=workflow_name,
             params=params,
             resolve_entity_name=True,
         )
@@ -850,7 +883,7 @@ class ChatWorkflow(Workflow):
         entity_version = params.get("workflow_file_name", config.ENTITY_VERSION)
         try:
             git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
-            file_path = await get_project_file_name(git_branch_id=technical_id,
+            file_path = await get_project_file_name(git_branch_id=git_branch_id,
                                                     file_name=workflow_file_name,
                                                     repository_name=get_repository_name(entity))
             async with aiofiles.open(file_path, 'r') as f:
@@ -860,13 +893,7 @@ class ChatWorkflow(Workflow):
                                                                                  entity_name=entity.workflow_name,
                                                                                  entity_version=entity_version,
                                                                                  technical_id=git_branch_id)#use git branch id
-                entity_name = entity.workflow_cache.get("entity_name")
-                TARGET_FILE_NAME = f"cyoda_workflow_dto/{entity_version}/workflow_{entity_name}_{uuid.uuid1()}.json"
-                await _save_file(_data=workflow_cyoda_dto,
-                                 item=TARGET_FILE_NAME,
-                                 git_branch_id=git_branch_id,
-                                 repository_name=get_repository_name(entity))
-                return "Successfully converted and saved workflow dto"
+                return workflow_cyoda_dto
         except Exception as e:
             logger.exception(e)
             return "Error while converting workflow"

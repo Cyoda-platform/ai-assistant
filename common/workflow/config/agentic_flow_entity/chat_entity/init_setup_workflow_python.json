@@ -74,7 +74,7 @@
                   "type": "function",
                   "function": {
                     "name": "read_link",
-                    "description": "Read content from a URL. Use this tool when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -246,7 +246,7 @@
                   "type": "function",
                   "function": {
                     "name": "read_link",
-                    "description": "Read content from a URL. Use this tool when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -775,12 +775,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -803,12 +810,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -828,11 +842,18 @@
                         },
                         "user_request": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
-                        "git_branch"
+                        "git_branch",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -855,12 +876,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -883,12 +911,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -1046,7 +1081,7 @@
                   "type": "function",
                   "function": {
                     "name": "read_link",
-                    "description": "Read content from a URL. Use this tool when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1103,12 +1138,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -1118,7 +1160,7 @@
                   "type": "function",
                   "function": {
                     "name": "add_new_workflow",
-                    "description": "Launches workflow that is necessary to help the user add a new workflow. Key factor is that an application already exists and the user explicitly asks to add a new workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user add a new workflow. Key factor is that an application already exists and the user explicitly asks to add a new workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1131,12 +1173,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -1146,7 +1195,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_api_existing_app",
-                    "description": "Launches workflow that is necessary to help the user edit/update existing api (routes.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/routes/routes.py (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user edit/update existing api (routes.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/routes/routes.py  (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1156,11 +1205,18 @@
                         },
                         "user_request": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
-                        "git_branch"
+                        "git_branch",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -1170,7 +1226,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_existing_workflow",
-                    "description": "Launches workflow that is necessary to help the user edit an existing workflow/workflow json. Key factor is that an application already exists and the user explicitly asks to update a workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user edit an existing workflow/workflow json. Key factor is that an application already exists and the user explicitly asks to update a workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1183,12 +1239,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -1198,7 +1261,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_existing_processors",
-                    "description": "Launches workflow that is necessary to help the user update workflow processors code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/workflow.py code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user update workflow processors code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/workflow.py code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1211,12 +1274,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -1387,11 +1457,18 @@
                         },
                         "user_request": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
-                        "git_branch"
+                        "git_branch",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }

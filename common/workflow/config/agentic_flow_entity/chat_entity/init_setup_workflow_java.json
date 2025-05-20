@@ -106,7 +106,6 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -277,7 +276,6 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -602,7 +600,6 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -775,12 +772,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -803,12 +807,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -828,11 +839,18 @@
                         },
                         "user_request": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
-                        "git_branch"
+                        "git_branch",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -855,12 +873,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -883,12 +908,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -910,7 +942,6 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -1104,12 +1135,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -1132,12 +1170,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -1157,11 +1202,18 @@
                         },
                         "user_request": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
-                        "git_branch"
+                        "git_branch",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -1184,12 +1236,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -1212,12 +1271,19 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -1239,7 +1305,6 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -1389,11 +1454,18 @@
                         },
                         "user_request": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
-                        "git_branch"
+                        "git_branch",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }

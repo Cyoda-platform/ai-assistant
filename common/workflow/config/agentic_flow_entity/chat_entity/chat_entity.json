@@ -11,7 +11,7 @@
     },
     "initialized_chat": {
       "transitions": {
-        "process_user_input": {
+        "submit_answer": {
           "next": "submitted_workflow_question",
           "action": {
             "name": "process_event",
@@ -158,12 +158,20 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -186,12 +194,20 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -211,11 +227,19 @@
                         },
                         "user_request": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
-                        "git_branch"
+                        "git_branch",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -238,12 +262,20 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -266,12 +298,20 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -291,11 +331,19 @@
                         },
                         "user_request": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
-                        "git_branch"
+                        "git_branch",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -335,11 +383,19 @@
                         },
                         "user_request": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
-                        "git_branch"
+                        "git_branch",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -397,7 +453,7 @@
     },
     "submitted_workflow_question": {
       "transitions": {
-        "process_user_input": {
+        "submit_answer": {
           "next": "processed_question",
           "manual": true,
           "action": {
@@ -545,12 +601,20 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -573,12 +637,20 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -598,11 +670,19 @@
                         },
                         "user_request": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
-                        "git_branch"
+                        "git_branch",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -625,12 +705,20 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -653,12 +741,20 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
                         "git_branch",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -678,11 +774,19 @@
                         },
                         "user_request": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
-                        "git_branch"
+                        "git_branch",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
@@ -722,11 +826,19 @@
                         },
                         "user_request": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
-                        "git_branch"
+                        "git_branch",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }

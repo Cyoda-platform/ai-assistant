@@ -124,29 +124,17 @@
               "type": "prompt",
               "model": {
               },
-              "input": {
-                "local_fs": [
-                  "entity/{entity_name}/workflow.py"
-                ]
-              },
-              "output": {
-                "local_fs": [
-                  "entity/{entity_name}/workflow.py"
-                ]
-              },
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "# Please update processors functions according the new requirement \"{user_request}\".",
-                    "Generate new process functions if necessary or update existing functions according to the user requirement.",
-                    "Processes should have name starting with 'process_' and take only one argument entity.",
+                    "# Please outline the processors functions according the new requirement \"{user_request}\" that need to be either added or updated.",
+                    " And ask the user to proceed with calling update processors command to proceed.",
                     "",
                     "Entity data example:",
                     "{entity_name}",
 
-                    "",
-                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
+                    ""
                   ]
                 }
               ],
