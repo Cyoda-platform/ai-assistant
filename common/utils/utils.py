@@ -680,16 +680,16 @@ def format_json_if_needed(data, key):
         print(f"Data at {key} is not a valid JSON object: {value}")  # Optionally log this or handle it
     return data
 
-async def clone_repo(chat_id: str, repository_name: str):
+async def clone_repo(git_branch_id: str, repository_name: str):
     """
     Clone the GitHub repository to the target directory.
     If the repository should not be copied, it ensures the target directory exists.
     """
     repository_url = config.REPOSITORY_URL.format(repository_name=repository_name)
-    clone_dir = f"{config.PROJECT_DIR}/{chat_id}/{repository_name}"
+    clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
 
     if await repo_exists(clone_dir):
-        await git_pull(chat_id=chat_id, repository_name=repository_name)
+        await git_pull(git_branch_id=git_branch_id, repository_name=repository_name)
         return
 
     if config.CLONE_REPO != "true":
@@ -714,7 +714,7 @@ async def clone_repo(chat_id: str, repository_name: str):
     # Asynchronously checkout the branch using subprocess
     checkout_process = await asyncio.create_subprocess_exec(
         'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-        'checkout', '-b', str(chat_id),
+        'checkout', '-b', str(git_branch_id),
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )
@@ -727,33 +727,33 @@ async def clone_repo(chat_id: str, repository_name: str):
     logger.info(f"Repository cloned to {clone_dir}")
 
     os.chdir(clone_dir)
-    await set_upstream_tracking(chat_id=chat_id)
+    await set_upstream_tracking(git_branch_id=git_branch_id)
     await run_git_config_command()
-    await git_pull(chat_id=chat_id, repository_name=repository_name)
+    await git_pull(git_branch_id=git_branch_id, repository_name=repository_name)
 
 
-async def get_project_file_name(chat_id, file_name, git_branch_id, repository_name: str, folder_name=None):
+async def get_project_file_name(git_branch_id, file_name, repository_name: str, folder_name=None):
     if folder_name:
-        project_file_name = f"{config.PROJECT_DIR}/{chat_id}/{repository_name}/{folder_name}/{file_name}"
+        project_file_name = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}/{folder_name}/{file_name}"
     else:
-        project_file_name = f"{config.PROJECT_DIR}/{chat_id}/{repository_name}/{file_name}"
-    await clone_repo(chat_id=git_branch_id, repository_name=repository_name)
+        project_file_name = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}/{file_name}"
+    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
     return project_file_name
 
 
 async def get_project_file_name_path(technical_id, git_branch_id, file_name, repository_name: str):
-    await clone_repo(chat_id=git_branch_id, repository_name=repository_name)
+    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
     target_dir = os.path.join(f"{config.PROJECT_DIR}/{technical_id}/{repository_name}", "")
     file_path = os.path.join(target_dir, file_name)
     return file_path
 
-async def _save_file(chat_id, _data, item, git_branch_id, repository_name: str, folder_name = None) -> str:
+async def _save_file(_data, item, git_branch_id, repository_name: str, folder_name = None) -> str:
     """
     Save a file (text or binary) inside a specific directory.
     Handles FileStorage objects directly.
     """
-    await clone_repo(chat_id=git_branch_id, repository_name=repository_name)
-    target_dir = os.path.join(f"{config.PROJECT_DIR}/{chat_id}/{repository_name}", folder_name or "")
+    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
+    target_dir = os.path.join(f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}", folder_name or "")
     file_path = os.path.join(target_dir, item)
     logger.info(f"Saving to {file_path}")
 
@@ -807,7 +807,7 @@ async def _save_file(chat_id, _data, item, git_branch_id, repository_name: str, 
             file_paths_to_commit.append(init_file)
 
     if config.CLONE_REPO == "true":
-        await _git_push(chat_id=chat_id,
+        await _git_push(git_branch_id=git_branch_id,
                         file_paths=file_paths_to_commit,
                         commit_message=f"saved {item}",
                         repository_name=repository_name)
@@ -817,13 +817,13 @@ async def _save_file(chat_id, _data, item, git_branch_id, repository_name: str, 
     return str(file_path)
 
 
-async def delete_file(chat_id, _data, item, git_branch_id, repository_name: str, folder_name=None) -> str:
+async def delete_file(_data, item, git_branch_id, repository_name: str, folder_name=None) -> str:
     """
     Delete a file inside a specific directory in a cloned repository.
     If config.CLONE_REPO is true, pushes the deletion to the repository.
     """
-    await clone_repo(chat_id=git_branch_id, repository_name=repository_name)
-    target_dir = os.path.join(f"{config.PROJECT_DIR}/{chat_id}/{repository_name}", folder_name or "")
+    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
+    target_dir = os.path.join(f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}", folder_name or "")
     file_path = os.path.join(target_dir, item)
 
     logger.info(f"Attempting to delete: {file_path}")
@@ -840,7 +840,7 @@ async def delete_file(chat_id, _data, item, git_branch_id, repository_name: str,
 
     # Push changes to Git if cloning is enabled
     if config.CLONE_REPO == "true":
-        await _git_push(chat_id=chat_id,
+        await _git_push(git_branch_id=git_branch_id,
                         file_paths=[item],
                         commit_message=f"deleted {item}",
                         repository_name=repository_name)
@@ -849,14 +849,14 @@ async def delete_file(chat_id, _data, item, git_branch_id, repository_name: str,
     return str(file_path)
 
 
-async def git_pull(chat_id, repository_name: str, merge_strategy="recursive"):
-    clone_dir = f"{config.PROJECT_DIR}/{chat_id}/{repository_name}"
+async def git_pull(git_branch_id, repository_name: str, merge_strategy="recursive"):
+    clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
 
     try:
         # Start the `git checkout` command asynchronously
         checkout_process = await asyncio.create_subprocess_exec(
             'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'checkout', str(chat_id),
+            'checkout', str(git_branch_id),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -882,7 +882,7 @@ async def git_pull(chat_id, repository_name: str, merge_strategy="recursive"):
         # Compare the local branch with its remote counterpart explicitly
         diff_process = await asyncio.create_subprocess_exec(
             'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'diff', f"origin/{str(chat_id)}", str(chat_id),
+            'diff', f"origin/{str(git_branch_id)}", str(git_branch_id),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -904,7 +904,7 @@ async def git_pull(chat_id, repository_name: str, merge_strategy="recursive"):
         # Now, run the `git pull` command asynchronously with the specified merge strategy
         pull_process = await asyncio.create_subprocess_exec(
             'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'pull', '--strategy', merge_strategy, '--strategy-option=theirs', 'origin', str(chat_id),
+            'pull', '--strategy', merge_strategy, '--strategy-option=theirs', 'origin', str(git_branch_id),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -925,16 +925,16 @@ async def git_pull(chat_id, repository_name: str, merge_strategy="recursive"):
 
 
 # todo git push in case of interim changes will throw an error
-async def _git_push(chat_id, file_paths: list, commit_message: str, repository_name: str):
-    await git_pull(chat_id=chat_id, repository_name=repository_name)
+async def _git_push(git_branch_id, file_paths: list, commit_message: str, repository_name: str):
+    await git_pull(git_branch_id=git_branch_id, repository_name=repository_name)
 
-    clone_dir = f"{config.PROJECT_DIR}/{chat_id}/{repository_name}"
+    clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
 
     try:
-        # Create a new branch with the name $chat_id
+        # Create a new branch with the name git_branch_id
         checkout_process = await asyncio.create_subprocess_exec(
             'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'checkout', str(chat_id),
+            'checkout', str(git_branch_id),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -959,7 +959,7 @@ async def _git_push(chat_id, file_paths: list, commit_message: str, repository_n
         # Commit the changes
         commit_process = await asyncio.create_subprocess_exec(
             'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'commit', '-m', f"{commit_message}: {chat_id}",
+            'commit', '-m', f"{commit_message}: {git_branch_id}",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -971,7 +971,7 @@ async def _git_push(chat_id, file_paths: list, commit_message: str, repository_n
         # Push the new branch to the remote repository
         push_process = await asyncio.create_subprocess_exec(
             'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'push', '-u', 'origin', str(chat_id),
+            'push', '-u', 'origin', str(git_branch_id),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -1004,8 +1004,8 @@ async def run_git_config_command():
     print(stdout.decode().strip())
 
 
-async def set_upstream_tracking(chat_id):
-    branch = chat_id
+async def set_upstream_tracking(git_branch_id):
+    branch = git_branch_id
     # Construct the command to set the upstream branch
     process = await asyncio.create_subprocess_exec(
         "git", "branch", "--set-upstream-to", f"origin/{branch}", branch,
@@ -1062,7 +1062,7 @@ def parse_entity(model_cls, resp: Any) -> Any:
 
 
 async def read_file_util(filename, technical_id, repository_name: str):
-    await git_pull(chat_id=technical_id, repository_name=repository_name)
+    await git_pull(git_branch_id=technical_id, repository_name=repository_name)
     target_dir = os.path.join(f"{config.PROJECT_DIR}/{technical_id}/{repository_name}", "")
     file_path = os.path.join(target_dir, filename)
     try:

@@ -1,12 +1,15 @@
 import json
 import logging
 import os
+import uuid
+
 import httpx
 import aiofiles
 import common.config.const as const
 
 from bs4 import BeautifulSoup
 from typing import Any, List
+
 from common.ai.nltk_service import get_most_similar_entity
 from common.config.config import config
 from common.utils.batch_converter import convert_state_diagram_to_jsonl_dataset
@@ -41,7 +44,7 @@ class ChatWorkflow(Workflow):
                  entity_service,
                  scheduler,
                  cyoda_auth_service,
-                 #openapi_functions,  # todo will need factory soon
+                 workflow_converter_service,  # todo will need factory soon
                  mock=False):
         self.dataset = dataset
         self.workflow_helper_service = workflow_helper_service
@@ -49,12 +52,11 @@ class ChatWorkflow(Workflow):
         self.mock = mock
         self.scheduler = scheduler
         self.cyoda_auth_service = cyoda_auth_service
-        #self.openapi_functions = openapi_functions
+        self.workflow_converter_service = workflow_converter_service
 
     async def save_env_file(self, technical_id, entity: ChatEntity, **params):
         repository_name = get_repository_name(entity)
-        file_name = await get_project_file_name(chat_id=technical_id,
-                                                file_name=params.get("filename"), 
+        file_name = await get_project_file_name(file_name=params.get("filename"),
                                                 git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
                                                 repository_name=repository_name
                                                 )
@@ -179,11 +181,10 @@ class ChatWorkflow(Workflow):
 
         repository_name = get_repository_name(entity)
 
-        await clone_repo(chat_id=technical_id, repository_name=repository_name)
+        await clone_repo(git_branch_id=technical_id, repository_name=repository_name)
 
         # Call the async _save_file function
-        await _save_file(chat_id=technical_id,
-                         _data=technical_id,
+        await _save_file(_data=technical_id,
                          item='README.txt',
                          git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
                          repository_name=repository_name)
@@ -274,8 +275,7 @@ class ChatWorkflow(Workflow):
         """
         try:
             new_content = parse_from_string(escaped_code=params.get("new_content"))
-            await _save_file(chat_id=technical_id,
-                             _data=new_content,
+            await _save_file(_data=new_content,
                              item=params.get("filename"),
                              git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
                              repository_name=get_repository_name(entity))
@@ -306,9 +306,13 @@ class ChatWorkflow(Workflow):
         conditions.setdefault(transition, {})["require_additional_question"] = additional_flag
 
     async def is_stage_completed(self, technical_id: str, entity: ChatEntity, **params: Any) -> bool:
+        if params.get('params'):
+            logger.exception("Wrong value for params")
+            params = params.get('params')
         transition = params.get("transition")
         if transition is None:
-            raise ValueError("Missing required parameter: 'transition'")
+            logger.exception("Missing required parameter: 'transition'")
+            return False
 
         transitions = entity.transitions_memory
         current_iteration = transitions.current_iteration
@@ -326,6 +330,11 @@ class ChatWorkflow(Workflow):
 
         # Return the inverse of the require_additional_question flag.
         return not conditions[transition].get("require_additional_question", True)
+
+
+    async def not_stage_completed(self, technical_id: str, entity: ChatEntity, **params: Any) -> bool:
+        completed = await self.is_stage_completed(technical_id=technical_id, entity=entity, params=params)
+        return not completed
 
     async def get_weather(self, technical_id, entity: ChatEntity, **params):
         # Example implementation; replace with actual API integration
@@ -352,8 +361,7 @@ class ChatWorkflow(Workflow):
         input_file_path = params.get("input_file_path")
         output_file_path = params.get("output_file_path")
         result = await build_workflow_from_jsonl(input_file_path=input_file_path)
-        await _save_file(chat_id=technical_id,
-                         _data=result,
+        await _save_file(_data=result,
                          item=output_file_path,
                          git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
                          repository_name=get_repository_name(entity))
@@ -399,8 +407,7 @@ class ChatWorkflow(Workflow):
                                   sort_keys=True) if entity_data_example is not None else "{}"
 
             # Save the file asynchronously
-            await _save_file(chat_id=technical_id,
-                             _data=data_str,
+            await _save_file(_data=data_str,
                              item=target_item,
                              git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
                              repository_name=get_repository_name(entity))
@@ -441,15 +448,13 @@ class ChatWorkflow(Workflow):
         filename = params.get("filename")
         routes_file = params.get("routes_file")
         try:
-            file_path = await get_project_file_name(chat_id=technical_id, 
-                                                    file_name=filename,
+            file_path = await get_project_file_name(file_name=filename,
                                                     git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
                                                     repository_name=get_repository_name(entity))
             async with aiofiles.open(file_path, 'r') as f:
                 content = await f.read()
                 input_json = json.loads(content)
-            await _save_file(chat_id=technical_id,
-                             _data=input_json.get("file_without_workflow").get("code"),
+            await _save_file(_data=input_json.get("file_without_workflow").get("code"),
                              item=routes_file,
                              git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
                              repository_name=get_repository_name(entity))
@@ -553,9 +558,7 @@ class ChatWorkflow(Workflow):
             source=source,
             function_name=entity.workflow_cache.get("workflow_function"))
         logger.info(extracted_function)
-        await _save_file(
-            chat_id=entity.parent_id,
-            _data=code_without_function,
+        await _save_file(_data=code_without_function,
             item=f"entity/{entity.workflow_cache.get("entity_name")}/workflow.py",
             git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
             repository_name=get_repository_name(entity)
@@ -572,9 +575,7 @@ class ChatWorkflow(Workflow):
                                                              meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
         workflow_json = json.loads(message_content)
         workflow = enrich_workflow(workflow_json)
-        await _save_file(
-            chat_id=entity.parent_id,
-            _data=json.dumps(workflow, indent=4, sort_keys=True),  # Prettified JSON
+        await _save_file(_data=json.dumps(workflow, indent=4, sort_keys=True),  # Prettified JSON
             item=f"entity/{entity.workflow_cache.get('entity_name')}/workflow.json",
             git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
             repository_name=get_repository_name(entity)
@@ -600,7 +601,7 @@ class ChatWorkflow(Workflow):
         if git_branch_id and git_branch_id == "main":
             logger.exception("Modifications to main branch are not allowed")
             return "Modifications to main branch are not allowed"
-        await clone_repo(chat_id=git_branch_id, repository_name=repository_name)
+        await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
         app_api = await read_file_util(filename="routes/routes.py",
                                        technical_id=git_branch_id,
                                        repository_name=get_repository_name(entity))
@@ -669,7 +670,7 @@ class ChatWorkflow(Workflow):
             if git_branch_id == "main":
                 logger.exception("Modifications to main branch are not allowed")
                 return "Modifications to main branch are not allowed"
-            await clone_repo(chat_id=git_branch_id, repository_name=repository_name)
+            await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
 
         # One-off resolution for workflows that need an entity_name
         if resolve_entity_name:
@@ -739,8 +740,7 @@ class ChatWorkflow(Workflow):
     ) -> str:
         files: List[str] = params.get("files")
         for file_name in files:
-            await delete_file(chat_id=technical_id,
-                             _data=technical_id,
+            await delete_file(_data=technical_id,
                              item=file_name,
                              git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
                              repository_name=get_repository_name(entity))
@@ -844,6 +844,36 @@ class ChatWorkflow(Workflow):
         entity_names = await self.get_entities_list(branch_id=branch_id, repository_name=repository_name)
         resolved_name = get_most_similar_entity(target=entity_name, entity_list=entity_names)
         return resolved_name if resolved_name else entity_name
+
+    async def convert_workflow_to_dto(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
+        workflow_file_name = params.get("workflow_file_name")
+        entity_version = params.get("workflow_file_name", config.ENTITY_VERSION)
+        try:
+            git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
+            file_path = await get_project_file_name(git_branch_id=technical_id,
+                                                    file_name=workflow_file_name,
+                                                    repository_name=get_repository_name(entity))
+            async with aiofiles.open(file_path, 'r') as f:
+                content = await f.read()
+                workflow_contents = json.loads(content)
+                workflow_cyoda_dto = self.workflow_converter_service.convert_workflow(workflow_contents=workflow_contents,
+                                                                                 entity_name=entity.workflow_name,
+                                                                                 entity_version=entity_version,
+                                                                                 technical_id=git_branch_id)#use git branch id
+                entity_name = entity.workflow_cache.get("entity_name")
+                TARGET_FILE_NAME = f"cyoda_workflow_dto/{entity_version}/workflow_{entity_name}_{uuid.uuid1()}.json"
+                await _save_file(_data=workflow_cyoda_dto,
+                                 item=TARGET_FILE_NAME,
+                                 git_branch_id=git_branch_id,
+                                 repository_name=get_repository_name(entity))
+                return "Successfully converted and saved workflow dto"
+        except Exception as e:
+            logger.exception(e)
+            return "Error while converting workflow"
+
+
+
+
 
 
 

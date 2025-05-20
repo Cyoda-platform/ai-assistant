@@ -158,33 +158,6 @@
                       "additionalProperties": false
                     }
                   }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "transition": {
-                          "type": "string",
-                          "enum": [
-                            "process_application_requirement"
-                          ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "require_additional_question_flag",
-                        "transition"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
                 }
               ],
               "messages": [
@@ -216,9 +189,20 @@
     },
     "app_requirements_requested": {
       "transitions": {
+        "submit_answer": {
+          "next": "app_requirements_requested_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "app_requirements_finalized",
+          "manual": true
+        }
+      }
+    },
+    "app_requirements_requested_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "app_requirements_requested",
-          "manual": true,
+          "next": "app_requirements_requested_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -369,6 +353,25 @@
               "approve": true
             }
           }
+        }
+      }
+    },
+    "app_requirements_requested_processing": {
+      "transitions": {
+        "process_application_requirement_processing": {
+          "next": "app_requirements_requested",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "description": "not_stage_completed",
+                "parameters": {
+                  "transition": "process_application_requirement"
+                }
+              }
+            }
+          }
         },
         "process_application_requirement_success": {
           "next": "app_requirements_finalized",
@@ -450,9 +453,20 @@
     },
     "api_inquired": {
       "transitions": {
+        "submit_answer": {
+          "next": "api_inquired_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "api_discussion_completed",
+          "manual": true
+        }
+      }
+    },
+    "api_inquired_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "api_inquired",
-          "manual": true,
+          "next": "api_inquired_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -582,15 +596,32 @@
               "approve": true
             }
           }
+        }
+      }
+    },
+    "api_inquired_processing": {
+      "transitions": {
+        "process_api_inquiry_processing": {
+          "next": "api_inquired",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "discuss_api"
+                }
+              }
+            }
+          }
         },
-        "transition_to_asked_about_api_success": {
+        "process_api_inquiry_success": {
           "next": "api_discussion_completed",
           "condition": {
             "config": {
               "type": "function",
               "function": {
                 "name": "is_stage_completed",
-                "description": "Verifies stage is complete",
                 "parameters": {
                   "transition": "discuss_api"
                 }
@@ -755,7 +786,7 @@
                     "Add a comment explaining the workaround where needed, especially if using @ModelAttribute in GET.",
                     "",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Java comments are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```."
-                ]
+                  ]
                 }
               ]
             }
@@ -782,9 +813,20 @@
     },
     "prototype_discussion_requested": {
       "transitions": {
+        "submit_answer": {
+          "next": "prototype_discussion_requested_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "prototype_discussion_completed",
+          "manual": true
+        }
+      }
+    },
+    "prototype_discussion_requested_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "prototype_discussion_requested",
-          "manual": true,
+          "next": "prototype_discussion_requested_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -912,7 +954,7 @@
                   "type": "function",
                   "function": {
                     "name": "save_file",
-                    "description": "Save changes to src/main/java/com/java_template/entity/EntityControllerPrototype.java to the repository so that the user can view the changes to the src/main/java/com/java_template/entity/EntityControllerPrototype.java. Apply this function if you make changes to src/main/java/com/java_template/entity/EntityControllerPrototype.java (fix issues, make improvements, adjustments according to the user request). No need to apply this function if the code does not require changes and you're answering a general question.",
+                    "description": "Save changes to src/main/java/com/java_template/entity/EntityControllerPrototype.java to the repository so that the user can view the changes. Apply this if you make changes; omit if just answering a general question.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -976,15 +1018,32 @@
               "approve": true
             }
           }
+        }
+      }
+    },
+    "prototype_discussion_requested_processing": {
+      "transitions": {
+        "process_prototype_discussion_processing": {
+          "next": "prototype_discussion_requested",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "discuss_prototype"
+                }
+              }
+            }
+          }
         },
-        "transition_to_asked_about_api_success": {
+        "process_prototype_discussion_success": {
           "next": "prototype_discussion_completed",
           "condition": {
             "config": {
               "type": "function",
               "function": {
                 "name": "is_stage_completed",
-                "description": "Clones template repository",
                 "parameters": {
                   "transition": "discuss_prototype"
                 }
@@ -1013,9 +1072,20 @@
     },
     "migration_confirmation_requested": {
       "transitions": {
+        "submit_answer": {
+          "next": "migration_confirmation_requested_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "migration_confirmation_completed",
+          "manual": true
+        }
+      }
+    },
+    "migration_confirmation_requested_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "migration_confirmation_requested",
-          "manual": true,
+          "next": "migration_confirmation_requested_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -1207,15 +1277,32 @@
               "approve": true
             }
           }
+        }
+      }
+    },
+    "migration_confirmation_requested_processing": {
+      "transitions": {
+        "process_migration_confirmation_processing": {
+          "next": "migration_confirmation_requested",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "migration_confirmation"
+                }
+              }
+            }
+          }
         },
-        "transition_to_migration_confirmation_success": {
+        "process_migration_confirmation_success": {
           "next": "migration_confirmation_completed",
           "condition": {
             "config": {
               "type": "function",
               "function": {
                 "name": "is_stage_completed",
-                "description": "Completes iteration",
                 "parameters": {
                   "transition": "migration_confirmation"
                 }
@@ -1227,7 +1314,7 @@
     },
     "migration_confirmation_completed": {
       "transitions": {
-        "process_user_input": {
+        "migration_confirmation_notify": {
           "next": "migration_confirmation_notified",
           "action": {
             "name": "process_event",
@@ -1690,8 +1777,10 @@
                 "name": "delete_files",
                 "description": "delete_files",
                 "parameters": {
-                  "files": ["src/main/java/com/java_template/entity/CyodaEntityControllerPrototype.java",
-                  "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"]
+                  "files": [
+                    "src/main/java/com/java_template/entity/CyodaEntityControllerPrototype.java",
+                    "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
+                  ]
                 }
               },
               "publish": true

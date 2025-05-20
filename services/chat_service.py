@@ -37,7 +37,6 @@ logging.basicConfig(
 )
 
 
-
 class ChatService:
     def __init__(self, entity_service, cyoda_auth_service, chat_lock, ai_agent):
         self.entity_service: EntityService = entity_service
@@ -147,7 +146,7 @@ class ChatService:
                                                                auth_header=auth_header,
                                                                dialogue=[],
                                                                child_entities=set())
-        #dialogue = self._post_process_dialogue(dialogue)
+        # dialogue = self._post_process_dialogue(dialogue)
         entities_data = await self._get_entities_processing_data(technical_id=technical_id,
                                                                  child_entities=child_entities)
         return {
@@ -343,13 +342,17 @@ class ChatService:
         if not valid:
             return {"message": val_answer}, 400
 
+        next_transition = const.TransitionKey.MANUAL_APPROVE.value \
+            if answer == const.Notifications.APPROVE.value \
+            else const.TransitionKey.PROCESS_USER_INPUT.value
+
         edge_id, transitioned = await trigger_manual_transition(
             entity_service=self.entity_service,
             chat=chat,
             answer=val_answer,
             user_file=user_file,
             cyoda_auth_service=self.cyoda_auth_service,
-            transition=const.TransitionKey.PROCESS_USER_INPUT.value
+            transition=next_transition
         )
         if transitioned:
             return {"answer_technical_id": edge_id}, 200
@@ -375,7 +378,7 @@ class ChatService:
                         await _launch_transition(self.entity_service, child.technical_id, self.cyoda_auth_service, None,
                                                  const.TransitionKey.MANUAL_RETRY.value)
                         if chat.chat_flow.finished_flow and chat.chat_flow.finished_flow[-1].type == "answer" and not \
-                        chat.chat_flow.finished_flow[-1].consumed:
+                                chat.chat_flow.finished_flow[-1].consumed:
                             await _launch_transition(self.entity_service, child.technical_id, self.cyoda_auth_service,
                                                      None,
                                                      const.TransitionKey.PROCESS_USER_INPUT.value)
@@ -572,4 +575,3 @@ class ChatService:
                         )
             except Exception as e:
                 logger.exception(f"Failed to rollback workflow for entity {entity.technical_id}: {e}")
-

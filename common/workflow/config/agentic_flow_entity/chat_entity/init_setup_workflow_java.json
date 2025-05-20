@@ -48,9 +48,20 @@
     },
     "app_requirements_step1": {
       "transitions": {
+        "submit_answer": {
+          "next": "app_requirements_step1_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "prompt_app_requirements_step2",
+          "manual": true
+        }
+      }
+    },
+    "app_requirements_step1_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "app_requirements_step1",
-          "manual": true,
+          "next": "app_requirements_step1_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -63,7 +74,7 @@
                   "type": "function",
                   "function": {
                     "name": "read_link",
-                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "description": "Read content from a URL. Use this tool when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -144,8 +155,26 @@
               "approve": true
             }
           }
+        }
+      }
+    },
+    "app_requirements_step1_processing": {
+      "transitions": {
+        "process_app_setup_1_processing": {
+          "next": "app_requirements_step1",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_1"
+                }
+              }
+            }
+          }
         },
-        "process_step1_success": {
+        "process_app_setup_1_success": {
           "next": "prompt_app_requirements_step2",
           "condition": {
             "config": {
@@ -190,9 +219,20 @@
     },
     "app_requirements_step2": {
       "transitions": {
+        "submit_answer": {
+          "next": "app_requirements_step2_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "prompt_app_requirements_step3",
+          "manual": true
+        }
+      }
+    },
+    "app_requirements_step2_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "app_requirements_step2",
-          "manual": true,
+          "next": "app_requirements_step2_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -205,7 +245,7 @@
                   "type": "function",
                   "function": {
                     "name": "read_link",
-                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "description": "Read content from a URL. Use this tool when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -289,8 +329,26 @@
               "approve": true
             }
           }
+        }
+      }
+    },
+    "app_requirements_step2_processing": {
+      "transitions": {
+        "process_app_setup_2_processing": {
+          "next": "app_requirements_step2",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_2"
+                }
+              }
+            }
+          }
         },
-        "process_step2_success": {
+        "process_app_setup_2_success": {
           "next": "prompt_app_requirements_step3",
           "condition": {
             "config": {
@@ -358,9 +416,20 @@
     },
     "app_requirements_step3": {
       "transitions": {
+        "submit_answer": {
+          "next": "app_requirements_step3_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "prompt_app_requirements_step4",
+          "manual": true
+        }
+      }
+    },
+    "app_requirements_step3_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "app_requirements_step3",
-          "manual": true,
+          "next": "app_requirements_step3_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -419,11 +488,11 @@
                   "content": [
                     "- Clarify if the user already has an environment",
                     "  • Let the user know: if they do, let them decide whether they want to redeploy it (this may disrupt others!). If they choose to redeploy, call the deploy cyoda env tool; otherwise, call finish_discussion.",
-                    "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now .",
+                    "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now.",
                     "",
                     "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes.",
-                    " Ask the user confirm that their environment is deployed and they are happy with the result. ",
-                    " Once the user tells you the env is ready/they are happy/done/ready to proceed finish_discussion immediately",
+                    "Ask the user confirm that their environment is deployed and they are happy with the result.",
+                    "Once the user tells you the env is ready/they are happy/done/ready to proceed finish_discussion immediately.",
                     "**Troubleshooting:** Let the user know: N/A (deployment errors will be surfaced by the deployment tool)."
                   ]
                 }
@@ -432,8 +501,26 @@
               "max_iteration": 30
             }
           }
+        }
+      }
+    },
+    "app_requirements_step3_processing": {
+      "transitions": {
+        "process_app_setup_3_processing": {
+          "next": "app_requirements_step3",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_3"
+                }
+              }
+            }
+          }
         },
-        "process_step3_success": {
+        "process_app_setup_3_success": {
           "next": "prompt_app_requirements_step4",
           "condition": {
             "config": {
@@ -477,9 +564,20 @@
     },
     "app_requirements_step4": {
       "transitions": {
+        "submit_answer": {
+          "next": "app_requirements_step4_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "prompt_app_requirements_step5",
+          "manual": true
+        }
+      }
+    },
+    "app_requirements_step4_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "app_requirements_step4",
-          "manual": true,
+          "next": "app_requirements_step4_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -544,7 +642,8 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Troubleshooting:** Let the user know: missing or malformed values may cause runtime errors—ensure there are no stray spaces and quotes only where needed."]
+                    "**Troubleshooting:** Let the user know: missing or malformed values may cause runtime errors—ensure there are no stray spaces and quotes only where needed."
+                  ]
                 }
               ],
               "tool_choice": "auto",
@@ -552,8 +651,26 @@
               "approve": true
             }
           }
+        }
+      }
+    },
+    "app_requirements_step4_processing": {
+      "transitions": {
+        "process_app_setup_4_processing": {
+          "next": "app_requirements_step4",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_4"
+                }
+              }
+            }
+          }
         },
-        "process_step4_success": {
+        "process_app_setup_4_success": {
           "next": "prompt_app_requirements_step5",
           "condition": {
             "config": {
@@ -599,9 +716,20 @@
     },
     "app_requirements_step5": {
       "transitions": {
+        "submit_answer": {
+          "next": "app_requirements_step5_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "prompt_app_requirements_step6",
+          "manual": true
+        }
+      }
+    },
+    "app_requirements_step5_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "app_requirements_step5",
-          "manual": true,
+          "next": "app_requirements_step5_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -614,7 +742,7 @@
                   "type": "function",
                   "function": {
                     "name": "read_link",
-                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "description": "Read content from a URL. Use this tool when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -822,7 +950,8 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Troubleshooting:** Let the user know: if the import fails, they should verify their JSON formats and version compatibility, and check the Cloud logs for detailed import errors."]
+                    "**Troubleshooting:** Let the user know: if the import fails, they should verify their JSON formats and version compatibility, and check the Cloud logs for detailed import errors."
+                  ]
                 }
               ],
               "tool_choice": "auto",
@@ -830,8 +959,26 @@
               "approve": true
             }
           }
+        }
+      }
+    },
+    "app_requirements_step5_processing": {
+      "transitions": {
+        "process_app_setup_5_processing": {
+          "next": "app_requirements_step5",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_5"
+                }
+              }
+            }
+          }
         },
-        "process_step5_success": {
+        "process_app_setup_5_success": {
           "next": "prompt_app_requirements_step6",
           "condition": {
             "config": {
@@ -874,9 +1021,20 @@
     },
     "app_requirements_step6": {
       "transitions": {
+        "submit_answer": {
+          "next": "app_requirements_step6_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "prompt_app_requirements_step7",
+          "manual": true
+        }
+      }
+    },
+    "app_requirements_step6_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "app_requirements_step6",
-          "manual": true,
+          "next": "app_requirements_step6_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -889,7 +1047,7 @@
                   "type": "function",
                   "function": {
                     "name": "read_link",
-                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "description": "Read content from a URL. Use this tool when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -961,7 +1119,7 @@
                   "type": "function",
                   "function": {
                     "name": "add_new_workflow",
-                    "description": "Launches workflow that is necessary to help the user add a new workflow. Key factor is that an application already exists and the user explicitly asks to add a new workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user add a new workflow. Key factor is that an application already exists and the user explicitly asks to add a new workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -989,7 +1147,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_api_existing_app",
-                    "description": "Launches workflow that is necessary to help the user edit/update existing api (routes.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/routes/routes.py  (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user edit/update existing api (routes.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/routes/routes.py (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1013,7 +1171,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_existing_workflow",
-                    "description": "Launches workflow that is necessary to help the user edit an existing workflow/workflow json. Key factor is that an application already exists and the user explicitly asks to update a workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user edit an existing workflow/workflow json. Key factor is that an application already exists and the user explicitly asks to update a workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1041,7 +1199,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_existing_processors",
-                    "description": "Launches workflow that is necessary to help the user update workflow processors code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/workflow.py code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user update workflow processors code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/workflow.py code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1123,7 +1281,8 @@
                   "content": [
                     "**Troubleshooting:**",
                     "- Let the user know: if they can’t access the server, they should check that it’s still running and that their firewall allows local traffic.",
-                    "- Let the user know: if no GRPC event occurs, they should verify their endpoint triggers GRPC and inspect the logs to trace payload delivery."]
+                    "- Let the user know: if no GRPC event occurs, they should verify their endpoint triggers GRPC and inspect the logs to trace payload delivery."
+                  ]
                 }
               ],
               "tool_choice": "auto",
@@ -1131,8 +1290,26 @@
               "approve": true
             }
           }
+        }
+      }
+    },
+    "app_requirements_step6_processing": {
+      "transitions": {
+        "process_app_setup_6_processing": {
+          "next": "app_requirements_step6",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_6"
+                }
+              }
+            }
+          }
         },
-        "process_step6_success": {
+        "process_app_setup_6_success": {
           "next": "prompt_app_requirements_step7",
           "condition": {
             "config": {
@@ -1176,9 +1353,20 @@
     },
     "app_requirements_step7": {
       "transitions": {
+        "submit_answer": {
+          "next": "app_requirements_step7_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "ready_to_lock_chat",
+          "manual": true
+        }
+      }
+    },
+    "app_requirements_step7_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "app_requirements_step7",
-          "manual": true,
+          "next": "app_requirements_step7_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -1239,7 +1427,8 @@
                 {
                   "role": "user",
                   "content": [
-                    " If the user asks to deploy their application - call deploy user app. "]
+                    " If the user asks to deploy their application - call deploy user app. "
+                  ]
                 }
               ],
               "tool_choice": "auto",
@@ -1247,8 +1436,26 @@
               "approve": true
             }
           }
+        }
+      }
+    },
+    "app_requirements_step7_processing": {
+      "transitions": {
+        "process_app_setup_7_processing": {
+          "next": "app_requirements_step7",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_7"
+                }
+              }
+            }
+          }
         },
-        "process_step7_success": {
+        "process_app_setup_7_success": {
           "next": "ready_to_lock_chat",
           "condition": {
             "config": {

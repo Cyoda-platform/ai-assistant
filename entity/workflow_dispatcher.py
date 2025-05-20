@@ -359,10 +359,9 @@ class WorkflowDispatcher:
                         formatted_filename = cache_key
                         logger.exception(e)
                     branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
-                    await _save_file(chat_id=branch_id,
-                                     _data=response,
+                    await _save_file(_data=response,
                                      item=formatted_filename,
-                                     git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                                     git_branch_id=branch_id,
                                      repository_name=get_repository_name(entity))
             if config.get("output").get("workflow_cache"):
                 cache_keys = config.get("output").get("workflow_cache")

@@ -74,7 +74,8 @@ class JavaClasses(str, Enum):
 @unique
 class TransitionKey(str, Enum):
     UPDATE = "update_transition"
-    PROCESS_USER_INPUT = "process_user_input"
+    PROCESS_USER_INPUT = "submit_answer"
+    MANUAL_APPROVE = "manual_approve"
     MANUAL_RETRY = "retry"
     LOCKED_CHAT = "locked_chat"
     UNLOCK_CHAT = "unlock_chat"
