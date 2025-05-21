@@ -4,26 +4,6 @@
   "states": {
     "none": {
       "transitions": {
-        "schedule_task": {
-          "next": "scheduled",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "function",
-              "function": {
-                "name": "schedule_workflow_tasks",
-                "description": "",
-                "parameters": {
-                }
-              },
-              "publish": false
-            }
-          }
-        }
-      }
-    },
-    "scheduled": {
-      "transitions": {
         "wait": {
           "next": "waiting"
         }

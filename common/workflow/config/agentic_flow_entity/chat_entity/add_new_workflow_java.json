@@ -1,92 +1,38 @@
 {
   "initial_state": "none",
-  "workflow_name": "generating_gen_app_workflow",
+  "workflow_name": "add_new_workflow",
   "states": {
     "none": {
       "transitions": {
-        "start_workflow_generation": {
-          "next": "started_workflow_generation"
+        "start_workflow_add": {
+          "next": "generate_workflow_json"
         }
       }
     },
-    "started_workflow_generation": {
+    "generate_workflow_json": {
       "transitions": {
-        "save_workflow_code": {
-          "next": "saved_workflow_code",
+        "enrich_workflow": {
+          "next": "generate_workflow_processors",
           "action": {
             "name": "process_event",
             "config": {
               "type": "prompt",
-              "publish": false,
-              "model": {},
-              "input": {},
-              "output": {
-                "local_fs": [
-                  "entity/{entity_name}/workflow.py"
-                ]
+              "model": {
               },
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "Which workflow would you recommend for this code?",
-                    "Could you split this code into functions, each function should have name starting with 'process_'. These functions are async (example: async process_{entity_name}(entity: dict): )",
-                    "It can take only one argument entity data and can modify this entity data state, so please also remove any unnecessary entity_service.update(this entity) calls = as you can do it by changing entity attributes directly, e.g. entity['attribute'] = new_value.",
-                    "No more additional arguments can be passed.",
-                    "Also, all workflow orchestration should be inside {workflow_function}. {workflow_function} should have only workflow orchestration code and no business logic. no other function can have workflow orchestration code.",
-                    "{code}",
-                    "You cannot apply entity_service.add/update/delete on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity['attribute'].  The new state will be persisted. Do not add any test/extra code.",
-                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      }
-    },
-
-    "saved_workflow_code": {
-      "transitions": {
-        "design_workflow_config_from_code": {
-          "next": "designed_workflow_config_from_code",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "prompt",
-              "publish": false,
-              "model": {},
-              "input": {
-                "local_fs": [
-                  "entity/{entity_name}/workflow.py"
-                ]
-              },
-              "output": {
-                "local_fs": [
-                  "entity/{entity_name}/workflow.json"
-                ]
-              },
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "Please construct workflow JSON using a typical FSM model.",
-                    "The FSM has states and transitions.",
-                    "Represent it as a directed graph.",
-                    "States are nodes.",
-                    "Transitions are edges.",
-                    "Each transition may have processes.",
-                    "Add processes if explicitly specified.",
-                    "Only one transition can originate from a state.",
-                    "Each state (except None) must be reachable by one transition.",
-                    "No isolated states allowed.",
-                    "Each transition needs a start and end state.",
-                    "Begin with initial state \"None\".",
-                    "Define transitions between states.",
-                    "Each non-None state is the destination of one transition.",
-                    "Ensure full connectivity of the graph.",
-                    "Processes names should be the same as functions names in the attached code",
-                    "JSON Example:",
+                    "Please construct workflow json from this description/code/flow chart {user_request} using a typical finite-state machine (FSM) model.",
+                    "The FSM consists of states and transitions between them, represented as a directed graph.",
+                    "Each transition may have processes. Each process starts with 'process_' prefix.",
+                    "Ideally, there should be one process per transition. If user doesn't specify, derive from transition name.",
+                    "Each state except the initial ('None') must be reached by exactly one transition.",
+                    "Each transition must have both start and end state.",
+                    "Always start from an initial state 'None'.",
+                    "",
+                    "JSON Example of the Workflow:",
+                    "",
                     "{",
                     "  \"name\": \"specify_name_that_describes_the_workflow\",",
                     "  \"description\": \"describe_the_workflow\",",
@@ -120,8 +66,9 @@
                     "    }",
                     "  ]",
                     "}",
-                    "Ensure each process function is in externalized_processors.",
-                    "Return only valid JSON without extra information."
+                    "",
+                    "Please ensure each function is listed under processes.externalized_processors.",
+                    "Return only valid JSON without any extra text."
                   ]
                 }
               ],
@@ -192,16 +139,77 @@
                     }
                   }
                 }
-              }
+              },
+              "output": {
+                "local_fs": [
+                 "entity/{entity_name}/workflow.json"
+                ]
+              },
+              "publish": true
             }
           }
         }
       }
     },
-    "designed_workflow_config_from_code": {
+    "generate_workflow_processors": {
       "transitions": {
-        "lock_chat": {
-          "next": "locked_chat"
+        "notify_user": {
+          "next": "user_notification",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+                "name": "OPEN_AI",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "# Please implement processors for the newly generated workflow according to the user requirement {user_request}.",
+                    "If the requirement is not specific enough just add a template with example code.",
+                    "Generate new process functions if necessary or update existing methods according to the user requirement.",
+                    "Processes method should have name starting with 'process'. It should return CompletableFuture<ObjectNode>",
+                    "It can take only one argument ObjectNode entity and can modify this entity state",
+                    "No more additional arguments can be passed.",
+                    "Example:",
+                    "public CompletableFuture<ObjectNode> processSetDefaultStatus(ObjectNode entity) {",
+                    "    if (!entity.has(\"status\")) {",
+                    "     entity.put(\"status\", \"pending\");",
+                    "    }",
+                    "return CompletableFuture.completedFuture(entity);",
+                    "  }",
+                    "Please, call the class Workflow.",
+                    "You cannot apply entityService.addItem/updateItem/deleteItem on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity.attribute.  The new state will be persisted. Do not add any test/extra code.",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting."
+                  ]
+                }
+              ],
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.java"
+                ]
+              },
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "user_notification": {
+      "transitions": {
+        "done": {
+          "next": "locked_chat",
+          "action": {
+            "name": "notify_user",
+            "config": {
+              "type": "question",
+              "question": "The workflow has been successfully added. Please don’t hesitate to get in touch if I can assist further.",
+              "publish": true
+            }
+          }
         }
       }
     }

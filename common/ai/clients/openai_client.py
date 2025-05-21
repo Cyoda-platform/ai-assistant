@@ -6,7 +6,12 @@ from openai import AsyncOpenAI
 from common.utils.utils import custom_serializer
 from entity.model import ModelConfig, ToolChoice
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] [%(threadName)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
 logger = logging.getLogger(__name__)
 
 class AsyncOpenAIClient:

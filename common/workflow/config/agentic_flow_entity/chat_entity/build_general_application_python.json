@@ -10,7 +10,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "\uD83D\uDC4B Welcome to Cyoda Application Builder! We’re excited to build something amazing with you! \n\n \uD83C\uDF1F Your branch will be ready soon, and I’ll notify you when I push changes. If you have suggestions, message me or use Canvas! \uD83D\uDE0A  \n\nIn Canvas, you can code, edit, and improve around the main app build flow! \uD83D\uDCBB  \n\nIf something goes wrong, no worries—just roll back! \n\n\uD83D\uDE2C Your app will be live on Cyoda Platform GitHub soon! \n\n\uD83D\uDE80 Let’s build your branch together! \uD83C\uDF3F",
+              "notification": "\uD83D\uDC4B Welcome to Cyoda Application Builder! We’re excited to build something amazing with you! \n\n \uD83C\uDF1F Your branch will be ready soon, and I’ll notify you when I push changes. If you have suggestions, message me or use Canvas! \uD83D\uDE0A  \n\n You can view how your chat workflow operates internally and monitor your progress in our debug window, which you can open using the button in the top-right corner. \uD83D\uDCBB  \n\nIf something goes wrong, no worries—just roll back! \n\n\uD83D\uDE2C Your app will be live on Cyoda Platform GitHub soon! \n\n\uD83D\uDE80 Let’s build your branch together! \uD83C\uDF3F",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -173,7 +173,6 @@
                     " Do not ask about any specific frameworks or technologies, the final application will be in quart python on Cyoda platform - no other choices.",
                     " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. format it with markdown ",
                     " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
-                    " Call set_additional_question_flag with true immediately after 6 attempts. Do not hold the user too long they will bored",
                     " Be polite, please ",
                     " Here is my requirement: "
                   ]
@@ -189,9 +188,20 @@
     },
     "app_requirements_requested": {
       "transitions": {
+        "submit_answer": {
+          "next": "app_requirements_requested_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "app_requirements_finalized",
+          "manual": true
+        }
+      }
+    },
+    "app_requirements_requested_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "app_requirements_requested",
-          "manual": true,
+          "next": "app_requirements_requested_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -295,8 +305,8 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Set true if user question requires clarification or discussion, set false if you have enough information or the user asks to proceed to the next question. Summarise the requirement in a couple of sentences and set to true if the user chooses your example answers or after 6 attempts! Do not hold the user too long",
+                    "name": "finish_discussion",
+                    "description": "Use if you have enough information or the user asks to proceed to the next question. Summarise the requirement in a couple of sentences and set to true if the user chooses your example answers or after 6 attempts! Do not hold the user too long.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -306,13 +316,9 @@
                           "enum": [
                             "process_application_requirement"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false
@@ -333,7 +339,7 @@
                     " Do not ask about any specific frameworks or technologies, the final application will be in quart python on Cyoda platform - no other choices.",
                     " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. format it with markdown ",
                     " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
-                    " Call set_additional_question_flag with true immediately after 6 attempts. Do not hold the user too long they will bored",
+                    " Call finish_discussion immediately after 6 attempts. Do not hold the user too long they will bored.",
                     " Be polite, please ",
                     " Here is my requirement: "
                   ]
@@ -342,6 +348,25 @@
               "tool_choice": "auto",
               "max_iteration": 30,
               "approve": true
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_requested_processing": {
+      "transitions": {
+        "process_application_requirement_processing": {
+          "next": "app_requirements_requested",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "description": "not_stage_completed",
+                "parameters": {
+                  "transition": "process_application_requirement"
+                }
+              }
             }
           }
         },
@@ -425,9 +450,20 @@
     },
     "api_inquired": {
       "transitions": {
+        "submit_answer": {
+          "next": "api_inquired_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "api_discussion_completed",
+          "manual": true
+        }
+      }
+    },
+    "api_inquired_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "api_inquired",
-          "manual": true,
+          "next": "api_inquired_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -531,8 +567,8 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Set true if the discussion with the user is not complete and the user has additional questions/requirements, set false if the user asks to proceed or if the user is satisfied with the current result (e.g. says it is correct, valid, works for them). If set to false notify the user you're going to proceed with prototype generation.",
+                    "name": "finish_discussion",
+                    "description": "Use if the user asks to proceed or if the user is satisfied with the current result (e.g. says it is correct, valid, works for them). If set to false notify the user you're going to proceed with prototype generation.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -542,13 +578,9 @@
                           "enum": [
                             "discuss_api"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false
@@ -556,20 +588,46 @@
                   }
                 }
               ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Please, adjust the the functional requirements and the API according to the user request. ",
+                    " Once the user is happy with the result or has no more questions, please call finish_discussion. "
+                  ]
+                }
+              ],
               "tool_choice": "auto",
               "max_iteration": 30,
               "approve": true
             }
           }
+        }
+      }
+    },
+    "api_inquired_processing": {
+      "transitions": {
+        "process_api_inquiry_processing": {
+          "next": "api_inquired",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "discuss_api"
+                }
+              }
+            }
+          }
         },
-        "transition_to_asked_about_api_success": {
+        "process_api_inquiry_success": {
           "next": "api_discussion_completed",
           "condition": {
             "config": {
               "type": "function",
               "function": {
                 "name": "is_stage_completed",
-                "description": "Verifies stage is complete",
                 "parameters": {
                   "transition": "discuss_api"
                 }
@@ -654,7 +712,7 @@
                     "Please double-check you are using all the information provided earlier. Use httpx.AsyncClient for http requests, and Quart api.",
                     "Use QuartSchema(app) but do not add any @validate_request as our data is dynamic, just add QuartSchema(app) one line.",
                     "Use this entry point: if __name__ == '__main__':app.run(use_reloader=False, debug=True, host='0.0.0.0', port=8000, threaded=True).",
-                    "Mock any persistence, do not use any particular implementation, just local cache (e.g. you cannot use sqlalchemy in the prototype or any external implementation for persistence or cache).",
+                    "Mock any persistence, do not use any particular implementation, just local cache (e.g. you cannot use sqlalchemy in the prototype or any external implementation for persistence or cache, avoid using global keyword as we're using asyncio).",
                     "Please use real APIs.",
                     "You are most welcome to use such pattern where it is reasonable:",
                     "entity_job[job_id] = {\"status\": \"processing\", \"requestedAt\": requested_at}\n# Fire and forget the processing task.",
@@ -678,7 +736,9 @@
               "type": "prompt",
               "publish": true,
               "allow_anonymous_users": true,
-              "model": {},
+              "model": {
+                "model_name": "o4-mini"
+              },
               "input": {},
               "output": {
                 "local_fs": [
@@ -727,6 +787,7 @@
                     "I know this iss confusing - i think there is an issue in quart schema library so we have to workaround this issue:",
                     "Always put validation first for GET requests, and last for POST requests. Reason about this issue and make correct decision.",
                     "Also put a comment that it is an issue workaround, so that everyone knows the logic behind.",
+                    " Important note: validate_request have defect so be very careful in placing these annotations",
                     "",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting. Please, make sure there is no markdown (e.g. ```)"
                   ]
@@ -756,9 +817,20 @@
     },
     "prototype_discussion_requested": {
       "transitions": {
+        "submit_answer": {
+          "next": "prototype_discussion_requested_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "prototype_discussion_completed",
+          "manual": true
+        }
+      }
+    },
+    "prototype_discussion_requested_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "prototype_discussion_requested",
-          "manual": true,
+          "next": "prototype_discussion_requested_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -912,8 +984,8 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Finish the iteration if the user is happy with the result and has no more questions",
+                    "name": "finish_discussion",
+                    "description": "Finish the iteration if the user is happy with the result and has no more questions.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -923,13 +995,9 @@
                           "enum": [
                             "discuss_prototype"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false
@@ -945,7 +1013,8 @@
                     " If the user asks you to make any improvements or fix any issues please first read the file entity/prototype.py to get the latest version.",
                     " Then use your own judgement to introduce changes necessary for the user",
                     " Finally save the changes to the prototype.py file. And let the user know what changes you introduced and why.",
-                    " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case."
+                    " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case.",
+                    " Call finish_discussion only once the user is happy with the result or asks to proceed. "
                   ]
                 }
               ],
@@ -954,15 +1023,32 @@
               "approve": true
             }
           }
+        }
+      }
+    },
+    "prototype_discussion_requested_processing": {
+      "transitions": {
+        "process_prototype_discussion_processing": {
+          "next": "prototype_discussion_requested",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "discuss_prototype"
+                }
+              }
+            }
+          }
         },
-        "transition_to_asked_about_api_success": {
+        "process_prototype_discussion_success": {
           "next": "prototype_discussion_completed",
           "condition": {
             "config": {
               "type": "function",
               "function": {
                 "name": "is_stage_completed",
-                "description": "Clones template repository",
                 "parameters": {
                   "transition": "discuss_prototype"
                 }
@@ -991,9 +1077,20 @@
     },
     "migration_confirmation_requested": {
       "transitions": {
+        "submit_answer": {
+          "next": "migration_confirmation_requested_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "migration_confirmation_completed",
+          "manual": true
+        }
+      }
+    },
+    "migration_confirmation_requested_submitted_answer": {
+      "transitions": {
         "process_user_input": {
-          "next": "migration_confirmation_requested",
-          "manual": true,
+          "next": "migration_confirmation_requested_processing",
           "action": {
             "name": "process_event",
             "config": {
@@ -1147,8 +1244,8 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "set_additional_question_flag",
-                    "description": "Finish the iteration if the user is happy with the result and has no more questions",
+                    "name": "finish_discussion",
+                    "description": "Finish the iteration if the user is happy with the result and has no more questions.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1158,13 +1255,9 @@
                           "enum": [
                             "migration_confirmation"
                           ]
-                        },
-                        "require_additional_question_flag": {
-                          "type": "boolean"
                         }
                       },
                       "required": [
-                        "require_additional_question_flag",
                         "transition"
                       ],
                       "additionalProperties": false
@@ -1180,7 +1273,8 @@
                     " If the user asks you to make any improvements or fix any issues please first read the file entity/prototype.py to get the latest version.",
                     " Then use your own judgement to introduce changes necessary for the user",
                     " Finally save the changes to the prototype.py file. And let the user know what changes you introduced and why.",
-                    " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case."
+                    " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case.",
+                    " Call finish_discussion only once the user is happy with the result or asks to proceed. "
                   ]
                 }
               ],
@@ -1189,15 +1283,32 @@
               "approve": true
             }
           }
+        }
+      }
+    },
+    "migration_confirmation_requested_processing": {
+      "transitions": {
+        "process_migration_confirmation_processing": {
+          "next": "migration_confirmation_requested",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "migration_confirmation"
+                }
+              }
+            }
+          }
         },
-        "transition_to_migration_confirmation_success": {
+        "process_migration_confirmation_success": {
           "next": "migration_confirmation_completed",
           "condition": {
             "config": {
               "type": "function",
               "function": {
                 "name": "is_stage_completed",
-                "description": "Completes iteration",
                 "parameters": {
                   "transition": "migration_confirmation"
                 }
@@ -1209,7 +1320,7 @@
     },
     "migration_confirmation_completed": {
       "transitions": {
-        "process_user_input": {
+        "migration_confirmation_notify": {
           "next": "migration_confirmation_notified",
           "action": {
             "name": "process_event",
@@ -1244,6 +1355,7 @@
                     "Your task is to refactor the code so that all interactions with the local cache are replaced by calls to an external service called entity_service (from app_init.app_init import entity_service).",
                     "You can use only these functions for replacement - if this is not enough just skip and leave as is",
                     "entity name should always be underscore lowercase",
+                    " Make sure that get item by id endpoint can now be only string. If you used numeric value before - please now use string, as technical id is string",
                     "1. id = await entity_service.add_item(",
                     "    token=cyoda_auth_service,",
                     "    entity_model=\"{entity_name}\",",
@@ -1299,6 +1411,33 @@
                     "logger.exception(e)",
                     "",
                     "",
+                    "Condition example:",
+                    "Available operatorType values:",
+                    "\"EQUALS\", \"NOT_EQUAL\", \"IEQUALS\", \"INOT_EQUAL\", \"IS_NULL\", \"NOT_NULL\",",
+                    "\"GREATER_THAN\", \"GREATER_OR_EQUAL\", \"LESS_THAN\", \"LESS_OR_EQUAL\",",
+                    "\"ICONTAINS\", \"ISTARTS_WITH\", \"IENDS_WITH\", \"INOT_CONTAINS\",",
+                    "\"INOT_STARTS_WITH\", \"INOT_ENDS_WITH\", \"MATCHES_PATTERN\",",
+                    "\"BETWEEN\", \"BETWEEN_INCLUSIVE\"",
+                    "{",
+                    "  \"cyoda\": {",
+                    "    \"type\": \"group\",",
+                    "    \"operator\": \"AND\",",
+                    "    \"conditions\": [",
+                    "      {",
+                    "        \"jsonPath\": \"$.failed\",",
+                    "        \"operatorType\": \"EQUALS\",",
+                    "        \"value\": false,",
+                    "        \"type\": \"simple\"",
+                    "      },",
+                    "      {",
+                    "        \"jsonPath\": \"$.last_modified\",",
+                    "        \"operatorType\": \"GREATER_THAN\",",
+                    "        \"value\": 1,",
+                    "        \"type\": \"simple\"",
+                    "      }",
+                    "    ]",
+                    "  }",
+                    "}",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
                   ]
                 }
@@ -1520,11 +1659,6 @@
             "config": {
               "type": "prompt",
               "publish": false,
-              "model": {
-                "model_name": "gpt-4o",
-                "temperature": 0.7,
-                "max_tokens": 10000
-              },
               "memory_tags": [
                 "generate_prototype_cyoda_workflow_json"
               ],
@@ -1534,7 +1668,6 @@
                   "content": [
                     "You are given a Python code that includes definitions and usage of an `entity_service` class or function.",
                     "This service add method accepts an `entity_model` argument and optionally a `workflow` argument.",
-
                     "## 1. Entity Model Node:",
                     "Task: Extract all `entity_model` references passed to `entity_service`.",
                     "Example Python code:",
@@ -1548,14 +1681,12 @@
                     "```",
                     "- Here, `entity_model` is `'example'`",
                     "- `workflow` is a reference to `my_workflow`, which must be fully extracted",
-
                     "You must extract:",
                     "- `entity_model_name`: e.g. `'example'`",
                     "- Workflow function details:",
                     "    - `name`: the function name, e.g. `my_workflow`",
                     "    - `content`: the full code block of the function",
                     "    - `code_with_necessary_imports_and_constants`: include any top-level imports or constants used by the function, if applicable",
-
                     "JSON Output Example for `entity_models`:",
                     "```json",
                     "{",
@@ -1567,7 +1698,6 @@
                     "  }",
                     "}",
                     "```",
-
                     "## 2. File Without Workflow Node:",
                     "Task: Return the full original Python code, but with all `workflow` arguments removed.",
                     "For the above code, this means:",
@@ -1579,16 +1709,12 @@
                     "```python",
                     "service = entity_service(entity_model='example')",
                     "```",
-
                     "Do not change anything else in the code, even if the `workflow` function is no longer used.",
-
                     "JSON Output Example for `file_without_workflow`:",
-                    "```json",
                     "{",
                     "  \"code\": \"service = entity_service(entity_model='example')\"",
                     "}",
                     "```",
-
                     "## Combined JSON Structure Example (Final Output):",
                     "{",
                     "  \"entity_models\": [",
@@ -1691,7 +1817,8 @@
                 "name": "register_workflow_with_app",
                 "description": "register_workflow_with_app",
                 "parameters": {
-                  "filename": "entity/prototype_cyoda_workflow.json"
+                  "filename": "entity/prototype_cyoda_workflow.json",
+                  "routes_file": "routes/routes.py"
                 }
               },
               "publish": false
@@ -1810,7 +1937,8 @@
                 "name": "init_setup_workflow",
                 "description": "init_setup_workflow",
                 "parameters": {
-                  "user_request": "Hello! Please help me start my new application."
+                  "user_request": "Hello! Please help me start my new application.",
+                  "programming_language": "PYTHON"
                 }
               },
               "publish": false

@@ -1,34 +1,79 @@
 import asyncio
 import logging
-import common.config.const as const
+from typing import List
 
+from common.config import const
 from common.config.config import config
+from common.config.const import SCHEDULER_STATUS_WAITING
 from common.utils.chat_util_functions import _launch_transition
 from common.utils.utils import send_cyoda_request
 from entity.model import SchedulerEntity
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class WorkflowTask:
-    """
-    Encapsulates a workflow task that repeatedly checks the state of child entities,
-    or polls a deploy endpoint, depending on scheduled_action.
-    """
 
-    def __init__(
-        self,
-        technical_id: str,
-        awaited_entity_ids: list[str],
-        entity_service,
-        cyoda_auth_service,
-        scheduled_action: config.ScheduledAction
-    ):
-        self.technical_id = technical_id
-        self.awaited_entity_ids = awaited_entity_ids
+class Scheduler:
+    def __init__(self, entity_service, cyoda_auth_service):
         self.entity_service = entity_service
         self.cyoda_auth_service = cyoda_auth_service
-        self.scheduled_action = scheduled_action
+        self.backoff_delay = 60  # seconds
+        self.max_backoff = 10 * 60  # 10 minutes
+
+    async def start(self):
+        delay = self.backoff_delay
+        while True:
+            try:
+                scheduled_entities = await self.entity_service.get_items_by_condition(
+                    token=self.cyoda_auth_service,
+                    entity_model=const.ModelName.SCHEDULER_ENTITY.value,
+                    entity_version=config.ENTITY_VERSION,
+                    condition={
+                        "cyoda": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
+                                {
+                                    "field": "state",
+                                    "operatorType": "EQUALS",
+                                    "value": SCHEDULER_STATUS_WAITING,
+                                    "type": "lifecycle",
+                                }
+                            ],
+                        }
+                    })
+
+                if scheduled_entities:
+                    delay = self.backoff_delay  # reset delay
+                    tasks = [self._run_for_entity(entity) for entity in scheduled_entities]
+                    await asyncio.gather(*tasks)
+                else:
+                    logger.info("No scheduled entities found. Backing off.")
+                    delay = min(delay * 2, self.max_backoff)
+            except Exception as e:
+                logger.exception(f"Scheduler encountered an error: {e}")
+
+            await asyncio.sleep(delay)
+
+    async def _run_for_entity(self, entity: SchedulerEntity):
+        try:
+            scheduler_instance = ScheduledEntityRunner(
+                entity=entity,
+                entity_service=self.entity_service,
+                cyoda_auth_service=self.cyoda_auth_service
+            )
+            await scheduler_instance.run()
+        except Exception as e:
+            logger.exception(f"Failed to process entity {entity.technical_id}: {e}")
+
+
+class ScheduledEntityRunner:
+    def __init__(self, entity: SchedulerEntity, entity_service, cyoda_auth_service):
+        self.entity: SchedulerEntity = entity
+        self.scheduled_action = entity.scheduled_action
+        self.awaited_entity_ids: List[str] = entity.awaited_entity_ids
+        self.technical_id = entity.technical_id
+        self.entity_service = entity_service
+        self.cyoda_auth_service = cyoda_auth_service
 
     async def run(self) -> None:
         if self.scheduled_action == config.ScheduledAction.SCHEDULE_ENTITIES_FLOW:
@@ -38,58 +83,43 @@ class WorkflowTask:
 
     async def _run_entities_flow(
             self,
-            check_interval: float = const.SCHEDULER_CHECK_INTERVAL,
-            max_attempts: int = const.MAX_SCHEDULER_POLLS,
     ) -> None:
-        """Wait until all child entities are LOCKED_CHAT, then launch transition,
-        but give up after max_attempts polls."""
-        attempts = 0
-        while True:
-            # fetch all children in parallel
-            tasks = [
-                self.entity_service.get_item(
-                    token=self.cyoda_auth_service,
-                    entity_model=None,
-                    entity_version=config.ENTITY_VERSION,
-                    technical_id=eid
-                )
-                for eid in self.awaited_entity_ids
-            ]
-            children = await asyncio.gather(*tasks)
 
-            if all(c.get("current_state").startswith(const.TransitionKey.LOCKED_CHAT.value) for c in children):
-                await _launch_transition(
-                    entity_service=self.entity_service,
-                    technical_id=self.technical_id,
-                    cyoda_auth_service=self.cyoda_auth_service,
-                )
-                return
+        tasks = [
+            self.entity_service.get_item(
+                token=self.cyoda_auth_service,
+                entity_model=None,
+                entity_version=config.ENTITY_VERSION,
+                technical_id=eid
+            )
+            for eid in self.awaited_entity_ids
+        ]
+        children = await asyncio.gather(*tasks)
 
-            attempts += 1
-            if attempts >= max_attempts:
-                raise TimeoutError(
-                    f"Entities flow did not reach LOCKED_CHAT after {max_attempts} polls."
-                )
-
-            await asyncio.sleep(check_interval)
+        if all(c.get("current_state", "").startswith(const.TransitionKey.LOCKED_CHAT.value) for c in children):
+            await _launch_transition(
+                entity_service=self.entity_service,
+                technical_id=self.technical_id,
+                cyoda_auth_service=self.cyoda_auth_service,
+            )
+            return
 
     async def _run_deploy_flow(
             self,
             check_interval: float = config.CHECK_DEPLOY_INTERVAL,
             max_attempts: int = const.MAX_SCHEDULER_POLLS,
     ) -> None:
-        """Poll the deploy status endpoint until the build finishes,
-        but fail after max_attempts polls."""
         attempts = 0
         while True:
             if len(self.awaited_entity_ids) != 1:
                 raise Exception("Single build id is required")
 
-            # choose the right status URL
-            if self.scheduled_action == config.ScheduledAction.SCHEDULE_CYODA_ENV_DEPLOY:
-                status_url = f"{config.DEPLOY_CYODA_ENV_STATUS}?build_id={self.awaited_entity_ids[0]}"
-            else:
-                status_url = f"{config.DEPLOY_USER_APP_STATUS}?build_id={self.awaited_entity_ids[0]}"
+            build_id = self.awaited_entity_ids[0]
+            status_url = (
+                f"{config.DEPLOY_CYODA_ENV_STATUS}?build_id={build_id}"
+                if self.scheduled_action == config.ScheduledAction.SCHEDULE_CYODA_ENV_DEPLOY
+                else f"{config.DEPLOY_USER_APP_STATUS}?build_id={build_id}"
+            )
 
             resp = await send_cyoda_request(
                 cyoda_auth_service=self.cyoda_auth_service,
@@ -97,30 +127,23 @@ class WorkflowTask:
                 base_url=status_url,
                 path=''
             )
-            deploy_state = resp.get("json").get("state")
+            deploy_state = resp.get("json", {}).get("state")
+            deploy_status = resp.get("json", {}).get("status")
 
             if deploy_state == "PROCESSING":
-                logger.info(
-                    f"Deployment status: {resp.get('status')}; "
-                    f"re-checking in {check_interval}s..."
-                )
+                logger.info(f"Deployment status: {deploy_status}; re-checking in {check_interval}s...")
             else:
-                scheduled_entity: SchedulerEntity = await self.entity_service.get_item(
+                scheduled_entity = await self.entity_service.get_item(
                     token=self.cyoda_auth_service,
                     entity_model=const.ModelName.SCHEDULER_ENTITY.value,
                     entity_version=config.ENTITY_VERSION,
                     technical_id=self.technical_id
                 )
-                # Determine whether we succeeded or failed
-                deploy_status = resp.get("json").get("status")
                 transition_map = (
-                    config.ACTION_SUCCESS_TRANSITIONS
-                    if deploy_status == "SUCCESS"
+                    config.ACTION_SUCCESS_TRANSITIONS if deploy_status == "SUCCESS"
                     else config.ACTION_FAILURE_TRANSITIONS
                 )
-                scheduled_entity.triggered_entity_next_transition = \
-                    transition_map.get(self.scheduled_action)
-
+                scheduled_entity.triggered_entity_next_transition = transition_map.get(self.scheduled_action)
                 await _launch_transition(
                     entity_service=self.entity_service,
                     technical_id=self.technical_id,
@@ -131,47 +154,20 @@ class WorkflowTask:
 
             attempts += 1
             if attempts >= max_attempts:
-                scheduled_entity: SchedulerEntity = await self.entity_service.get_item(
+                scheduled_entity = await self.entity_service.get_item(
                     token=self.cyoda_auth_service,
                     entity_model=const.ModelName.SCHEDULER_ENTITY.value,
                     entity_version=config.ENTITY_VERSION,
                     technical_id=self.technical_id
                 )
-                scheduled_entity.triggered_entity_next_transition = config.ACTION_FAILURE_TRANSITIONS.get(self.scheduled_action)
-
+                scheduled_entity.triggered_entity_next_transition = config.ACTION_FAILURE_TRANSITIONS.get(
+                    self.scheduled_action)
                 await _launch_transition(
                     entity_service=self.entity_service,
                     technical_id=self.technical_id,
                     cyoda_auth_service=self.cyoda_auth_service,
                     entity=scheduled_entity
                 )
-                raise TimeoutError(
-                    f"Deploy flow did not exit PROCESSING after {max_attempts} polls."
-                )
+                raise TimeoutError(f"Deploy flow did not exit PROCESSING after {max_attempts} polls.")
 
             await asyncio.sleep(check_interval)
-
-
-class Scheduler:
-    """
-    Manages workflow tasks: it registers them and keeps track of running tasks.
-    """
-
-    def __init__(self, entity_service, cyoda_auth_service):
-        self.entity_service = entity_service
-        self.tasks = []  # List to hold asyncio.Task objects.
-        self.cyoda_auth_service = cyoda_auth_service
-
-    def schedule_workflow_task(self, technical_id, awaited_entity_ids, scheduled_action: config.ScheduledAction):
-        """
-        Registers a new workflow task.
-        Returns "ok" immediately after scheduling the task in the background.
-        """
-        workflow_task = WorkflowTask(technical_id=technical_id,
-                                     awaited_entity_ids=awaited_entity_ids,
-                                     entity_service=self.entity_service,
-                                     cyoda_auth_service=self.cyoda_auth_service,
-                                     scheduled_action=scheduled_action)
-        task = asyncio.create_task(workflow_task.run())
-        self.tasks.append(task)
-        return "ok"

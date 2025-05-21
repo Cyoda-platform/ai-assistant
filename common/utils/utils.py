@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 import aiofiles
-from typing import Optional, Any
+from typing import Optional, Any, Set
 import uuid
 import json
 
@@ -502,54 +502,67 @@ async def send_get_request(token: str, api_url: str, path: str) -> Optional[Any]
         logger.error(f"Error during GET request to {url}: {err}")
         raise
 
-async def send_request(headers, url, method, data=None, json_data=None):
+async def send_request(
+        headers: dict,
+        url: str,
+        method: str,
+        data: Optional[dict] = None,
+        json_data: Optional[dict] = None,
+) -> dict:
     """
     Send an HTTP request with the given headers and payload.
-    Behaves as before: for GET/POST, returns content on 200 or 404;
-    for PUT/DELETE, raises for 404 before returning content.
-    Raises InvalidTokenException on 401, and otherwise raises on other error-statuses.
+
+    - All 2xx are treated as success.
+    - GET/POST also allow 404 (returned as content).
+    - PUT/DELETE will raise on 404.
+    - Raises InvalidTokenException on 401.
+    - Logs & raises on any other non-allowed status.
     """
     method = method.upper()
-    if method not in {'GET', 'POST', 'PUT', 'DELETE'}:
-        raise ValueError(f"Unsupported HTTP method: {method}")
+    if method not in {"GET", "POST", "PUT", "DELETE"}:
+        raise ValueError(f"Unsupported HTTP method: {method!r}")
+
+    # Which statuses we’ll accept without exception:
+    allowed_statuses: Set[int] = set(range(200, 300))
+    if method in ("GET", "POST"):
+        allowed_statuses.add(404)
 
     timeout = httpx.Timeout(150.0, connect=60.0)
-
-    async with httpx.AsyncClient(
-            timeout=timeout,
-            trust_env=False,          # ← don’t read proxy vars from the environment
-    ) as client:
+    async with httpx.AsyncClient(timeout=timeout, trust_env=False) as client:
         response = await client.request(
-            method,
-            url,
-            headers=headers,
-            data=data,
-            json=json_data,
+            method, url, headers=headers, data=data, json=json_data
         )
 
     status = response.status_code
 
     if status == 401:
-        raise InvalidTokenException("Invalid token")
+        raise InvalidTokenException("The service returned Invalid token")
 
-    if status in (200, 404):
-        # PUT and DELETE originally raised even on 404 before reading content
-        if method in ('PUT', 'DELETE'):
-            response.raise_for_status()
+    if status not in allowed_statuses:
+        # unexpected status → log full context then raise
+        logger.error(
+            f"url={url}, method={method}, data={json.dumps(data or json_data)}"
+        )
+        response.raise_for_status()
 
-        ct = response.headers.get('Content-Type', '')
-        if 'application/json' in ct:
+    if status == 404 and method == "POST":
+        logger.warning(
+            f"status={status}. url={url}, method={method}, data={json.dumps(data or json_data)}"
+        )
+
+    # parse body (JSON if we can, otherwise raw text)
+    content: Optional[any]
+    ct = response.headers.get("Content-Type", "")
+    if "application/json" in ct:
+        try:
             content = response.json()
-        else:
+        except ValueError:
+            logger.warning(f"Failed to parse JSON for {method} {url}; falling back to text")
             content = response.text
     else:
-        logger.error(f"url={url}, method = {method},data={json.dumps(data)}")
-        content = None
-        response.raise_for_status()
-    return {
-        "status": status,
-        "json": content
-    }
+        content = response.text
+
+    return {"status": status, "json": content}
 
 
 
@@ -667,15 +680,16 @@ def format_json_if_needed(data, key):
         print(f"Data at {key} is not a valid JSON object: {value}")  # Optionally log this or handle it
     return data
 
-async def clone_repo(chat_id: str):
+async def clone_repo(git_branch_id: str, repository_name: str):
     """
     Clone the GitHub repository to the target directory.
     If the repository should not be copied, it ensures the target directory exists.
     """
-    clone_dir = f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}"
+    repository_url = config.REPOSITORY_URL.format(repository_name=repository_name)
+    clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
 
     if await repo_exists(clone_dir):
-        await git_pull(chat_id=chat_id)
+        await git_pull(git_branch_id=git_branch_id, repository_name=repository_name)
         return
 
     if config.CLONE_REPO != "true":
@@ -685,8 +699,9 @@ async def clone_repo(chat_id: str):
         return
 
     # Asynchronously clone the repository using subprocess
+
     clone_process = await asyncio.create_subprocess_exec(
-        'git', 'clone', config.REPOSITORY_URL, clone_dir,
+        'git', 'clone', repository_url, clone_dir,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )
@@ -699,7 +714,7 @@ async def clone_repo(chat_id: str):
     # Asynchronously checkout the branch using subprocess
     checkout_process = await asyncio.create_subprocess_exec(
         'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-        'checkout', '-b', str(chat_id),
+        'checkout', '-b', str(git_branch_id),
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )
@@ -712,33 +727,33 @@ async def clone_repo(chat_id: str):
     logger.info(f"Repository cloned to {clone_dir}")
 
     os.chdir(clone_dir)
-    await set_upstream_tracking(chat_id=chat_id)
+    await set_upstream_tracking(git_branch_id=git_branch_id)
     await run_git_config_command()
-    await git_pull(chat_id=chat_id)
+    await git_pull(git_branch_id=git_branch_id, repository_name=repository_name)
 
 
-async def get_project_file_name(chat_id, file_name, git_branch_id, folder_name=None):
+async def get_project_file_name(git_branch_id, file_name, repository_name: str, folder_name=None):
     if folder_name:
-        project_file_name = f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}/{folder_name}/{file_name}"
+        project_file_name = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}/{folder_name}/{file_name}"
     else:
-        project_file_name = f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}/{file_name}"
-    await clone_repo(chat_id=git_branch_id)
+        project_file_name = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}/{file_name}"
+    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
     return project_file_name
 
 
-async def get_project_file_name_path(technical_id, git_branch_id, file_name):
-    await clone_repo(chat_id=git_branch_id)
-    target_dir = os.path.join(f"{config.PROJECT_DIR}/{technical_id}/{config.REPOSITORY_NAME}", "")
+async def get_project_file_name_path(technical_id, git_branch_id, file_name, repository_name: str):
+    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
+    target_dir = os.path.join(f"{config.PROJECT_DIR}/{technical_id}/{repository_name}", "")
     file_path = os.path.join(target_dir, file_name)
     return file_path
 
-async def _save_file(chat_id, _data, item, git_branch_id, folder_name=None) -> str:
+async def _save_file(_data, item, git_branch_id, repository_name: str, folder_name = None) -> str:
     """
     Save a file (text or binary) inside a specific directory.
     Handles FileStorage objects directly.
     """
-    await clone_repo(chat_id=git_branch_id)
-    target_dir = os.path.join(f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}", folder_name or "")
+    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
+    target_dir = os.path.join(f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}", folder_name or "")
     file_path = os.path.join(target_dir, item)
     logger.info(f"Saving to {file_path}")
 
@@ -772,39 +787,76 @@ async def _save_file(chat_id, _data, item, git_branch_id, folder_name=None) -> s
         raise
 
     logger.info(f"Saved to {file_path}")
-
-    # Define the path for __init__.py in the target directory
-    init_file_target_dir = os.path.dirname(file_path)
-    init_file = os.path.join(init_file_target_dir, "__init__.py")
     file_paths_to_commit = [file_path]
 
-    # Check if __init__.py exists asynchronously
-    init_file_exists = await asyncio.to_thread(os.path.exists, init_file)
+    if repository_name == config.PYTHON_REPOSITORY_NAME:
+        # Define the path for __init__.py in the target directory
+        init_file_target_dir = os.path.dirname(file_path)
+        init_file = os.path.join(init_file_target_dir, "__init__.py")
 
-    if not init_file_exists:
-        # If __init__.py does not exist, create it (empty __init__.py file)
-        async with aiofiles.open(init_file, 'w') as f:
-            pass  # Just create an empty __init__.py file
 
-        logger.info(f"Created {init_file}")
-        file_paths_to_commit.append(init_file)
+        # Check if __init__.py exists asynchronously
+        init_file_exists = await asyncio.to_thread(os.path.exists, init_file)
+
+        if not init_file_exists:
+            # If __init__.py does not exist, create it (empty __init__.py file)
+            async with aiofiles.open(init_file, 'w') as f:
+                pass  # Just create an empty __init__.py file
+
+            logger.info(f"Created {init_file}")
+            file_paths_to_commit.append(init_file)
 
     if config.CLONE_REPO == "true":
-        await _git_push(chat_id, file_paths_to_commit, commit_message=f"saved {item}")
+        await _git_push(git_branch_id=git_branch_id,
+                        file_paths=file_paths_to_commit,
+                        commit_message=f"saved {item}",
+                        repository_name=repository_name)
 
     logger.info(f"pushed to git")
 
     return str(file_path)
 
 
-async def git_pull(chat_id, merge_strategy="recursive"):
-    clone_dir = f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}"
+async def delete_file(_data, item, git_branch_id, repository_name: str, folder_name=None) -> str:
+    """
+    Delete a file inside a specific directory in a cloned repository.
+    If config.CLONE_REPO is true, pushes the deletion to the repository.
+    """
+    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
+    target_dir = os.path.join(f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}", folder_name or "")
+    file_path = os.path.join(target_dir, item)
+
+    logger.info(f"Attempting to delete: {file_path}")
+
+    # Ensure target directory exists before attempting to delete
+    await asyncio.to_thread(os.makedirs, os.path.dirname(file_path), exist_ok=True)
+
+    # Delete file
+    if os.path.isfile(file_path):
+        await asyncio.to_thread(os.remove, file_path)
+        logger.info(f"Deleted file: {file_path}")
+    else:
+        logger.warning(f"File not found for deletion: {file_path}")
+
+    # Push changes to Git if cloning is enabled
+    if config.CLONE_REPO == "true":
+        await _git_push(git_branch_id=git_branch_id,
+                        file_paths=[item],
+                        commit_message=f"deleted {item}",
+                        repository_name=repository_name)
+        logger.info("Pushed deletion to git")
+
+    return str(file_path)
+
+
+async def git_pull(git_branch_id, repository_name: str, merge_strategy="recursive"):
+    clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
 
     try:
         # Start the `git checkout` command asynchronously
         checkout_process = await asyncio.create_subprocess_exec(
             'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'checkout', str(chat_id),
+            'checkout', str(git_branch_id),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -830,7 +882,7 @@ async def git_pull(chat_id, merge_strategy="recursive"):
         # Compare the local branch with its remote counterpart explicitly
         diff_process = await asyncio.create_subprocess_exec(
             'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'diff', f"origin/{str(chat_id)}", str(chat_id),
+            'diff', f"origin/{str(git_branch_id)}", str(git_branch_id),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -852,7 +904,7 @@ async def git_pull(chat_id, merge_strategy="recursive"):
         # Now, run the `git pull` command asynchronously with the specified merge strategy
         pull_process = await asyncio.create_subprocess_exec(
             'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'pull', '--strategy', merge_strategy, '--strategy-option=theirs', 'origin', str(chat_id),
+            'pull', '--strategy', merge_strategy, '--strategy-option=theirs', 'origin', str(git_branch_id),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -873,16 +925,16 @@ async def git_pull(chat_id, merge_strategy="recursive"):
 
 
 # todo git push in case of interim changes will throw an error
-async def _git_push(chat_id, file_paths: list, commit_message: str):
-    await git_pull(chat_id=chat_id)
+async def _git_push(git_branch_id, file_paths: list, commit_message: str, repository_name: str):
+    await git_pull(git_branch_id=git_branch_id, repository_name=repository_name)
 
-    clone_dir = f"{config.PROJECT_DIR}/{chat_id}/{config.REPOSITORY_NAME}"
+    clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
 
     try:
-        # Create a new branch with the name $chat_id
+        # Create a new branch with the name git_branch_id
         checkout_process = await asyncio.create_subprocess_exec(
             'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'checkout', str(chat_id),
+            'checkout', str(git_branch_id),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -907,7 +959,7 @@ async def _git_push(chat_id, file_paths: list, commit_message: str):
         # Commit the changes
         commit_process = await asyncio.create_subprocess_exec(
             'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'commit', '-m', f"{commit_message}: {chat_id}",
+            'commit', '-m', f"{commit_message}: {git_branch_id}",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -919,7 +971,7 @@ async def _git_push(chat_id, file_paths: list, commit_message: str):
         # Push the new branch to the remote repository
         push_process = await asyncio.create_subprocess_exec(
             'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'push', '-u', 'origin', str(chat_id),
+            'push', '-u', 'origin', str(git_branch_id),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -952,8 +1004,8 @@ async def run_git_config_command():
     print(stdout.decode().strip())
 
 
-async def set_upstream_tracking(chat_id):
-    branch = chat_id
+async def set_upstream_tracking(git_branch_id):
+    branch = git_branch_id
     # Construct the command to set the upstream branch
     process = await asyncio.create_subprocess_exec(
         "git", "branch", "--set-upstream-to", f"origin/{branch}", branch,
@@ -1009,9 +1061,9 @@ def parse_entity(model_cls, resp: Any) -> Any:
         return None
 
 
-async def read_file_util(filename, technical_id):
-    await git_pull(chat_id=technical_id)
-    target_dir = os.path.join(f"{config.PROJECT_DIR}/{technical_id}/{config.REPOSITORY_NAME}", "")
+async def read_file_util(filename, technical_id, repository_name: str):
+    await git_pull(git_branch_id=technical_id, repository_name=repository_name)
+    target_dir = os.path.join(f"{config.PROJECT_DIR}/{technical_id}/{repository_name}", "")
     file_path = os.path.join(target_dir, filename)
     try:
         async with aiofiles.open(file_path, 'r') as file:
@@ -1113,3 +1165,7 @@ def get_current_timestamp_num(lower_timedelta=0):
         epoch_millis = int(time_now.timestamp() * 1000)
         return epoch_millis
 
+def get_repository_name(entity):
+    repository_name = config.JAVA_REPOSITORY_NAME if entity.workflow_name.endswith(
+        "java") else config.PYTHON_REPOSITORY_NAME
+    return repository_name

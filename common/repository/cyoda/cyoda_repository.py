@@ -112,11 +112,12 @@ class CyodaRepository(CrudRepository):
         return entities[0] if entities else None
 
     async def find_by_id(self, meta, _uuid: Any) -> Optional[Any]:
+        method = "get"
         if meta and meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE:
             if _uuid in _edge_messages_cache:
                 return _edge_messages_cache[_uuid]
             path = f"message/get/{_uuid}"
-            resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="get", path=path)
+            resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method=method, path=path)
             content = resp.get("json", {}).get("content", "{}")
             data = json.loads(content).get("edge_message_content")
             if data:
@@ -124,8 +125,18 @@ class CyodaRepository(CrudRepository):
             return data
 
         path = f"entity/{_uuid}"
-        resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="get", path=path)
+
+        resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method=method, path=path)
+        if not isinstance(resp, dict):
+            logger.exception(f"method = {method}, path = {path}")
+            logger.error(f"resp = {resp} ")
+            raise Exception("find_by_id resp is not dict!")
         payload = resp.get("json", {})
+        if not isinstance(payload, dict):
+            logger.exception(f"method = {method}, path = {path}")
+            logger.error(f"payload = {payload} ")
+            logger.error(f"resp = {resp} ")
+            raise Exception("find_by_id payload is not dict!")
         data = payload.get("data", {})
         data["current_state"] = payload.get("meta", {}).get("state")
         data["technical_id"] = _uuid

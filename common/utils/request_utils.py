@@ -1,6 +1,17 @@
+import logging
+
 from common.utils.utils import send_get_request
 from common.config.config import config
 from common.exception.exceptions import InvalidTokenException
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] [%(threadName)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
+logger = logging.getLogger(__name__)
 
 def extract_bearer_token(auth_header: str) -> str:
     parts = auth_header.split()
@@ -11,4 +22,7 @@ def extract_bearer_token(auth_header: str) -> str:
 async def validate_with_cyoda(token: str):
     resp = await send_get_request(token, config.CYODA_API_URL, 'v1')
     if not resp or resp.get('status') == 401:
+        if not config.ENABLE_AUTH:
+            logger.info("token invalid, but auth is disabled")
+            return
         raise InvalidTokenException('Invalid token')

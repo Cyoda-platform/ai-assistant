@@ -30,7 +30,11 @@ from entity.chat.chat import ChatEntity
 from entity.model import FlowEdgeMessage, ChatMemory, ModelConfig, AgenticFlowEntity
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] [%(threadName)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
 
 
 class ChatService:
@@ -142,7 +146,7 @@ class ChatService:
                                                                auth_header=auth_header,
                                                                dialogue=[],
                                                                child_entities=set())
-        #dialogue = self._post_process_dialogue(dialogue)
+        # dialogue = self._post_process_dialogue(dialogue)
         entities_data = await self._get_entities_processing_data(technical_id=technical_id,
                                                                  child_entities=child_entities)
         return {
@@ -212,30 +216,30 @@ class ChatService:
             technical_id=technical_id
         )
 
-        if not chat and config.CHAT_REPOSITORY == "local":
-            async with self.chat_lock:
-                chat = await self.entity_service.get_item(
-                    token=self.cyoda_auth_service,
-                    entity_model=const.ModelName.CHAT_ENTITY.value,
-                    entity_version=config.ENTITY_VERSION,
-                    technical_id=technical_id
-                )
-                if not chat:
-                    await clone_repo(chat_id=technical_id)
-                    async with httpx.AsyncClient() as client:
-                        response = await client.get(f"{config.RAW_REPOSITORY_URL}/{technical_id}/entity/chat.json")
-                        response.raise_for_status()  # Optional: ensures error is raised for non-2xx
-                        data = response.text
-                    chat = ChatEntity.model_validate(json.loads(data))
-                    if not chat:
-                        raise ChatNotFoundException()
-                    await self.entity_service.add_item(
-                        token=self.cyoda_auth_service,
-                        entity_model=const.ModelName.CHAT_ENTITY.value,
-                        entity_version=config.ENTITY_VERSION,
-                        entity=chat
-                    )
-        elif not chat:
+        # if not chat and config.CHAT_REPOSITORY == "local":
+        #     async with self.chat_lock:
+        #         chat = await self.entity_service.get_item(
+        #             token=self.cyoda_auth_service,
+        #             entity_model=const.ModelName.CHAT_ENTITY.value,
+        #             entity_version=config.ENTITY_VERSION,
+        #             technical_id=technical_id
+        #         )
+        #         if not chat:
+        #             await clone_repo(chat_id=technical_id)
+        #             async with httpx.AsyncClient() as client:
+        #                 response = await client.get(f"{config.RAW_REPOSITORY_URL}/{technical_id}/entity/chat.json")
+        #                 response.raise_for_status()  # Optional: ensures error is raised for non-2xx
+        #                 data = response.text
+        #             chat = ChatEntity.model_validate(json.loads(data))
+        #             if not chat:
+        #                 raise ChatNotFoundException()
+        #             await self.entity_service.add_item(
+        #                 token=self.cyoda_auth_service,
+        #                 entity_model=const.ModelName.CHAT_ENTITY.value,
+        #                 entity_version=config.ENTITY_VERSION,
+        #                 entity=chat
+        #             )
+        if not chat:
             raise ChatNotFoundException()
 
         await self._validate_chat_owner(chat, user_id)
@@ -338,13 +342,17 @@ class ChatService:
         if not valid:
             return {"message": val_answer}, 400
 
+        next_transition = const.TransitionKey.MANUAL_APPROVE.value \
+            if answer == const.Notifications.APPROVE.value \
+            else const.TransitionKey.PROCESS_USER_INPUT.value
+
         edge_id, transitioned = await trigger_manual_transition(
             entity_service=self.entity_service,
             chat=chat,
             answer=val_answer,
             user_file=user_file,
             cyoda_auth_service=self.cyoda_auth_service,
-            transition=const.TransitionKey.PROCESS_USER_INPUT.value
+            transition=next_transition
         )
         if transitioned:
             return {"answer_technical_id": edge_id}, 200
@@ -370,7 +378,7 @@ class ChatService:
                         await _launch_transition(self.entity_service, child.technical_id, self.cyoda_auth_service, None,
                                                  const.TransitionKey.MANUAL_RETRY.value)
                         if chat.chat_flow.finished_flow and chat.chat_flow.finished_flow[-1].type == "answer" and not \
-                        chat.chat_flow.finished_flow[-1].consumed:
+                                chat.chat_flow.finished_flow[-1].consumed:
                             await _launch_transition(self.entity_service, child.technical_id, self.cyoda_auth_service,
                                                      None,
                                                      const.TransitionKey.PROCESS_USER_INPUT.value)
@@ -567,4 +575,3 @@ class ChatService:
                         )
             except Exception as e:
                 logger.exception(f"Failed to rollback workflow for entity {entity.technical_id}: {e}")
-

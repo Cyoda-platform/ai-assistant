@@ -1,0 +1,163 @@
+{
+  "initial_state": "none",
+  "workflow_name": "edit_existing_workflow",
+  "states": {
+    "none": {
+      "transitions": {
+        "start_workflow_update": {
+          "next": "started_workflow_update"
+        }
+      }
+    },
+    "started_workflow_update": {
+      "transitions": {
+        "update_workflow_config": {
+          "next": "updated_workflow_config",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+              },
+              "input": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.json"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.json"
+                ]
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "You are provided entity workflow json.",
+                    "Please update it based on the user request \"{user_request}\".",
+                    "Processes should have name starting with 'process_'.",
+                    "Please return only workflow json only."
+                  ]
+                }
+              ],
+              "response_format": {
+                "name": "workflow_design_schema",
+                "description": "workflow design schema",
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "transitions"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "transitions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "start_state",
+                          "end_state",
+                          "automated"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "start_state": {
+                            "type": "string"
+                          },
+                          "end_state": {
+                            "type": "string"
+                          },
+                          "automated": {
+                            "type": "boolean"
+                          },
+                          "processes": {
+                            "type": "object",
+                            "properties": {
+                              "schedule_transition_processors": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {}
+                                }
+                              },
+                              "externalized_processors": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "required": [
+                                    "name"
+                                  ],
+                                  "properties": {
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "updated_workflow_config": {
+      "transitions": {
+        "update_processors_code": {
+          "next": "updated_processors_code",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "# Please outline the processors functions according the new requirement \"{user_request}\" that need to be either added or updated.",
+                    " And ask the user to proceed with calling update processors command to proceed.",
+                    "",
+                    "Entity data example:",
+                    "{entity_name}",
+
+                    ""
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "updated_processors_code": {
+      "transitions": {
+        "done": {
+          "next": "locked_chat",
+          "action": {
+            "name": "notify_user",
+            "config": {
+              "type": "question",
+              "question": "Your workflow has been adjusted as requested. Would you like to review it together or explore additional changes?",
+              "publish": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

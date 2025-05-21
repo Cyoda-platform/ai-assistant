@@ -1,7 +1,10 @@
 import logging
+import threading
 import uuid
 import json
 import asyncio
+from typing import Any
+
 import grpc
 
 from cloudevents_pb2 import CloudEvent
@@ -25,7 +28,12 @@ GREET_EVENT_TYPE = "CalculationMemberGreetEvent"
 KEEP_ALIVE_EVENT_TYPE = "CalculationMemberKeepAliveEvent"
 EVENT_ACK_TYPE = "EventAckResponse"
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] [%(threadName)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -127,6 +135,7 @@ class GrpcClient:
                 "success": True,
             },
         )
+        logger.info(f"ack_keep_alive {data.get('id')}")
         await queue.put(ack)
 
     async def process_calc_req_event(self, data: dict, queue: asyncio.Queue, type: str):
@@ -144,7 +153,33 @@ class GrpcClient:
         entity.current_transition = data['transition']['name']
 
         try:
-            entity, resp = await self.workflow_dispatcher.process_event(
+            def run_async_in_new_loop(coro: asyncio.coroutines) -> Any:
+                """
+                Runs an async coroutine in a separate thread and event loop.
+                Returns the result synchronously.
+                """
+                result_container = {}
+                exception_container = {}
+
+                def thread_target():
+                    try:
+                        new_loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(new_loop)
+                        result = new_loop.run_until_complete(coro)
+                        result_container['result'] = result
+                    except Exception as e:
+                        exception_container['exception'] = e
+                    finally:
+                        new_loop.close()
+
+                thread = threading.Thread(target=thread_target)
+                thread.start()
+                thread.join()
+
+                if 'exception' in exception_container:
+                    raise exception_container['exception']
+                return result_container['result']
+            coro = self.workflow_dispatcher.process_event(
                 entity=entity,
                 action={
                     "name": processor_name,
@@ -152,6 +187,9 @@ class GrpcClient:
                 },
                 technical_id=data['entityId']
             )
+
+            loop = asyncio.get_running_loop()
+            entity, resp = await loop.run_in_executor(None, lambda: run_async_in_new_loop(coro))
             data['payload']['data'] = model_cls.model_dump(entity)
         except Exception as e:
             logger.exception("Error processing entity")
