@@ -1659,11 +1659,6 @@
             "config": {
               "type": "prompt",
               "publish": false,
-              "model": {
-                "model_name": "gpt-4o",
-                "temperature": 0.7,
-                "max_tokens": 10000
-              },
               "memory_tags": [
                 "generate_prototype_cyoda_workflow_json"
               ],
