@@ -231,7 +231,7 @@ class WorkflowDispatcher:
             entity=entity,
             technical_id=technical_id,
             tools=config.get("tools"),
-            model=ModelConfig.model_validate(config.get("model")) if config.get("model") else {},
+            model=ModelConfig.model_validate(config.get("model") if config.get("model") else {}),
             tool_choice=config.get("tool_choice"),
             messages=messages,
             response_format=config.get("response_format")
