@@ -246,6 +246,8 @@ class ChatService:
         return chat
 
     async def _validate_chat_owner(self, chat, user_id):
+        if not config.ENABLE_AUTH:
+            return
         if chat.user_id == user_id:
             return
 
