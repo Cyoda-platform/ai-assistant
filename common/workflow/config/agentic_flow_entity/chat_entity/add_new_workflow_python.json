@@ -12,7 +12,7 @@
     "generate_workflow_json": {
       "transitions": {
         "enrich_workflow": {
-          "next": "generate_workflow_processors",
+          "next": "generated_workflow_json",
           "action": {
             "name": "process_event",
             "config": {
@@ -151,10 +151,32 @@
         }
       }
     },
-    "generate_workflow_processors": {
+    "generated_workflow_json": {
+      "transitions": {
+        "convert_workflow_to_cyoda_dto": {
+          "next": "converted_workflow_json",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "publish": false,
+              "function": {
+                "name": "convert_workflow_to_dto",
+                "description": "convert_workflow_to_dto",
+                "parameters": {
+                  "workflow_file_name": "entity/{entity_name}/workflow.json",
+                  "output_file_name": "cyoda_dto/{entity_name}/workflow.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "converted_workflow_json": {
       "transitions": {
         "notify_user": {
-          "next": "user_notification",
+          "next": "generated_workflow_processors",
           "action": {
             "name": "process_event",
             "config": {
@@ -194,7 +216,7 @@
         }
       }
     },
-    "user_notification": {
+    "generated_workflow_processors": {
       "transitions": {
         "done": {
           "next": "locked_chat",

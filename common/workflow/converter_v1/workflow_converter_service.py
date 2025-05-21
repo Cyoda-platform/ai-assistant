@@ -14,7 +14,7 @@ entity_dir = Path(__file__).resolve().parent.parent.parent.parent / 'entity'
 API_V_WORKFLOWS_ = "api/v1/workflows"
 
 class CyodaWorkflowConverterService:
-    async def convert_workflow(self, workflow_contents, entity_name, entity_version, technical_id):
+    def convert_workflow(self, workflow_contents, entity_name, entity_version, technical_id):
         workflow_contents = enrich_workflow(workflow_contents)
         workflow_contents['name'] = f"{workflow_contents['name']}:ENTITY_MODEL_VAR:ENTITY_VERSION_VAR:CHAT_ID_VAR"
         workflow_contents = json.dumps(workflow_contents)
