@@ -19,7 +19,7 @@ class Scheduler:
         self.backoff_delay = 60  # seconds
         self.max_backoff = 10 * 60  # 10 minutes
 
-    async def start(self):
+    async def start_scheduler(self):
         delay = self.backoff_delay
         while True:
             try:

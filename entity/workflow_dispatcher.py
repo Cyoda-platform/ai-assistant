@@ -57,7 +57,6 @@ class WorkflowDispatcher:
             return None
 
     async def process_event(self, entity: WorkflowEntity, action, technical_id):
-
         response = "returned empty response"
         try:
             config = action.get("config")

@@ -1,6 +1,4 @@
-import asyncio
 import logging
-import threading
 from datetime import timedelta
 
 from quart import Quart, send_from_directory
@@ -8,6 +6,7 @@ from quart_cors import cors
 from quart_rate_limiter import RateLimiter, rate_limit
 import common.config.const as const
 from common.exception.errors import init_error_handlers
+from common.utils.event_loop import BackgroundEventLoop
 from routes.chat import chat_bp
 from routes.labels_config import labels_config_bp
 from routes.token import token_bp
@@ -24,20 +23,6 @@ def create_app():
 
     # --- Error handlers ---
     init_error_handlers(app)
-
-    def start_scheduler_background():
-        loop = asyncio.new_event_loop()
-
-        def run_loop():
-            asyncio.set_event_loop(loop)
-            loop.run_forever()
-
-        # Start loop in background thread
-        threading.Thread(target=run_loop, daemon=True).start()
-        # Schedule the coroutine
-        future = asyncio.run_coroutine_threadsafe(scheduler.start(), loop)
-        logger.info("Started Scheduler background thread.")
-        return loop, future
 
     # --- CORS + OPTIONS hooks ---
     @app.before_serving
@@ -56,12 +41,13 @@ def create_app():
             return '', 204
 
         # start gRPC stream in background
-        loop = asyncio.new_event_loop()
-        threading.Thread(target=lambda: (asyncio.set_event_loop(loop), loop.run_forever()), daemon=True).start()
-        app.background_task = asyncio.run_coroutine_threadsafe(grpc_client.grpc_stream(), loop)
+        grpc_client_loop = BackgroundEventLoop()
+        grpc_client_loop.run_coroutine(grpc_client.grpc_stream())
         logger.info("Started gRPC background stream.")
-        loop, future = start_scheduler_background()
 
+        scheduler_loop = BackgroundEventLoop()
+        scheduler_loop.run_coroutine(scheduler.start_scheduler())
+        logger.info("Started scheduler background stream.")
 
 
     @app.after_serving

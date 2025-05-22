@@ -1,4 +1,6 @@
 import json
+import logging
+
 import jsonschema
 from jsonschema import ValidationError
 
@@ -7,6 +9,13 @@ from common.config.config import config
 from entity.chat.chat import ChatEntity
 from entity.model import ModelConfig
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] [%(threadName)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
+logger = logging.getLogger(__name__)
 
 #todo add react, prompt chaining etc - other techniques, add more implementations
 class OpenAiAgent:
@@ -32,11 +41,12 @@ class OpenAiAgent:
     ):
         try:
             parsed = json.loads(content)
+            #todo get all validation errors at once
             jsonschema.validate(instance=parsed, schema=schema)
             # Return the original string on success
             return content, None
         except (json.JSONDecodeError, ValidationError) as e:
-            msg = f"Validation failed on attempt {attempt}/{max_retries}: {e}. Retrying..."
+            msg = f"Validation failed on attempt {attempt}/{max_retries}: {e}. Pleas return correct json."
             messages.append({"role": "assistant", "content": msg})
             return None, msg
 
@@ -54,7 +64,7 @@ class OpenAiAgent:
                 {"type": "json_schema", "json_schema": response_format}
                 if response_format else None
             )
-
+            logger.info(f"Running completion...attempt={attempt}")
             completion = await self.client.create_completion(
                 model=model,
                 messages=messages,
@@ -82,7 +92,6 @@ class OpenAiAgent:
                 continue
 
             content = resp.content
-            messages.append({"role": "assistant", "content": content})
 
             if schema:
                 valid_str, error = await self._validate_with_schema(
@@ -90,10 +99,12 @@ class OpenAiAgent:
                 )
                 if valid_str is not None:
                     # Always return the JSON string
+                    messages.append({"role": "assistant", "content": content})
                     return valid_str
                 # otherwise retry
             else:
                 # No schema: return string as before
+                messages.append({"role": "assistant", "content": content})
                 return content
 
         return {

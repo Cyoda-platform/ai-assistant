@@ -10,6 +10,7 @@ import grpc
 from cloudevents_pb2 import CloudEvent
 from common.config import config
 from common.config.config import config
+from common.utils.event_loop import BackgroundEventLoop
 from cyoda_cloud_api_pb2_grpc import CloudEventsServiceStub
 from entity.model import WorkflowEntity
 from entity.model_registry import model_registry
@@ -42,6 +43,7 @@ class GrpcClient:
         self.workflow_dispatcher = workflow_dispatcher
         self.auth = auth
         self.chat_service = chat_service
+        self.processor_loop = BackgroundEventLoop()
 
     def metadata_callback(self, context, callback):
         """
@@ -153,43 +155,13 @@ class GrpcClient:
         entity.current_transition = data['transition']['name']
 
         try:
-            def run_async_in_new_loop(coro: asyncio.coroutines) -> Any:
-                """
-                Runs an async coroutine in a separate thread and event loop.
-                Returns the result synchronously.
-                """
-                result_container = {}
-                exception_container = {}
-
-                def thread_target():
-                    try:
-                        new_loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(new_loop)
-                        result = new_loop.run_until_complete(coro)
-                        result_container['result'] = result
-                    except Exception as e:
-                        exception_container['exception'] = e
-                    finally:
-                        new_loop.close()
-
-                thread = threading.Thread(target=thread_target)
-                thread.start()
-                thread.join()
-
-                if 'exception' in exception_container:
-                    raise exception_container['exception']
-                return result_container['result']
-            coro = self.workflow_dispatcher.process_event(
+            entity, resp = await self.workflow_dispatcher.process_event(
                 entity=entity,
                 action={
                     "name": processor_name,
                     "config": json.loads(data['parameters']['context'])
                 },
-                technical_id=data['entityId']
-            )
-
-            loop = asyncio.get_running_loop()
-            entity, resp = await loop.run_in_executor(None, lambda: run_async_in_new_loop(coro))
+                technical_id=data['entityId'])
             data['payload']['data'] = model_cls.model_dump(entity)
         except Exception as e:
             logger.exception("Error processing entity")
@@ -233,10 +205,10 @@ class GrpcClient:
                         elif response.type in (CALC_REQ_EVENT_TYPE, CRITERIA_CALC_REQ_EVENT_TYPE):
                             logger.info(f"Calc request: {response.type}")
                             data = json.loads(response.text_data)
-                            await self.process_calc_req_event(data, queue, response.type)
+                            self.processor_loop.run_coroutine(self.process_calc_req_event(data, queue, response.type))
                         elif response.type == GREET_EVENT_TYPE:
                             logger.info("Greet event received")
-                            asyncio.create_task(self.rollback_failed_workflows())
+                            self.processor_loop.run_coroutine(self.rollback_failed_workflows())
                         else:
                             logger.error(f"Unhandled event type: {response.type}")
 
