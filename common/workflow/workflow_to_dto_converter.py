@@ -1,5 +1,7 @@
 import json
 import uuid
+from typing import Any
+
 import common.config.const as const
 from datetime import datetime
 from pathlib import Path
@@ -8,11 +10,78 @@ from zoneinfo import ZoneInfo
 from common.config.config import config
 
 
+OPERATION_MAPPING = {
+    "equals (disregard case)": {"operation": "IEQUALS", "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals"},
+    "not equal (disregard case)": {"operation": "INOT_EQUAL", "@bean": "com.cyoda.core.conditions.nonqueryable.INotEquals"},
+    "between (inclusive)": {"operation": "BETWEEN", "@bean": "com.cyoda.core.conditions.queryable.Between"},
+    "contains": {"operation": "CONTAINS", "@bean": "com.cyoda.core.conditions.nonqueryable.IContains"},
+    "starts with": {"operation": "ISTARTS_WITH", "@bean": "com.cyoda.core.conditions.nonqueryable.IStartsWith"},
+    "ends with": {"operation": "IENDS_WITH", "@bean": "com.cyoda.core.conditions.nonqueryable.IEndsWith"},
+    "does not contain": {"operation": "INOT_CONTAINS", "@bean": "com.cyoda.core.conditions.nonqueryable.INotContains"},
+    "does not start with": {"operation": "INOT_STARTS_WITH", "@bean": "com.cyoda.core.conditions.nonqueryable.INotStartsWith"},
+    "does not end with": {"operation": "NOT_ENDS_WITH", "@bean": "com.cyoda.core.conditions.nonqueryable.NotEndsWith"},
+    "matches other field (case insensitive)": {"operation": "INOT_ENDS_WITH", "@bean": "com.cyoda.core.conditions.nonqueryable.INotEndsWith"},
+    "equals": {"operation": "EQUALS", "@bean": "com.cyoda.core.conditions.queryable.Equals"},
+    "not equal": {"operation": "NOT_EQUAL", "@bean": "com.cyoda.core.conditions.nonqueryable.NotEquals"},
+    "less than": {"operation": "LESS_THAN", "@bean": "com.cyoda.core.conditions.queryable.LessThan"},
+    "greater than": {"operation": "GREATER_THAN", "@bean": "com.cyoda.core.conditions.queryable.GreaterThan"},
+    "less than or equal to": {"operation": "LESS_OR_EQUAL", "@bean": "com.cyoda.core.conditions.queryable.LessThanEquals"},
+    "greater than or equal to": {"operation": "GREATER_OR_EQUAL", "@bean": "com.cyoda.core.conditions.queryable.GreaterThanEquals"},
+    "between (inclusive, match case)": {"operation": "BETWEEN_INCLUSIVE", "@bean": "com.cyoda.core.conditions.queryable.BetweenInclusive"},
+    "is null": {"operation": "IS_NULL", "@bean": "com.cyoda.core.conditions.nonqueryable.IsNull"},
+    "is not null": {"operation": "NOT_NULL", "@bean": "com.cyoda.core.conditions.nonqueryable.NotNull"}
+}
+
+VALID_VALUE_TYPES = {
+    "classes", "nulls", "localTimes", "timeuuids", "years", "longs", "yearMonths", "strings",
+    "ints", "byteArrays", "booleans", "bigIntegers", "shorts", "typeReferences", "zonedDateTimes",
+    "floats", "bigDecimals", "dates", "localDates", "locales", "doubles", "bytes", "localDateTimes",
+    "chars", "uuids"
+}
+
+VALUE_TYPE_TO_JAVA_TYPE = {
+    "strings": "String",
+    "uuids": "java.util.UUID",
+    "timeuuids": "com.datastax.oss.driver.api.core.uuid.Uuids",
+    "dates": "java.util.Date",
+    "localDates": "java.time.LocalDate",
+    "localTimes": "java.time.LocalTime",
+    "localDateTimes": "java.time.LocalDateTime",
+    "zonedDateTimes": "java.time.ZonedDateTime",
+    "yearMonths": "java.time.YearMonth",
+    "years": "java.time.Year",
+    "locales": "java.util.Locale",
+    "chars": "char",
+    "byteArrays": "byte[]",
+    "classes": "java.lang.Class",
+    "typeReferences": "java.lang.reflect.Type"
+}
+
+META_FIELD_TYPES = {
+    "id": "UUID",
+    "entityModelClassId": "UUID",
+    "owner": "String",
+    "state": "String",
+    "entityModelName": "String",
+    "previousTransition": "String",
+    "creationDate": "java.util.Date",
+    "lastUpdateTime": "java.util.Date",
+    "entityModelVersion": None
+}
+
+RAW_TYPES = {
+    "ints", "longs", "doubles", "floats", "booleans", "shorts", "bytes", "bigDecimals", "bigIntegers"
+}
+
+FIELD_NAME_PREFIX = (
+    "members.[*]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps."
+)
+
 def generate_id():
     return str(uuid.uuid1())
 
 
-def convert(input_file_path, output_file_path, calculation_node_tags, model_name, model_version, workflow_name):
+def convert(input_file_path, output_file_path, calculation_node_tags, model_name, model_version, workflow_name, ai):
     """Reads JSON from a file, converts it to workflow_dto, and writes it to another file."""
     with open(input_file_path, "r", encoding="utf-8") as infile:
         input_json = json.load(infile)
@@ -23,14 +92,15 @@ def convert(input_file_path, output_file_path, calculation_node_tags, model_name
                                                 calculation_nodes_tags=calculation_node_tags,
                                                 model_name=model_name,
                                                 model_version=model_version,
-                                                workflow_name=workflow_name)
+                                                workflow_name=workflow_name,
+                                                ai=ai)
 
     with open(output_file_path, "w", encoding="utf-8") as outfile:
         json.dump(workflow_dto, outfile, indent=4, ensure_ascii=False)
 
 
 def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags, model_name, model_version,
-                                 workflow_name):
+                                 workflow_name, ai):
     default_param_values = {
         "owner": "CYODA",
         "user": "CYODA",
@@ -40,6 +110,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "sync_process": "false",
         "new_transaction_for_async": "true",
         "none_transactional_for_async": "false",
+        "default_condition_name": "default_condition_name"
     }
     fail_chat_criteria_id = generate_id()
     fail_chat_criteria = {
@@ -214,24 +285,25 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
     for state_name, state_data in input_json["states"].items():
         start_state = save_new_state(state_name, state_map, default_param_values, class_name, state_data)
         state_name_to_id[state_name] = start_state
-        state_data["transitions"][const.TransitionKey.MANUAL_RETRY.value] = {
-            "next": state_name,
-            "manual": True
-        }
-        state_data["transitions"][const.TransitionKey.FAIL.value] = {
-            "next": f"{const.TransitionKey.LOCKED_CHAT.value}_{state_name}",
-            "action": {
-                "name": "process_event",
-                "config": {
-                    "type": "function",
-                    "function": {
-                        "name": "fail_workflow",
-                        "description": "Clones template repository"
-                    },
-                    "publish": True
+        if ai:
+            state_data["transitions"][const.TransitionKey.MANUAL_RETRY.value] = {
+                "next": state_name,
+                "manual": True
+            }
+            state_data["transitions"][const.TransitionKey.FAIL.value] = {
+                "next": f"{const.TransitionKey.LOCKED_CHAT.value}_{state_name}",
+                "action": {
+                    "name": "process_event",
+                    "config": {
+                        "type": "function",
+                        "function": {
+                            "name": "fail_workflow",
+                            "description": "Clones template repository"
+                        },
+                        "publish": True
+                    }
                 }
             }
-        }
 
         # Process transitions
         def add_transition(transition_name, transition_data, transition_start_state=None, transition_criteria_id=None):
@@ -284,6 +356,9 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                 )
 
                 # Process externalized_processor's dto
+                action = transition_data.get("action", {})
+                config = action.get("config", {}) or {}
+
                 dto["processes"].append({
                     "persisted": True,
                     "owner": default_param_values["owner"],
@@ -293,23 +368,20 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                         "persistedId": process_id,
                         "runtimeId": 0
                     },
-                    "name": transition_data["action"]["name"],
+                    "name": action.get("name"),
                     "entityClassName": class_name,
                     "creationDate": current_timestamp(),
-                    "description": transition_data["action"]["config"].get("description", ""),
-                    # "config": transition_data["action"]["config"],
+                    "description": config.get("description", ""),
                     "processorClassName": "net.cyoda.saas.externalize.processor.ExternalizedProcessor",
                     "parameters": process_params,
                     "fields": [],
-                    "syncProcess": transition_data["action"]["config"].get("sync_process",
-                                                                           default_param_values["sync_process"]),
-                    "newTransactionForAsync": transition_data["action"]["config"].get("new_transaction_for_async",
-                                                                                      default_param_values[
-                                                                                          "new_transaction_for_async"]),
-                    "noneTransactionalForAsync": transition_data["action"]["config"].get(
+                    "syncProcess": config.get("sync_process", default_param_values["sync_process"]),
+                    "newTransactionForAsync": config.get(
+                        "new_transaction_for_async",
+                        default_param_values["new_transaction_for_async"]),
+                    "noneTransactionalForAsync": config.get(
                         "none_transactional_for_async",
-                        default_param_values[
-                            "none_transactional_for_async"]),
+                        default_param_values["none_transactional_for_async"]),
                     "isTemplate": False,
                     "criteriaIds": process_criteria_ids,
                     "user": default_param_values["user"]
@@ -325,9 +397,9 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                         "valueType": "STRING",
                         "value": {
                             "@type": "String",
-                            "value": transition_data["action"]["config"].get("calculation_nodes_tags",
-                                                                             calculation_nodes_tags)
-                            # todo what source for tags?
+                            "value": config.get(
+                                "calculation_nodes_tags",
+                                calculation_nodes_tags)
                         }
                     },
                     {
@@ -340,8 +412,8 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                         "value": {
                             "@type": "String",
                             "value": str(
-                                transition_data["action"]["config"].get("attach_entity", default_param_values[
-                                    "attach_entity"])).lower()
+                                config.get("attach_entity",
+                                default_param_values["attach_entity"])).lower()
                         }
                     },
                     {
@@ -351,10 +423,10 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                         "name": "Calculation response timeout (ms)",
                         "creationDate": current_timestamp(),
                         "valueType": "INTEGER",
-                        "value": {"@type": "String", "value": str(
-                            transition_data["action"]["config"].get("calculation_response_timeout_ms",
-                                                                    default_param_values[
-                                                                        "calculation_response_timeout_ms"]))}
+                        "value": {
+                            "@type": "String", "value": str(
+                                config.get("calculation_response_timeout_ms",
+                                default_param_values["calculation_response_timeout_ms"]))}
                     },
                     {
                         "persisted": True,
@@ -363,10 +435,11 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                         "name": "Retry policy",
                         "creationDate": current_timestamp(),
                         "valueType": "STRING",
-                        "value": {"@type": "String",
-                                  "value": transition_data["action"]["config"].get("retry_policy",
-                                                                                   default_param_values[
-                                                                                       "retry_policy"])}
+                        "value": {
+                            "@type": "String",
+                            "value": config.get(
+                                "retry_policy",
+                                default_param_values["retry_policy"])}
                     },
                     {
                         "persisted": True,
@@ -375,7 +448,8 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                         "name": "Parameter 'context'",
                         "creationDate": current_timestamp(),
                         "valueType": "STRING",
-                        "value": {"@type": "String", "value": json.dumps(transition_data["action"]["config"])}
+                        "value":
+                            {"@type": "String", "value": json.dumps(config)}
                     }
                 ])
 
@@ -385,23 +459,26 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
 
             # Process transition's externalized_criteria
             if "condition" in transition_data:
+                condition = transition_data.get("condition", {})
+                config = condition.get("config", {}) or {}
+                function = config.get("function", {}) or {}
                 criteria = {
                     "owner": default_param_values["owner"],
-                    "calculation_nodes_tags": transition_data["condition"]["config"].get("calculation_nodes_tags",
-                                                                                         calculation_nodes_tags),
-                    "attach_entity": str(transition_data["condition"]["config"].get("attach_entity",
-                                                                                    default_param_values[
-                                                                                        "attach_entity"])).lower(),
-                    "calculation_response_timeout_ms": str(
-                        transition_data["condition"]["config"].get("calculation_response_timeout_ms",
-                                                                   default_param_values[
-                                                                       "calculation_response_timeout_ms"])),
-                    "retry_policy": transition_data["condition"]["config"].get("retry_policy",
-                                                                               default_param_values[
-                                                                                   "retry_policy"]),
-                    "name": transition_data["condition"]["config"]["function"]["name"],
-                    "description": transition_data["condition"]["config"]["function"].get("description", ""),
-                    "config": transition_data["condition"]["config"],
+                    "calculation_nodes_tags": config.get(
+                        "calculation_nodes_tags",
+                        calculation_nodes_tags),
+                    "attach_entity": str(config.get(
+                        "attach_entity",
+                        default_param_values["attach_entity"])).lower(),
+                    "calculation_response_timeout_ms": str(config.get(
+                            "calculation_response_timeout_ms",
+                            default_param_values["calculation_response_timeout_ms"])),
+                    "retry_policy": config.get(
+                        "retry_policy",
+                        default_param_values["retry_policy"]),
+                    "name": function.get("name") or condition.get("name", default_param_values["default_condition_name"]),
+                    "description": function.get("description") or condition.get("description", ""),
+                    "config": config,
                     "user": default_param_values["user"]
                 }
 
@@ -411,6 +488,33 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                 dto["processParams"].extend(criteria_params)
                 criteria_dto = generate_ext_criteria(criteria, criteria_id, criteria_params, class_name)
                 dto["criterias"].append(criteria_dto)
+
+            # Process transition's condition_criteria
+            if "condition_criteria" in transition_data:
+                condition_criteria = transition_data.get("condition_criteria", {})
+                params = condition_criteria.get("params", {}) or {}
+
+                cond_crit_id = generate_id()
+                criteria_ids.append(cond_crit_id)
+
+                converted_condition = convert_condition(params)
+
+                condition_criteria_dto = {
+                    "persisted": True,
+                    "owner": default_param_values["owner"],
+                    "id": cond_crit_id,
+                    "name": condition_criteria["name"],
+                    "entityClassName": class_name,
+                    "creationDate": current_timestamp(),
+                    "description": condition_criteria.get("description", ""),
+                    "condition": converted_condition,
+                    "aliasDefs": [],
+                    "parameters": [],
+                    "criteriaChecker": "ConditionCriteriaChecker",
+                    "user": default_param_values["user"]
+                }
+
+                dto["criterias"].append(condition_criteria_dto)
 
         for transition_name, transition_data in state_data["transitions"].items():
             add_transition(transition_name=transition_name, transition_data=transition_data)
@@ -442,6 +546,89 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
     add_none_state_if_not_exists(dto, default_param_values, class_name)
     return dto
 
+def convert_condition(condition):
+    if condition.get("type") == "group":
+        return {
+            "@bean": "com.cyoda.core.conditions.GroupCondition",
+            "operator": condition.get("operator"),
+            "conditions": [convert_condition(sub) for sub in condition.get("conditions", [])]
+        }
+
+    elif condition.get("type") == "simple":
+        operator_type = condition.get("operatorType", "").strip()
+        mapping = OPERATION_MAPPING.get(operator_type.lower()) or OPERATION_MAPPING.get(operator_type)
+
+        if not mapping:
+            raise ValueError(f"Unsupported operatorType: {operator_type}")
+
+        json_path = condition["jsonPath"]
+        value_type = condition.get("value_type")
+
+        if json_path.startswith("$."):
+            json_path = resolve_field_name(json_path, value_type)
+
+        field_name = json_path  # after resolve, use this for META_FIELD_TYPES and final output
+
+        result = {
+            "@bean": mapping["@bean"],
+            "fieldName": field_name,
+            "operation": mapping["operation"],
+            "rangeField": "false"
+        }
+
+        if mapping["operation"] in {"BETWEEN", "BETWEEN_INCLUSIVE"}:
+            if "value_from" not in condition or "value_to" not in condition:
+                raise ValueError(f"'value_from' and 'value_to' must be present for operatorType '{operator_type}'")
+
+            result["from"] = build_between_value(field_name, condition["value_from"], value_type)
+            result["to"] = build_between_value(field_name, condition["value_to"], value_type)
+        else:
+            result["value"] = condition["value"]
+
+        # if ".queryable." in mapping["@bean"]:
+        #     result["queryable"] = True
+
+        return result
+
+    else:
+        raise ValueError(f"Unknown condition type: {condition.get('type')}")
+
+def map_value_type_to_java_type(value_type):
+    VALUE_TYPE_TO_JAVA_TYPE = {
+        "uuids": "UUID",
+        "strings": "String",
+        "dates": "java.util.Date"
+    }
+    return VALUE_TYPE_TO_JAVA_TYPE.get(value_type)
+
+def build_between_value(field_name: str, value: Any, value_type: str):
+    if value_type in RAW_TYPES:
+        return value
+
+    explicit_java_type = META_FIELD_TYPES.get(field_name)
+    java_type = explicit_java_type or map_value_type_to_java_type(value_type)
+
+    if java_type:
+        return {
+            "@type": java_type,
+            "value": value
+        }
+
+    return value  # fallback if no mapping
+
+def resolve_field_name(json_path: str, value_type: str) -> str:
+    """
+    - if jsonPath starts with '$.', adds prefix + value_type (value_type must be present and valid);
+    """
+    if value_type not in VALID_VALUE_TYPES:
+        raise ValueError(f"Invalid value_type '{value_type}'. Must be one of: {', '.join(sorted(VALID_VALUE_TYPES))}")
+    return f"{FIELD_NAME_PREFIX}{value_type}.[{json_path}]"
+
+def build_between_value(field_name: str, value: Any, which: str):
+    java_type = META_FIELD_TYPES.get(field_name)
+    if java_type:
+        return {"@type": java_type, "value": value}
+    return value
 
 def save_new_state(state_name, state_map, default_param_values, class_name, state_data):
     if state_name in state_map:
@@ -619,14 +806,11 @@ if __name__ == "__main__":
         output_dir = output_file.parent
         output_dir.mkdir(parents=True, exist_ok=True)
         workflow_name = file_path.relative_to(CONFIG_DIR).parts[-1].split(".")[0]
+        # Set the AI flag
+        ai = True
         # Call your conversion
-        convert(
-            input_file_path=input_file,
-            output_file_path=str(output_file),
-            calculation_node_tags=config.GRPC_PROCESSOR_TAG,
-            model_name=model_name,
-            model_version=int(config.ENTITY_VERSION),
-            workflow_name=workflow_name
-        )
+        convert(input_file_path=input_file, output_file_path=str(output_file),
+                calculation_node_tags=config.GRPC_PROCESSOR_TAG, model_name=model_name,
+                model_version=int(config.ENTITY_VERSION), workflow_name=workflow_name, ai=ai)
 
         print(f"Conversion completed. Result saved to {output_file}")
