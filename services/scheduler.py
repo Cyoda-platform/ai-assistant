@@ -16,8 +16,8 @@ class Scheduler:
     def __init__(self, entity_service, cyoda_auth_service):
         self.entity_service = entity_service
         self.cyoda_auth_service = cyoda_auth_service
-        self.backoff_delay = 60  # seconds
-        self.max_backoff = 10 * 60  # 10 minutes
+        self.backoff_delay = 30  # seconds
+        self.max_backoff = 3 * 60  # 3 minutes
 
     async def start_scheduler(self):
         delay = self.backoff_delay
