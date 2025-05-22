@@ -209,6 +209,7 @@ class GrpcClient:
                             logger.info("Greet event received")
                             self.processor_loop.run_coroutine(self.rollback_failed_workflows())
                         else:
+
                             logger.error(f"Unhandled event type: {response.type}")
 
                 # If we exit the stream cleanly, break out of the retry loop
