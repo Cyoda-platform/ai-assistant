@@ -1,0 +1,725 @@
+= Building a Human-in-the-Loop Workflow
+:toc:
+:toclevels: 3
+
+This document outlines how to set up a human-in-the-loop workflow. The workflow begins with a question to gather user feedback, then branches into two transitions: one requiring manual human review and another that is condition-based. Standardized function names (e.g., `set_additional_question_flag` for manual review and `is_stage_completed` for condition checks) promote consistency. A final prompt step ensures confirmation or summary.
+
+== 1. Start with an Initial Question
+
+Purpose::  
+Engage the user by asking for feedback or input.
+
+Configuration:  
+Use an action of type `"question"` to display the prompt.
+
+Example:
+
+[source,json]
+----
+"feedback_question": {
+  "transitions": {
+    "collect_feedback": {
+      "next": "feedback_received",
+      "action": {
+        "name": "process_event",
+        "config": {
+          "type": "question",
+          "question": "Please share your feedback on our service:",
+          "example_answers": [
+            "I really appreciate the fast support, but the interface could be improved."
+          ],
+          "publish": true,
+          "allow_anonymous_users": true
+        }
+      }
+    }
+  }
+}
+----
+
+Outcome::  
+Collects the user’s initial input before proceeding to further steps.
+
+== 2. Introduce Two Transitions from Feedback Collection
+
+=== 2A. Manual Transition (Human-Triggered)
+
+Purpose::  
+Permit a human (or an agent on behalf of a human) to decide if additional input is needed.
+
+Configuration Details:
+
+- **Manual Flag**: Set `"manual": true` in the transition to require human intervention.
+- **Agent Action**: Use an agent that prompts the user for more information.
+- **Standard Function**: The `set_additional_question_flag` function marks whether further feedback is required.
+
+Example:
+
+[source,json]
+----
+"feedback_received": {
+  "transitions": {
+    "discuss_feedback": {
+      "next": "feedback_received",
+      "manual": true,
+      "action": {
+        "name": "process_event",
+        "config": {
+          "type": "agent",
+          "publish": true,
+          "allow_anonymous_users": true,
+          "model": {},
+          "tools": [
+            {
+              "type": "function",
+              "function": {
+                "name": "set_additional_question_flag",
+                "description": "Set true if additional feedback is needed; false otherwise.",
+                "strict": true,
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "transition": {
+                      "type": "string",
+                      "enum": ["discuss_feedback"]
+                    },
+                    "require_additional_question_flag": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["transition", "require_additional_question_flag"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          ],
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                "Your feedback seems brief. Would you like to add more details or clarify any points?"
+              ]
+            }
+          ],
+          "tool_choice": "auto",
+          "max_iteration": 30,
+          "approve": true
+        }
+      }
+    }
+  }
+}
+----
+
+Outcome::  
+The automated flow pauses. The human (or agent) uses `set_additional_question_flag` to set a condition, indicating whether additional input is required.
+
+=== 2B. Conditional Transition
+
+Purpose::  
+Allow the workflow to advance automatically once a certain condition is met (e.g., no further human input needed).
+
+Configuration Details:
+
+- **Condition Check**: Use the `is_stage_completed` function to confirm that manual discussions are finished.
+
+Example:
+
+[source,json]
+----
+"feedback_received": {
+  "transitions": {
+    "transition_to_feedback_processing_success": {
+      "next": "processed",
+      "condition": {
+        "config": {
+          "type": "function",
+          "function": {
+            "name": "is_stage_completed",
+            "description": "Checks if the feedback discussion stage is complete.",
+            "params": {
+              "transition": "discuss_feedback"
+            }
+          }
+        }
+      },
+      "action": {
+        "name": "process_event",
+        "config": {
+          "type": "agent",
+          "publish": true,
+          "allow_anonymous_users": true,
+          "model": {},
+          "tools": [
+            {
+              "type": "function",
+              "function": {
+                "name": "sentiment_analysis",
+                "description": "Analyzes the sentiment of the feedback.",
+                "strict": true,
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["text"],
+                  "additionalProperties": false
+                }
+              }
+            },
+            {
+              "type": "function",
+              "function": {
+                "name": "entity_extraction",
+                "description": "Extracts key entities from the feedback.",
+                "strict": true,
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["text"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          ],
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                "Proceeding with analysis: extract sentiment and key entities from the provided feedback: {{feedback}}"
+              ]
+            }
+          ],
+          "tool_choice": "auto",
+          "max_iteration": 10,
+          "approve": true
+        }
+      }
+    }
+  }
+}
+----
+
+Outcome::  
+Once `is_stage_completed` confirms the stage is done, the workflow automatically proceeds to feedback processing.
+
+== 3. Finalizing with a Prompt
+
+Purpose::  
+Wrap up by summarizing or confirming the final output.
+
+Configuration Details:
+
+- Use `"type": "prompt"` to request a concluding summary or final user confirmation.
+
+Example:
+
+[source,json]
+----
+"processed": {
+  "transitions": {
+    "save_feedback": {
+      "next": "workflow_completed",
+      "action": {
+        "name": "process_event",
+        "config": {
+          "type": "prompt",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                "Please make a summary"
+              ]
+            }
+          ],
+          "publish": true,
+          "allow_anonymous_users": true
+        }
+      }
+    }
+  }
+}
+----
+
+Outcome::  
+Ensures a final confirmation or summary is provided and the interaction concludes neatly.
+
+== Example Workflow Diagram
+
+Below is a simple state diagram illustrating the workflow:
+
+[source,mermaid]
+----
+stateDiagram-v2
+    [*] --> start
+    start --> feedback_question : notify_start / notification
+    feedback_question --> feedback_received : collect_feedback / question
+    feedback_received --> feedback_received : discuss_feedback (manual) / agent
+    feedback_received --> processed : transition_to_feedback_processing_success [is_stage_completed] / agent
+    processed --> workflow_completed : save_feedback / prompt
+    workflow_completed --> end : notify_completion / notification
+    end --> [*]
+----
+
+== Complete Example JSON
+
+The following JSON snippet demonstrates the entire workflow configuration:
+
+[source,json]
+----
+{
+  "initial_state": "start",
+  "states": {
+    "start": {
+      "transitions": {
+        "notify_start": {
+          "next": "feedback_question",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "Feedback process initiated. Thank you for participating!",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "feedback_question": {
+      "transitions": {
+        "collect_feedback": {
+          "next": "feedback_received",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "question",
+              "question": "Please share your feedback on our service:",
+              "example_answers": [
+                "I really appreciate the fast support, but the interface could be improved."
+              ],
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "feedback_received": {
+      "transitions": {
+        "discuss_feedback": {
+          "next": "feedback_received",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "set_additional_question_flag",
+                    "description": "Set true if the discussion with the user is not complete and the user has additional feedback details to provide. If set to false, proceed with processing.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "discuss_feedback"
+                          ]
+                        },
+                        "require_additional_question_flag": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "transition",
+                        "require_additional_question_flag"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Your feedback seems brief. Would you like to add more details or clarify any points?"
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        },
+        "transition_to_feedback_processing_success": {
+          "next": "processed",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "description": "Checks if the feedback discussion stage is complete.",
+                "params": {
+                  "transition": "discuss_feedback"
+                }
+              }
+            }
+          },
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "sentiment_analysis",
+                    "description": "Analyzes the sentiment of the feedback.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "text"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "entity_extraction",
+                    "description": "Extracts key entities from the feedback.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "text"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Proceeding with analysis: extract sentiment and key entities from the provided feedback: {{feedback}}"
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 10,
+              "approve": true
+            }
+          }
+        }
+      }
+    },
+    "processed": {
+      "transitions": {
+        "save_feedback": {
+          "next": "workflow_completed",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Please make a summary"
+                  ]
+                }
+              ],
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "workflow_completed": {
+      "transitions": {
+        "notify_completion": {
+          "next": "end",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "Feedback has been processed successfully. Thank you!",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    }
+  }
+}
+----
+
+== Summary
+
+1. **Initial Question**  
+   Start by asking a straightforward question (`"type": "question"`) to capture initial input.
+
+2. **Manual Transition**  
+   Pause the automated flow with `"manual": true`. An agent action and the `set_additional_question_flag` function collect or trigger more user feedback if needed.
+
+3. **Conditional Transition**  
+   Use `is_stage_completed` to automatically continue once human review is no longer required.
+
+4. **Final Prompt**  
+   Summarize or confirm the results (`"type": "prompt"`) before concluding the workflow.
+
+By standardizing function names and handling both human-triggered and automated paths, this workflow offers a clear, controlled human-in-the-loop process that balances automation with human judgment.
+
+
+= Implementation Highlights
+:toc:
+:toclevels: 2
+
+This document focuses on three core aspects of the workflow framework: how to implement agents, how to introduce human-in-the-loop steps, and how to set up prompt chaining. A few additional examples are also included to show the flexibility of this approach.
+
+== Implementing Agents
+
+Agents in this framework are represented by transitions with an `"action"` configuration that uses `"type": "agent"`. The `model` and `tools` sections indicate how the agent will operate, for example, leveraging specific functions to analyze or process user input.
+
+[source,json]
+----
+"some_state": {
+  "transitions": {
+    "agent_step": {
+      "next": "next_state",
+      "action": {
+        "name": "process_event",
+        "config": {
+          "type": "agent",
+          "publish": true,
+          "allow_anonymous_users": true,
+          "model": {},
+          "tools": [
+            {
+              "type": "function",
+              "function": {
+                "name": "some_function",
+                "description": "Performs a particular task or analysis.",
+                "strict": true,
+                "parameters": {  }
+              }
+            }
+          ],
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                "Agent prompt goes here."
+              ]
+            }
+          ],
+          "tool_choice": "auto",
+          "max_iteration": 10,
+          "approve": true
+        }
+      }
+    }
+  }
+}
+----
+
+=== Key Points
+
+- **type**: `"agent"` indicates this step is an agent-based action.
+- **tools**: A list of function tools the agent may call.
+- **messages**: Content or prompts that drive the agent’s responses.
+- **allow_anonymous_users**: If `true`, no login restrictions apply.
+- **approve**: Ensures a final review or approval before continuing.
+
+== Implementing Human-in-the-Loop
+
+Human-in-the-loop steps can be introduced in two main ways:
+
+1. **Manual Transitions**: By setting `"manual": true` in a transition, the workflow halts until a human approves or intervenes.
+2. **Standard Functions**: Incorporate named functions (e.g., `set_additional_question_flag`) to record whether further user feedback is needed.
+
+[source,json]
+----
+"feedback_received": {
+  "transitions": {
+    "discuss_feedback": {
+      "next": "feedback_received",
+      "manual": true,
+      "action": {
+        "name": "process_event",
+        "config": {
+          "type": "agent",
+          "tools": [
+            {
+              "type": "function",
+              "function": {
+                "name": "set_additional_question_flag",
+                "description": "Decides if more user input is required.",
+                "parameters": {  }
+              }
+            }
+          ],
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                "Would you like to add more details?"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+----
+
+=== Key Points
+
+- **manual**: When `true`, the flow pauses for human review.
+- **set_additional_question_flag**: A standardized function for capturing a boolean decision (more feedback vs. proceed).
+
+== Implementing Prompt Chaining
+
+Prompt chaining is achieved by having one transition produce output or “messages,” which the subsequent transition consumes. Each chained prompt can either be an agent action or a standard function call:
+
+[source,json]
+----
+"first_step": {
+  "transitions": {
+    "prompt_user": {
+      "next": "second_step",
+      "action": {
+        "name": "process_event",
+        "config": {
+          "type": "prompt",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                "Please describe your experience so far."
+              ]
+            }
+          ],
+          "publish": true
+        }
+      }
+    }
+  }
+},
+"second_step": {
+  "transitions": {
+    "analyze_input": {
+      "next": "third_step",
+      "action": {
+        "name": "process_event",
+        "config": {
+          "type": "agent",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                "Analyze the user's previous response."
+              ]
+            }
+          ],
+          "tools": [ ... ]
+        }
+      }
+    }
+  }
+}
+----
+
+Here, the `first_step` gathers user data with a `"type": "prompt"`, then the `second_step` processes that information with an `"agent"`, passing along any outputs or updated context to the next state.
+
+== Additional Examples
+
+=== Notification Steps
+
+Use `"type": "notification"` to display system messages:
+
+[source,json]
+----
+"notify_step": {
+  "transitions": {
+    "notify_user": {
+      "next": "another_state",
+      "action": {
+        "name": "process_event",
+        "config": {
+          "type": "notification",
+          "notification": "Your data is being processed",
+          "publish": true
+        }
+      }
+    }
+  }
+}
+----
+
+=== Condition Checks
+
+Leverage functions like `is_stage_completed` to automatically proceed once criteria are met:
+
+[source,json]
+----
+"feedback_received": {
+  "transitions": {
+    "move_next": {
+      "next": "processed",
+      "condition": {
+        "config": {
+          "type": "function",
+          "function": {
+            "name": "is_stage_completed",
+            "description": "Check if current stage is finalized.",
+            "params": {  }
+          }
+        }
+      }
+    }
+  }
+}
+----
+
+=== Summary
+
+- **Agents**: Implemented as `"type": "agent"` within transitions, combining tools (functions) and interactive messages.
+- **Human-in-the-Loop**: Achieved via `"manual": true` transitions and functions like `set_additional_question_flag`.
+- **Prompt Chaining**: Multiple prompt or agent steps can be chained to form a continuous dialogue or multi-step user interaction.
+- **Additional Features**: Notification and condition-based checks (e.g., `is_stage_completed`) round out the workflow control.

@@ -1,0 +1,76 @@
+= Inventory Management API Documentation
+:author: Inventory Systems
+:version: 1.0
+:doctype: article
+
+== Overview
+This API allows management of inventory items, warehouses, and stock movements.
+
+== Base URL
+`https://api.inventorymanager.com/v1`
+
+== Authentication
+Include your API key in the header:
+`Authorization: Bearer <api_key>`
+
+== Endpoints
+
+=== Items
+* **GET** `/items`
+  Retrieve a list of inventory items.
+  _Query Parameters:_ `category`, `warehouseId`.
+
+* **GET** `/items/{itemId}`
+  Get details for a specific item.
+
+* **POST** `/items`
+  Add a new inventory item.
+  [source,json]
+  ----
+  {
+    "name": "LED Monitor",
+    "sku": "LED-24X",
+    "category": "Electronics",
+    "quantity": 100,
+    "warehouseId": "wh001"
+  }
+  ----
+
+* **PUT** `/items/{itemId}`
+  Update item details.
+
+* **DELETE** `/items/{itemId}`
+  Delete an inventory item.
+
+=== Warehouses
+* **GET** `/warehouses`
+  Retrieve all warehouses.
+
+* **GET** `/warehouses/{warehouseId}`
+  Retrieve warehouse details.
+
+* **POST** `/warehouses`
+  Create a new warehouse record.
+
+* **PUT** `/warehouses/{warehouseId}`
+  Update warehouse information.
+
+* **DELETE** `/warehouses/{warehouseId}`
+  Delete a warehouse record.
+
+=== Stock Movements
+* **GET** `/movements`
+  Retrieve a list of stock movements.
+
+* **POST** `/movements`
+  Create a new stock movement record.
+  [source,json]
+  ----
+  {
+    "itemId": "item123",
+    "warehouseId": "wh001",
+    "quantity": 20,
+    "movementType": "inbound",
+    "date": "2025-02-20"
+  }
+  ----

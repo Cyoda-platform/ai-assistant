@@ -1,0 +1,58 @@
+= Educational Platform API Documentation
+:author: EduTech Team
+:version: 1.0
+:doctype: article
+
+== Overview
+This API manages courses, enrollment, and student records for an online educational platform.
+
+== Base URL
+`https://api.educationplatform.com/v1`
+
+== Authentication
+Authenticate with your API token:
+`Authorization: Bearer <token>`
+
+== Endpoints
+
+=== Courses
+* **GET** `/courses`
+  Retrieve a list of courses.
+
+* **GET** `/courses/{courseId}`
+  Retrieve course details.
+
+* **POST** `/courses`
+  Create a new course.
+  [source,json]
+  ----
+  {
+    "title": "Introduction to Programming",
+    "description": "Learn the basics of programming.",
+    "instructor": "instructor001",
+    "duration": "10 weeks"
+  }
+  ----
+
+* **PUT** `/courses/{courseId}`
+  Update course details.
+
+* **DELETE** `/courses/{courseId}`
+  Delete a course.
+
+=== Enrollments
+* **GET** `/enrollments`
+  Retrieve enrollment records.
+
+* **POST** `/courses/{courseId}/enrollments`
+  Enroll a student in a course.
+  [source,json]
+  ----
+  {
+    "studentId": "student123",
+    "enrollmentDate": "2025-01-15"
+  }
+  ----
+
+* **DELETE** `/enrollments/{enrollmentId}`
+  Cancel an enrollment.

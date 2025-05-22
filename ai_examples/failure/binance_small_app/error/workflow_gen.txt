@@ -1,0 +1,76 @@
+Please complete the entity job workflow code using relevant code and nested functions from prototype.py, to make it fully functioning.
+We are migrating prototype.py code to production ready workflow code so any in-memory caches if relevant - should be replaced with specified entity_service methods
+
+```python
+
+import json
+import logging
+=====add
+from aiohttp import ClientSession
+from app_init.app_init import entity_service
+from common.config.config import ENTITY_VERSION
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
+logger = logging.getLogger(__name__)
+
+async def create_report(data, meta={'token': 'cyoda_token'}):
+    """
+    Initiates the creation of job and links to secondary entities: report.
+
+    Complete business logic
+    """
+    # try:
+    #
+    #         data = await request.json
+    #         email = data.get('email')  # Expecting an email in the request
+    #
+    #         if not email:
+    #             return jsonify({"status": "error", "message": "Email address is required."}), 400
+    #
+    #         btc_usd, btc_eur = await fetch_conversion_rates()
+    #
+    #         if btc_usd is None or btc_eur is None:
+    #             return jsonify({"status": "error", "message": "Failed to fetch conversion rates."}), 500
+    #
+    #         report_id = str(len(reports) + 1)  # Simple report ID generation
+    #         timestamp = datetime.datetime.utcnow().isoformat() + 'Z'
+    #         report = {
+    #             "report_id": report_id,
+    #             "timestamp": timestamp,
+    #             "btc_usd": btc_usd,
+    #             "btc_eur": btc_eur,
+    #             "email": email
+    #         }
+    #         reports[report_id] = report
+    #
+    #         # TODO: Implement email sending logic here
+    #         # e.g., send_email(report)
+    #
+    #         return jsonify({"status": "success", "report_id": report_id, "message": "Report creation initiated."}), 200
+    #
+    #     # The following commented-out code shows how to save and retrieve secondary entities:
+    #     # report_id = await entity_service.add_item(token=meta['token'], entity_model='report', entity_version=ENTITY_VERSION, entity=data)
+    #     # report_data = await entity_service.get_item(token=meta['token'], entity_model='report', entity_version=ENTITY_VERSION, technical_id=report_id)
+    #     =====add
+
+    # data['report_id'] = report_id
+    #    =====add
+
+     Optionally update the current entity data with calculated results:
+    #     # data['attribute'] = calculated_value
+    #
+    # except Exception as e:
+    #     logger.error(f"Error in send_teamcity_request: {e}")
+    #     raise
+
+
+```
+Return fully functioning code
+
+
+ [{"entity/prototype.py": "# Below is a prototype implementation for your `prototype.py` file using Quart for the web framework and aiohttp for making HTTP requests. The code incorporates the specified API design, along with placeholders for any uncertain parts. \n# \n# ```python\nfrom quart import Quart, request, jsonify\nfrom aiohttp import ClientSession\nfrom quart_schema import QuartSchema\nimport asyncio\nimport datetime\n\napp = Quart(__name__)\nQuartSchema(app)\n\n# Placeholder for the external API URL\nEXTERNAL_API_URL = \"https://api.example.com/v1/btc_rates\"  # TODO: Replace with the actual API URL\n\n# In-memory storage for reports\nreports = {}\n\nasync def fetch_conversion_rates():\n    async with ClientSession() as session:\n        async with session.get(EXTERNAL_API_URL) as response:\n            if response.status == 200:\n                data = await response.json()\n                # Extract BTC rates from the response\n                btc_usd = data.get('btc_usd')  # TODO: Adjust based on actual API response structure\n                btc_eur = data.get('btc_eur')  # TODO: Adjust based on actual API response structure\n                return btc_usd, btc_eur\n            else:\n                # Handle error scenario\n                return None, None\n\n@app.route('/job', methods=['POST'])\nasync def create_report():\n    data = await request.json\n    email = data.get('email')  # Expecting an email in the request\n    \n    if not email:\n        return jsonify({\"status\": \"error\", \"message\": \"Email address is required.\"}), 400\n    \n    btc_usd, btc_eur = await fetch_conversion_rates()\n    \n    if btc_usd is None or btc_eur is None:\n        return jsonify({\"status\": \"error\", \"message\": \"Failed to fetch conversion rates.\"}), 500\n    \n    report_id = str(len(reports) + 1)  # Simple report ID generation\n    timestamp = datetime.datetime.utcnow().isoformat() + 'Z'\n    report = {\n        \"report_id\": report_id,\n        \"timestamp\": timestamp,\n        \"btc_usd\": btc_usd,\n        \"btc_eur\": btc_eur,\n        \"email\": email\n    }\n    reports[report_id] = report\n    \n    # TODO: Implement email sending logic here\n    # e.g., send_email(report)\n\n    return jsonify({\"status\": \"success\", \"report_id\": report_id, \"message\": \"Report creation initiated.\"}), 200\n\n@app.route('/report/<id>', methods=['GET'])\nasync def get_report(id):\n    report = reports.get(id)\n    \n    if not report:\n        return jsonify({\"status\": \"error\", \"message\": \"Report not found.\"}), 404\n\n    return jsonify(report), 200\n\nif __name__ == '__main__':\n    app.run(use_reloader=False, debug=True, host='0.0.0.0', port=8000, threaded=True)\n# ```\n# \n# ### Key Points:\n# - **External API Fetching**: The `fetch_conversion_rates` function is responsible for retrieving the Bitcoin conversion rates from an external API. Adjust the `EXTERNAL_API_URL` and response parsing based on your actual API.\n# - **Report Storage**: Reports are stored in a simple dictionary for demonstration purposes. This can be replaced with a more robust storage solution in the future.\n# - **Email Sending**: A placeholder is included for email sending logic, which should be implemented based on your requirements (e.g., using an SMTP library or a third-party service).\n# - **Error Handling**: Basic error handling is included to manage missing email input and API fetch failures.\n# \n# This prototype allows you to verify the user experience and identify any gaps in the requirements. If you have any further modifications or features in mind, please let me know!"}]

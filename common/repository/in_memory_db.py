@@ -1,8 +1,9 @@
 import threading
-from typing import List, Any
+from typing import List
 
 from common.repository.crud_repository import CrudRepository
-from common.util.utils import *
+from common.utils.utils import *
+from entity.model import AgenticFlowEntity
 
 logger = logging.getLogger('django')
 
@@ -10,6 +11,8 @@ cache = {}
 
 
 class InMemoryRepository(CrudRepository):
+
+
     _instance = None
     _lock = threading.Lock()
 
@@ -60,12 +63,15 @@ class InMemoryRepository(CrudRepository):
     async def find_all_by_criteria(self, meta, criteria: Any) -> Optional[Any]:
         entities = []
         for uuid in cache:
-            if cache[uuid][criteria["key"]] == criteria["value"]:
-                cache[uuid]['technical_id'] = uuid
+            if getattr(cache[uuid], criteria["key"]) == criteria["value"]:
+                cache[uuid].technical_id = uuid
                 entities.append(cache[uuid])
         return entities
 
-    async def save(self, meta, entity: Any) -> Any:
+    async def save(self, meta, entity: AgenticFlowEntity) -> Any:
+        if entity.technical_id:
+            cache[entity.technical_id] = entity
+            return entity.technical_id
         uuid = str(generate_uuid())
         cache[uuid] = entity
         return uuid
@@ -84,3 +90,6 @@ class InMemoryRepository(CrudRepository):
 
     async def delete_by_id(self, meta, technical_id: Any) -> None:
         del cache[technical_id]
+
+    async def get_transitions(self, meta, technical_id):
+        pass

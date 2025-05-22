@@ -1,0 +1,135 @@
+= How to Write a State Diagram with a Question Leading to Two Transitions
+:toc:
+:toclevels: 2
+
+Mermaid is a popular syntax for drawing state diagrams to illustrate workflow logic. Below is an overview of how to write a state diagram that starts with a `question` node and branches into two transitions (one manual and one conditional) before proceeding to a final prompt.
+
+== Diagram Overview
+
+1. **Initial Start**
+   Represented by `[*]`, indicating the entry point of your flow.
+
+2. **State Nodes**
+   Each state (e.g., `feedback_question`, `feedback_received`) is a distinct node. Arrows between these nodes represent transitions.
+
+3. **Manual Transition**
+   Involves a human-in-the-loop step. The diagram often labels such a transition with something like `(manual)` to indicate human intervention.
+
+4. **Conditional Transition**
+   Automatically moves to the next state when a condition function (e.g., `is_stage_completed`) is fulfilled.
+
+5. **Final Prompt**
+   The last or near-final state might include a prompt to confirm or summarize the interaction.
+
+== Mermaid Syntax Explanation
+
+- `stateDiagram-v2` : Tells Mermaid we are drawing a version 2 state diagram.
+- `[ * ] --> someState` : Denotes an initial transition from the start node (`[*]`) to `someState`.
+- `stateOne --> stateTwo : label` : Shows a transition from `stateOne` to `stateTwo` with a label describing either the transition name or additional details.
+- Square brackets like `[condition]` can be used to note a guard or condition on the transition.
+- `(manual)` or `(agent)` next to a transition’s label can give hints about what happens in that step (e.g., manual review vs. agent action).
+
+== Example State Diagram
+
+Below is the specific example diagram that includes a question state (`feedback_question`) branching into two different transitions from `feedback_received`:
+
+[source,mermaid]
+----
+stateDiagram-v2
+    [*] --> start
+    start --> feedback_question : notify_start / notification
+    feedback_question --> feedback_received : collect_feedback / question
+    feedback_received --> feedback_received : discuss_feedback (manual) / agent
+    feedback_received --> processed : transition_to_feedback_processing_success [is_stage_completed] / agent
+    processed --> workflow_completed : save_feedback / prompt
+    workflow_completed --> end : notify_completion / notification
+    end --> [*]
+----
+
+=== Explanation of Each Transition
+
+1. `[ * ] --> start`
+   - The diagram begins at a pseudo-state (`[*]`) and immediately transitions to the `start` state.
+
+2. `start --> feedback_question : notify_start / notification`
+   - Moves from `start` to `feedback_question`.
+   - The label `notify_start / notification` suggests an action to notify users that the feedback process has begun.
+
+3. `feedback_question --> feedback_received : collect_feedback / question`
+   - Goes to `feedback_received` via `collect_feedback`.
+   - The `question` label indicates this is where the user’s initial feedback is captured.
+
+4. `feedback_received --> feedback_received : discuss_feedback (manual) / agent`
+   - A manual transition labeled `(manual)`, indicating a human-in-the-loop step.
+   - The `/ agent` part implies an agent action is triggered, but a human decides whether to continue or seek further details.
+
+5. `feedback_received --> processed : transition_to_feedback_processing_success [is_stage_completed] / agent`
+   - A conditional transition (guarded by `[is_stage_completed]`) that moves to `processed` if the condition is satisfied.
+   - Another agent action is involved (`/ agent`), typically performing automated checks or actions (e.g., analysis functions).
+
+6. `processed --> workflow_completed : save_feedback / prompt`
+   - After processing, the workflow transitions to `workflow_completed` and the label indicates a `prompt` is shown to the user, often asking for final confirmation or a summary.
+
+7. `workflow_completed --> end : notify_completion / notification`
+   - The final notification occurs, signaling completion of the workflow.
+   - The diagram returns to `end`, and from there, it terminates with `[ * ]`.
+
+== Best Practices
+
+1. **Clear Labels**
+   - Each transition label should describe what event triggers the transition (e.g., `collect_feedback`) and what type of action it is (e.g., `/ question`, `/ agent`).
+
+2. **Manual vs. Conditional**
+   - Distinguish manual transitions (`(manual)`) from automated ones to highlight where human intervention is required versus where the system handles logic on its own.
+
+3. **Consistent Naming**
+   - Keep function or transition names consistent across your diagram and workflow configuration (e.g., using the same name `is_stage_completed` or `set_additional_question_flag` as in your implementation).
+
+4. **Color or Style (Optional)**
+   - Mermaid allows styling nodes and edges if clarity is needed. However, simple, clear labeling typically suffices for many workflows.
+
+== Summary
+
+When writing a state diagram for a workflow involving a question state branching into both manual and conditional transitions:
+
+- Start from `[*]` and proceed to the first actionable state.
+- Label transitions with meaningful names plus a slash (`/`) referencing their action type (`question`, `agent`, or `prompt`).
+- Use `(manual)` for human-in-the-loop steps and `[condition]` syntax to indicate automated checks.
+- Ensure a closing transition leads the diagram back to an `[*]` or an `end` state for a neat finish.
+
+This approach offers a clear visual representation of how feedback flows, when humans intervene, and how automation proceeds, all within a concise Mermaid diagram.
+
+Here is an example state diagram for agentic app workflow.
+
+source state --> next state : transition name (manual - optional) /action[question, notification, agent, function, prompt]  [additional information about action in arbitrary format, for agents and functions it makes sense to specify tool names or function name that can be used with a list of parameters]. : is a reserved symbol — do not use it inside the brackets or values]
+
+Human-in-the-loop Pattern Notice:
+
+To implement a human-in-the-loop, first use a question action. Then, from the same source state, define two transitions:
+
+A manual agent transition using the set_additional_question_flag tool.
+
+A condition transition using is_stage_completed.
+
+[source,mermaid]
+----
+stateDiagram-v2
+state0 --> state1 : transition1 /question
+state1 --> state1 : transition2 (manual) /agent  [tools[set_additional_question_flag(transition="discuss_feedback", require_additional_question_flag=true)]] (loop here)
+state1 --> state3 : transition3 /condition [is_stage_completed(transition="discuss_feedback")] 
+----
+
+Example:
+
+[source,mermaid]
+----
+stateDiagram-v2
+    [*] --> start
+    start --> feedback_question : notify_start /notification ["hello!"]
+    feedback_question --> feedback_received : collect_feedback /question ["please let me know what feedback can i collect"]
+    feedback_received --> feedback_received : discuss_feedback (manual) /agent [tools [read_link(url="")], [web_search(query=""], [set_additional_question_flag(transition="discuss_feedback", require_additional_question_flag=true)]]
+    feedback_received --> transition_to_feedback_processing_success : finish_processing /condition [is_stage_completed(transition="discuss_feedback")] 
+    transition_to_feedback_processing_success --> workflow_completed : save_feedback /prompt ["please generate summary"]
+    workflow_completed --> end : notify_completion /notification ["finished execution]
+    end --> [*]
+----

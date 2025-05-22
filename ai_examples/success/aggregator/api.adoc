@@ -1,0 +1,32 @@
+= News Aggregator API Documentation
+:author: NewsTech
+:version: 1.0
+:doctype: article
+
+== Overview
+This API aggregates news articles from multiple sources and supports topic filtering.
+
+== Base URL
+`https://api.newsaggregator.com/v1`
+
+== Authentication
+Include your API key in the header:
+`Authorization: Bearer <api_key>`
+
+== Endpoints
+
+=== Articles
+* **GET** `/articles`
+  Retrieve a list of news articles.
+  _Query Parameters:_ `source`, `topic`, `date`.
+
+* **GET** `/articles/{articleId}`
+  Retrieve detailed information for a specific article.
+
+=== Sources
+* **GET** `/sources`
+  Retrieve a list of news sources.
+
+=== Topics
+* **GET** `/topics`
+  Retrieve available topics for filtering.

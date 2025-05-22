@@ -1,0 +1,92 @@
+{
+  "initial_state": "none",
+  "workflow_name": "edit_api_existing_app",
+  "states": {
+    "none": {
+      "transitions": {
+        "start_api_update_workflow": {
+          "next": "api_code_design"
+        }
+      }
+    },
+    "api_code_design": {
+      "transitions": {
+        "user_approved_app": {
+          "next": "finish_editing",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+                "model_name": "gpt-4o",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "input": {
+                "local_fs": [
+                  "routes/routes.py"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "routes/routes.py"
+                ]
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "You are provided with code that implements a REST API (using a framework Quart, blueprint).",
+                    "Please update it according to the user request: {user_request}",
+                    "Please only introduce fixes or necessary updates - do not replace the original content completely. Be very careful not to introduce any breaking changes!",
+                    "Reference:",
+                    "entity_service (from app_init.app_init import entity_service).",
+                    "You can use only these functions - if this is not enough just skip and leave as is.",
+                    "",
+                    "1. Add:",
+                    "id = await entity_service.add_item(",
+                    "    token=cyoda_auth_service,",
+                    "    entity_model=\"{entity_name}\",",
+                    "    entity_version=ENTITY_VERSION,  # always use this constant",
+                    "    entity=data  # the validated data object",
+                    ")",
+                    "Just return id in the response - do not retrieve result immediately.",
+                    "",
+                    "2. Retrieve:",
+                    "await entity_service.get_item(...)",
+                    "await entity_service.get_items(...)",
+                    "await entity_service.get_items_by_condition(...)",
+                    "",
+                    "3. Update:",
+                    "await entity_service.update_item(...)",
+                    "",
+                    "4. Delete:",
+                    "await entity_service.delete_item(...)",
+                    "",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "finish_editing": {
+      "transitions": {
+        "finish_editing": {
+          "next": "locked_chat",
+          "action": {
+            "name": "notify_user",
+            "config": {
+              "type": "question",
+              "question": "Your API has been adjusted as requested. Would you like to review it together or explore additional changes?",
+              "publish": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

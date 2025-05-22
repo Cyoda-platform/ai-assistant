@@ -1,0 +1,110 @@
+{
+  "initial_state": "none",
+  "workflow_name": "edit_api_existing_app",
+  "states": {
+    "none": {
+      "transitions": {
+        "start_api_update_workflow": {
+          "next": "api_code_design"
+        }
+      }
+    },
+    "api_code_design": {
+      "transitions": {
+        "user_approved_app": {
+          "next": "finish_editing",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+                "model_name": "gpt-4o",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "input": {
+                "local_fs": [
+                  "src/main/java/com/java_template/controller/Controller.java"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/controller/Controller.java"
+                ]
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "You are provided with code that implements a REST API (using a framework Spring Boot).",
+                    "Please update it according to the user request: {user_request}",
+                    "Please only introduce fixes or necessary updates - do not replace the original content completely. Be very careful not to introduce any breaking changes!",
+                    "Reference:",
+                    "1. CompletableFuture<UUID> idFuture = entityService.addItem(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,  # always use this constant",
+                    "    entity=data  # the validated data object",
+                    ")",
+                    "Note: entityService.addItem returns technicalId of the created entity.",
+                    "CompletableFuture<List<UUID>> addItems idsFuture = entityService.addItems(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,  # always use this constant",
+                    "    entities=data",
+                    ")",
+                    "Note: entityService.addItems returns a list of technicalIds of the created entities.",
+                    "2. Data retrieval:",
+                    "CompletableFuture<ObjectNode> itemFuture = entityService.getItem(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,",
+                    "    technicalId=<id>",
+                    ")",
+                    "CompletableFuture<ArrayNode> itemsFuture = entityService.getItems(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,",
+                    ")",
+                    "CompletableFuture<ArrayNode> filteredItemsFuture = entityService.getItemsByCondition(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,",
+                    "    condition=condition",
+                    ")",
+                    "Note: when retrieving or returning entities via entityService.getItem / getItems / getItemsByCondition, the unique identifier is stored in the field \"technicalId\" (not \"id\"). Use \"technicalId\" to extract or compare entity IDs.\n",
+                    "3. CompletableFuture<UUID> updatedItemId = entityService.updateItem(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,  # always use this constant",
+                    "    technicalId=id, #technicalId is required",
+                    "    entity=data,",
+                    ")",
+                    "Note: entityService.updateItem returns technicalId of the updated entity.",
+                    "Use @JsonIgnore on fields like 'technicalId' and pass the original Java object directly to addItem or updateItem without converting to ObjectNode.",
+                    "4. CompletableFuture<UUID> deletedItemId = entityService.deleteItem(",
+                    "    entityModel=\"{entity_name}\",",
+                    "    entityVersion=ENTITY_VERSION,  # always use this constant",
+                    "    technicalId=id,",
+                    ")",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```."
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "finish_editing": {
+      "transitions": {
+        "finish_editing": {
+          "next": "locked_chat",
+          "action": {
+            "name": "notify_user",
+            "config": {
+              "type": "question",
+              "question": "Your API has been adjusted as requested. Would you like to review it together or explore additional changes?",
+              "publish": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

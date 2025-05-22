@@ -1,0 +1,77 @@
+{
+  "initial_state": "none",
+  "workflow_name": "edit_existing_processors",
+  "states": {
+    "none": {
+      "transitions": {
+        "start_data_processors_update": {
+          "next": "started_data_processors_update"
+        }
+      }
+    },
+    "started_data_processors_update": {
+      "transitions": {
+        "update_processors_functions": {
+          "next": "user_notification",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+              },
+              "input": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.java",
+                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.json"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.java"
+                ]
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "# Please update processors functions according the new requirement \"{user_request}\".",
+                    "Generate new process functions if necessary or update existing functions according to the user requirement.",
+                    "Processes should have name starting with 'process_' and take only one argument entity.",
+                    "===============",
+                    "Current workflow configuration is provided in the attachment: workflow.json",
+                    "===============",
+                    "Current processors code is provided in the attachment: Workflow.java",
+                    "Example:",
+                    "public CompletableFuture<ObjectNode> processSetDefaultStatus(ObjectNode entity) {",
+                    "    if (!entity.has(\"status\")) {",
+                    "     entity.put(\"status\", \"pending\");",
+                    "    }",
+                    "return CompletableFuture.completedFuture(entity);",
+                    "  }",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting."
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "user_notification": {
+      "transitions": {
+        "end": {
+          "next": "locked_chat",
+          "action": {
+            "name": "notify_user",
+            "config": {
+              "type": "question",
+              "question": "Your processor has been adjusted as requested. Would you like to review it together or explore additional changes?",
+              "publish": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

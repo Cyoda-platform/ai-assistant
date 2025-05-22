@@ -1,0 +1,59 @@
+= Blog API Documentation
+:author: Content Team
+:version: 1.0
+:doctype: article
+
+== Overview
+This API manages blog posts and comments for a content-driven website.
+
+== Base URL
+`https://api.blogexample.com/v1`
+
+== Authentication
+Use token-based authentication:
+`Authorization: Bearer <token>`
+
+== Endpoints
+
+=== Posts
+* **GET** `/posts`
+  Retrieve a list of blog posts.
+  _Query Parameters:_ `author`, `tag`, `page`, `limit`.
+
+* **GET** `/posts/{postId}`
+  Retrieve details of a specific post.
+
+* **POST** `/posts`
+  Create a new blog post.
+  [source,json]
+  ----
+  {
+    "title": "Understanding REST APIs",
+    "content": "This post explains RESTful design principles...",
+    "authorId": "user001",
+    "tags": ["REST", "API", "Web"]
+  }
+  ----
+
+* **PUT** `/posts/{postId}`
+  Update an existing post.
+
+* **DELETE** `/posts/{postId}`
+  Delete a blog post.
+
+=== Comments
+* **GET** `/posts/{postId}/comments`
+  Retrieve all comments for a post.
+
+* **POST** `/posts/{postId}/comments`
+  Add a new comment to a post.
+  [source,json]
+  ----
+  {
+    "author": "Jane Doe",
+    "content": "Great insights on REST APIs!"
+  }
+  ----
+
+* **DELETE** `/posts/{postId}/comments/{commentId}`
+  Delete a comment.

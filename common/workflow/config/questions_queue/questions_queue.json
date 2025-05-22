@@ -1,0 +1,40 @@
+{
+  "initial_state": "none",
+  "states": {
+    "uninitialized": {
+      "transitions": {
+        "initialize_queue": {
+          "next": "idle"
+        }
+      }
+    },
+    "idle": {
+      "transitions": {
+        "lock_for_enqueue": {
+          "next": "enqueue_locked",
+          "manual": true
+        },
+        "lock_for_dequeue": {
+          "next": "dequeue_locked",
+          "manual": true
+        }
+      }
+    },
+    "enqueue_locked": {
+      "transitions": {
+        "enqueue_message": {
+          "next": "idle",
+          "manual": true
+        }
+      }
+    },
+    "dequeue_locked": {
+      "transitions": {
+        "dequeue_message": {
+          "next": "idle",
+          "manual": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "initial_state": "none",
+  "workflow_name": "edit_existing_processors",
+  "states": {
+    "none": {
+      "transitions": {
+        "start_data_processors_update": {
+          "next": "started_data_processors_update"
+        }
+      }
+    },
+    "started_data_processors_update": {
+      "transitions": {
+        "update_processors_functions": {
+          "next": "user_notification",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+              },
+              "input": {
+                "local_fs": [
+                  "entity/{entity_name}/workflow.py",
+                  "entity/{entity_name}/workflow.json",
+                  "entity/{entity_name}/{entity_name}.json"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "entity/{entity_name}/workflow.py"
+                ]
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "# Please update processors functions according the new requirement \"{user_request}\".",
+                    "Generate new process functions if necessary or update existing functions according to the user requirement.",
+                    "Processes should have name starting with 'process_' and take only one argument entity.",
+                    "===============",
+                    "Current entity data example is provided in the attachment: {entity_name}.json",
+                    "===============",
+                    "Current workflow configuration is provided in the attachment: workflow.json",
+                    "===============",
+                    "Current processors code is provided in the attachment: workflow.py",
+                    "Example:",
+                    "async def process_some_name(entity: dict):",
+                    "    final_result = do_some_user_request(...)",
+                    "    entity[\"final_result\"] = final_result",
+                    "    entity[\"workflowProcessed\"] = True",
+                    "",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "user_notification": {
+      "transitions": {
+        "end": {
+          "next": "locked_chat",
+          "action": {
+            "name": "notify_user",
+            "config": {
+              "type": "question",
+              "question": "Your processor has been adjusted as requested. Would you like to review it together or explore additional changes?",
+              "publish": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

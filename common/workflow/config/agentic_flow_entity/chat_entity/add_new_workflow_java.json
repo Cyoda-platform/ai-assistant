@@ -1,0 +1,239 @@
+{
+  "initial_state": "none",
+  "workflow_name": "add_new_workflow",
+  "states": {
+    "none": {
+      "transitions": {
+        "start_workflow_add": {
+          "next": "generate_workflow_json"
+        }
+      }
+    },
+    "generate_workflow_json": {
+      "transitions": {
+        "enrich_workflow": {
+          "next": "generated_workflow_json",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Please construct workflow json from this description/code/flow chart {user_request} using a typical finite-state machine (FSM) model.",
+                    "The FSM consists of states and transitions between them, represented as a directed graph.",
+                    "Each transition may have processes. Each process starts with 'process_' prefix.",
+                    "Ideally, there should be one process per transition. If user doesn't specify, derive from transition name.",
+                    "Each state except the initial ('None') must be reached by exactly one transition.",
+                    "Each transition must have both start and end state.",
+                    "Always start from an initial state 'None'.",
+                    "",
+                    "JSON Example of the Workflow:",
+                    "",
+                    "{",
+                    "  \"name\": \"specify_name_that_describes_the_workflow\",",
+                    "  \"description\": \"describe_the_workflow\",",
+                    "  \"transitions\": [",
+                    "    {",
+                    "      \"name\": \"spark_happy_message\",",
+                    "      \"description\": \"Spark the happy message\",",
+                    "      \"start_state\": \"None\",",
+                    "      \"start_state_description\": \"Initial state\",",
+                    "      \"end_state\": \"Happy_message_sparked\",",
+                    "      \"end_state_description\": \"A happy message has been sparked\",",
+                    "      \"automated\": true",
+                    "    },",
+                    "    {",
+                    "      \"name\": \"send_happy_message\",",
+                    "      \"description\": \"Send the happy message\",",
+                    "      \"start_state\": \"Happy_message_sparked\",",
+                    "      \"start_state_description\": \"A happy message has been sparked\",",
+                    "      \"end_state\": \"Message_sent\",",
+                    "      \"end_state_description\": \"The happy message has been sent\",",
+                    "      \"automated\": true,",
+                    "      \"processes\": {",
+                    "        \"schedule_transition_processors\": [],",
+                    "        \"externalized_processors\": [",
+                    "          {",
+                    "            \"name\": \"process_example\",",
+                    "            \"description\": \"\"",
+                    "          }",
+                    "        ]",
+                    "      }",
+                    "    }",
+                    "  ]",
+                    "}",
+                    "",
+                    "Please ensure each function is listed under processes.externalized_processors.",
+                    "Return only valid JSON without any extra text."
+                  ]
+                }
+              ],
+              "response_format": {
+                "name": "workflow_design_schema",
+                "description": "workflow design schema",
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "transitions"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "transitions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "start_state",
+                          "end_state",
+                          "automated"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "start_state": {
+                            "type": "string"
+                          },
+                          "end_state": {
+                            "type": "string"
+                          },
+                          "automated": {
+                            "type": "boolean"
+                          },
+                          "processes": {
+                            "type": "object",
+                            "properties": {
+                              "schedule_transition_processors": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {}
+                                }
+                              },
+                              "externalized_processors": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "required": [
+                                    "name"
+                                  ],
+                                  "properties": {
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.json"
+                ]
+              },
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "generated_workflow_json": {
+      "transitions": {
+        "convert_workflow_to_cyoda_dto": {
+          "next": "converted_workflow_json",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "publish": false,
+              "function": {
+                "name": "convert_workflow_to_dto",
+                "description": "convert_workflow_to_dto",
+                "parameters": {
+                  "workflow_file_name": "src/main/java/com/java_template/entity/{entity_name}/Workflow.json",
+                  "output_file_name": "src/main/java/com/java_template/cyoda_dto/{entity_name}/workflow.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "converted_workflow_json": {
+      "transitions": {
+        "notify_user": {
+          "next": "generated_workflow_processors",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+                "name": "OPEN_AI",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "# Please implement processors for the newly generated workflow according to the user requirement {user_request}.",
+                    "If the requirement is not specific enough just add a template with example code.",
+                    "Generate new process functions if necessary or update existing methods according to the user requirement.",
+                    "Processes method should have name starting with 'process'. It should return CompletableFuture<ObjectNode>",
+                    "It can take only one argument ObjectNode entity and can modify this entity state",
+                    "No more additional arguments can be passed.",
+                    "Example:",
+                    "public CompletableFuture<ObjectNode> processSetDefaultStatus(ObjectNode entity) {",
+                    "    if (!entity.has(\"status\")) {",
+                    "     entity.put(\"status\", \"pending\");",
+                    "    }",
+                    "return CompletableFuture.completedFuture(entity);",
+                    "  }",
+                    "Please, call the class Workflow.",
+                    "You cannot apply entityService.addItem/updateItem/deleteItem on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity.attribute.  The new state will be persisted. Do not add any test/extra code.",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting."
+                  ]
+                }
+              ],
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.java"
+                ]
+              },
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "generated_workflow_processors": {
+      "transitions": {
+        "done": {
+          "next": "locked_chat",
+          "action": {
+            "name": "notify_user",
+            "config": {
+              "type": "question",
+              "question": "The workflow has been successfully added. Please don’t hesitate to get in touch if I can assist further.",
+              "publish": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

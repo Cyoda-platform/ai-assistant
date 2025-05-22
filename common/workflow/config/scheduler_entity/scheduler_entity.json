@@ -1,0 +1,41 @@
+{
+  "initial_state": "none",
+  "workflow_name": "scheduler_entity",
+  "states": {
+    "none": {
+      "transitions": {
+        "wait": {
+          "next": "waiting"
+        }
+      }
+    },
+    "waiting": {
+      "transitions": {
+        "trigger_parent_entity": {
+          "next": "unlocked_parent_entity",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "trigger_parent_entity",
+                "description": "",
+                "parameters": {
+                }
+              },
+              "publish": false
+            }
+          }
+        }
+      }
+    },
+    "unlocked_parent_entity": {
+      "transitions": {
+        "finish": {
+          "next": "finished"
+        }
+      }
+    }
+  }
+}

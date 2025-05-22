@@ -1,0 +1,286 @@
+= AI Application Development: Dynamic, Flexible, and Future-Proof
+
+Developing AI-driven applications can be complex. Existing frameworks such as LangGraph, crewAI, AutoGen, and others have simplified certain tasks, yet they often fall short when you require highly dynamic, adaptable, and scalable solutions capable of seamlessly integrating evolving AI technologies and workflows.
+
+== Definitions and Concepts
+
+- **Agentic Application**: An application capable of autonomous decision-making through structured planning, reasoning, tool utilization, memory management, and continuous feedback.
+- **Plan**: Structured workflow consisting of defined states, transitions, and associated actions.
+- **Reasoning**: Decision-making logic enabling the agent to evaluate contexts and make informed choices.
+- **Tools**: External APIs, databases, or functions that agents interact with to perform tasks.
+- **Memory**: Capability to retain context (short-term) and historical knowledge (long-term).
+- **Feedback & Learning**: Mechanisms that continuously refine and enhance agent behavior through experience.
+- **Security & Compliance**: Ensuring trustworthy, secure, and compliant interactions and data handling.
+
+== Limitations of Existing Solutions
+
+Most current AI frameworks offer either high-level abstractions (easy but inflexible) or low-level controls (flexible but complex). For example:
+
+- **High-level Frameworks** (e.g., crewAI, OpenAI Swarm): User-friendly and fast to deploy, but rigid and difficult to adapt as requirements evolve.
+- **Low-level Frameworks** (e.g., LangGraph, AutoGen): Highly customizable but demand significant coding expertise and ongoing maintenance. Changes in AI providers, models, or capabilities often require extensive rewrites.
+
+This rigidity-versus-complexity dilemma makes it challenging to achieve truly flexible, scalable, and maintainable AI workflows.
+
+== A Superior Approach: FSM-Based JSON Configuration
+
+We propose an architectural pattern, rather than another framework, where AI workflows are defined using a Finite State Machine (FSM) represented in JSON. Combined with isolated Python functions for execution, this approach provides unparalleled flexibility, scalability, and clarity.
+
+=== How It Works
+
+Your AI application comprises just two key artifacts:
+
+- **FSM JSON File**: Defines workflow states, transitions, and actions, including reasoning via agents, prompting, executing tools, and human-in-the-loop interactions.
+- **workflow.py**: Implements custom functions (tools) referenced in FSM JSON when external protocols such as MCP are unavailable.
+
+=== Mapping Agentic Components in FSM JSON
+
+- **Plan**: Explicitly defined through `states` and `transitions`.
+- **Reasoning**: Implemented via `agent` actions, allowing dynamic decision-making.
+- **Tools**: Specified by `function` actions linking directly to external APIs or custom functions.
+- **Memory**: Managed implicitly via state transitions and explicitly through functions handling context storage and retrieval.
+- **Feedback & Learning**: Enabled through iterative state management and agent reflection.
+- **Security & Compliance**: Integrated seamlessly via Cyoda’s security infrastructure.
+
+== Workflow Orchestration with Cyoda
+
+Workflows defined in JSON are orchestrated seamlessly by Cyoda Cloud, serving as an Entity Database Management System (EDBMS). Each FSM workflow attaches directly to an entity within the Cyoda platform, enabling complex multi-agent, multi-workflow orchestrations that run concurrently and independently.
+
+Applications scale effortlessly by creating new entities, each triggering distinct workflows, supporting parallel processing and efficient management of multiple agentic applications.
+
+== Agent-Specific Code and Commons Module
+
+Agent-specific implementations, such as reasoning logic, memory management, and tool integrations, are available through the open-source "commons" module maintained by Cyoda. This module functions like an SDK but offers full transparency and customization options, enabling rapid development of sophisticated multi-agent applications.
+
+== Key Advantages
+
+=== 1. Dynamic Workflows
+- Intuitive and explicit FSM architecture simplifies modifications.
+- Easily adopt new prompt engineering or reasoning techniques by adjusting JSON.
+
+=== 2. Flexible AI Integrations
+- Specify AI models, parameters, methods, and tools directly in JSON.
+- New AI integrations quickly implemented without code changes.
+
+=== 3. No Hardcoded Prompts or Logic
+- Complete abstraction of AI behavior from application logic.
+- Simplifies experimentation through structured JSON configurations.
+
+=== 4. Scalability and Ease of Maintenance
+- Declarative JSON configurations enhance readability and manageability.
+- Introduce new functionalities rapidly without disrupting existing workflows.
+
+=== 5. Human-in-the-Loop Friendly
+- Seamlessly integrates human interactions directly into workflows.
+- Supports collaborative improvement and iteration.
+
+=== 6. Workflow Validation
+- JSON structure validation ensures correctness and reliability.
+- Checks include AI model configurations, manual transitions, and infinite loop prevention.
+
+== Example Use Case
+
+Consider a workflow requesting a city from the user and providing weather information via an agent. 
+
+In this example workflow, a user is first greeted by a weather assistant that prompts them to specify a city. Once the user provides a city name, an AI agent automatically retrieves the current weather and humidity information using the defined Python functions (get_weather and get_humidity). Finally, the agent communicates this information back to the user through a notification. This demonstrates the FSM-based JSON architecture's simplicity, clarity, and flexibility, allowing seamless integration of agent-driven logic and external tools.
+
+[source,json]
+----
+{
+  "initial_state": "none",
+  "states": {
+    "none": {
+      "transitions": {
+        "greet_user": {
+          "next": "ask_city",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "question",
+              "question": "👋 Hello! I'm your weather assistant. Which city's weather would you like to check?",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "ask_city": {
+      "transitions": {
+        "get_weather_info": {
+          "next": "weather_provided",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {
+                "provider": "openai",
+                "model_name": "gpt-4o-mini",
+                "temperature": 0.2
+              },
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_weather",
+                    "description": "Fetch current weather for a specified city",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "city": {
+                          "type": "string",
+                          "description": "The city name"
+                        }
+                      },
+                      "required": ["city"]
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_humidity",
+                    "description": "Fetch current humidity level for a specified city",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "city": {
+                          "type": "string",
+                          "description": "The city name"
+                        }
+                      },
+                      "required": ["city"]
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "system",
+                  "content": "You help users by providing weather and humidity information using available tools."
+                }
+              ],
+              "tool_choice": "auto"
+            }
+          }
+        }
+      }
+    },
+    "weather_provided": {
+      "transitions": {
+        "farewell": {
+          "next": "end",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "🌤️ Hope you found that helpful! Let me know if you need anything else.",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "end": {
+      "transitions": {}
+    }
+  }
+}
+
+----
+
+
+
+```mermaid
+stateDiagram-v2
+    [*] --> none
+    none --> ask_city : greet_user / process_event
+    ask_city --> weather_provided : get_weather_info (manual) / process_event
+    weather_provided --> end : farewell / process_event
+```
+
+[source,python]
+----
+async def get_weather(self, technical_id, entity, **params):
+    # Example implementation; replace with actual API integration
+    return {
+        "city": params.get("city"),
+        "temperature": "18°C",
+        "condition": "Sunny"
+    }
+
+async def get_humidity(self, technical_id, entity, **params):
+    # Example implementation; replace with actual API integration
+    return {
+        "city": params.get("city"),
+        "humidity": "55%"
+    }
+----
+
+== Agentic FSM for Weather Assistant
+
+This FSM guides user interactions for weather retrieval.
+
+=== Attributes
+
+State: Represents the bot's condition at any moment.
+
+Transitions: Define how the bot moves between states.
+
+Action: Specifies what happens during a transition.
+
+Type: Describes the action’s function (e.g., question, agent, notification).
+
+Manual: Requires explicit user input before transitioning.
+
+=== States & Transitions
+
+==== none (Initial State)
+
+Transition: greet_user → ask_city
+
+Action: question
+
+Prompts user for a city name.
+
+==== ask_city
+
+Transition: get_weather_info → weather_provided
+
+Action: agent
+
+Uses AI (gpt-4o-mini) and tools (get_weather, get_humidity).
+
+Manual: true (User must input city name).
+
+==== weather_provided
+
+Transition: farewell → end
+
+Action: notification
+
+Displays weather summary.
+
+==== end
+
+No transitions (final state).
+
+=== Summary
+The FSM efficiently collects user input, fetches weather data via API tools, and provides responses before concluding the session.
+
+video::assets/workflow_introduction_example.mp4[]
+
+
+== Application Builder: Automate Workflow Creation
+
+With the interactive application builder, you don't need to manually write JSON. Leveraging the commons module and workflow templates, this conversational interface auto-generates the necessary workflow files and Python functions, providing ready-made agentic applications without manual coding.
+
+== Conclusion
+
+The FSM-based JSON architectural pattern provides an optimal balance between flexibility, ease of use, and dynamic adaptability. By clearly separating configuration from execution logic, it simplifies AI development and future-proofs against emerging technologies and tools.
+
+Adopting this pattern transforms how intelligent applications are built, maintained, and scaled, delivering the agility demanded by today's evolving AI landscape.
+
