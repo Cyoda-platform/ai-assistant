@@ -169,7 +169,7 @@ class GrpcClient:
             entity.failed = True
             data['payload']['data'] = model_cls.model_dump(entity)
             resp = None
-
+        logger.info(f"Calc response: processor_name: {processor_name},technical_id={data['entityId']}")
         notif = self.create_notification_event(data=data, response=resp, type=type)
         await queue.put(notif)
 
