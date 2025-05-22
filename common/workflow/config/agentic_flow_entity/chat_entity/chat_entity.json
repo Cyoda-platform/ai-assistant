@@ -5,68 +5,7 @@
     "none": {
       "transitions": {
         "initialize_chat": {
-          "next": "generated_initial_cyoda_prototype"
-        }
-      }
-    },
-    "generated_initial_cyoda_prototype": {
-      "transitions": {
-        "generate_entities_data_design": {
-          "next": "initialized_chat",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "prompt",
-              "publish": false,
-              "model": {},
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "Please, generate some random json that will fail validation: {",
-                    "    \"entities\": [",
-                    "        {",
-                    "            \"error_text\": \"\", //put anything",
-                    "            \"entity_data_wrong_example\": \"\", //put anything",
-                    "        }",
-                    "    ]",
-                    "}"
-                  ]
-                }
-              ],
-              "response_format": {
-                "name": "entities_design_schema",
-                "description": "entities design schema",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "entities": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "entity_name": {
-                            "type": "string"
-                          },
-                          "entity_data_example": {
-                            "type": "object",
-                            "properties": {}
-                          }
-                        },
-                        "required": [
-                          "entity_name",
-                          "entity_data_example"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "entities"
-                  ]
-                }
-              }
-            }
-          }
+          "next": "initialized_chat"
         }
       }
     },
