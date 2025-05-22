@@ -1,9 +1,7 @@
 import logging
-import threading
 import uuid
 import json
 import asyncio
-from typing import Any
 
 import grpc
 
@@ -122,6 +120,7 @@ class GrpcClient:
             if event is None:
                 break
             yield event
+            logger.info(f"event done {event.id} {event.type}")
             queue.task_done()
 
     async def handle_keep_alive_event(self, response, queue: asyncio.Queue):
@@ -199,13 +198,13 @@ class GrpcClient:
 
                     async for response in call:
                         if response.type == KEEP_ALIVE_EVENT_TYPE:
-                            await self.handle_keep_alive_event(response, queue)
+                            asyncio.create_task(self.handle_keep_alive_event(response, queue))
                         elif response.type == EVENT_ACK_TYPE:
                             logger.debug(response)
                         elif response.type in (CALC_REQ_EVENT_TYPE, CRITERIA_CALC_REQ_EVENT_TYPE):
                             logger.info(f"Calc request: {response.type}")
                             data = json.loads(response.text_data)
-                            self.processor_loop.run_coroutine(self.process_calc_req_event(data, queue, response.type))
+                            asyncio.create_task(self.process_calc_req_event(data, queue, response.type))
                         elif response.type == GREET_EVENT_TYPE:
                             logger.info("Greet event received")
                             self.processor_loop.run_coroutine(self.rollback_failed_workflows())
