@@ -2,8 +2,6 @@ import logging
 import random
 
 import jwt
-import json
-import httpx
 from typing import List, Tuple
 import common.config.const as const
 from common.config.config import config
@@ -23,7 +21,6 @@ from common.utils.chat_util_functions import (
 )
 from common.utils.utils import (
     current_timestamp,
-    clone_repo,
     validate_token, send_cyoda_request, get_current_timestamp_num,
 )
 from entity.chat.chat import ChatEntity

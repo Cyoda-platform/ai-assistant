@@ -40,7 +40,6 @@ class ChatWorkflow(Workflow):
     def __init__(self, dataset,
                  workflow_helper_service,
                  entity_service,
-                 scheduler,
                  cyoda_auth_service,
                  workflow_converter_service,  # todo will need factory soon
                  mock=False):
@@ -48,7 +47,6 @@ class ChatWorkflow(Workflow):
         self.workflow_helper_service = workflow_helper_service
         self.entity_service = entity_service
         self.mock = mock
-        self.scheduler = scheduler
         self.cyoda_auth_service = cyoda_auth_service
         self.workflow_converter_service = workflow_converter_service
 
