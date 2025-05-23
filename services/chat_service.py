@@ -27,12 +27,6 @@ from entity.chat.chat import ChatEntity
 from entity.model import FlowEdgeMessage, ChatMemory, ModelConfig, AgenticFlowEntity
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] [%(threadName)s] %(name)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
-
 
 class ChatService:
     def __init__(self, entity_service, cyoda_auth_service, chat_lock, ai_agent):

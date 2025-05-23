@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 
 from common.config.config import config as env_config
@@ -16,9 +17,11 @@ from entity.chat.helper_functions import WorkflowHelperService
 from entity.chat.workflow import ChatWorkflow
 from services.chat_service import ChatService
 from services.labels_config_service import LabelsConfigService
+from services.scheduler import Scheduler
 from entity.workflow import Workflow
 from entity.workflow_dispatcher import WorkflowDispatcher
 
+logger = logging.getLogger(__name__)
 
 class ServicesFactory:
     _instance = None
@@ -50,6 +53,8 @@ class ServicesFactory:
             self.entity_repository = self._create_repository(repo_type=env_config.CHAT_REPOSITORY,
                                                              cyoda_auth_service=self.cyoda_auth_service)
             self.entity_service = EntityServiceImpl(repository=self.entity_repository, model_registry=model_registry)
+            self.scheduler = Scheduler(entity_service=self.entity_service, cyoda_auth_service=self.cyoda_auth_service)
+
 
             self.chat_workflow = ChatWorkflow(
                 dataset=self.dataset,
@@ -119,6 +124,7 @@ class ServicesFactory:
             "dataset": self.dataset,
             "device_sessions": self.device_sessions,
             "cyoda_auth_service": self.cyoda_auth_service,
+            "scheduler": self.scheduler,
             "workflow_converter_service": self.workflow_converter_service
         }  # or directly paste the BeanFactory class here, then drop logic.init
 
@@ -132,6 +138,7 @@ entity_service = _services['entity_service']
 chat_lock = _services['chat_lock']
 fsm_implementation = _services['fsm']
 grpc_client = _services['grpc_client']
+scheduler = _services['scheduler']
 cyoda_auth_service = _services['cyoda_auth_service']
 chat_service = _services['chat_service']
 labels_config_service = _services['labels_config_service']

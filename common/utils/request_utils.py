@@ -4,12 +4,6 @@ from common.utils.utils import send_get_request
 from common.config.config import config
 from common.exception.exceptions import InvalidTokenException
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] [%(threadName)s] %(name)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
 
 logger = logging.getLogger(__name__)
 

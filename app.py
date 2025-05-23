@@ -1,6 +1,8 @@
 # main.py
 from app_factory import create_app
+from log import setup_root_logger
 
+setup_root_logger()
 app = create_app()
 
 if __name__ == '__main__':

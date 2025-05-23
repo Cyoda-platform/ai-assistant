@@ -67,6 +67,7 @@ class Config:
         self.AUTH_SECRET_KEY = _get_env("AUTH_SECRET_KEY", required=True)
         self.CLOUD_MANAGER_HOST = _get_env("CLOUD_MANAGER_HOST", required=True)
         self.CLIENT_HOST = _get_env("CLIENT_HOST", required=True)
+        self.EXTERNALIZE_SCHEDULER = _get_env("EXTERNALIZE_SCHEDULER", default="false").lower() == "true"
 
         # — optional strings with defaults —
         self.API_PREFIX = _get_env("API_PREFIX", default="/api/v1")

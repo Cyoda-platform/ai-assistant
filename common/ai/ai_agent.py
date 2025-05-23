@@ -6,14 +6,6 @@ from jsonschema import ValidationError
 
 from common.config import const
 from common.config.config import config
-from entity.chat.chat import ChatEntity
-from entity.model import ModelConfig
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] [%(threadName)s] %(name)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
 
 logger = logging.getLogger(__name__)
 

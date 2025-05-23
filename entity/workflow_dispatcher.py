@@ -14,12 +14,6 @@ from common.utils.utils import _save_file, _post_process_response, get_current_t
 from entity.chat.chat import AgenticFlowEntity
 from entity.model import FlowEdgeMessage, ChatMemory, AIMessage, WorkflowEntity, ModelConfig
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] [%(threadName)s] %(name)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
-
 logger = logging.getLogger(__name__)
 
 

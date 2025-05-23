@@ -5,12 +5,14 @@ from quart import Quart, send_from_directory
 from quart_cors import cors
 from quart_rate_limiter import RateLimiter, rate_limit
 import common.config.const as const
+from common.config.config import config
 from common.exception.errors import init_error_handlers
 from common.utils.event_loop import BackgroundEventLoop
 from routes.chat import chat_bp
 from routes.labels_config import labels_config_bp
 from routes.token import token_bp
 from services.factory import grpc_client
+from services.factory import scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,11 @@ def create_app():
         grpc_client_loop = BackgroundEventLoop()
         grpc_client_loop.run_coroutine(grpc_client.grpc_stream())
         logger.info("Started gRPC background stream.")
+        if not config.EXTERNALIZE_SCHEDULER:
+            scheduler_loop = BackgroundEventLoop()
+            scheduler_loop.run_coroutine(scheduler.start_scheduler())
+            logger.info("Started scheduler background stream.")
+
 
     @app.after_serving
     async def shutdown_grpc():
