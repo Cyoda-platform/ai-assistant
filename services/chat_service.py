@@ -28,6 +28,7 @@ from entity.model import FlowEdgeMessage, ChatMemory, ModelConfig, AgenticFlowEn
 
 logger = logging.getLogger(__name__)
 
+
 class ChatService:
     def __init__(self, entity_service, cyoda_auth_service, chat_lock, ai_agent):
         self.entity_service: EntityService = entity_service
@@ -68,29 +69,34 @@ class ChatService:
             return {"error": "Answer size exceeds 1MB limit"}
 
         # 1) create greeting
+        last_modified = get_current_timestamp_num()
         edge_id = await self.entity_service.add_item(
             token=self.cyoda_auth_service,
             entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
             entity_version=config.ENTITY_VERSION,
-            entity={
-                "current_transition": "",
-                "current_state": "",
-                "type": "notification",
-                "publish": True,
-                "consumed": True,
-                "notification": "Hi! I'm Cyoda 🧚. Let me take a look at your question…"
-            },
+            entity=FlowEdgeMessage(
+                current_transition="",
+                current_state="",
+                type="notification",
+                publish=True,
+                consumed=True,
+                message="Hi! I'm Cyoda 🧚. Let me take a look at your question…",
+                last_modified=last_modified
+            ),
             meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
         )
-        greeting = FlowEdgeMessage(user_id=user_id, type="notification",
-                                   publish=True, edge_message_id=edge_id)
+        greeting = FlowEdgeMessage(user_id=user_id,
+                                   type="notification",
+                                   publish=True,
+                                   last_modified=last_modified,
+                                   edge_message_id=edge_id)
 
         # 2) new memory
         memory_id = await self.entity_service.add_item(
             token=self.cyoda_auth_service,
             entity_model=const.ModelName.CHAT_MEMORY.value,
             entity_version=config.ENTITY_VERSION,
-            entity=ChatMemory.model_validate({"messages": {}})
+            entity=ChatMemory.model_validate({"messages": {}, "last_modified": last_modified})
         )
 
         # 3) build ChatEntity
@@ -107,18 +113,22 @@ class ChatService:
             "failed": "false",
             "transitions_memory": {"conditions": {}, "current_iteration": {}, "max_iteration": {}},
             "memory_id": memory_id,
-            "last_modified": get_current_timestamp_num()
+            "last_modified": last_modified
         })
 
         # 4) echo back user question
-        ans_id = await add_answer_to_finished_flow(
+        ans_id, last_modified = await add_answer_to_finished_flow(
             entity_service=self.entity_service,
             answer=init_q,
             cyoda_auth_service=self.cyoda_auth_service
         )
         chat.chat_flow.finished_flow.extend([
-            FlowEdgeMessage(type="answer", publish=True,
-                            edge_message_id=ans_id, consumed=False, user_id=user_id),
+            FlowEdgeMessage(type="answer",
+                            publish=True,
+                            edge_message_id=ans_id,
+                            consumed=False,
+                            user_id=user_id,
+                            last_modified=last_modified),
             greeting
         ])
 
@@ -403,31 +413,34 @@ class ChatService:
 
         for msg in finished_flow:
             if msg.type in ("question", "notification", "answer") and msg.publish:
-                content = await self.entity_service.get_item(
+                content: FlowEdgeMessage = await self.entity_service.get_item(
                     token=self.cyoda_auth_service,
                     entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
                     entity_version=config.ENTITY_VERSION,
                     technical_id=msg.edge_message_id,
                     meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
                 )
-                content["technical_id"] = msg.edge_message_id
-                if content.get("question") and content.get("approve"):
+                content.technical_id = msg.edge_message_id
+                if content.type == "question" and content.approve:
                     approve_msg = const.Notifications.APPROVE_INSTRUCTION_MESSAGE.value
-                    if not content["question"].rstrip().endswith(approve_msg.rstrip()):
-                        content["question"] = f"{content['question'].rstrip()}\n\n{approve_msg}"
-                if content.get("answer") and content["answer"] == const.Notifications.APPROVE.value:
-                    content["answer"] = random.choice(list(const.ApproveAnswer)).value
-                dialogue.append(content)
+                    if not content.message.rstrip().endswith(approve_msg.rstrip()):
+                        content.message = f"{content.message.rstrip()}\n\n{approve_msg}"
+                if content.type == "answer" and content.message == const.Notifications.APPROVE.value:
+                    content.message = random.choice(list(const.ApproveAnswer)).value
+                message_content = content.model_dump()
+                #todo - for backwards compatibility - remove
+                message_content[content.type] = content.message
+                dialogue.append(message_content)
 
             if msg.type == "child_entities":
-                content = await self.entity_service.get_item(
+                content: FlowEdgeMessage = await self.entity_service.get_item(
                     token=self.cyoda_auth_service,
                     entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
                     entity_version=config.ENTITY_VERSION,
                     technical_id=msg.edge_message_id,
                     meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
                 )
-                for child_id in content.get("child_entities", []):
+                for child_id in content.message:
                     child_entities.add(child_id)
                     child = await self.entity_service.get_item(
                         token=self.cyoda_auth_service,

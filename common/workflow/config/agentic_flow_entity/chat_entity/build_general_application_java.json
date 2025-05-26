@@ -1802,7 +1802,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "✅ Your application is ready in the {branch_name} branch!\n\n [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) \uD83D\uDC40 \n\nLet’s bring it to life — together.\n\n ",
+              "question": "✅ Your application is ready in the {branch_name} branch!\n\n [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) \uD83D\uDC40 \n\nLet’s bring it to life — together. Please make sure you've logged in to proceed\n\n ",
               "publish": true
             }
           }

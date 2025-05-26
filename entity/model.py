@@ -3,15 +3,16 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from common.config.config import config
 from common.config.const import SCHEDULER_STATUS_WAITING
+from common.utils.utils import get_current_timestamp_num
 
 
 class WorkflowEntity(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="forbid")
     technical_id: Optional[str] = None
-    last_modified: Optional[int] = 1715182245000 #for backwards compatibility
+    last_modified: Optional[int] = get_current_timestamp_num()
     current_transition: Optional[str] = None
     current_state: Optional[str] = None
-    user_id: str
+    user_id: Optional[str] = "default"
     workflow_name: Optional[str] = None
     workflow_cache: Optional[Dict[str, Any]] = {}
     edge_messages_store: Optional[Dict[str, Any]] = {}
@@ -19,40 +20,39 @@ class WorkflowEntity(BaseModel):
     error: Optional[str] = None
     error_code: Optional[str] = "None"
 
+class AIMessage(WorkflowEntity):
+    model_config = ConfigDict(extra="forbid")
+    edge_message_id: Optional[str] = None
+    role: Optional[str] = None
+    content: Optional[Any] = None
 
-class AIMessage(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    edge_message_id: str
-
-
-class ChatMemory(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+class ChatMemory(WorkflowEntity):
+    model_config = ConfigDict(extra="forbid")
     messages: Optional[Dict[str, List[AIMessage]]] = {}
 
-
 class TransitionsMemory(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="forbid")
     conditions: Optional[Dict[str, Any]] = {}
     current_iteration: Optional[Dict[str, Any]] = {}
     max_iteration: Optional[Dict[str, Any]] = {}
 
-
 class FlowEdgeMessage(WorkflowEntity):
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="forbid")
     type: str
     publish: Optional[bool] = False
+    approve: Optional[bool] = False
     consumed: Optional[bool] = True
-    edge_message_id: str
-
+    edge_message_id: Optional[str] = None
+    message: Optional[Any] = None
 
 class ChatFlow(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="forbid")
     current_flow: Optional[List[FlowEdgeMessage]] = []
     finished_flow: Optional[List[FlowEdgeMessage]] = []
-
+    last_modified: Optional[int] = get_current_timestamp_num()
 
 class AgenticFlowEntity(WorkflowEntity):
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="forbid")
     chat_id: Optional[str] = ""
     memory_id: str
     questions_queue_id: Optional[str] = None
@@ -67,9 +67,8 @@ class AgenticFlowEntity(WorkflowEntity):
     child_entities: Optional[List[str]] = []
     scheduled_entities: Optional[List[str]] = []
 
-
 class SchedulerEntity(WorkflowEntity):
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="forbid")
     awaited_entity_ids: Optional[List[str]] = []
     triggered_entity_id: str = ""
     scheduled_action: Optional[str] = config.ScheduledAction.SCHEDULE_ENTITIES_FLOW.value

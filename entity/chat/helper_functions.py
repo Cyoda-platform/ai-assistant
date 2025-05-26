@@ -5,7 +5,7 @@ import os
 from common.config.config import config
 import common.config.const as const
 from common.utils.chat_util_functions import add_answer_to_finished_flow
-from common.utils.utils import current_timestamp
+from common.utils.utils import current_timestamp, get_current_timestamp_num
 from entity.chat.chat import ChatEntity
 from entity.model import SchedulerEntity, FlowEdgeMessage
 
@@ -62,7 +62,7 @@ class WorkflowHelperService:
             }
         })
         if user_request:
-            user_request_message_id = await add_answer_to_finished_flow(entity_service=entity_service,
+            user_request_message_id, last_modified = await add_answer_to_finished_flow(entity_service=entity_service,
                                                                         answer=user_request,
                                                                         cyoda_auth_service=self.cyoda_auth_service,
                                                                         publish=False)
@@ -71,6 +71,7 @@ class WorkflowHelperService:
                                                                         publish=False,
                                                                         edge_message_id=user_request_message_id,
                                                                         consumed=False,
+                                                                        last_modified=last_modified,
                                                                         user_id=entity.user_id))
 
         child_technical_id = await entity_service.add_item(token=self.cyoda_auth_service,
@@ -90,14 +91,15 @@ class WorkflowHelperService:
                                         scheduled_action: config.ScheduledAction = config.ScheduledAction.SCHEDULE_ENTITIES_FLOW,
                                         ):
 
-        child_entity: SchedulerEntity = SchedulerEntity.model_validate({
-            "user_id": "system",
-            "workflow_name": const.ModelName.SCHEDULER_ENTITY.value,
-            "awaited_entity_ids": awaited_entity_ids,
-            "triggered_entity_id": triggered_entity_id,
-            "scheduled_action": scheduled_action.value,
-            "triggered_entity_next_transition": triggered_entity_next_transition
-        })
+        child_entity: SchedulerEntity = SchedulerEntity(
+            user_id="system",
+            workflow_name=const.ModelName.SCHEDULER_ENTITY.value,
+            awaited_entity_ids=awaited_entity_ids,
+            triggered_entity_id=triggered_entity_id,
+            scheduled_action=scheduled_action.value,
+            triggered_entity_next_transition=triggered_entity_next_transition,
+            last_modified=get_current_timestamp_num()
+        )
 
         child_technical_id = await entity_service.add_item(token=self.cyoda_auth_service,
                                                            entity_model=const.ModelName.SCHEDULER_ENTITY.value,
