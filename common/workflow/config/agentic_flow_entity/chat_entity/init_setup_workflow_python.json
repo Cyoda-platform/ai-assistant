@@ -404,6 +404,7 @@
                     "- Let the user know: do they already have an environment?",
                     "  • Let the user know: if they do, let them decide whether they want to redeploy it. If they choose to redeploy, call the deploy cyoda env tool; otherwise, call finish_discussion.",
                     "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now (this may disrupt others!).",
+                    " Always ask for explicit confirmation to deploy the env (like, please say Yes if you're ready to deploy).",
                     "",
                     "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes."
                   ]
@@ -1411,7 +1412,8 @@
                     "**Step 7:** Let the user know: now that the client application is running smoothly on their local machine, ask if they would like to deploy it to their Cyoda Cloud environment.",
                     "Let the user know: this deployment will provision the app into our Kubernetes cluster using the Helm charts located in the project’s `helm/` directory.",
                     "Let the user know: if they approve, deploy the user application and pass the session branch name.",
-                    "Let the user know: if they deny, call `finish_discussion`."
+                    "Let the user know: if they deny, call `finish_discussion`.",
+                    " Always ask for explicit confirmation to deploy the user application (like, please say Yes if you're ready to deploy)."
                   ]
                 }
               ],
@@ -1505,7 +1507,7 @@
                   "role": "user",
                   "content": [
                     " If the user asks to deploy their application - call deploy user app. ",
-                    " Always ask for explicit confirmation to deploy the env (like, please say Yes if you're ready to deploy)."
+                    " Always ask for explicit confirmation to deploy the user application (like, please say Yes if you're ready to deploy)."
                   ]
                 }
               ],
