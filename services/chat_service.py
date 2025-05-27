@@ -36,6 +36,24 @@ class ChatService:
         self.ai_agent = ai_agent
         self.cyoda_auth_service = cyoda_auth_service
 
+    async def transfer_chats(self, guest_token, auth_header):
+        guest_user_id = self._get_user_id(auth_header=f"Bearer {guest_token}")
+        user_id = self._get_user_id(auth_header=auth_header)
+
+        transfer_chats_entities = await self._get_entities_by_user_name(user_id=user_id, model=const.ModelName.TRANSFER_CHATS_ENTITY)
+
+        if transfer_chats_entities:
+            raise GuestChatsLimitExceededException("Sorry, your guest chats have already been transferred. Only one guest session is allowed.")
+
+        transfer_chats_entity = {
+            "user_id": user_id,
+            "guest_user_id": guest_user_id
+        }
+        await self.entity_service.add_item(token=self.cyoda_auth_service,
+                                      entity_model=const.ModelName.TRANSFER_CHATS_ENTITY,
+                                      entity_version=config.ENTITY_VERSION,
+                                      entity=transfer_chats_entity)
+
     # public methods used by routes
     # todo stream chats not to load all of them into memory
     async def list_chats(self, user_id: str) -> List[dict]:
@@ -582,3 +600,7 @@ class ChatService:
                         )
             except Exception as e:
                 logger.exception(f"Failed to rollback workflow for entity {entity.technical_id}: {e}")
+
+
+
+

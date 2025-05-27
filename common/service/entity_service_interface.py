@@ -37,3 +37,9 @@ class EntityService(ABC):
     async def get_transitions(self, token: str, technical_id: str, meta: Any) -> Any:
         """Get next transitions"""
         pass
+
+    @abstractmethod
+    async def delete_item(self, token: str, entity_model: str, entity_version: str, technical_id: str,
+                          meta: Any) -> Any:
+        """Delete an existing item from the repository."""
+        pass

@@ -177,8 +177,9 @@ class GrpcClient:
                 # 1) Define keep-alive options (milliseconds unless noted)
                 keepalive_opts = [
                     ('grpc.keepalive_time_ms', 15_000),  # PING every 30 s
-                    ('grpc.keepalive_timeout_ms', 10_000),  # wait 10 s for PONG
+                    ('grpc.keepalive_timeout_ms', 30_000),  # wait 10 s for PONG
                     ('grpc.keepalive_permit_without_calls', 1),  # even if idle
+                    ('grpc.enable_http_proxy', 0)
                 ]
 
                 # 2) Pass them into secure_channel alongside your creds
