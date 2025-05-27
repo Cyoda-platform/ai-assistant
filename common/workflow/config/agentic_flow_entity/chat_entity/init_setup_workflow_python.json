@@ -494,6 +494,7 @@
                     "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes.",
                     " Ask the user confirm that their environment is deployed and they are happy with the result. ",
                     " Once the user tells you the env is ready/they are happy/done/ready to proceed finish_discussion immediately",
+                    " Always ask for explicit confirmation to deploy the env (like, please say Yes if you're ready to deploy).",
                     "**Troubleshooting:** Let the user know: N/A (deployment errors will be surfaced by the deployment tool)."
                   ]
                 }
@@ -552,8 +553,9 @@
                   "role": "user",
                   "content": [
                     "**Step 4:** Let the user know: they should edit their `.env` file with the required environment-specific value for `CYODA_HOST` (use their newly deployed host name).",
-                    "- Let the user know: all other properties can stay at their defaults.",
-                    "- Let the user know: their branch name is used for `GRPC_PROCESSOR_TAG` (they can change it if they like)."
+                    "- Let the user know: all other properties can stay at their defaults apart from CYODA_HOST.",
+                    "- Let the user know: their branch name is used for `GRPC_PROCESSOR_TAG` (they can change it if they like).",
+                    "- Let the user know: if they are using shared environment they need to make sure they specify unique ENTITY_VERSION."
                   ]
                 }
               ],
@@ -1502,7 +1504,9 @@
                 {
                   "role": "user",
                   "content": [
-                    " If the user asks to deploy their application - call deploy user app. "]
+                    " If the user asks to deploy their application - call deploy user app. ",
+                    " Always ask for explicit confirmation to deploy the env (like, please say Yes if you're ready to deploy)."
+                  ]
                 }
               ],
               "tool_choice": "auto",

@@ -215,7 +215,7 @@ FILES_NOTIFICATIONS = {
     },
 }
 
-BRANCH_READY_NOTIFICATION = "🎉 **Your branch is live!**\n\nJust clone and check it out when you’re ready. 😎\n\n1. Clone {repository_name}:\n```bash\ngit clone https://github.com/Cyoda-platform/{repository_name}/\n```\n\n2. Jump to your branch:\n```bash\ngit checkout {branch_name}\n```\n\nPeek at it here if you're the curious type: [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{branch_name}) 👀\n\nYou've got two modules:\n- **Common** – Already wired up. Touch it only if you're feeling brave. 🛠️\n- **Entity** – Your playground. Add, edit, and push. I’ll keep an eye out. \n\nJust ping me here if you’ve got any questions!😸"
+BRANCH_READY_NOTIFICATION = "🎉 **Your branch is live!**\nI’ve added a GitHub branch in our public repository where I’ll be posting updates.\nYou can check it out now or come back to it anytime:\n🔗 [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{branch_name}) 👀\n!"
 
 # === Miscellaneous design strings ===
 LOGIC_CODE_DESIGN_STR = "Additional logic code design"

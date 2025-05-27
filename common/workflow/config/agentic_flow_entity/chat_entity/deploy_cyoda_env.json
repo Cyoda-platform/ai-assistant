@@ -65,7 +65,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "✅ Your Cyoda environment **{cyoda_env_name}** has been successfully deployed!\n\nYou can now start your application locally. Would you like help setting up the application locally?",
+              "notification": "✅ Your [Cyoda environment](https://{cyoda_env_name}) has been successfully deployed!\n\nYou can now start your application locally. Would you like to proceed setting up the application?",
               "publish": true,
               "allow_anonymous_users": true
             }

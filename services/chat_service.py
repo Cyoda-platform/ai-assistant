@@ -100,11 +100,12 @@ class ChatService:
         )
 
         # 3) build ChatEntity
+        name_length = 50
         chat = ChatEntity.model_validate({
             "user_id": user_id,
             "chat_id": "",
             "date": current_timestamp(),
-            "name": init_q[:25] + "…" if len(init_q) > 25 else init_q,
+            "name": init_q[:name_length] + "…" if len(init_q) > name_length else init_q,
             "description": req_data.get("description"),
             "chat_flow": {"current_flow": [], "finished_flow": []},
             "current_transition": "",
