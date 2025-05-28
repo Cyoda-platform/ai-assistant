@@ -67,10 +67,12 @@ class Config:
         self.AUTH_SECRET_KEY = _get_env("AUTH_SECRET_KEY", required=True)
         self.CLOUD_MANAGER_HOST = _get_env("CLOUD_MANAGER_HOST", required=True)
         self.CLIENT_HOST = _get_env("CLIENT_HOST", required=True)
+        self.EXTERNALIZE_SCHEDULER = _get_env("EXTERNALIZE_SCHEDULER", default="false").lower() == "true"
 
         # — optional strings with defaults —
         self.API_PREFIX = _get_env("API_PREFIX", default="/api/v1")
         self.ENTITY_VERSION = _get_env("ENTITY_VERSION", default="1001")
+        self.CLIENT_ENTITY_VERSION = _get_env("CLIENT_ENTITY_VERSION", default="1000")
         self.CHAT_ID = _get_env("CHAT_ID", default=None)
         self.GRPC_PROCESSOR_TAG = _get_env("GRPC_PROCESSOR_TAG", default="ai_assistant")
         self.CHAT_REPOSITORY = _get_env("CHAT_REPOSITORY", default="local")

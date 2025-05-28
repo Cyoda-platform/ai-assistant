@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 
 from common.config.config import config as env_config
@@ -11,7 +12,6 @@ from common.repository.cyoda.cyoda_repository import CyodaRepository
 from common.repository.in_memory_db import InMemoryRepository
 from common.service.service import EntityServiceImpl
 from common.workflow.converter_v1.workflow_converter_service import CyodaWorkflowConverterService
-#from entity.chat.workflow.openapi_functions import OpenAPIFunctions
 from entity.model_registry import model_registry
 from entity.chat.helper_functions import WorkflowHelperService
 from entity.chat.workflow import ChatWorkflow
@@ -21,6 +21,7 @@ from services.scheduler import Scheduler
 from entity.workflow import Workflow
 from entity.workflow_dispatcher import WorkflowDispatcher
 
+logger = logging.getLogger(__name__)
 
 class ServicesFactory:
     _instance = None
@@ -59,7 +60,6 @@ class ServicesFactory:
                 dataset=self.dataset,
                 workflow_helper_service=self.workflow_helper_service,
                 entity_service=self.entity_service,
-                scheduler=self.scheduler,
                 cyoda_auth_service=self.cyoda_auth_service,
                 workflow_converter_service=self.workflow_converter_service
             )

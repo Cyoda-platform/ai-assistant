@@ -267,6 +267,7 @@ class CyodaRepository(CrudRepository):
 
 
     async def save(self, meta, entity: Any) -> Any:
+
         if meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE:
             payload = {
                 "meta-data": {"source": "ai_assistant"},
@@ -276,7 +277,7 @@ class CyodaRepository(CrudRepository):
             path = f"message/new/{meta['entity_model']}_{meta['entity_version']}"
         else:
             data = json.dumps(entity, default=custom_serializer)
-            path = f"entity/JSON/{meta['entity_model']}/{meta['entity_version']}"
+            path = f"entity/JSON/{meta['entity_model']}/{meta['entity_version']}?waitForConsistencyAfter=true"
 
         resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="post", path=path, data=data)
         result = resp.get("json", [])
@@ -288,6 +289,7 @@ class CyodaRepository(CrudRepository):
         if meta.get("type") == config.CYODA_ENTITY_TYPE_EDGE_MESSAGE and technical_id:
             _edge_messages_cache[technical_id] = entity
 
+        logger.info(f"Saved entity of type {meta.get("type")}, id: {technical_id}")
         return technical_id
 
     async def save_all(self, meta, entities: List[Any]) -> Any:
@@ -308,10 +310,7 @@ class CyodaRepository(CrudRepository):
             return await self._launch_transition(meta=meta, technical_id=technical_id)
 
         transition = meta.get("update_transition", const.TransitionKey.UPDATE.value)
-        path = (
-            f"entity/JSON/{technical_id}/{transition}"
-            "?transactional=true&waitForConsistencyAfter=true"
-        )
+        path = (f"entity/JSON/{technical_id}/{transition}")
         data = json.dumps(entity, default=custom_serializer)
         resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="put", path=path, data=data)
         result = resp.get("json", {})

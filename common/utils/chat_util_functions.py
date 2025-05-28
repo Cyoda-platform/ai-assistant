@@ -4,6 +4,7 @@ from typing import Tuple
 
 from common.config.config import config
 from common.utils.file_reader import read_file_content
+from common.utils.utils import get_current_timestamp_num
 from entity.chat.chat import ChatEntity
 from entity.model import FlowEdgeMessage
 
@@ -26,7 +27,7 @@ async def trigger_manual_transition(
     )
 
     # Append to finished_flow and get the edge ID
-    edge_message_id = await add_answer_to_finished_flow(
+    edge_message_id, last_modified = await add_answer_to_finished_flow(
         entity_service=entity_service,
         answer=user_answer,
         cyoda_auth_service=cyoda_auth_service
@@ -39,6 +40,7 @@ async def trigger_manual_transition(
                 type="answer",
                 publish=True,
                 edge_message_id=edge_message_id,
+                last_modified=last_modified,
                 consumed=transition==const.TransitionKey.MANUAL_APPROVE.value,
                 user_id=chat.user_id
             )
@@ -113,18 +115,20 @@ async def trigger_manual_transition(
 
 
 async def add_answer_to_finished_flow(entity_service, answer: str, cyoda_auth_service, publish=True):
+    last_modified = get_current_timestamp_num()
     flow_message_content = {
         "type": "answer",
-        "answer": answer,
-        "publish": publish
+        "message": answer,
+        "publish": publish,
+        "last_modified": last_modified
     }
     edge_message_id = await entity_service.add_item(token=cyoda_auth_service,
                                                     entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
                                                     entity_version=config.ENTITY_VERSION,
-                                                    entity=flow_message_content,
+                                                    entity=FlowEdgeMessage.model_validate(flow_message_content),
                                                     meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
 
-    return edge_message_id
+    return edge_message_id, last_modified
 
 
 async def get_user_message(message, user_file):

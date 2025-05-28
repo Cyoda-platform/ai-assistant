@@ -20,39 +20,42 @@ class Scheduler:
         self.max_backoff = 3 * 60  # 3 minutes
 
     async def start_scheduler(self):
-        delay = self.backoff_delay
-        while True:
-            try:
-                scheduled_entities = await self.entity_service.get_items_by_condition(
-                    token=self.cyoda_auth_service,
-                    entity_model=const.ModelName.SCHEDULER_ENTITY.value,
-                    entity_version=config.ENTITY_VERSION,
-                    condition={
-                        "cyoda": {
-                            "type": "group",
-                            "operator": "AND",
-                            "conditions": [
-                                {
-                                    "field": "state",
-                                    "operatorType": "EQUALS",
-                                    "value": SCHEDULER_STATUS_WAITING,
-                                    "type": "lifecycle",
-                                }
-                            ],
-                        }
-                    })
+        try:
+            delay = self.backoff_delay
+            while True:
+                try:
+                    scheduled_entities = await self.entity_service.get_items_by_condition(
+                        token=self.cyoda_auth_service,
+                        entity_model=const.ModelName.SCHEDULER_ENTITY.value,
+                        entity_version=config.ENTITY_VERSION,
+                        condition={
+                            "cyoda": {
+                                "type": "group",
+                                "operator": "AND",
+                                "conditions": [
+                                    {
+                                        "field": "state",
+                                        "operatorType": "EQUALS",
+                                        "value": SCHEDULER_STATUS_WAITING,
+                                        "type": "lifecycle",
+                                    }
+                                ],
+                            }
+                        })
 
-                if scheduled_entities:
-                    delay = self.backoff_delay  # reset delay
-                    tasks = [self._run_for_entity(entity) for entity in scheduled_entities]
-                    await asyncio.gather(*tasks)
-                else:
-                    logger.info("No scheduled entities found. Backing off.")
-                    delay = min(delay * 2, self.max_backoff)
-            except Exception as e:
-                logger.exception(f"Scheduler encountered an error: {e}")
+                    if scheduled_entities:
+                        delay = self.backoff_delay  # reset delay
+                        tasks = [self._run_for_entity(entity) for entity in scheduled_entities]
+                        await asyncio.gather(*tasks)
+                    else:
+                        logger.info("No scheduled entities found. Backing off.")
+                        delay = min(delay * 2, self.max_backoff)
+                except Exception as e:
+                    logger.exception(f"Scheduler encountered an error: {e}")
 
-            await asyncio.sleep(delay)
+                await asyncio.sleep(delay)
+        except Exception as e:
+            logger.exception(e)
 
     async def _run_for_entity(self, entity: SchedulerEntity):
         try:

@@ -27,11 +27,6 @@ GREET_EVENT_TYPE = "CalculationMemberGreetEvent"
 KEEP_ALIVE_EVENT_TYPE = "CalculationMemberKeepAliveEvent"
 EVENT_ACK_TYPE = "EventAckResponse"
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] [%(threadName)s] %(name)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
 
 logger = logging.getLogger(__name__)
 
@@ -182,8 +177,9 @@ class GrpcClient:
                 # 1) Define keep-alive options (milliseconds unless noted)
                 keepalive_opts = [
                     ('grpc.keepalive_time_ms', 15_000),  # PING every 30 s
-                    ('grpc.keepalive_timeout_ms', 10_000),  # wait 10 s for PONG
+                    ('grpc.keepalive_timeout_ms', 30_000),  # wait 10 s for PONG
                     ('grpc.keepalive_permit_without_calls', 1),  # even if idle
+                    ('grpc.enable_http_proxy', 0)
                 ]
 
                 # 2) Pass them into secure_channel alongside your creds
@@ -243,13 +239,16 @@ class GrpcClient:
         """
         Entry point: keeps the bidirectional stream alive, reconnecting on token revocations.
         """
-        await self.consume_stream()
+        try:
+            await self.consume_stream()
+        except Exception as e:
+            logger.exception(e)
 
 
     async def rollback_failed_workflows(self):
         logger.info("restarting entities workflows....")
         try:
-            await self.chat_service.rollback_failed_workflows()
+            asyncio.create_task(self.chat_service.rollback_failed_workflows())
         except Exception as e:
             logger.error("Failed to restart entities")
             logger.exception(e)

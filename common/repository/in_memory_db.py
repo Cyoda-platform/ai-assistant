@@ -5,7 +5,7 @@ from common.repository.crud_repository import CrudRepository
 from common.utils.utils import *
 from entity.model import AgenticFlowEntity
 
-logger = logging.getLogger('django')
+logger = logging.getLogger(__name__)
 
 cache = {}
 

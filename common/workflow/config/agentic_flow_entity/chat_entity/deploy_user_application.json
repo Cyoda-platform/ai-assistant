@@ -81,7 +81,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "✅ Your application has been successfully deployed to **{user_env_name}**!\n\n📄 API documentation is now available at:\n- https://{user_env_name}/scalar\n- https://{user_env_name}/docs\n\nYou can use either link to explore and test your API endpoints interactively.\n\n🚀 Your app is now connected to your Cyoda environment and ready to process workflows.",
+              "notification": "✅ Your [application](https://{user_env_name}) has been successfully deployed!\n\n📄 API documentation is now available at:\n- [Scalar](https://{user_env_name}/scalar)\n- [Swagger UI](https://{user_env_name}/docs)\n\nYou can use either link to explore and test your API endpoints interactively.\n\n🚀 Your app is now connected to your Cyoda environment and ready to process workflows.",
               "publish": true,
               "allow_anonymous_users": true
             }

@@ -5,6 +5,7 @@ from quart import Quart, send_from_directory
 from quart_cors import cors
 from quart_rate_limiter import RateLimiter, rate_limit
 import common.config.const as const
+from common.config.config import config
 from common.exception.errors import init_error_handlers
 from common.utils.event_loop import BackgroundEventLoop
 from routes.chat import chat_bp
@@ -44,10 +45,10 @@ def create_app():
         grpc_client_loop = BackgroundEventLoop()
         grpc_client_loop.run_coroutine(grpc_client.grpc_stream())
         logger.info("Started gRPC background stream.")
-
-        scheduler_loop = BackgroundEventLoop()
-        scheduler_loop.run_coroutine(scheduler.start_scheduler())
-        logger.info("Started scheduler background stream.")
+        if not config.EXTERNALIZE_SCHEDULER:
+            scheduler_loop = BackgroundEventLoop()
+            scheduler_loop.run_coroutine(scheduler.start_scheduler())
+            logger.info("Started scheduler background stream.")
 
 
     @app.after_serving
@@ -55,7 +56,6 @@ def create_app():
         if hasattr(app, 'background_task'):
             app.background_task.cancel()
             await app.background_task
-        grpc_client.stop()  # you can wrap loop.stop()/thread.join() inside grpc_client
         logger.info("Stopped gRPC background stream.")
 
     # --- Static index route ---

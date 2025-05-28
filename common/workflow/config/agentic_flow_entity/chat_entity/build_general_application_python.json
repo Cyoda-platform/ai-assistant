@@ -10,7 +10,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "\uD83D\uDC4B Welcome to Cyoda Application Builder! We’re excited to build something amazing with you! \n\n \uD83C\uDF1F Your branch will be ready soon, and I’ll notify you when I push changes. If you have suggestions, message me or use Canvas! \uD83D\uDE0A  \n\n You can view how your chat workflow operates internally and monitor your progress in our debug window, which you can open using the button in the top-right corner. \uD83D\uDCBB  \n\nIf something goes wrong, no worries—just roll back! \n\n\uD83D\uDE2C Your app will be live on Cyoda Platform GitHub soon! \n\n\uD83D\uDE80 Let’s build your branch together! \uD83C\uDF3F",
+              "notification":  "👋 Welcome to Cyoda Application Builder!\nWe’re excited to work with you on building your app.\n\n🔧 Here's how the process works:\n\n**Define & confirm functional requirements**\nWe'll discuss what your app needs to do and confirm the necessary API endpoints.\n\n**Prototype phase**\nWe’ll create a controller-based sketch prototype focused on core logic only.\n\n**Backend migration**\nOnce you're happy with the prototype, we'll migrate it to the Cyoda backend, introducing our event-driven architecture and non-functional requirements.\n👉 Learn more: https://cyoda.com\n\n🚀 After that, you’ll get guidance on launching your app—and we can continue editing it as needed.\n\n🌱 We're in alpha!\nIf something goes wrong or you have questions, reach out on [Discord](https://discord.com/channels/791341703498956840) or click Retry in the entities progress window.\n\nLet’s build something great together!\n\n```mermaid\ngraph TD\n    A([Define & Confirm Functional Requirements]):::bar e1@== build_general_application.functional_requirements_specified\n    ==> B([Build Sketch Prototype]):::bar\n    B e2@== functional_requirements_generated ==> C([Validate Functionality & API Endpoints]):::bar\n    C e3@== prototype_discussion_requested ==> D{Are You Happy With the Prototype?}:::bar\n    D e4@== migration_confirmation_requested ==> E([Migrate to Cyoda Backend]):::bar\n    E e5@== finished_app_generation_flow ==> F([Event-Driven Architecture + Non-Functional Requirements]):::bar\n    F e6@== init_setup_workflow ==> G([Launch Your App]):::bar\n    G e7@== edit_existing_workflow ==> H([Iterate & Edit as Needed]):::bar\n\n    D e1@== No ==> B\n\n    H e8@== locked_chat ==> I([Need Help? Click Retry or Ask on Discord]):::bar\n    e1@{ animate: true }\n    e2@{ animate: true }\n    e3@{ animate: true }\n    e4@{ animate: true }\n    e5@{ animate: true }\n    e6@{ animate: true }\n    e7@{ animate: true }\n    e8@{ animate: true }\n    classDef bar stroke:#0f0\n```",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -171,7 +171,7 @@
                     " Max 3 questions and suggestions at a time - ask only if absolutely necessary. Keep it short so that the user is kept engaged. It is better to say something like - Would you like to A or B, Do i understand correct and you'd prefer A to B - etc",
                     " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
                     " Do not ask about any specific frameworks or technologies, the final application will be in quart python on Cyoda platform - no other choices.",
-                    " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. format it with markdown ",
+                    " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. Format it with markdown.",
                     " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
                     " Be polite, please ",
                     " Here is my requirement: "
@@ -1918,7 +1918,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "✅ Your application is ready in the {branch_name} branch!\n\n [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) \uD83D\uDC40 \n\nLet’s bring it to life — together.\n\n ",
+              "question": "✅ Your application is ready in the {branch_name} branch!\n\n [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) \uD83D\uDC40 \n\nLet’s bring it to life — together. Please make sure you've logged in to proceed\n\n ",
               "publish": true
             }
           }

@@ -1551,7 +1551,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "🎉 Congrats on launching your first app! Your hard work paid off—this is just the beginning. Keep iterating, stay creative, and aim high! 🚀 Join our [Discord](https://discord.gg/bwTRS3hA) to share feedback and stay updated. 🙌",
+              "notification": "🎉 Congrats on launching your first app! Your hard work paid off—this is just the beginning. Keep iterating, stay creative, and aim high! 🚀 Join our [Discord](https://discord.com/channels/791341703498956840/791341703498956843) to share feedback and stay updated. 🙌",
               "publish": true,
               "allow_anonymous_users": true
             }

@@ -6,7 +6,6 @@ from pathlib import Path
 from common.workflow.converter_v1.util.workflow_enricher import enrich_workflow
 from common.workflow.converter_v1.util.workflow_to_dto_converter import parse_ai_workflow_to_dto
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 entity_dir = Path(__file__).resolve().parent.parent.parent.parent / 'entity'

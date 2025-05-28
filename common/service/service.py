@@ -7,7 +7,7 @@ from common.repository.crud_repository import CrudRepository
 from common.service.entity_service_interface import EntityService
 from common.utils.utils import parse_entity
 
-logger = logging.getLogger('quart')
+logger = logging.getLogger(__name__)
 
 
 class EntityServiceImpl(EntityService):
