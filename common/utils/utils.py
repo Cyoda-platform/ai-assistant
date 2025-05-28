@@ -455,7 +455,8 @@ async def send_cyoda_request(
     Send an HTTP request to the Cyoda API with automatic retry on 401.
     """
     token = cyoda_auth_service.get_access_token()
-    for attempt in range(4):
+    max_attempt = 2
+    for attempt in range(max_attempt):
         try:
             if method.lower() == "get":
                 resp = await send_get_request(token, base_url, path)
@@ -469,18 +470,31 @@ async def send_cyoda_request(
                 raise ValueError(f"Unsupported HTTP method: {method}")
             # todo check here
         except Exception as exc:
-            msg = str(exc)
-            if attempt == 0 and ("401" in msg or "Unauthorized" in msg):
-                logger.warning(f"Request to {path} failed with 401; invalidating tokens and retrying")
-                _invalidate_tokens(cyoda_auth_service=cyoda_auth_service)
-                token = cyoda_auth_service.get_access_token()
-                continue
-            elif attempt == 0 and ("422" in msg):
-                logger.error(f"Response from {path} returned status 422; retrying")
-                continue
-            elif attempt == 0 and ("500" in msg):
-                logger.error(f"Response from {path} returned status 500; retrying")
-                continue
+            if exc and hasattr(exc, "status_code"):
+                if attempt == 0 and exc.status_code==401:
+                    logger.warning(f"Request to {path} failed with 401; invalidating tokens and retrying")
+                    _invalidate_tokens(cyoda_auth_service=cyoda_auth_service)
+                    token = cyoda_auth_service.get_access_token()
+                    continue
+                elif attempt <= max_attempt and exc.status_code==422:
+                    logger.error(f"Response from {path} returned status 422; retrying")
+                    continue
+                elif attempt <= max_attempt and exc.status_code==500:
+                    logger.error(f"Response from {path} returned status 500; retrying")
+                    continue
+            else:
+                msg = str(exc)
+                if attempt == 0 and ("401" in msg or "Unauthorized" in msg):
+                    logger.warning(f"Request to {path} failed with 401; invalidating tokens and retrying")
+                    _invalidate_tokens(cyoda_auth_service=cyoda_auth_service)
+                    token = cyoda_auth_service.get_access_token()
+                    continue
+                elif attempt <= max_attempt and ("422" in msg):
+                    logger.error(f"Response from {path} returned status 422; retrying")
+                    continue
+                elif attempt <= max_attempt and ("500" in msg):
+                    logger.error(f"Response from {path} returned status 500; retrying")
+                    continue
             raise
         status = resp.get("status") if isinstance(resp, dict) else None
         if attempt == 0 and status == 401:

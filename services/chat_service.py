@@ -24,7 +24,7 @@ from common.utils.utils import (
     validate_token, send_cyoda_request, get_current_timestamp_num,
 )
 from entity.chat.chat import ChatEntity
-from entity.model import FlowEdgeMessage, ChatMemory, ModelConfig, AgenticFlowEntity
+from entity.model import FlowEdgeMessage, ChatMemory, ModelConfig, AgenticFlowEntity, AIMessage
 
 logger = logging.getLogger(__name__)
 
@@ -351,7 +351,7 @@ class ChatService:
             tools=None,
             model=ModelConfig(),
             tool_choice=None,
-            messages=[{"role": "user", "content": question}]
+            messages=[AIMessage(role="user", content=question)]
         )
         return {"message": result}, 200
 

@@ -207,8 +207,8 @@ class WorkflowDispatcher:
                     edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                                          entity_model=const.ModelName.AI_MEMORY_EDGE_MESSAGE.value,
                                                                          entity_version=env_config.ENTITY_VERSION,
-                                                                         entity={"role": "user",
-                                                                                 "content": answer_content},
+                                                                         entity=AIMessage(role="user",
+                                                                                 content=answer_content),
                                                                          meta={
                                                                              "type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
                     memory.messages.get(memory_tag).append(AIMessage(edge_message_id=edge_message_id))
@@ -237,7 +237,7 @@ class WorkflowDispatcher:
         edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                              entity_model=const.ModelName.AI_MEMORY_EDGE_MESSAGE.value,
                                                              entity_version=env_config.ENTITY_VERSION,
-                                                             entity={"role": "assistant", "content": ai_agent_resp},
+                                                             entity=AIMessage(role="assistant", content=ai_agent_resp),
                                                              meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
         memory_tags = config.get("memory_tags", [env_config.GENERAL_MEMORY_TAG])
         for memory_tag in memory_tags:
@@ -410,7 +410,7 @@ class WorkflowDispatcher:
             token=self.cyoda_auth_service,
             entity_model=const.ModelName.AI_MEMORY_EDGE_MESSAGE.value,
             entity_version=env_config.ENTITY_VERSION,
-            entity={"role": "assistant", "content": content},
+            entity=AIMessage(role="assistant", content=content),
             meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
         )
 
