@@ -119,5 +119,5 @@ async def transfer_chats():
     req_data = await request.get_json()
     guest_token = req_data.get('guest_token')
     header = request.headers.get('Authorization', '')
-    result = await chat_service.transfer_chats(guest_token=guest_token, header=header)
+    result = await chat_service.transfer_chats(guest_token=guest_token, auth_header=header)
     return jsonify(result), 200
