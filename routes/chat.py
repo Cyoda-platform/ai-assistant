@@ -112,7 +112,7 @@ async def rollback(technical_id):
 async def push_notify(technical_id):
     return jsonify({"error": const.Notifications.OPERATION_NOT_SUPPORTED.value}), 400
 
-@chat_bp.route( '/transfer-chats', methods=['POST'])
+@chat_bp.route( '/transfer', methods=['POST'])
 @rate_limit(const.RATE_LIMIT, timedelta(minutes=1))
 @auth_required
 async def transfer_chats():
