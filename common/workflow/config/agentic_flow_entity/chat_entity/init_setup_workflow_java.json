@@ -401,6 +401,7 @@
                     "- Let the user know: do they already have an environment?",
                     "  • Let the user know: if they do, let them decide whether they want to redeploy it. If they choose to redeploy, call the deploy cyoda env tool; otherwise, call finish_discussion.",
                     "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now (this may disrupt others!).",
+                    " Always ask for explicit confirmation to deploy the env (like, please say Yes if you're ready to deploy).",
                     "",
                     "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes."
                   ]
@@ -549,8 +550,9 @@
                   "role": "user",
                   "content": [
                     "**Step 4:** Let the user know: they should edit their `.env` file with the required environment-specific value for `CYODA_HOST` (use their newly deployed host name).",
-                    "- Let the user know: all other properties can stay at their defaults.",
-                    "- Let the user know: their branch name is used for `GRPC_PROCESSOR_TAG` (they can change it if they like)."
+                    "- Let the user know: all other properties can stay at their defaults apart from CYODA_HOST.",
+                    "- Let the user know: their branch name is used for `GRPC_PROCESSOR_TAG` (they can change it if they like).",
+                    "- Let the user know: if they are using shared environment they need to make sure they specify unique ENTITY_VERSION."
                   ]
                 }
               ],
@@ -699,7 +701,8 @@
                   "content": [
                     "**Step 5:** Let the user know: with their env configured, they should import the workflows by running:",
                     "```bash",
-                    "python common/repository/cyoda/cyoda_init.py",
+                    "./gradlew bootJarWorkflowImport",
+                    "java -jar build/libs/java-client-template-1.0-SNAPSHOT-workflow-import.jar",
                     "```",
                     "Let the user know: the workflows should appear in their Cyoda UI once the import completes."
                   ]
@@ -829,7 +832,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_api_existing_app",
-                    "description": "Launches workflow that is necessary to help the user edit/update existing api (routes.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/routes/routes.py  (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user edit/update existing api (Controller.java). Key factor is that an application already exists and the user explicitly asks to add changes to com.java_template.controller.Controller.java  (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -895,7 +898,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_existing_processors",
-                    "description": "Launches workflow that is necessary to help the user update workflow processors code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/workflow.py code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user update workflow processors code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/{entity_name}Workflow.java code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1192,7 +1195,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_api_existing_app",
-                    "description": "Launches workflow that is necessary to help the user edit/update existing api (routes.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/routes/routes.py (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user edit/update existing api (Controller.java). Key factor is that an application already exists and the user explicitly asks to add changes to com.java_template.controller.Controller.java (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1258,7 +1261,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_existing_processors",
-                    "description": "Launches workflow that is necessary to help the user update workflow processors code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/workflow.py code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user update workflow processors code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/{entity_name}Workflow.java code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1406,7 +1409,8 @@
                     "**Step 7:** Let the user know: now that the client application is running smoothly on their local machine, ask if they would like to deploy it to their Cyoda Cloud environment.",
                     "Let the user know: this deployment will provision the app into our Kubernetes cluster using the Helm charts located in the project’s `helm/` directory.",
                     "Let the user know: if they approve, deploy the user application and pass the session branch name.",
-                    "Let the user know: if they deny, call `finish_discussion`."
+                    "Let the user know: if they deny, call `finish_discussion`.",
+                    "Always ask for explicit confirmation to deploy the user application (like, please say Yes if you're ready to deploy)."
                   ]
                 }
               ],
@@ -1499,7 +1503,8 @@
                 {
                   "role": "user",
                   "content": [
-                    " If the user asks to deploy their application - call deploy user app. "
+                    " If the user asks to deploy their application - call deploy user app. ",
+                    " Always ask for explicit confirmation to deploy the user application (like, please say Yes if you're ready to deploy)."
                   ]
                 }
               ],
