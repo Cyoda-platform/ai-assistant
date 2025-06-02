@@ -206,7 +206,7 @@
                     "**Step 2:** Let the user know: they should ensure their development environment is set up, including having Java and Gradle installed.",
                     " _Let the user know: they should expect to see a `Login failed (404)` error in logs initially, as Cyoda isn’t configured yet._",
                     "- Let the user know: if they encounter `ClassNotFoundException`, they should ensure all dependencies are properly defined in `build.gradle`.",
-                    "- Let the user know: if they encounter missing dependencies, they should run `./gradlew build` to resolve them."
+                    "- Let the user know: if they encounter missing dependencies, they should run `./gradlew --refresh-dependencies` to resolve them."
                   ]
                 }
               ],
@@ -318,7 +318,7 @@
                     "**Troubleshooting:**",
                     " _Let the user know: they should expect to see a `Login failed (404)` error in logs initially, as Cyoda isn’t configured yet._",
                     "- Let the user know: if they encounter `ClassNotFoundException`, they should ensure all dependencies are properly defined in `build.gradle`.",
-                    "- Let the user know: if they encounter missing dependencies, they should run `./gradlew build` to resolve them."
+                    "- Let the user know: if they encounter missing dependencies, they should run `./gradlew --refresh-dependencies` to resolve them."
                   ]
                 }
               ],
@@ -1043,7 +1043,7 @@
                   "role": "user",
                   "content": [
                     "**Step 6:** Let the user know: they should test their API by visiting `http://localhost:8000` (or their configured port) and ensure everything looks good.",
-                    "- Let the user know: when they save `{entity_name}`, an event will be sent and processed by their workflow code in `entity/{entity_name}/Workflow.java` and the corresponding JSON."
+                    "- Let the user know: when they save `{entity_name}`, an event will be sent and processed by their workflow code in `entity/{entity_name}/{entity_name}Workflow.java` and the corresponding JSON."
                   ]
                 }
               ],

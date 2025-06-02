@@ -83,7 +83,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -226,7 +226,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -490,7 +490,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -859,7 +859,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -1119,7 +1119,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -1613,7 +1613,7 @@
                     "    }",
                     "  ],",
                     "  \"file_without_workflow\": {",
-                    "    \"code\": \"package com.java_template.entity;\n\nimport com.fasterxml.jackson.databind.JsonNode;\\nimport com.fasterxml.jackson.dat\"",
+                    "    \"code\": \"package com.java_template.entity;\n\nimport com.fasterxml.jackson.databind.JsonNode;\nnimport com.fasterxml.jackson.databind.ObjectMapper;\"",
                     "  }"
                   ]
                 }
@@ -1731,6 +1731,7 @@
                   "role": "user",
                   "content": [
                     "hello, please update Controller.java file contents renaming its class to Controller and fixing imports. Remember you are Spring Boot developer.",
+                    "inject com.fasterxml.jackson.databind.ObjectMapper via constructor instead of creating a new one.",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Java comments are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```."
                   ]
                 }

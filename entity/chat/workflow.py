@@ -108,7 +108,7 @@ class ChatWorkflow(Workflow):
         )
         entity.scheduled_entities.append(scheduled_entity_id)
 
-        return f"Successfully scheduled {scheduled_action.value.replace('_', ' ')} with build ID {build_id}. Would you like to discuss anything else while my assistant is working on the job?"
+        return f"Successfully scheduled {scheduled_action.value.replace('_', ' ')} with build ID {build_id}."
 
     async def schedule_deploy_env(
             self,
