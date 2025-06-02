@@ -423,8 +423,9 @@
                     " Please, help me define the functional requirements for my project.",
                     "Outline the necessary API endpoints (adhering to Restful rules, any business logic that invokes external data source, retrieves data or does any calculations needs to be done in POST endpoint, GET is used only for my application results retrieval (external data retrieval should be implemented in POST endpoint)),",
                     "including details on request/response formats. Additionally, provide a visual representation of the user-app interaction using Mermaid diagrams (e.g. journey/sequence).",
+                    "Ensure that **each Mermaid diagram is enclosed in a complete and valid Markdown code block**, starting with ```mermaid and ending with ``` (on a separate line).",
                     "Please return markdown document without any additional information.",
-                    "Each diagram should be wrapped into ```mermaid ...```"
+                    "Make sure there are no unclosed Mermaid blocks — every diagram must end with a closing triple backtick on a separate line."
                   ]
                 }
               ]
@@ -1608,12 +1609,12 @@
                     "      \"workflow_function\": {",
                     "        \"name\": \"my_workflow\",",
                     "        \"content\": \"private CompletableFuture<ObjectNode> processPet(ObjectNode entity) {\n    logger.info(\"Workflow processPet started for entity: {}\",\",",
-                    "        \"code_with_necessary_imports_and_constants\": \"package com.java_template.entity;\nimport com.fasterxml.jackson.databind.JsonNode;\"",
+                    "        \"code_with_necessary_imports_and_constants\": \"package com.java_template.entity;\nimport com.fasterxml.jackson.databind.node.ObjectNode;\"",
                     "      }",
                     "    }",
                     "  ],",
                     "  \"file_without_workflow\": {",
-                    "    \"code\": \"package com.java_template.entity;\n\nimport com.fasterxml.jackson.databind.JsonNode;\nnimport com.fasterxml.jackson.databind.ObjectMapper;\"",
+                    "    \"code\": \"package com.java_template.entity;\n\nimport com.fasterxml.jackson.databind.node.ObjectNode;\nnimport com.fasterxml.jackson.databind.ObjectMapper;\"",
                     "  }"
                   ]
                 }

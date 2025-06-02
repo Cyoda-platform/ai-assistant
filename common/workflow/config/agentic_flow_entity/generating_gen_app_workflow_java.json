@@ -30,13 +30,15 @@
                   "role": "user",
                   "content": [
                     "Which workflow would you recommend for this code?",
-                    "Could you split this code into methods, each method should have name starting with 'process' and must be public static. It should return CompletableFuture<ObjectNode>",
+                    "Could you split this code into methods, each method should have name starting with 'process'. It should return CompletableFuture<ObjectNode>",
                     "It can take only one argument ObjectNode entity and can modify this entity state, so please also remove any unnecessary entityService.updateItem(this entity) calls = as you can do it by changing entity attributes directly, e.g. entity.attribute = new_value.",
                     "No more additional arguments can be passed.",
                     "Also, all workflow orchestration should be inside {workflow_function}. {workflow_function} should have only workflow orchestration code and no business logic. no other function can have workflow orchestration code.",
                     "{code}",
-                    "Please, call the class {entity_name}Workflow. Use package name 'com.java_template.entity.{entity_name}'.",
+                    "Please, call the class {entity_name}Workflow. Use package name 'com.java_template.entity.{entity_name}'. Add @Component annotation to the class. Use constructor for com.fasterxml.jackson.databind.ObjectMapper",
+                    "Use 'import static com.java_template.common.config.Config.*;' to import ENTITY_VERSION.",
                     "You cannot apply entityService.addItem/updateItem/deleteItem on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity.attribute.  The new state will be persisted. Do not add any test/extra code.",
+                    "Remove all RestController methods and annotations, leave only workflow-related methods, which start with 'process'.",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting."
                   ]
                 }
