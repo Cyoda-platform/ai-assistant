@@ -41,19 +41,21 @@ class ChatService:
         guest_user_id = self._get_user_id(auth_header=f"Bearer {guest_token}")
         user_id = self._get_user_id(auth_header=auth_header)
 
-        transfer_chats_entities = await self._get_entities_by_user_name(user_id=user_id, model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
+        transfer_chats_entities = await self._get_entities_by_user_name(user_id=user_id,
+                                                                        model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
 
         if transfer_chats_entities:
-            raise GuestChatsLimitExceededException("Sorry, your guest chats have already been transferred. Only one guest session is allowed.")
+            raise GuestChatsLimitExceededException(
+                "Sorry, your guest chats have already been transferred. Only one guest session is allowed.")
 
         transfer_chats_entity = {
             "user_id": user_id,
             "guest_user_id": guest_user_id
         }
         await self.entity_service.add_item(token=self.cyoda_auth_service,
-                                      entity_model=const.ModelName.TRANSFER_CHATS_ENTITY.value,
-                                      entity_version=config.ENTITY_VERSION,
-                                      entity=transfer_chats_entity)
+                                           entity_model=const.ModelName.TRANSFER_CHATS_ENTITY.value,
+                                           entity_version=config.ENTITY_VERSION,
+                                           entity=transfer_chats_entity)
 
     # public methods used by routes
     # todo stream chats not to load all of them into memory
@@ -61,9 +63,11 @@ class ChatService:
         if not user_id:
             raise InvalidTokenException("Invalid token")
 
-        chats = await self._get_entities_by_user_name_and_workflow_name(user_id, const.ModelName.CHAT_BUSINESS_ENTITY.value)
+        chats = await self._get_entities_by_user_name_and_workflow_name(user_id,
+                                                                        const.ModelName.CHAT_BUSINESS_ENTITY.value)
         if not user_id.startswith("guest."):
-            transfers = await self._get_entities_by_user_name(user_id=user_id, model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
+            transfers = await self._get_entities_by_user_name(user_id=user_id,
+                                                              model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
             if transfers:
                 guest_id = transfers[0]["guest_user_id"]
                 chats += await self._get_entities_by_user_name_and_workflow_name(guest_id,
@@ -174,7 +178,7 @@ class ChatService:
     async def get_chat(self, auth_header: str, technical_id: str) -> dict:
         chat_business_entity = await self._get_business_chat_for_user(auth_header=auth_header,
                                                                       technical_id=technical_id)
-        chat = await self.entity_service.get_item(
+        chat: ChatEntity = await self.entity_service.get_item(
             token=self.cyoda_auth_service,
             entity_model=const.ModelName.CHAT_ENTITY.value,
             entity_version=config.ENTITY_VERSION,
@@ -185,7 +189,7 @@ class ChatService:
                                                                dialogue=[],
                                                                child_entities=set())
         # dialogue = self._post_process_dialogue(dialogue)
-        entities_data = await self._get_entities_processing_data(technical_id=technical_id,
+        entities_data = await self._get_entities_processing_data(technical_id=chat.technical_id,
                                                                  child_entities=child_entities)
         return {
             "technical_id": technical_id,
@@ -197,15 +201,27 @@ class ChatService:
         }
 
     async def delete_chat(self, auth_header: str, technical_id: str) -> dict:
+        #verify chat belongs to the user
         chat_business_entity: ChatBusinessEntity = await self._get_business_chat_for_user(auth_header=auth_header,
-                                                                      technical_id=technical_id)
-        chat_business_entity.current_transition = const.TransitionKey.DELETE.value
-        await _launch_transition(self.entity_service,
-                                 chat_business_entity.technical_id,
-                                 self.cyoda_auth_service,
-                                 chat_business_entity,
-                                 const.TransitionKey.DELETE.value)
+                                                                                          technical_id=technical_id)
+        await _launch_transition(entity_service=self.entity_service,
+                                 technical_id=chat_business_entity.technical_id,
+                                 cyoda_auth_service=self.cyoda_auth_service,
+                                 entity=None,
+                                 transition=const.TransitionKey.DELETE.value)
         return {"message": "Chat deleted", "technical_id": technical_id}
+
+    async def rename_chat(self, auth_header: str, technical_id: str, chat_name: str, chat_description: str) -> dict:
+        chat_business_entity: ChatBusinessEntity = await self._get_business_chat_for_user(auth_header=auth_header,
+                                                                                          technical_id=technical_id)
+        chat_business_entity.name = chat_name
+        chat_business_entity.description = chat_description
+        await _launch_transition(entity_service=self.entity_service,
+                                 technical_id=chat_business_entity.technical_id,
+                                 cyoda_auth_service=self.cyoda_auth_service,
+                                 entity=chat_business_entity,
+                                 transition=const.TransitionKey.DELETE.value)
+        return {"message": "Chat renamed", "technical_id": technical_id}
 
     async def submit_text_question(self, auth_header, technical_id, question):
         chat = await self._get_chat_for_user(auth_header, technical_id)
@@ -260,7 +276,8 @@ class ChatService:
         return chat_business_entity
 
     async def _get_chat_for_user(self, auth_header, technical_id):
-        chat_business_entity = await self._get_business_chat_for_user(auth_header=auth_header, technical_id=technical_id)
+        chat_business_entity = await self._get_business_chat_for_user(auth_header=auth_header,
+                                                                      technical_id=technical_id)
         chat = await self.entity_service.get_item(
             token=self.cyoda_auth_service,
             entity_model=const.ModelName.CHAT_ENTITY.value,
@@ -457,7 +474,7 @@ class ChatService:
                 if content.type == "answer" and content.message == const.Notifications.APPROVE.value:
                     content.message = random.choice(list(const.ApproveAnswer)).value
                 message_content = content.model_dump()
-                #todo - for backwards compatibility - remove
+                # todo - for backwards compatibility - remove
                 message_content[content.type] = content.message
                 dialogue.append(message_content)
 
@@ -610,7 +627,3 @@ class ChatService:
                         )
             except Exception as e:
                 logger.exception(f"Failed to rollback workflow for entity {entity.technical_id}: {e}")
-
-
-
-

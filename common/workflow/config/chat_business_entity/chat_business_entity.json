@@ -11,7 +11,7 @@
     },
     "initialized_chat": {
       "transitions": {
-        "update": {
+        "update_transition": {
           "manual": true,
           "next": "initialized_chat"
         },
