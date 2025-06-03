@@ -358,7 +358,7 @@ class CyodaRepository(CrudRepository):
         path = (
             f"platform-api/entity/transition?entityId={technical_id}"
             f"&entityClass={entity_class}&transitionName="
-            f"{meta.get('update_transition', const.TransitionKey.UPDATE.value)}&waitForConsistencyAfter=true"
+            f"{meta.get('update_transition', const.TransitionKey.UPDATE.value)}"
         )
         resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="put", path=path)
         return resp.get("json")
