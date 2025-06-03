@@ -8,6 +8,8 @@ from zoneinfo import ZoneInfo
 from common.config.config import config
 
 
+
+
 def generate_id():
     return str(uuid.uuid1())
 
@@ -18,8 +20,9 @@ def convert(input_file_path, output_file_path, calculation_node_tags, model_name
         input_json = json.load(infile)
 
     # Call the conversion method
+    CLASS_NAME = "com.cyoda.tdb.model.treenode.TreeNodeEntity"
     workflow_dto = convert_json_to_workflow_dto(input_json=input_json,
-                                                class_name="com.cyoda.tdb.model.treenode.TreeNodeEntity",
+                                                class_name=CLASS_NAME,
                                                 calculation_nodes_tags=calculation_node_tags,
                                                 model_name=model_name,
                                                 model_version=model_version,
@@ -47,7 +50,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "owner": "CYODA",
         "id": fail_chat_criteria_id,
         "name": "has_failed",
-        "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+        "entityClassName": class_name,
         "creationDate": "2025-05-02T15:17:30.992+02:00",
         "description": "",
         "condition": {
@@ -75,7 +78,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "owner": "CYODA",
         "id": proceed_chat_criteria_id,
         "name": "has_succeeded",
-        "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+        "entityClassName": class_name,
         "creationDate": "2025-05-02T15:17:30.992+02:00",
         "description": "",
         "condition": {
@@ -103,7 +106,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "owner": "CYODA",
         "id": wrong_generated_content_criteria_id,
         "name": "wrong_generated_content",
-        "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+        "entityClassName": class_name,
         "creationDate": "2025-05-02T15:17:30.992+02:00",
         "description": "",
         "condition": {
