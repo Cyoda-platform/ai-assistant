@@ -217,8 +217,10 @@ class ChatService:
     async def rename_chat(self, auth_header: str, technical_id: str, chat_name: str, chat_description: str) -> dict:
         chat_business_entity: ChatBusinessEntity = await self._get_business_chat_for_user(auth_header=auth_header,
                                                                                           technical_id=technical_id)
-        chat_business_entity.name = chat_name
-        chat_business_entity.description = chat_description
+        if chat_name:
+            chat_business_entity.name = chat_name
+        if chat_description:
+            chat_business_entity.description = chat_description
         await self.entity_service.update_item(
             token=self.cyoda_auth_service,
             entity_model=const.ModelName.CHAT_BUSINESS_ENTITY.value,
