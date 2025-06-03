@@ -1,5 +1,5 @@
 import common.config.const as const
-from entity.chat.chat import ChatEntity
+from entity.chat.chat import ChatEntity, ChatBusinessEntity
 from entity.model import QuestionsQueue, SchedulerEntity, AgenticFlowEntity, ChatMemory, FlowEdgeMessage, AIMessage
 
 model_registry = {
@@ -10,5 +10,6 @@ model_registry = {
     const.ModelName.SCHEDULER_ENTITY.value: SchedulerEntity,
     const.ModelName.QUESTIONS_QUEUE.value: QuestionsQueue,
     const.ModelName.CHAT_MEMORY.value: ChatMemory,
+    const.ModelName.CHAT_BUSINESS_ENTITY.value: ChatBusinessEntity
 
 }

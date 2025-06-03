@@ -1,0 +1,26 @@
+{
+  "initial_state": "none",
+  "workflow_name": "chat_business_entity",
+  "states": {
+    "none": {
+      "transitions": {
+        "initialize_chat": {
+          "next": "initialized_chat"
+        }
+      }
+    },
+    "initialized_chat": {
+      "transitions": {
+        "update": {
+          "manual": true,
+          "next": "initialized_chat"
+        },
+        "delete": {
+          "manual": true,
+          "next": "deleted"
+        }
+      }
+    }
+  }
+}
+

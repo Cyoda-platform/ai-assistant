@@ -23,8 +23,9 @@ from common.utils.utils import (
     current_timestamp,
     validate_token, send_cyoda_request, get_current_timestamp_num,
 )
-from entity.chat.chat import ChatEntity
-from entity.model import FlowEdgeMessage, ChatMemory, ModelConfig, AgenticFlowEntity, AIMessage
+from entity.chat.chat import ChatEntity, ChatBusinessEntity
+from entity.model import FlowEdgeMessage, ChatMemory, ModelConfig, AgenticFlowEntity, AIMessage, ChatFlow, \
+    TransitionsMemory
 
 logger = logging.getLogger(__name__)
 
@@ -60,13 +61,13 @@ class ChatService:
         if not user_id:
             raise InvalidTokenException("Invalid token")
 
-        chats = await self._get_entities_by_user_name_and_workflow_name(user_id, const.ModelName.CHAT_ENTITY.value)
+        chats = await self._get_entities_by_user_name_and_workflow_name(user_id, const.ModelName.CHAT_BUSINESS_ENTITY.value)
         if not user_id.startswith("guest."):
             transfers = await self._get_entities_by_user_name(user_id=user_id, model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
             if transfers:
                 guest_id = transfers[0]["guest_user_id"]
                 chats += await self._get_entities_by_user_name_and_workflow_name(guest_id,
-                                                                                 const.ModelName.CHAT_ENTITY.value)
+                                                                                 const.ModelName.CHAT_BUSINESS_ENTITY.value)
 
         return [{
             "technical_id": c.technical_id,
@@ -119,21 +120,19 @@ class ChatService:
 
         # 3) build ChatEntity
         name_length = 50
-        chat = ChatEntity.model_validate({
-            "user_id": user_id,
-            "chat_id": "",
-            "date": current_timestamp(),
-            "name": init_q[:name_length] + "…" if len(init_q) > name_length else init_q,
-            "description": req_data.get("description"),
-            "chat_flow": {"current_flow": [], "finished_flow": []},
-            "current_transition": "",
-            "current_state": "",
-            "workflow_name": const.ModelName.CHAT_ENTITY.value,
-            "failed": "false",
-            "transitions_memory": {"conditions": {}, "current_iteration": {}, "max_iteration": {}},
-            "memory_id": memory_id,
-            "last_modified": last_modified
-        })
+
+        chat = ChatEntity(
+            user_id=user_id,
+            date=current_timestamp(),
+            chat_flow=ChatFlow(current_flow=[], finished_flow=[]),
+            current_transition="",
+            current_state="",
+            workflow_name=const.ModelName.CHAT_ENTITY.value,
+            failed=False,
+            transitions_memory=TransitionsMemory(conditions={}, current_iteration={}, max_iteration={}),
+            memory_id=memory_id,
+            last_modified=last_modified
+        )
 
         # 4) echo back user question
         ans_id, last_modified = await add_answer_to_finished_flow(
@@ -152,16 +151,35 @@ class ChatService:
         ])
 
         # 5) persist and respond
-        tech_id = await self.entity_service.add_item(
+        chat_id = await self.entity_service.add_item(
             token=self.cyoda_auth_service,
             entity_model=const.ModelName.CHAT_ENTITY.value,
             entity_version=config.ENTITY_VERSION,
             entity=chat
         )
+        chat_wrapper = ChatBusinessEntity(user_id=user_id,
+                                          chat_id=chat_id,
+                                          date=current_timestamp(),
+                                          name=init_q[:name_length] + "…" if len(init_q) > name_length else init_q,
+                                          workflow_name=const.ModelName.CHAT_BUSINESS_ENTITY.value,
+                                          description=req_data.get("description"))
+        tech_id = await self.entity_service.add_item(
+            token=self.cyoda_auth_service,
+            entity_model=const.ModelName.CHAT_BUSINESS_ENTITY.value,
+            entity_version=config.ENTITY_VERSION,
+            entity=chat_wrapper
+        )
         return {"message": "Chat created", "technical_id": tech_id, "answer_technical_id": ans_id}
 
     async def get_chat(self, auth_header: str, technical_id: str) -> dict:
-        chat = await self._get_chat_for_user(auth_header, technical_id)
+        chat_business_entity = await self._get_business_chat_for_user(auth_header=auth_header,
+                                                                      technical_id=technical_id)
+        chat = await self.entity_service.get_item(
+            token=self.cyoda_auth_service,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
+            entity_version=config.ENTITY_VERSION,
+            technical_id=chat_business_entity.chat_id
+        )
         dialogue, child_entities = await self._process_message(finished_flow=chat.chat_flow.finished_flow,
                                                                auth_header=auth_header,
                                                                dialogue=[],
@@ -171,23 +189,22 @@ class ChatService:
                                                                  child_entities=child_entities)
         return {
             "technical_id": technical_id,
-            "name": chat.name,
-            "description": chat.description,
-            "date": chat.date,
+            "name": chat_business_entity.name,
+            "description": chat_business_entity.description,
+            "date": chat_business_entity.date,
             "dialogue": dialogue,
             "entities_data": entities_data
         }
 
     async def delete_chat(self, auth_header: str, technical_id: str) -> dict:
-        await self._get_chat_for_user(auth_header, technical_id)
-        # todo Unresolved attribute reference 'delete_item' for class 'EntityService'
-        await self.entity_service.delete_item(
-            token=self.cyoda_auth_service,
-            entity_model=const.ModelName.CHAT_ENTITY.value,
-            entity_version=config.ENTITY_VERSION,
-            technical_id=technical_id,
-            meta={}
-        )
+        chat_business_entity: ChatBusinessEntity = await self._get_business_chat_for_user(auth_header=auth_header,
+                                                                      technical_id=technical_id)
+        chat_business_entity.current_transition = const.TransitionKey.DELETE.value
+        await _launch_transition(self.entity_service,
+                                 chat_business_entity.technical_id,
+                                 self.cyoda_auth_service,
+                                 chat_business_entity,
+                                 const.TransitionKey.DELETE.value)
         return {"message": "Chat deleted", "technical_id": technical_id}
 
     async def submit_text_question(self, auth_header, technical_id, question):
@@ -224,45 +241,32 @@ class ChatService:
 
     # ─── Private helpers ─────────────────────────────────────────────────────
 
-    async def _get_chat_for_user(self, auth_header, technical_id):
+    async def _get_business_chat_for_user(self, auth_header, technical_id):
         user_id = self._get_user_id(auth_header)
         if not user_id:
             raise InvalidTokenException()
 
-        chat = await self.entity_service.get_item(
+        chat_business_entity = await self.entity_service.get_item(
             token=self.cyoda_auth_service,
-            entity_model=const.ModelName.CHAT_ENTITY.value,
+            entity_model=const.ModelName.CHAT_BUSINESS_ENTITY.value,
             entity_version=config.ENTITY_VERSION,
             technical_id=technical_id
         )
 
-        # if not chat and config.CHAT_REPOSITORY == "local":
-        #     async with self.chat_lock:
-        #         chat = await self.entity_service.get_item(
-        #             token=self.cyoda_auth_service,
-        #             entity_model=const.ModelName.CHAT_ENTITY.value,
-        #             entity_version=config.ENTITY_VERSION,
-        #             technical_id=technical_id
-        #         )
-        #         if not chat:
-        #             await clone_repo(chat_id=technical_id)
-        #             async with httpx.AsyncClient() as client:
-        #                 response = await client.get(f"{config.RAW_REPOSITORY_URL}/{technical_id}/entity/chat.json")
-        #                 response.raise_for_status()  # Optional: ensures error is raised for non-2xx
-        #                 data = response.text
-        #             chat = ChatEntity.model_validate(json.loads(data))
-        #             if not chat:
-        #                 raise ChatNotFoundException()
-        #             await self.entity_service.add_item(
-        #                 token=self.cyoda_auth_service,
-        #                 entity_model=const.ModelName.CHAT_ENTITY.value,
-        #                 entity_version=config.ENTITY_VERSION,
-        #                 entity=chat
-        #             )
-        if not chat:
+        if not chat_business_entity:
             raise ChatNotFoundException()
 
-        await self._validate_chat_owner(chat, user_id)
+        await self._validate_chat_owner(chat_business_entity, user_id)
+        return chat_business_entity
+
+    async def _get_chat_for_user(self, auth_header, technical_id):
+        chat_business_entity = await self._get_business_chat_for_user(auth_header=auth_header, technical_id=technical_id)
+        chat = await self.entity_service.get_item(
+            token=self.cyoda_auth_service,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
+            entity_version=config.ENTITY_VERSION,
+            technical_id=chat_business_entity.chat_id
+        )
         return chat
 
     async def _validate_chat_owner(self, chat, user_id):
@@ -327,7 +331,13 @@ class ChatService:
                     "conditions": [
                         {"jsonPath": "$.user_id", "operatorType": "EQUALS", "value": user_id, "type": "simple"},
                         {"jsonPath": "$.workflow_name", "operatorType": "EQUALS",
-                         "value": const.ModelName.CHAT_ENTITY.value, "type": "simple"}
+                         "value": const.ModelName.CHAT_BUSINESS_ENTITY.value, "type": "simple"},
+                        {
+                            "field": "state",
+                            "operatorType": "INOT_EQUAL",
+                            "value": "deleted",
+                            "type": "lifecycle"
+                        }
                     ],
                     "type": "group"
                 },

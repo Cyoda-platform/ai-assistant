@@ -73,6 +73,7 @@ class JavaClasses(str, Enum):
 # === Transition keys ===
 @unique
 class TransitionKey(str, Enum):
+    DELETE = "delete"
     UPDATE = "update_transition"
     PROCESS_USER_INPUT = "submit_answer"
     MANUAL_APPROVE = "manual_approve"
@@ -87,6 +88,7 @@ class TransitionKey(str, Enum):
 @unique
 class ModelName(str, Enum):
     QUESTIONS_QUEUE = "questions_queue"
+    CHAT_BUSINESS_ENTITY = "chat_business_entity"
     CHAT_MEMORY = "chat_memory"
     FLOW_EDGE_MESSAGE = "flow_edge_message"
     AI_MEMORY_EDGE_MESSAGE = "ai_memory_edge_message"

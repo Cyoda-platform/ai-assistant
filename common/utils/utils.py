@@ -479,7 +479,7 @@ async def send_cyoda_request(
                 elif attempt <= max_attempt and exc.status_code==422:
                     logger.error(f"Response from {path} returned status 422; retrying")
                     continue
-                elif attempt <= max_attempt and exc.status_code==500:
+                elif attempt <= max_attempt and exc.status_code in [500, 503]:
                     logger.error(f"Response from {path} returned status 500; retrying")
                     continue
             else:
@@ -492,7 +492,7 @@ async def send_cyoda_request(
                 elif attempt <= max_attempt and ("422" in msg):
                     logger.error(f"Response from {path} returned status 422; retrying")
                     continue
-                elif attempt <= max_attempt and ("500" in msg):
+                elif attempt <= max_attempt and (("500" in msg) or ("503" in msg)):
                     logger.error(f"Response from {path} returned status 500; retrying")
                     continue
             raise
