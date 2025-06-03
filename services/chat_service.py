@@ -201,14 +201,17 @@ class ChatService:
         }
 
     async def delete_chat(self, auth_header: str, technical_id: str) -> dict:
-        #verify chat belongs to the user
+        # verify chat belongs to the user
         chat_business_entity: ChatBusinessEntity = await self._get_business_chat_for_user(auth_header=auth_header,
                                                                                           technical_id=technical_id)
-        await _launch_transition(entity_service=self.entity_service,
-                                 technical_id=chat_business_entity.technical_id,
-                                 cyoda_auth_service=self.cyoda_auth_service,
-                                 entity=None,
-                                 transition=const.TransitionKey.DELETE.value)
+        await self.entity_service.update_item(
+            token=self.cyoda_auth_service,
+            entity_model=const.ModelName.CHAT_BUSINESS_ENTITY.value,
+            entity_version=config.ENTITY_VERSION,
+            technical_id=chat_business_entity.technical_id,
+            entity=chat_business_entity,
+            meta={const.TransitionKey.UPDATE.value: const.TransitionKey.DELETE.value}
+        )
         return {"message": "Chat deleted", "technical_id": technical_id}
 
     async def rename_chat(self, auth_header: str, technical_id: str, chat_name: str, chat_description: str) -> dict:
@@ -216,11 +219,14 @@ class ChatService:
                                                                                           technical_id=technical_id)
         chat_business_entity.name = chat_name
         chat_business_entity.description = chat_description
-        await _launch_transition(entity_service=self.entity_service,
-                                 technical_id=chat_business_entity.technical_id,
-                                 cyoda_auth_service=self.cyoda_auth_service,
-                                 entity=chat_business_entity,
-                                 transition=const.TransitionKey.DELETE.value)
+        await self.entity_service.update_item(
+            token=self.cyoda_auth_service,
+            entity_model=const.ModelName.CHAT_BUSINESS_ENTITY.value,
+            entity_version=config.ENTITY_VERSION,
+            technical_id=chat_business_entity.technical_id,
+            entity=chat_business_entity,
+            meta={const.TransitionKey.UPDATE.value: const.TransitionKey.UPDATE.value}
+        )
         return {"message": "Chat renamed", "technical_id": technical_id}
 
     async def submit_text_question(self, auth_header, technical_id, question):
