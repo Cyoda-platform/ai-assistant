@@ -203,7 +203,7 @@
                     "    }",
                     "return CompletableFuture.completedFuture(entity);",
                     "  }",
-                    "Please, call the class Workflow.",
+                    "Please, call the class {entity_name}Workflow. Use package name 'com.java_template.entity.{entity_name}' ",
                     "You cannot apply entityService.addItem/updateItem/deleteItem on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity.attribute.  The new state will be persisted. Do not add any test/extra code.",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting."
                   ]
@@ -211,7 +211,7 @@
               ],
               "output": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.java"
+                  "src/main/java/com/java_template/entity/{entity_name}/{entity_name}Workflow.java"
                 ]
               },
               "publish": true
