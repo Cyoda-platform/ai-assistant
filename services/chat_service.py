@@ -466,7 +466,7 @@ class ChatService:
         list, set]:
 
         for msg in finished_flow:
-            if msg.type in ("question", "notification", "answer") and msg.publish:
+            if msg.type in ("question", "notification", "answer", const.UI_FUNCTION_PREFIX) and msg.publish:
                 content: FlowEdgeMessage = await self.entity_service.get_item(
                     token=self.cyoda_auth_service,
                     entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,

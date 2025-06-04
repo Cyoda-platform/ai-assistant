@@ -81,6 +81,10 @@ class OpenAiAgent:
                 adapted_messages.append(resp)
                 for call in resp.tool_calls:
                     args = json.loads(call.function.arguments)
+                    if call.function.name.startswith(const.UI_FUNCTION_PREFIX):
+                        if isinstance(args, dict):
+                            return {"type": const.UI_FUNCTION_PREFIX, "function": call.function.name, **args}
+                        return {"type": const.UI_FUNCTION_PREFIX, "function": call.function.name}
                     result = await methods_dict[call.function.name](
                         cls_instance, technical_id=technical_id, entity=entity, **args
                     )

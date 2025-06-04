@@ -124,12 +124,32 @@ class ScheduledEntityRunner:
                 else f"{config.DEPLOY_USER_APP_STATUS}?build_id={build_id}"
             )
 
-            resp = await send_cyoda_request(
-                cyoda_auth_service=self.cyoda_auth_service,
-                method="get",
-                base_url=status_url,
-                path=''
-            )
+            try:
+                resp = await send_cyoda_request(
+                    cyoda_auth_service=self.cyoda_auth_service,
+                    method="get",
+                    base_url=status_url,
+                    path=''
+                )
+            except Exception as e:
+                logger.exception(e)
+                transition_map = (
+                    config.ACTION_FAILURE_TRANSITIONS
+                )
+                scheduled_entity = await self.entity_service.get_item(
+                    token=self.cyoda_auth_service,
+                    entity_model=const.ModelName.SCHEDULER_ENTITY.value,
+                    entity_version=config.ENTITY_VERSION,
+                    technical_id=self.technical_id
+                )
+                scheduled_entity.triggered_entity_next_transition = transition_map.get(self.scheduled_action)
+                await _launch_transition(
+                    entity_service=self.entity_service,
+                    technical_id=self.technical_id,
+                    cyoda_auth_service=self.cyoda_auth_service,
+                    entity=scheduled_entity
+                )
+                return
             deploy_state = resp.get("json", {}).get("state")
             deploy_status = resp.get("json", {}).get("status")
 

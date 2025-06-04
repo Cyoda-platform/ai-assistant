@@ -428,6 +428,43 @@
                       "additionalProperties": false
                     }
                   }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_issue_technical_user",
+                    "description": " Please use ui_function_issue_technical_user for requests like give me a technical user. ",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "POST"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/users/machine"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "file"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
                 }
               ],
               "messages": [
@@ -867,6 +904,43 @@
                       },
                       "required": [
                         "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_issue_technical_user",
+                    "description": " Please use ui_function_issue_technical_user for requests like give me a technical user. ",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "POST"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/users/machine"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "file"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
                       ],
                       "additionalProperties": false
                     }

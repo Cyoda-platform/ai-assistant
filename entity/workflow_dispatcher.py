@@ -318,12 +318,20 @@ class WorkflowDispatcher:
         if config_type in ("function", "prompt", "agent"):
 
             if response and response != "None":
-                notification = FlowEdgeMessage(
-                    publish=config.get("publish", False),
-                    message=_post_process_response(response=f"{response}", config=config),
-                    approve=config.get("approve", False),
-                    type="question"
-                )
+                if isinstance(response, dict) and response.get("type") and response.get("type")==const.UI_FUNCTION_PREFIX:
+                    notification = FlowEdgeMessage(
+                        publish=config.get("publish", False),
+                        message=_post_process_response(response=f"{response}", config=config),
+                        approve=config.get("approve", False),
+                        type=const.UI_FUNCTION_PREFIX
+                    )
+                else:
+                    notification = FlowEdgeMessage(
+                        publish=config.get("publish", False),
+                        message=_post_process_response(response=f"{response}", config=config),
+                        approve=config.get("approve", False),
+                        type="question"
+                    )
                 await self.add_edge_message(message=notification,
                                             flow=finished_flow,
                                             user_id=entity.user_id)
