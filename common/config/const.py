@@ -156,10 +156,13 @@ class Notifications(str, Enum):
     PROCEED_TO_THE_NEXT_STEP = "Proceeded to the next step. You will see a notification soon!"
     DESIGN_PLEASE_WAIT = "Sorry, I haven't come up with an answer to the previous question yet. Please give me one more minute to think everything over 🤔⏳"
     FAILED_WORKFLOW = (
-        "⚠️ We encountered an error while processing the workflow **{technical_id}**. "
-        "Our team will look into it shortly.\n\nTo continue, please start a new chat.\n\n"
-        "You can continue working with your branch or application in a different chat."
-        "We’re sorry for the inconvenience and appreciate your understanding."
+        "⚠️ We ran into an error while processing the workflow **{technical_id}**. "
+        "Our team will review the issue shortly.\n\n"
+        "In the meantime, you can continue working on your branch or application in a new chat. \n\n"
+        "Please start a new conversation and include your branch name along with what you'd like to do — \n\n"
+        "for example, continue prototyping, proceed with the generated Cyoda app, add new entities or workflow processors, \n\n"
+        "or make edits to existing components.\n\n"
+        "We apologize for the inconvenience and appreciate your understanding."
     )
 
     APPROVAL_NOTIFICATION = (
