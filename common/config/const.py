@@ -158,8 +158,10 @@ class Notifications(str, Enum):
     FAILED_WORKFLOW = (
         "⚠️ We encountered an error while processing the workflow **{technical_id}**. "
         "Our team will look into it shortly.\n\nTo continue, please start a new chat.\n\n"
+        "You can continue working with your branch or application in a different chat."
         "We’re sorry for the inconvenience and appreciate your understanding."
     )
+
     APPROVAL_NOTIFICATION = (
         "Give a thumbs up 👍 if you'd like to proceed to the next question. "
         "If you'd like to discuss further, let's chat 💬"

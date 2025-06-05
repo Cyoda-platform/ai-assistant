@@ -336,7 +336,7 @@ class ChatService:
                 "cyoda": {
                     "operator": "AND",
                     "conditions": [{
-                        "jsonPath": "$.user_id", "operatorType": "EQUALS",
+                        "jsonPath": "user_id", "operatorType": "EQUALS",
                         "value": user_id, "type": "simple"
                     }],
                     "type": "group"
@@ -354,8 +354,8 @@ class ChatService:
                 "cyoda": {
                     "operator": "AND",
                     "conditions": [
-                        {"jsonPath": "$.user_id", "operatorType": "EQUALS", "value": user_id, "type": "simple"},
-                        {"jsonPath": "$.workflow_name", "operatorType": "EQUALS",
+                        {"jsonPath": "user_id", "operatorType": "EQUALS", "value": user_id, "type": "simple"},
+                        {"jsonPath": "workflow_name", "operatorType": "EQUALS",
                          "value": const.ModelName.CHAT_BUSINESS_ENTITY.value, "type": "simple"},
                         {
                             "field": "state",
@@ -590,13 +590,13 @@ class ChatService:
                 "operator": "AND",
                 "conditions": [
                     {
-                        "jsonPath": "$.failed",
+                        "jsonPath": "failed",
                         "operatorType": "EQUALS",
                         "value": False,
                         "type": "simple",
                     },
                     {
-                        "jsonPath": "$.last_modified",
+                        "jsonPath": "last_modified",
                         "operatorType": "GREATER_THAN",
                         "value": timestamp_threshold,
                         "type": "simple",
