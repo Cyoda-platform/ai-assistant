@@ -87,8 +87,9 @@ def convert(input_file_path, output_file_path, calculation_node_tags, model_name
         input_json = json.load(infile)
 
     # Call the conversion method
+    class_name = f"{model_name}.{model_version}"
     workflow_dto = convert_json_to_workflow_dto(input_json=input_json,
-                                                class_name="com.cyoda.tdb.model.treenode.TreeNodeEntity",
+                                                class_name=class_name,
                                                 calculation_nodes_tags=calculation_node_tags,
                                                 model_name=model_name,
                                                 model_version=model_version,
@@ -118,7 +119,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "owner": "CYODA",
         "id": fail_chat_criteria_id,
         "name": "has_failed",
-        "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+        "entityClassName": class_name,
         "creationDate": "2025-05-02T15:17:30.992+02:00",
         "description": "",
         "condition": {
@@ -127,7 +128,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
             "conditions": [
                 {
                     "@bean": "com.cyoda.core.conditions.queryable.Equals",
-                    "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.booleans.[$.failed]",
+                    "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.booleans.[failed]",
                     "operation": "EQUALS",
                     "rangeField": "false",
                     "value": True,
@@ -146,7 +147,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "owner": "CYODA",
         "id": proceed_chat_criteria_id,
         "name": "has_succeeded",
-        "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+        "entityClassName": class_name,
         "creationDate": "2025-05-02T15:17:30.992+02:00",
         "description": "",
         "condition": {
@@ -155,7 +156,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
             "conditions": [
                 {
                     "@bean": "com.cyoda.core.conditions.queryable.Equals",
-                    "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.booleans.[$.failed]",
+                    "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.booleans.[failed]",
                     "operation": "EQUALS",
                     "rangeField": "false",
                     "value": False,
@@ -174,7 +175,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "owner": "CYODA",
         "id": wrong_generated_content_criteria_id,
         "name": "wrong_generated_content",
-        "entityClassName": "com.cyoda.tdb.model.treenode.TreeNodeEntity",
+        "entityClassName": class_name,
         "creationDate": "2025-05-02T15:17:30.992+02:00",
         "description": "",
         "condition": {
@@ -183,7 +184,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
             "conditions": [
                 {
                     "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
-                    "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.booleans.[$.error_code]",
+                    "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.booleans.[error_code]",
                     "operation": "IEQUALS",
                     "rangeField": "false",
                     "value": "wrong_generated_content"
@@ -236,25 +237,10 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "conditions": [
             {
                 "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
-                "fieldName": "entityModelName",
-                "operation": "IEQUALS",
-                "rangeField": "false",
-                "value": model_name
-            },
-            {
-                "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
-                "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.strings.[$.workflow_name]",
+                "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.strings.[workflow_name]",
                 "operation": "IEQUALS",
                 "rangeField": "false",
                 "value": workflow_name
-            },
-            {
-                "@bean": "com.cyoda.core.conditions.queryable.Equals",
-                "fieldName": "entityModelVersion",
-                "operation": "EQUALS",
-                "rangeField": "false",
-                "value": model_version,
-                "queryable": True
             }
         ]}
 
@@ -809,8 +795,14 @@ if __name__ == "__main__":
         # Set the AI flag
         ai = True
         # Call your conversion
-        convert(input_file_path=input_file, output_file_path=str(output_file),
-                calculation_node_tags=config.GRPC_PROCESSOR_TAG, model_name=model_name,
-                model_version=int(config.ENTITY_VERSION), workflow_name=workflow_name, ai=ai)
+        convert(
+            input_file_path=input_file,
+            output_file_path=str(output_file),
+            calculation_node_tags=config.GRPC_PROCESSOR_TAG,
+            model_name=model_name,
+            model_version=int(config.ENTITY_VERSION),
+            workflow_name=workflow_name,
+            ai=ai
+        )
 
         print(f"Conversion completed. Result saved to {output_file}")
