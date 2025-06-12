@@ -46,7 +46,8 @@ class ChatWorkflow(Workflow):
     async def save_env_file(self, technical_id, entity: ChatEntity, **params):
         repository_name = get_repository_name(entity)
         file_name = await get_project_file_name(file_name=params.get("filename"),
-                                                git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                                                git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM,
+                                                                                        technical_id),
                                                 repository_name=repository_name
                                                 )
         async with aiofiles.open(file_name, 'r') as template_file:
@@ -99,7 +100,7 @@ class ChatWorkflow(Workflow):
             raise ValueError("No build_id found in the response")
 
         # Schedule the workflow
-        #todo check for the next transition
+        # todo check for the next transition
         scheduled_entity_id = await self.workflow_helper_service.launch_scheduled_workflow(
             entity_service=self.entity_service,
             awaited_entity_ids=[build_id],
@@ -178,8 +179,8 @@ class ChatWorkflow(Workflow):
                          git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
                          repository_name=repository_name)
         # todo - need to get from memory
-        entity.workflow_cache['branch_name'] = technical_id
-        return const.BRANCH_READY_NOTIFICATION.format(repository_name=repository_name, branch_name=technical_id)
+        entity.workflow_cache[const.GIT_BRANCH_PARAM] = technical_id
+        return const.BRANCH_READY_NOTIFICATION.format(repository_name=repository_name, git_branch=technical_id)
 
     async def init_chats(self, technical_id, entity: ChatEntity, **params):
         if config.MOCK_AI == "true":
@@ -279,7 +280,8 @@ class ChatWorkflow(Workflow):
         Reads data from a file using the provided chat id and file name.
         """
         # Await the asynchronous git_pull function.
-        return await read_file_util(filename=params.get("filename"), technical_id=technical_id, repository_name=get_repository_name(entity))
+        return await read_file_util(filename=params.get("filename"), technical_id=technical_id,
+                                    repository_name=get_repository_name(entity))
 
     async def finish_discussion(self, technical_id: str, entity: ChatEntity, **params: Any) -> None:
         transition = params.get("transition")
@@ -319,7 +321,6 @@ class ChatWorkflow(Workflow):
 
         # Return the inverse of the require_additional_question flag.
         return not conditions[transition].get("require_additional_question", True)
-
 
     async def not_stage_completed(self, technical_id: str, entity: ChatEntity, **params: Any) -> bool:
         completed = await self.is_stage_completed(technical_id=technical_id, entity=entity, params=params)
@@ -364,7 +365,8 @@ class ChatWorkflow(Workflow):
 
     async def save_entity_templates(self, technical_id, entity: ChatEntity, **params):
         file_path = await get_project_file_name(file_name="entity/entities_data_design.json",
-                                                git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                                                git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM,
+                                                                                        technical_id),
                                                 repository_name=get_repository_name(entity))
 
         try:
@@ -421,7 +423,9 @@ class ChatWorkflow(Workflow):
             entity_model=const.ModelName.CHAT_ENTITY.value,
             workflow_name=workflow_name,
             user_request=user_request,
-            workflow_cache=params)
+            workflow_cache=params,
+            resume_transition=const.TransitionKey.BUILD_NEW_APP.value)
+
         return f"Workflow {workflow_name} {child_technical_id} has been scheduled successfully. You'll be notified when it is in progress."
 
     async def unlock_chat(self, technical_id: str, entity: ChatEntity, **params: Any):
@@ -437,7 +441,8 @@ class ChatWorkflow(Workflow):
         routes_file = params.get("routes_file")
         try:
             file_path = await get_project_file_name(file_name=filename,
-                                                    git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                                                    git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM,
+                                                                                            technical_id),
                                                     repository_name=get_repository_name(entity))
             async with aiofiles.open(file_path, 'r') as f:
                 content = await f.read()
@@ -477,13 +482,14 @@ class ChatWorkflow(Workflow):
                     technical_id=technical_id,
                     entity=entity,
                     entity_model=const.ModelName.AGENTIC_FLOW_ENTITY.value,
-                    workflow_name=const.ModelName.GENERATING_GEN_APP_WORKFLOW_JAVA.value if entity.workflow_name.endswith("java") else const.ModelName.GENERATING_GEN_APP_WORKFLOW_PYTHON.value,
+                    workflow_name=const.ModelName.GENERATING_GEN_APP_WORKFLOW_JAVA.value if entity.workflow_name.endswith(
+                        "java") else const.ModelName.GENERATING_GEN_APP_WORKFLOW_PYTHON.value,
                     workflow_cache=workflow_cache,
                     edge_messages_store=edge_messages_store)
                 awaited_entity_ids.append(child_technical_id)
 
             if awaited_entity_ids:
-                #todo, need some way to identify next allowed transition
+                # todo, need some way to identify next allowed transition
                 scheduled_entity_id = await self.workflow_helper_service.launch_scheduled_workflow(
                     entity_service=self.entity_service,
                     awaited_entity_ids=awaited_entity_ids,
@@ -547,10 +553,10 @@ class ChatWorkflow(Workflow):
             function_name=entity.workflow_cache.get("workflow_function"))
         logger.info(extracted_function)
         await _save_file(_data=code_without_function,
-            item=f"entity/{entity.workflow_cache.get("entity_name")}/workflow.py",
-            git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
-            repository_name=get_repository_name(entity)
-        )
+                         item=f"entity/{entity.workflow_cache.get("entity_name")}/workflow.py",
+                         git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                         repository_name=get_repository_name(entity)
+                         )
         return extracted_function
 
     async def save_workflow_configuration(self, technical_id, entity: AgenticFlowEntity, **params):
@@ -564,10 +570,10 @@ class ChatWorkflow(Workflow):
         workflow_json = json.loads(message_content)
         workflow = enrich_workflow(workflow_json)
         await _save_file(_data=json.dumps(workflow, indent=4, sort_keys=True),  # Prettified JSON
-            item=f"entity/{entity.workflow_cache.get('entity_name')}/workflow.json",
-            git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
-            repository_name=get_repository_name(entity)
-        )
+                         item=f"entity/{entity.workflow_cache.get('entity_name')}/workflow.json",
+                         git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                         repository_name=get_repository_name(entity)
+                         )
 
     # =================================== generating_gen_app_workflow end =============================
     # ==================================== scheduler flow =======================================
@@ -594,7 +600,8 @@ class ChatWorkflow(Workflow):
                                        technical_id=git_branch_id,
                                        repository_name=get_repository_name(entity))
         entities_description = []
-        project_entities_list = await self.get_entities_list(branch_id=git_branch_id, repository_name=get_repository_name(entity))
+        project_entities_list = await self.get_entities_list(branch_id=git_branch_id,
+                                                             repository_name=get_repository_name(entity))
         for project_entity in project_entities_list:
             workflow_code = await read_file_util(technical_id=git_branch_id,
                                                  filename=f"entity/{project_entity}/workflow.py",
@@ -629,6 +636,34 @@ class ChatWorkflow(Workflow):
             workflow_name=const.ModelName.ADD_NEW_FEATURE.value,
             workflow_cache=workflow_cache,
             edge_messages_store=edge_messages_store)
+
+        return f"Successfully scheduled workflow for updating user application {child_technical_id}. I'll be right back - please don't ask anything else."
+
+    async def resume_build_general_application(self,
+                                               technical_id,
+                                               entity: AgenticFlowEntity,
+                                               **params):
+        # Clean up chat_id if needed
+
+        programming_language = params.get("programming_language")
+        git_branch_id = params.get(const.GIT_BRANCH_PARAM)
+
+        transition = params.get("transition")
+        repository_name = config.JAVA_REPOSITORY_NAME if programming_language == "JAVA" else config.PYTHON_REPOSITORY_NAME
+        if git_branch_id and git_branch_id == "main":
+            logger.exception("Modifications to main branch are not allowed")
+            return "Modifications to main branch are not allowed"
+        await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
+
+        child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
+            entity_service=self.entity_service,
+            technical_id=technical_id,
+            entity=entity,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
+            workflow_name=const.ModelName.GEN_APP_ENTITY_PYTHON.value,
+            workflow_cache=params,
+            resume_transition=transition,
+            edge_messages_store=None)
 
         return f"Successfully scheduled workflow for updating user application {child_technical_id}. I'll be right back - please don't ask anything else."
 
@@ -690,7 +725,7 @@ class ChatWorkflow(Workflow):
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
         if entity.user_id.startswith('guest'):
-            #raise GuestChatsLimitExceededException()
+            # raise GuestChatsLimitExceededException()
             return "Sorry, deploying Cyoda env is available only to logged in users. Please sign up or login!"
         # todo cloud manager needs to return namespace
         params['cyoda_env_name'] = f"{entity.user_id.lower()}.{config.CLIENT_HOST}"
@@ -706,9 +741,8 @@ class ChatWorkflow(Workflow):
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
         if entity.user_id.startswith('guest'):
-            #raise GuestChatsLimitExceededException()
+            # raise GuestChatsLimitExceededException()
             return "Sorry, deploying client application is available only to logged in users. Please sign up or login!"
-
 
         # todo cloud manager needs to return namespace
         params['user_env_name'] = f"client-{entity.user_id.lower()}.{config.CLIENT_HOST}"
@@ -729,17 +763,16 @@ class ChatWorkflow(Workflow):
         files: List[str] = params.get("files")
         for file_name in files:
             await delete_file(_data=technical_id,
-                             item=file_name,
-                             git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
-                             repository_name=get_repository_name(entity))
+                              item=file_name,
+                              git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                              repository_name=get_repository_name(entity))
         return ''
-
 
     async def init_setup_workflow(
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
         if entity.user_id.startswith('guest'):
-            #raise GuestChatsLimitExceededException()
+            # raise GuestChatsLimitExceededException()
             return "Sorry, setting up Cyoda env is available only to logged in users. Please sign up or login!"
         # todo cloud manager needs to return namespace
         programming_language = params.get("programming_language")
@@ -754,7 +787,6 @@ class ChatWorkflow(Workflow):
             workflow_name=workflow_name,
             params=params,
         )
-
 
     async def add_new_entity_for_existing_app(
             self, technical_id: str, entity: AgenticFlowEntity, **params
@@ -780,7 +812,6 @@ class ChatWorkflow(Workflow):
         if not programming_language:
             return "parameter programming_language is required"
         workflow_name = const.ModelName.ADD_NEW_WORKFLOW_JAVA.value if programming_language == "JAVA" else const.ModelName.ADD_NEW_WORKFLOW_PYTHON.value
-
 
         return await self._schedule_workflow(
             technical_id=technical_id,
@@ -879,10 +910,11 @@ class ChatWorkflow(Workflow):
             async with aiofiles.open(file_path, 'r') as f:
                 content = await f.read()
                 workflow_contents = json.loads(content)
-                workflow_cyoda_dto = self.workflow_converter_service.convert_workflow(workflow_contents=workflow_contents,
-                                                                                 entity_name=entity_name,
-                                                                                 entity_version=entity_version,
-                                                                                 technical_id=git_branch_id)#use git branch id
+                workflow_cyoda_dto = self.workflow_converter_service.convert_workflow(
+                    workflow_contents=workflow_contents,
+                    entity_name=entity_name,
+                    entity_version=entity_version,
+                    technical_id=git_branch_id)  # use git branch id
                 output_file_name = params.get("output_file_name").format(entity_name=entity_name)
 
                 await _save_file(_data=json.dumps(workflow_cyoda_dto),
@@ -893,10 +925,3 @@ class ChatWorkflow(Workflow):
         except Exception as e:
             logger.exception(e)
             return "Error while converting workflow"
-
-
-
-
-
-
-

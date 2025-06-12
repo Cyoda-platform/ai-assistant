@@ -82,7 +82,15 @@ class TransitionKey(str, Enum):
     UNLOCK_CHAT = "unlock_chat"
     FAIL = "fail"
     ROLLBACK = "rollback"
-
+    BUILD_NEW_APP = "build_new_app"
+    DISCUSS_FUNCTIONAL_REQUIREMENTS = "discuss_functional_requirements"
+    EDIT_FUNCTIONAL_REQUIREMENTS = "edit_functional_requirements"
+    PROTOTYPE_DISCUSSION_REQUESTED = "prototype_discussion_requested"
+    RESUME_MIGRATION = "resume_migration"
+    RESUME_PROTOTYPE_CYODA_WORKFLOW = "resume_prototype_cyoda_workflow"
+    RESUME_GEN_PROTOTYPE_CYODA_WORKFLOW_JSON = "resume_gen_prototype_cyoda_workflow_json"
+    RESUME_GEN_ENTITIES = "resume_gen_entities"
+    RESUME_POST_APP_BUILD_STEPS = "resume_post_app_build_steps"
 
 # === Model names ===
 @unique
@@ -222,7 +230,7 @@ FILES_NOTIFICATIONS = {
     },
 }
 
-BRANCH_READY_NOTIFICATION = "🎉 **Your branch is live!**\nI’ve added a GitHub branch in our public repository where I’ll be posting updates.\nYou can check it out now or come back to it anytime:\n🔗 [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{branch_name}) 👀\n"
+BRANCH_READY_NOTIFICATION = "🎉 **Your branch is live!**\nI’ve added a GitHub branch in our public repository where I’ll be posting updates.\nYou can check it out now or come back to it anytime:\n🔗 [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch}) 👀\n"
 
 # === Miscellaneous design strings ===
 LOGIC_CODE_DESIGN_STR = "Additional logic code design"

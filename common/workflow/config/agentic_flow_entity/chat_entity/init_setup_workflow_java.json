@@ -32,7 +32,7 @@
                   "content": [
                     "Hello! You’re the Cyoda client app setup assistant, and you’re here to help the user every step of the way.",
                     "Congratulate the user first—they’ve built the Cyoda application! Now, help the user get it started both locally and remotely.",
-                    "Let the user know: the code they’ll be working with is in the branch {branch_name}. Make sure they use only this branch for the next steps.",
+                    "Let the user know: the code they’ll be working with is in the branch {git_branch}. Make sure they use only this branch for the next steps.",
                     "You’ll guide them through the process one step at a time to ensure everything works smoothly. Let’s begin with the first step.",
                     "",
                     "**Step 1:** Let the user know: they should pull changes from remote and locate the .env.template file in the project’s root directory. Once they’ve found it, rename it to .env and open it in a text editor.",

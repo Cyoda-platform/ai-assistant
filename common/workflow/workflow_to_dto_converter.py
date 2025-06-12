@@ -9,25 +9,30 @@ from zoneinfo import ZoneInfo
 
 from common.config.config import config
 
-
 OPERATION_MAPPING = {
     "equals (disregard case)": {"operation": "IEQUALS", "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals"},
-    "not equal (disregard case)": {"operation": "INOT_EQUAL", "@bean": "com.cyoda.core.conditions.nonqueryable.INotEquals"},
+    "not equal (disregard case)": {"operation": "INOT_EQUAL",
+                                   "@bean": "com.cyoda.core.conditions.nonqueryable.INotEquals"},
     "between (inclusive)": {"operation": "BETWEEN", "@bean": "com.cyoda.core.conditions.queryable.Between"},
     "contains": {"operation": "CONTAINS", "@bean": "com.cyoda.core.conditions.nonqueryable.IContains"},
     "starts with": {"operation": "ISTARTS_WITH", "@bean": "com.cyoda.core.conditions.nonqueryable.IStartsWith"},
     "ends with": {"operation": "IENDS_WITH", "@bean": "com.cyoda.core.conditions.nonqueryable.IEndsWith"},
     "does not contain": {"operation": "INOT_CONTAINS", "@bean": "com.cyoda.core.conditions.nonqueryable.INotContains"},
-    "does not start with": {"operation": "INOT_STARTS_WITH", "@bean": "com.cyoda.core.conditions.nonqueryable.INotStartsWith"},
+    "does not start with": {"operation": "INOT_STARTS_WITH",
+                            "@bean": "com.cyoda.core.conditions.nonqueryable.INotStartsWith"},
     "does not end with": {"operation": "NOT_ENDS_WITH", "@bean": "com.cyoda.core.conditions.nonqueryable.NotEndsWith"},
-    "matches other field (case insensitive)": {"operation": "INOT_ENDS_WITH", "@bean": "com.cyoda.core.conditions.nonqueryable.INotEndsWith"},
+    "matches other field (case insensitive)": {"operation": "INOT_ENDS_WITH",
+                                               "@bean": "com.cyoda.core.conditions.nonqueryable.INotEndsWith"},
     "equals": {"operation": "EQUALS", "@bean": "com.cyoda.core.conditions.queryable.Equals"},
     "not equal": {"operation": "NOT_EQUAL", "@bean": "com.cyoda.core.conditions.nonqueryable.NotEquals"},
     "less than": {"operation": "LESS_THAN", "@bean": "com.cyoda.core.conditions.queryable.LessThan"},
     "greater than": {"operation": "GREATER_THAN", "@bean": "com.cyoda.core.conditions.queryable.GreaterThan"},
-    "less than or equal to": {"operation": "LESS_OR_EQUAL", "@bean": "com.cyoda.core.conditions.queryable.LessThanEquals"},
-    "greater than or equal to": {"operation": "GREATER_OR_EQUAL", "@bean": "com.cyoda.core.conditions.queryable.GreaterThanEquals"},
-    "between (inclusive, match case)": {"operation": "BETWEEN_INCLUSIVE", "@bean": "com.cyoda.core.conditions.queryable.BetweenInclusive"},
+    "less than or equal to": {"operation": "LESS_OR_EQUAL",
+                              "@bean": "com.cyoda.core.conditions.queryable.LessThanEquals"},
+    "greater than or equal to": {"operation": "GREATER_OR_EQUAL",
+                                 "@bean": "com.cyoda.core.conditions.queryable.GreaterThanEquals"},
+    "between (inclusive, match case)": {"operation": "BETWEEN_INCLUSIVE",
+                                        "@bean": "com.cyoda.core.conditions.queryable.BetweenInclusive"},
     "is null": {"operation": "IS_NULL", "@bean": "com.cyoda.core.conditions.nonqueryable.IsNull"},
     "is not null": {"operation": "NOT_NULL", "@bean": "com.cyoda.core.conditions.nonqueryable.NotNull"}
 }
@@ -76,6 +81,7 @@ RAW_TYPES = {
 FIELD_NAME_PREFIX = (
     "members.[*]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps."
 )
+
 
 def generate_id():
     return str(uuid.uuid1())
@@ -128,7 +134,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
             "conditions": [
                 {
                     "@bean": "com.cyoda.core.conditions.queryable.Equals",
-                    "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.booleans.[failed]",
+                    "fieldName": "failed",
                     "operation": "EQUALS",
                     "rangeField": "false",
                     "value": True,
@@ -156,7 +162,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
             "conditions": [
                 {
                     "@bean": "com.cyoda.core.conditions.queryable.Equals",
-                    "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.booleans.[failed]",
+                    "fieldName": "failed",
                     "operation": "EQUALS",
                     "rangeField": "false",
                     "value": False,
@@ -184,7 +190,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
             "conditions": [
                 {
                     "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
-                    "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.booleans.[error_code]",
+                    "fieldName": "error_code",
                     "operation": "IEQUALS",
                     "rangeField": "false",
                     "value": "wrong_generated_content"
@@ -237,7 +243,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "conditions": [
             {
                 "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
-                "fieldName": "members.[0]@com#cyoda#tdb#model#treenode#NodeInfo.value@com#cyoda#tdb#model#treenode#PersistedValueMaps.strings.[workflow_name]",
+                "fieldName": "workflow_name",
                 "operation": "IEQUALS",
                 "rangeField": "false",
                 "value": workflow_name
@@ -330,103 +336,238 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
 
             # Process externalized processor
             if "action" in transition_data:
-                process_id = generate_id()
-                process_params = []
-                process_criteria_ids = []
-                process_ids.append(
-                    {
-                        "persisted": True,
-                        "persistedId": process_id,
-                        "runtimeId": 0
+                extract_processor(process_ids, transition_data)
+
+                # Process externalized_processor's externalized_criteria - skip
+
+            # Process transition's externalized_criteria
+            if "condition" in transition_data:
+                condition = transition_data.get("condition", {})
+                config = condition.get("config", {}) or {}
+                if config:
+                    function = config.get("function", {}) or {}
+                    criteria = {
+                        "owner": default_param_values["owner"],
+                        "calculation_nodes_tags": config.get(
+                            "calculation_nodes_tags",
+                            calculation_nodes_tags),
+                        "attach_entity": str(config.get(
+                            "attach_entity",
+                            default_param_values["attach_entity"])).lower(),
+                        "calculation_response_timeout_ms": str(config.get(
+                            "calculation_response_timeout_ms",
+                            default_param_values["calculation_response_timeout_ms"])),
+                        "retry_policy": config.get(
+                            "retry_policy",
+                            default_param_values["retry_policy"]),
+                        "name": function.get("name") or condition.get("name",
+                                                                      default_param_values["default_condition_name"]),
+                        "description": function.get("description") or condition.get("description", ""),
+                        "config": config,
+                        "user": default_param_values["user"]
                     }
-                )
 
-                # Process externalized_processor's dto
-                action = transition_data.get("action", {})
-                config = action.get("config", {}) or {}
+                    criteria_id = generate_id()
+                    criteria_ids.append(criteria_id)
+                    criteria_params = generate_ext_criteria_params(criteria)
+                    dto["processParams"].extend(criteria_params)
+                    criteria_dto = generate_ext_criteria(criteria, criteria_id, criteria_params, class_name)
+                    dto["criterias"].append(criteria_dto)
+                # Process transition's condition_criteria
+                else:
+                    condition_criteria = transition_data.get("condition", {})
+                    if condition_criteria:
+                        cond_crit_id = generate_id()
+                        criteria_ids.append(cond_crit_id)
+                        converted_condition = convert_condition(condition_criteria)
+                        condition_criteria_dto = {
+                            "persisted": True,
+                            "owner": default_param_values["owner"],
+                            "id": cond_crit_id,
+                            "name": condition_criteria["name"],
+                            "entityClassName": class_name,
+                            "creationDate": current_timestamp(),
+                            "description": condition_criteria.get("description", ""),
+                            "condition": converted_condition,
+                            "aliasDefs": [],
+                            "parameters": [],
+                            "criteriaChecker": "ConditionCriteriaChecker",
+                            "user": default_param_values["user"]
+                        }
+                        dto["criterias"].append(condition_criteria_dto)
 
-                dto["processes"].append({
+        def extract_processor(process_ids, transition_data):
+            process_id = generate_id()
+            process_params = []
+            process_criteria_ids = []
+            process_ids.append(
+                {
+                    "persisted": True,
+                    "persistedId": process_id,
+                    "runtimeId": 0
+                }
+            )
+            # Process externalized_processor's dto
+            action = transition_data.get("action", {})
+            if action.get("config"):
+                extract_processor_condition(action, process_criteria_ids, process_id, process_params)
+            else:
+                if action.get("type") and action["type"]=="scheduled":
+                    dto["processes"].append({
+                        "persisted": True,
+                        "owner": default_param_values["owner"],
+                        "id": {
+                            "@bean": "com.cyoda.core.model.stateMachine.dto.ProcessIdDto",
+                            "persisted": True,
+                            "persistedId": process_id,
+                            "runtimeId": 0
+                        },
+                        "name": action.get("name"),
+                        "entityClassName": class_name,
+                        "creationDate": current_timestamp(),
+                        "description": config.get("description", ""),
+                        "processorClassName": "com.cyoda.plugins.statemachine.scheduler.ScheduleTransitionProcessor",
+                        "parameters": process_params,
+                        "fields": [],
+                        "syncProcess": config.get("sync_process", default_param_values["sync_process"]),
+                        "newTransactionForAsync": config.get(
+                            "new_transaction_for_async",
+                            default_param_values["new_transaction_for_async"]),
+                        "noneTransactionalForAsync": config.get(
+                            "none_transactional_for_async",
+                            default_param_values["none_transactional_for_async"]),
+                        "isTemplate": False,
+                        "criteriaIds": process_criteria_ids,
+                        "user": default_param_values["user"]
+                    })
+                    process_params.extend([
+                        {
+                            "persisted": True,
+                            "owner": default_param_values["owner"],
+                            "id": generate_id(),
+                            "name": "Delay (ms)",
+                            "creationDate": current_timestamp(),
+                            "valueType": "INTEGER",
+                            "value": {
+                                "@type": "String",
+                                "value": action.get("parameters").get("delay")
+                            }
+                        },
+                        {
+                            "persisted": True,
+                            "owner": default_param_values["owner"],
+                            "id": generate_id(),
+                            "name": "Timeout (ms)",
+                            "creationDate": current_timestamp(),
+                            "valueType": "INTEGER",
+                            "value": {
+                                "@type": "String",
+                                "value": action.get("parameters").get("timeout")
+                            }
+                        },
+                        {
+                            "persisted": True,
+                            "owner": default_param_values["owner"],
+                            "id": generate_id(),
+                            "name": "Transition name",
+                            "creationDate": current_timestamp(),
+                            "valueType": "STRING",
+                            "value": {
+                                "@type": "String",
+                                "value": action.get("parameters").get("next_transition")
+                            }
+                        }
+
+                    ])
+
+
+        def extract_processor_condition(action, process_criteria_ids, process_id, process_params):
+            config = action.get("config", {}) or {}
+            dto["processes"].append({
+                "persisted": True,
+                "owner": default_param_values["owner"],
+                "id": {
+                    "@bean": "com.cyoda.core.model.stateMachine.dto.ProcessIdDto",
+                    "persisted": True,
+                    "persistedId": process_id,
+                    "runtimeId": 0
+                },
+                "name": action.get("name"),
+                "entityClassName": class_name,
+                "creationDate": current_timestamp(),
+                "description": config.get("description", ""),
+                "processorClassName": "net.cyoda.saas.externalize.processor.ExternalizedProcessor",
+                "parameters": process_params,
+                "fields": [],
+                "syncProcess": config.get("sync_process", default_param_values["sync_process"]),
+                "newTransactionForAsync": config.get(
+                    "new_transaction_for_async",
+                    default_param_values["new_transaction_for_async"]),
+                "noneTransactionalForAsync": config.get(
+                    "none_transactional_for_async",
+                    default_param_values["none_transactional_for_async"]),
+                "isTemplate": False,
+                "criteriaIds": process_criteria_ids,
+                "user": default_param_values["user"]
+            })
+            process_params.extend([
+                {
                     "persisted": True,
                     "owner": default_param_values["owner"],
-                    "id": {
-                        "@bean": "com.cyoda.core.model.stateMachine.dto.ProcessIdDto",
-                        "persisted": True,
-                        "persistedId": process_id,
-                        "runtimeId": 0
-                    },
-                    "name": action.get("name"),
-                    "entityClassName": class_name,
+                    "id": generate_id(),
+                    "name": "Tags for filtering calculation nodes (separated by ',' or ';')",
                     "creationDate": current_timestamp(),
-                    "description": config.get("description", ""),
-                    "processorClassName": "net.cyoda.saas.externalize.processor.ExternalizedProcessor",
-                    "parameters": process_params,
-                    "fields": [],
-                    "syncProcess": config.get("sync_process", default_param_values["sync_process"]),
-                    "newTransactionForAsync": config.get(
-                        "new_transaction_for_async",
-                        default_param_values["new_transaction_for_async"]),
-                    "noneTransactionalForAsync": config.get(
-                        "none_transactional_for_async",
-                        default_param_values["none_transactional_for_async"]),
-                    "isTemplate": False,
-                    "criteriaIds": process_criteria_ids,
-                    "user": default_param_values["user"]
-                })
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": config.get(
+                            "calculation_nodes_tags",
+                            calculation_nodes_tags)
+                    }
+                },
+                {
+                    "persisted": True,
+                    "owner": default_param_values["owner"],
+                    "id": generate_id(),
+                    "name": "Attach entity",
+                    "creationDate": current_timestamp(),
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": str(
+                            config.get("attach_entity",
+                                       default_param_values["attach_entity"])).lower()
+                    }
+                },
+                {
+                    "persisted": True,
+                    "owner": default_param_values["owner"],
+                    "id": generate_id(),
+                    "name": "Calculation response timeout (ms)",
+                    "creationDate": current_timestamp(),
+                    "valueType": "INTEGER",
+                    "value": {
+                        "@type": "String", "value": str(
+                            config.get("calculation_response_timeout_ms",
+                                       default_param_values["calculation_response_timeout_ms"]))}
+                },
+                {
+                    "persisted": True,
+                    "owner": default_param_values["owner"],
+                    "id": generate_id(),
+                    "name": "Retry policy",
+                    "creationDate": current_timestamp(),
+                    "valueType": "STRING",
+                    "value": {
+                        "@type": "String",
+                        "value": config.get(
+                            "retry_policy",
+                            default_param_values["retry_policy"])}
+                },
 
-                process_params.extend([
-                    {
-                        "persisted": True,
-                        "owner": default_param_values["owner"],
-                        "id": generate_id(),
-                        "name": "Tags for filtering calculation nodes (separated by ',' or ';')",
-                        "creationDate": current_timestamp(),
-                        "valueType": "STRING",
-                        "value": {
-                            "@type": "String",
-                            "value": config.get(
-                                "calculation_nodes_tags",
-                                calculation_nodes_tags)
-                        }
-                    },
-                    {
-                        "persisted": True,
-                        "owner": default_param_values["owner"],
-                        "id": generate_id(),
-                        "name": "Attach entity",
-                        "creationDate": current_timestamp(),
-                        "valueType": "STRING",
-                        "value": {
-                            "@type": "String",
-                            "value": str(
-                                config.get("attach_entity",
-                                default_param_values["attach_entity"])).lower()
-                        }
-                    },
-                    {
-                        "persisted": True,
-                        "owner": default_param_values["owner"],
-                        "id": generate_id(),
-                        "name": "Calculation response timeout (ms)",
-                        "creationDate": current_timestamp(),
-                        "valueType": "INTEGER",
-                        "value": {
-                            "@type": "String", "value": str(
-                                config.get("calculation_response_timeout_ms",
-                                default_param_values["calculation_response_timeout_ms"]))}
-                    },
-                    {
-                        "persisted": True,
-                        "owner": default_param_values["owner"],
-                        "id": generate_id(),
-                        "name": "Retry policy",
-                        "creationDate": current_timestamp(),
-                        "valueType": "STRING",
-                        "value": {
-                            "@type": "String",
-                            "value": config.get(
-                                "retry_policy",
-                                default_param_values["retry_policy"])}
-                    },
+            ])
+            if config:
+                process_params.extend(
                     {
                         "persisted": True,
                         "owner": default_param_values["owner"],
@@ -436,71 +577,8 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                         "valueType": "STRING",
                         "value":
                             {"@type": "String", "value": json.dumps(config)}
-                    }
-                ])
-
-                dto["processParams"].extend(process_params)
-
-                # Process externalized_processor's externalized_criteria - skip
-
-            # Process transition's externalized_criteria
-            if "condition" in transition_data:
-                condition = transition_data.get("condition", {})
-                config = condition.get("config", {}) or {}
-                function = config.get("function", {}) or {}
-                criteria = {
-                    "owner": default_param_values["owner"],
-                    "calculation_nodes_tags": config.get(
-                        "calculation_nodes_tags",
-                        calculation_nodes_tags),
-                    "attach_entity": str(config.get(
-                        "attach_entity",
-                        default_param_values["attach_entity"])).lower(),
-                    "calculation_response_timeout_ms": str(config.get(
-                            "calculation_response_timeout_ms",
-                            default_param_values["calculation_response_timeout_ms"])),
-                    "retry_policy": config.get(
-                        "retry_policy",
-                        default_param_values["retry_policy"]),
-                    "name": function.get("name") or condition.get("name", default_param_values["default_condition_name"]),
-                    "description": function.get("description") or condition.get("description", ""),
-                    "config": config,
-                    "user": default_param_values["user"]
-                }
-
-                criteria_id = generate_id()
-                criteria_ids.append(criteria_id)
-                criteria_params = generate_ext_criteria_params(criteria)
-                dto["processParams"].extend(criteria_params)
-                criteria_dto = generate_ext_criteria(criteria, criteria_id, criteria_params, class_name)
-                dto["criterias"].append(criteria_dto)
-
-            # Process transition's condition_criteria
-            if "condition_criteria" in transition_data:
-                condition_criteria = transition_data.get("condition_criteria", {})
-                params = condition_criteria.get("params", {}) or {}
-
-                cond_crit_id = generate_id()
-                criteria_ids.append(cond_crit_id)
-
-                converted_condition = convert_condition(params)
-
-                condition_criteria_dto = {
-                    "persisted": True,
-                    "owner": default_param_values["owner"],
-                    "id": cond_crit_id,
-                    "name": condition_criteria["name"],
-                    "entityClassName": class_name,
-                    "creationDate": current_timestamp(),
-                    "description": condition_criteria.get("description", ""),
-                    "condition": converted_condition,
-                    "aliasDefs": [],
-                    "parameters": [],
-                    "criteriaChecker": "ConditionCriteriaChecker",
-                    "user": default_param_values["user"]
-                }
-
-                dto["criterias"].append(condition_criteria_dto)
+                    })
+            dto["processParams"].extend(process_params)
 
         for transition_name, transition_data in state_data["transitions"].items():
             add_transition(transition_name=transition_name, transition_data=transition_data)
@@ -509,7 +587,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                 transition_name = const.TransitionKey.ROLLBACK.value
                 transition_data = {
                     "next": state["next_state"],  # f"{LOCKED_CHAT}_{state_name}",
-                    "manual": True, #always manual to prevent loops
+                    "manual": True,  # always manual to prevent loops
                     "action": {
                         "name": "process_event",
                         "config": {
@@ -523,7 +601,8 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                     }
                 }
                 add_transition(transition_name=transition_name, transition_data=transition_data,
-                               transition_start_state=state_name_to_id.get(f"{const.TransitionKey.LOCKED_CHAT.value}_{state_name}"),
+                               transition_start_state=state_name_to_id.get(
+                                   f"{const.TransitionKey.LOCKED_CHAT.value}_{state_name}"),
                                transition_criteria_id=error_codes_name_to_id.get(state["error_code"]))
 
     dto["states"].extend(state_map.values())
@@ -531,6 +610,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
 
     add_none_state_if_not_exists(dto, default_param_values, class_name)
     return dto
+
 
 def convert_condition(condition):
     if condition.get("type") == "group":
@@ -579,6 +659,7 @@ def convert_condition(condition):
     else:
         raise ValueError(f"Unknown condition type: {condition.get('type')}")
 
+
 def map_value_type_to_java_type(value_type):
     VALUE_TYPE_TO_JAVA_TYPE = {
         "uuids": "UUID",
@@ -586,6 +667,7 @@ def map_value_type_to_java_type(value_type):
         "dates": "java.util.Date"
     }
     return VALUE_TYPE_TO_JAVA_TYPE.get(value_type)
+
 
 def build_between_value(field_name: str, value: Any, value_type: str):
     if value_type in RAW_TYPES:
@@ -602,6 +684,7 @@ def build_between_value(field_name: str, value: Any, value_type: str):
 
     return value  # fallback if no mapping
 
+
 def resolve_field_name(json_path: str, value_type: str) -> str:
     """
     - if jsonPath starts with '$.', adds prefix + value_type (value_type must be present and valid);
@@ -610,11 +693,13 @@ def resolve_field_name(json_path: str, value_type: str) -> str:
         raise ValueError(f"Invalid value_type '{value_type}'. Must be one of: {', '.join(sorted(VALID_VALUE_TYPES))}")
     return f"{FIELD_NAME_PREFIX}{value_type}.[{json_path}]"
 
+
 def build_between_value(field_name: str, value: Any, which: str):
     java_type = META_FIELD_TYPES.get(field_name)
     if java_type:
         return {"@type": java_type, "value": value}
     return value
+
 
 def save_new_state(state_name, state_map, default_param_values, class_name, state_data):
     if state_name in state_map:

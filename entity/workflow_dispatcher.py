@@ -437,5 +437,5 @@ class WorkflowDispatcher:
             entity_version=env_config.ENTITY_VERSION,
             technical_id=memory_id,
             entity=chat_memory,
-            meta={const.TransitionKey.UPDATE.value: "update"}
+            meta={const.TransitionKey.UPDATE.value: "UPDATE"}
         )
