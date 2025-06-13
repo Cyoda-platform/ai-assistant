@@ -1,35 +1,22 @@
-from typing import Dict, Any
+import json
 
-from common.workflow.converter.dto_builder import DTOBuilder
+from common.workflow.converter.dto_builder import convert_json_to_workflow_dto
 
 
-class WorkflowConverter:
-    def __init__(
-            self,
-            model_name: str,
-            model_version: int,
-            workflow_name: str,
-            calculation_node_tags: str,
-            ai: bool = False
-    ):
-        """
-        Coordinates the transformation of input JSON into Cyoda's FullWorkflowContainerDto.
-        """
-        self.model_name = model_name
-        self.model_version = model_version
-        self.workflow_name = workflow_name
-        self.calculation_node_tags = calculation_node_tags
-        self.ai = ai
+def convert(input_file_path, output_file_path, calculation_node_tags, model_name, model_version, workflow_name, ai):
+    """Reads JSON from a file, converts it to workflow_dto, and writes it to another file."""
+    with open(input_file_path, "r", encoding="utf-8") as infile:
+        input_json = json.load(infile)
 
-    def build(self, input_json: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Transforms the input JSON spec into a DTO dictionary for serialization.
-        """
-        builder = DTOBuilder(
-            model_name=self.model_name,
-            model_version=self.model_version,
-            workflow_name=self.workflow_name,
-            calculation_node_tags=self.calculation_node_tags,
-            ai=self.ai
-        )
-        return builder.build(input_json)
+    # Call the conversion method
+    class_name = f"{model_name}.{model_version}"
+    workflow_dto = convert_json_to_workflow_dto(input_json=input_json,
+                                                class_name=class_name,
+                                                calculation_nodes_tags=calculation_node_tags,
+                                                model_name=model_name,
+                                                model_version=model_version,
+                                                workflow_name=workflow_name,
+                                                ai=ai)
+
+    with open(output_file_path, "w", encoding="utf-8") as outfile:
+        json.dump(workflow_dto, outfile, indent=4, ensure_ascii=False)

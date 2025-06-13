@@ -1,301 +1,348 @@
 import json
-from typing import Any, Dict
 
 from common.config import const
-from common.workflow.workflow_to_dto_converter import (
-    current_timestamp,
-    generate_id,
-    resolve_field_name,
-    OPERATION_MAPPING,
-    convert_condition,
-    generate_ext_criteria_params,
-    generate_ext_criteria,
-)
+from common.config.config import config
+from common.workflow.converter.constants import DEFAULT_PARAM_VALUES
 from common.workflow.converter.utils import (
-    extract_processor,
-    extract_processor_condition,
+    generate_id, current_timestamp, add_none_state_if_not_exists,
+    generate_ext_criteria, generate_ext_criteria_params,
+    convert_condition, save_new_state
 )
 
 
-class DTOBuilder:
-    def __init__(
-            self,
-            model_name: str,
-            model_version: int,
-            workflow_name: str,
-            calculation_node_tags: str,
-            ai: bool = False,
-            default_owner: str = "CYODA",
-            default_user: str = "CYODA"
-    ):
-        self.model_name = model_name
-        self.model_version = model_version
-        self.workflow_name = workflow_name
-        self.calculation_node_tags = calculation_node_tags
-        self.class_name = f"{model_name}.{model_version}"
-        self.ai = ai
-        self.default_owner = default_owner
-        self.default_user = default_user
-
-        self.workflow_id = generate_id()
-        self.criteria_id_map: Dict[str, str] = {}
-        self.dto: Dict[str, Any] = {
-            "@bean": "com.cyoda.core.model.stateMachine.dto.FullWorkflowContainerDto",
-            "workflow": [],
-            "transitions": [],
-            "criterias": [],
-            "processes": [],
-            "states": [],
-            "processParams": []
-        }
-
-    def build(self, input_json: Dict[str, Any]) -> Dict[str, Any]:
-        # 1) workflow metadata
-        self._add_workflow_metadata(input_json.get("description", ""))
-        # 2) workflow-level criteria
-        self._add_workflow_condition_criteria()
-        # 3) base criteria: has_failed, has_succeeded, wrong_generated_content
-        self._add_base_criterias()
-        # 4) states + transitions
-        self._add_states_and_transitions(input_json["states"])
-        # 5) final “None”‐state & initial_transition
-        self._add_none_state_if_missing()
-        return self.dto
-
-    def _add_workflow_metadata(self, description: str):
-        self.dto["workflow"].append({
-            "persisted": True,
-            "owner": self.default_owner,
-            "id": self.workflow_id,
-            "name": f"{self.model_name}:{self.model_version}:{self.workflow_name}",
-            "entityClassName": self.class_name,
-            "creationDate": current_timestamp(),
-            "description": description,
-            "entityShortClassName": "TreeNodeEntity",
-            "transitionIds": [],
-            "criteriaIds": [],
-            "stateIds": ["noneState"],    # we'll extend this later
-            "active": True,
-            "useDecisionTree": False,
-            "decisionTrees": [],
-            "metaData": {"documentLink": ""}
-        })
-
-    def _add_workflow_condition_criteria(self):
-        crit_id = generate_id()
-        self.dto["workflow"][0]["criteriaIds"].append(crit_id)
-
-        cond = {
+def _build_simple_condition_criteria(criterion_id, name, class_name, field_name, value, bean, queryable=True):
+    return {
+        "persisted": True,
+        "owner": "CYODA",
+        "id": criterion_id,
+        "name": name,
+        "entityClassName": class_name,
+        "creationDate": current_timestamp(),
+        "description": "",
+        "condition": {
             "@bean": "com.cyoda.core.conditions.GroupCondition",
             "operator": "AND",
-            "conditions": [{
-                "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
-                "fieldName": "workflow_name",
-                "operation": "IEQUALS",
-                "rangeField": "false",
-                "value": self.workflow_name
-            }]
-        }
+            "conditions": [
+                {
+                    "@bean": bean,
+                    "fieldName": field_name,
+                    "operation": "EQUALS" if bean.endswith("Equals") else "IEQUALS",
+                    "rangeField": "false",
+                    "value": value,
+                    **({"queryable": True} if queryable else {})
+                }
+            ]
+        },
+        "aliasDefs": [],
+        "parameters": [],
+        "criteriaChecker": "ConditionCriteriaChecker",
+        "user": "CYODA"
+    }
 
-        self.dto["criterias"].append({
-            "persisted": True,
-            "owner": self.default_owner,
-            "id": crit_id,
-            "name": f"{self.model_name}:{self.model_version}:{self.workflow_name}",
-            "entityClassName": self.class_name,
-            "creationDate": current_timestamp(),
-            "description": "Workflow criteria",
-            "condition": cond,
-            "aliasDefs": [],
-            "parameters": [],
-            "criteriaChecker": "ConditionCriteriaChecker",
-            "user": self.default_user
-        })
 
-    def _add_base_criterias(self):
-        # has_failed / has_succeeded
-        for name, failed_value in [("has_failed", True), ("has_succeeded", False)]:
-            crit_id = generate_id()
-            self.criteria_id_map[name] = crit_id
-            self.dto["criterias"].append({
-                "persisted": True,
-                "owner": self.default_owner,
-                "id": crit_id,
-                "name": name,
-                "entityClassName": self.class_name,
-                "creationDate": current_timestamp(),
-                "description": "",
-                "condition": {
-                    "@bean": "com.cyoda.core.conditions.GroupCondition",
-                    "operator": "AND",
-                    "conditions": [{
-                        "@bean": "com.cyoda.core.conditions.queryable.Equals",
-                        "fieldName": "failed",
-                        "operation": "EQUALS",
-                        "rangeField": "false",
-                        "value": failed_value,
-                        "queryable": True
-                    }]
-                },
-                "aliasDefs": [],
-                "parameters": [],
-                "criteriaChecker": "ConditionCriteriaChecker",
-                "user": self.default_user
-            })
+def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags, model_name, model_version,
+                                 workflow_name, ai):
+    # Create common criteria
+    fail_crit_id = generate_id()
+    succeed_crit_id = generate_id()
+    wrong_gen_crit_id = generate_id()
 
-        # wrong_generated_content
-        wgc_id = generate_id()
-        self.criteria_id_map[const.AiErrorCodes.WRONG_GENERATED_CONTENT.value] = wgc_id
-        self.dto["criterias"].append({
-            "persisted": True,
-            "owner": self.default_owner,
-            "id": wgc_id,
-            "name": "wrong_generated_content",
-            "entityClassName": self.class_name,
-            "creationDate": current_timestamp(),
-            "description": "",
-            "condition": {
-                "@bean": "com.cyoda.core.conditions.GroupCondition",
-                "operator": "AND",
-                "conditions": [{
+    fail_crit = _build_simple_condition_criteria(fail_crit_id, "has_failed", class_name, "failed", True,
+                                                 "com.cyoda.core.conditions.queryable.Equals")
+    succeed_crit = _build_simple_condition_criteria(succeed_crit_id, "has_succeeded", class_name, "failed", False,
+                                                    "com.cyoda.core.conditions.queryable.Equals")
+    wrong_gen_crit = _build_simple_condition_criteria(wrong_gen_crit_id, "wrong_generated_content", class_name,
+                                                      "error_code", "wrong_generated_content",
+                                                      "com.cyoda.core.conditions.nonqueryable.IEquals", queryable=False)
+
+    dto = {
+        "@bean": "com.cyoda.core.model.stateMachine.dto.FullWorkflowContainerDto",
+        "workflow": [],
+        "transitions": [],
+        "criterias": [fail_crit, succeed_crit, wrong_gen_crit],
+        "processes": [],
+        "states": [],
+        "processParams": []
+    }
+
+    workflow_id = generate_id()
+    dto["workflow"].append({
+        "persisted": True,
+        "owner": DEFAULT_PARAM_VALUES["owner"],
+        "id": workflow_id,
+        "name": f"{model_name}:{model_version}:{workflow_name}",
+        "entityClassName": class_name,
+        "creationDate": current_timestamp(),
+        "description": input_json.get("description", ""),
+        "entityShortClassName": "TreeNodeEntity",
+        "transitionIds": [],
+        "criteriaIds": [],
+        "stateIds": ["noneState"],
+        "active": True,
+        "useDecisionTree": False,
+        "decisionTrees": [],
+        "metaData": {"documentLink": ""}
+    })
+
+    workflow_criteria_id = generate_id()
+    dto["criterias"].append({
+        "persisted": True,
+        "owner": DEFAULT_PARAM_VALUES["owner"],
+        "id": workflow_criteria_id,
+        "name": f"{model_name}:{model_version}:{workflow_name}",
+        "entityClassName": class_name,
+        "creationDate": current_timestamp(),
+        "description": "Workflow criteria",
+        "condition": {
+            "@bean": "com.cyoda.core.conditions.GroupCondition",
+            "operator": "AND",
+            "conditions": [
+                {
                     "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals",
-                    "fieldName": "error_code",
+                    "fieldName": "workflow_name",
                     "operation": "IEQUALS",
                     "rangeField": "false",
-                    "value": "wrong_generated_content"
-                }]
-            },
-            "aliasDefs": [],
-            "parameters": [],
-            "criteriaChecker": "ConditionCriteriaChecker",
-            "user": self.default_user
-        })
+                    "value": workflow_name
+                }
+            ]
+        },
+        "aliasDefs": [],
+        "parameters": [],
+        "criteriaChecker": "ConditionCriteriaChecker",
+        "user": DEFAULT_PARAM_VALUES["user"]
+    })
+    dto["workflow"][0]["criteriaIds"].append(workflow_criteria_id)
 
-    def _add_states_and_transitions(self, states: Dict[str, Any]):
-        state_map: Dict[str, Dict[str, Any]] = {}
-        transitions = []
+    error_codes_name_to_id = {
+        const.AiErrorCodes.WRONG_GENERATED_CONTENT.value: wrong_gen_crit_id
+    }
 
-        def save_state(name: str, data: Dict[str, Any]) -> Dict[str, Any]:
-            if name in state_map:
-                return state_map[name]
-            sid = "noneState" if name.lower() == "none" else generate_id()
-            obj = {
+    state_map = {}
+    state_name_to_id = {}
+    transitions = []
+
+    def _extract_processor(process_ids, transition_data):
+        action = transition_data.get("action", {})
+        process_id = generate_id()
+        process_params = []
+        process_criteria_ids = []
+        process_ids.append({"persisted": True, "persistedId": process_id, "runtimeId": 0})
+
+        if action.get("config"):
+            _extract_processor_condition(action, process_criteria_ids, process_id, process_params)
+        elif action.get("type") == "scheduled":
+            dto["processes"].append({
                 "persisted": True,
-                "owner": self.default_owner,
-                "id": sid,
-                "name": name,
-                "entityClassName": self.class_name,
+                "owner": DEFAULT_PARAM_VALUES["owner"],
+                "id": {"@bean": "com.cyoda.core.model.stateMachine.dto.ProcessIdDto",
+                       "persisted": True, "persistedId": process_id, "runtimeId": 0},
+                "name": action.get("name"),
+                "entityClassName": class_name,
                 "creationDate": current_timestamp(),
-                "description": data.get("description", "")
-            }
-            state_map[name] = obj
-            return obj
-
-        def build_transition(name, start, end_name, manual, desc, criteria_ids):
-            end = save_state(end_name, states.get(end_name, {}))
-            tid = generate_id()
-            tr = {
-                "persisted": True,
-                "owner": self.default_owner,
-                "id": tid,
-                "name": name,
-                "entityClassName": self.class_name,
-                "creationDate": current_timestamp(),
-                "description": desc,
-                "startStateId": start["id"],
-                "endStateId": end["id"],
-                "workflowId": self.workflow_id,
-                "criteriaIds": criteria_ids,
-                "endProcessesIds": [],
-                "active": True,
-                "automated": not manual,
-                "logActivity": False
-            }
-            # action → processes
-            if "action" in states[start["name"]]["transitions"].get(name, {}):
-                proc_info = states[start["name"]]["transitions"][name]["action"]
-                extract_processor(tr["endProcessesIds"], states[start["name"]]["transitions"][name])
-            self.dto["workflow"][0]["transitionIds"].append(tid)
-            transitions.append(tr)
-
-        # iterate states
-        for sname, sdata in states.items():
-            curr = save_state(sname, sdata)
-            # inject AI defaults
-            if self.ai:
-                sdata.setdefault("transitions", {})
-                sdata["transitions"].update({
-                    const.TransitionKey.MANUAL_RETRY.value: {"next": sname, "manual": True},
-                    const.TransitionKey.FAIL.value: {
-                        "next": f"{const.TransitionKey.LOCKED_CHAT.value}_{sname}",
-                        "action": {
-                            "name": "process_event",
-                            "config": {"type": "function", "function": {"name": "fail_workflow"}, "publish": True}
-                        }
-                    }
+                "description": config.get("description", ""),
+                "processorClassName": "com.cyoda.plugins.statemachine.scheduler.ScheduleTransitionProcessor",
+                "parameters": process_params,
+                "fields": [],
+                "syncProcess": config.get("sync_process", DEFAULT_PARAM_VALUES["sync_process"]),
+                "newTransactionForAsync": config.get("new_transaction_for_async",
+                                                     DEFAULT_PARAM_VALUES["new_transaction_for_async"]),
+                "noneTransactionalForAsync": config.get("none_transactional_for_async",
+                                                        DEFAULT_PARAM_VALUES["none_transactional_for_async"]),
+                "isTemplate": False,
+                "criteriaIds": process_criteria_ids,
+                "user": DEFAULT_PARAM_VALUES["user"]
+            })
+            for key, name, vtype in [
+                ("delay", "Delay (ms)", "INTEGER"),
+                ("timeout", "Timeout (ms)", "INTEGER"),
+                ("next_transition", "Transition name", "STRING")
+            ]:
+                process_params.append({
+                    "persisted": True,
+                    "owner": DEFAULT_PARAM_VALUES["owner"],
+                    "id": generate_id(),
+                    "name": name,
+                    "creationDate": current_timestamp(),
+                    "valueType": vtype,
+                    "value": {"@type": "String", "value": action["parameters"].get(key)}
                 })
 
-            for tname, tdata in sdata.get("transitions", {}).items():
-                manual = tdata.get("manual", False)
-                crits: list = []
-                # inline condition?
-                if "condition" in tdata:
-                    cid = generate_id()
-                    conv = convert_condition(tdata["condition"])
-                    self.dto["criterias"].append({
-                        "persisted": True,
-                        "owner": self.default_owner,
-                        "id": cid,
-                        "name": tdata["condition"].get("name", ""),
-                        "entityClassName": self.class_name,
-                        "creationDate": current_timestamp(),
-                        "description": tdata["condition"].get("description", ""),
-                        "condition": conv,
-                        "aliasDefs": [],
-                        "parameters": [],
-                        "criteriaChecker": "ConditionCriteriaChecker",
-                        "user": self.default_user
-                    })
-                    crits.append(cid)
-                else:
-                    # ROUTE on fail / success
-                    if tname == const.TransitionKey.FAIL.value:
-                        crits.append(self.criteria_id_map["has_failed"])
-                    elif not manual:
-                        crits.append(self.criteria_id_map["has_succeeded"])
+    def _extract_processor_condition(action, process_criteria_ids, process_id, process_params):
+        config_data = action.get("config", {}) or {}
+        dto["processes"].append({
+            "persisted": True,
+            "owner": DEFAULT_PARAM_VALUES["owner"],
+            "id": {"@bean": "com.cyoda.core.model.stateMachine.dto.ProcessIdDto",
+                   "persisted": True, "persistedId": process_id, "runtimeId": 0},
+            "name": action.get("name"),
+            "entityClassName": class_name,
+            "creationDate": current_timestamp(),
+            "description": config_data.get("description", ""),
+            "processorClassName": "net.cyoda.saas.externalize.processor.ExternalizedProcessor",
+            "parameters": process_params,
+            "fields": [],
+            "syncProcess": config_data.get("sync_process", DEFAULT_PARAM_VALUES["sync_process"]),
+            "newTransactionForAsync": config_data.get("new_transaction_for_async",
+                                                      DEFAULT_PARAM_VALUES["new_transaction_for_async"]),
+            "noneTransactionalForAsync": config_data.get("none_transactional_for_async",
+                                                         DEFAULT_PARAM_VALUES["none_transactional_for_async"]),
+            "isTemplate": False,
+            "criteriaIds": process_criteria_ids,
+            "user": DEFAULT_PARAM_VALUES["user"]
+        })
+        # Add externalized params
+        for name, key, vtype in [
+            ("Tags for filtering calculation nodes (separated by ',' or ';')", "calculation_nodes_tags", "STRING"),
+            ("Attach entity", "attach_entity", "STRING"),
+            ("Calculation response timeout (ms)", "calculation_response_timeout_ms", "INTEGER"),
+            ("Retry policy", "retry_policy", "STRING")
+        ]:
+            process_params.append({
+                "persisted": True,
+                "owner": DEFAULT_PARAM_VALUES["owner"],
+                "id": generate_id(),
+                "name": name,
+                "creationDate": current_timestamp(),
+                "valueType": vtype,
+                "value": {"@type": "String", "value": str(config_data.get(key, DEFAULT_PARAM_VALUES.get(key, '')))}
+            })
+        if config_data:
+            process_params.append({
+                "persisted": True,
+                "owner": DEFAULT_PARAM_VALUES["owner"],
+                "id": generate_id(),
+                "name": "Parameter 'context'",
+                "creationDate": current_timestamp(),
+                "valueType": "STRING",
+                "value": {"@type": "String", "value": json.dumps(config_data)}
+            })
+        dto["processParams"].extend(process_params)
 
-                build_transition(
-                    name=tname,
-                    start=curr,
-                    end_name=tdata["next"],
-                    manual=manual,
-                    desc=tdata.get("description", ""),
-                    criteria_ids=crits
-                )
+    def _add_transition(transition_name, transition_data, start_state, transition_start_state=None,
+                        transition_criteria_id=None):
+        transition_id = generate_id()
+        criteria_ids = [transition_criteria_id] if transition_criteria_id else []
+        if not criteria_ids:
+            if transition_name == const.TransitionKey.FAIL.value:
+                criteria_ids.append(fail_crit_id)
+            elif not transition_data.get("manual", False):
+                criteria_ids.append(succeed_crit_id)
 
-            # error_codes → rollback
-            for err in sdata.get("error_codes", []):
-                elog = const.TransitionKey.ROLLBACK.value
-                src = save_state(f"{const.TransitionKey.LOCKED_CHAT.value}_{sname}", {})
-                cid = self.criteria_id_map.get(err["error_code"])
-                build_transition(
-                    name=elog,
-                    start=src,
-                    end_name=err["next_state"],
-                    manual=True,
-                    desc="Error rollback",
-                    criteria_ids=[cid] if cid else []
-                )
+        end_state_name = transition_data["next"]
+        end_state = save_new_state(end_state_name, state_map, DEFAULT_PARAM_VALUES, class_name, state_data)
+        state_name_to_id[end_state_name] = end_state
+        process_ids = []
+        transitions.append({
+            "persisted": True,
+            "owner": DEFAULT_PARAM_VALUES["owner"],
+            "id": transition_id,
+            "name": transition_name,
+            "entityClassName": class_name,
+            "creationDate": current_timestamp(),
+            "description": transition_data.get("description", ""),
+            "startStateId": (transition_start_state or start_state)["id"],
+            "endStateId": end_state["id"],
+            "workflowId": workflow_id,
+            "criteriaIds": criteria_ids,
+            "endProcessesIds": process_ids,
+            "active": True,
+            "automated": not transition_data.get("manual", False),
+            "logActivity": False
+        })
+        dto["workflow"][0]["transitionIds"].append(transition_id)
 
-        # finally attach all states + transitions
-        self.dto["states"].extend(state_map.values())
-        self.dto["transitions"].extend(transitions)
-        # ensure every new state is in workflow[0]["stateIds"]
-        for st in state_map.values():
-            sid = st["id"]
-            if sid not in self.dto["workflow"][0]["stateIds"]:
-                self.dto["workflow"][0]["stateIds"].append(sid)
+        if "action" in transition_data:
+            _extract_processor(process_ids, transition_data)
 
-    def _add_none_state_if_missing(self):
-        # no-op here since we always seed "none" above
-        pass
+        if "condition" in transition_data:
+            condition_data = transition_data["condition"]
+            config_obj = condition_data.get("config", {})
+            if config_obj:
+                function = config_obj.get("function", {})
+                criteria = {
+                    "owner": DEFAULT_PARAM_VALUES["owner"],
+                    "calculation_nodes_tags": config_obj.get("calculation_nodes_tags", calculation_nodes_tags),
+                    "attach_entity": str(config_obj.get("attach_entity", DEFAULT_PARAM_VALUES["attach_entity"])).lower(),
+                    "calculation_response_timeout_ms": str(config_obj.get("calculation_response_timeout_ms",
+                                                                          DEFAULT_PARAM_VALUES["calculation_response_timeout_ms"])),
+                    "retry_policy": config_obj.get("retry_policy", DEFAULT_PARAM_VALUES["retry_policy"]),
+                    "name": function.get("name") or condition_data.get("name", DEFAULT_PARAM_VALUES["default_condition_name"]),
+                    "description": function.get("description") or condition_data.get("description", ""),
+                    "config": config_obj,
+                    "user": DEFAULT_PARAM_VALUES["user"]
+                }
+                crit_id = generate_id()
+                criteria_ids.append(crit_id)
+                crit_params = generate_ext_criteria_params(criteria)
+                dto["processParams"].extend(crit_params)
+                crit_dto = generate_ext_criteria(criteria, crit_id, crit_params, class_name)
+                dto["criterias"].append(crit_dto)
+            else:
+                cond_crit_id = generate_id()
+                criteria_ids.append(cond_crit_id)
+                converted = convert_condition(condition_data)
+                dto["criterias"].append({
+                    "persisted": True,
+                    "owner": DEFAULT_PARAM_VALUES["owner"],
+                    "id": cond_crit_id,
+                    "name": condition_data["name"],
+                    "entityClassName": class_name,
+                    "creationDate": current_timestamp(),
+                    "description": condition_data.get("description", ""),
+                    "condition": converted,
+                    "aliasDefs": [],
+                    "parameters": [],
+                    "criteriaChecker": "ConditionCriteriaChecker",
+                    "user": DEFAULT_PARAM_VALUES["user"]
+                })
+
+    for state_name, state_data in input_json["states"].items():
+        start_state = save_new_state(state_name, state_map, DEFAULT_PARAM_VALUES, class_name, state_data)
+        state_name_to_id[state_name] = start_state
+
+        if ai:
+            state_data["transitions"][const.TransitionKey.MANUAL_RETRY.value] = {"next": state_name, "manual": True}
+            state_data["transitions"][const.TransitionKey.FAIL.value] = {
+                "next": f"{const.TransitionKey.LOCKED_CHAT.value}_{state_name}",
+                "action": {
+                    "name": "process_event",
+                    "config": {
+                        "type": "function",
+                        "function": {
+                            "name": "fail_workflow",
+                            "description": "Clones template repository"
+                        },
+                        "publish": True
+                    }
+                }
+            }
+
+        for transition_name, transition_data in state_data["transitions"].items():
+            _add_transition(transition_name, transition_data, start_state)
+
+        for ec in state_data.get("error_codes", []):
+            _add_transition(
+                const.TransitionKey.ROLLBACK.value,
+                {
+                    "next": ec["next_state"],
+                    "manual": True,
+                    "action": {
+                        "name": "process_event",
+                        "config": {
+                            "type": "function",
+                            "function": {
+                                "name": "reset_failed_entity",
+                                "description": "reset failed entity state"
+                            },
+                            "publish": True
+                        }
+                    }
+                },
+                start_state=state_name_to_id.get(f"{const.TransitionKey.LOCKED_CHAT.value}_{state_name}"),
+                transition_criteria_id=error_codes_name_to_id.get(ec["error_code"])
+            )
+
+    dto["states"].extend(state_map.values())
+    dto["transitions"].extend(transitions)
+    add_none_state_if_not_exists(dto, DEFAULT_PARAM_VALUES, class_name)
+    return dto
