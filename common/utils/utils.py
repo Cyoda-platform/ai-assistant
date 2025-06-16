@@ -20,7 +20,6 @@ from jsonschema import validate
 from common.auth.cyoda_auth import CyodaAuthService
 from common.config.config import config
 from common.exception.exceptions import InvalidTokenException
-from entity.chat.chat import ChatEntity
 
 logger = logging.getLogger(__name__)
 
@@ -1186,7 +1185,7 @@ def get_current_timestamp_num(lower_timedelta=0):
         epoch_millis = int(time_now.timestamp() * 1000)
         return epoch_millis
 
-def get_repository_name(entity: ChatEntity):
+def get_repository_name(entity: "WorkflowEntity"):
     programming_language = entity.workflow_cache.get("programming_language")
     if programming_language:
         if programming_language == "PYTHON":
