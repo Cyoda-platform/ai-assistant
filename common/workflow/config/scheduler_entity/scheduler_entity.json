@@ -4,14 +4,14 @@
   "states": {
     "none": {
       "transitions": {
-        "wait": {
+        "schedule": {
           "next": "scheduled"
         }
       }
     },
     "scheduled": {
       "transitions": {
-        "trigger_parent_entity": {
+        "wait": {
           "next": "waiting",
           "action": {
             "name": "schedule_transaction",
@@ -101,7 +101,6 @@
       "transitions": {
         "trigger_parent_entity": {
           "next": "unlocked_parent_entity",
-          "manual": true,
           "action": {
             "name": "process_event",
             "config": {

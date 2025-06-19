@@ -1,3 +1,5 @@
+from common.config.config import config
+
 OPERATION_MAPPING = {
     "equals (disregard case)": {"operation": "IEQUALS", "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals"},
     "not equal (disregard case)": {"operation": "INOT_EQUAL",
@@ -79,5 +81,6 @@ DEFAULT_PARAM_VALUES = {
     "sync_process": "false",
     "new_transaction_for_async": "true",
     "none_transactional_for_async": "false",
-    "default_condition_name": "default_condition_name"
+    "default_condition_name": "default_condition_name",
+    "calculation_nodes_tags": config.GRPC_PROCESSOR_TAG
 }

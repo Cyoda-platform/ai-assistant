@@ -385,10 +385,17 @@
                       "properties": {
                         "user_request": {
                           "type": "string"
+                        },
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_app_setup_3"
+                          ]
                         }
                       },
                       "required": [
-                        "user_request"
+                        "user_request",
+                        "transition"
                       ],
                       "additionalProperties": false
                     }
@@ -451,10 +458,17 @@
                       "properties": {
                         "user_request": {
                           "type": "string"
+                        },
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_app_setup_3"
+                          ]
                         }
                       },
                       "required": [
-                        "user_request"
+                        "user_request",
+                        "transition"
                       ],
                       "additionalProperties": false
                     }
@@ -553,7 +567,7 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Step 4:** Let the user know: they should edit their `.env` file with the required environment-specific value for `CYODA_HOST` (use their newly deployed host name).",
+                    "**Step 4:** Let the user know: they should edit their `.env` file with the required environment-specific value for `CYODA_HOST` once their env has been deployed - they will get notification if they ask for deployment/redeployment. If their environment is not ready yet - they need to wait - they can work in a different chat while waiting.",
                     "- Let the user know: all other properties can stay at their defaults apart from CYODA_HOST.",
                     "- Let the user know: their branch name is used for `GRPC_PROCESSOR_TAG` (they can change it if they like).",
                     "- Let the user know: if they are using shared environment they need to make sure they specify unique ENTITY_VERSION."
@@ -1381,7 +1395,7 @@
           }
         },
         "process_app_setup_6_success": {
-          "next": "prompt_app_requirements_step7",
+          "next": "ready_to_lock_chat",
           "condition": {
             "config": {
               "type": "function",
@@ -1389,161 +1403,6 @@
                 "name": "is_stage_completed",
                 "parameters": {
                   "transition": "process_app_setup_6"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "prompt_app_requirements_step7": {
-      "transitions": {
-        "prompt_sent": {
-          "next": "app_requirements_step7",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "prompt",
-              "model": {},
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "**Step 7:** Let the user know: now that the client application is running smoothly on their local machine, ask if they would like to deploy it to their Cyoda Cloud environment.",
-                    "Let the user know: this deployment will provision the app into our Kubernetes cluster using the Helm charts located in the project’s `helm/` directory.",
-                    "Let the user know: if they approve, deploy the user application and pass the session branch name.",
-                    "Let the user know: if they deny, call `finish_discussion`.",
-                    " Always ask for explicit confirmation to deploy the user application (like, please say Yes if you're ready to deploy)."
-                  ]
-                }
-              ],
-              "publish": true
-            }
-          }
-        }
-      }
-    },
-    "app_requirements_step7": {
-      "transitions": {
-        "submit_answer": {
-          "next": "app_requirements_step7_submitted_answer",
-          "manual": true
-        },
-        "manual_approve": {
-          "next": "ready_to_lock_chat",
-          "manual": true
-        }
-      }
-    },
-    "app_requirements_step7_submitted_answer": {
-      "transitions": {
-        "process_user_input": {
-          "next": "app_requirements_step7_processing",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "agent",
-              "publish": true,
-              "allow_anonymous_users": true,
-              "model": {},
-              "tools": [
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "deploy_user_application",
-                    "description": "Launches workflow that is necessary to deploy user client application (external calculation node). User needs to explicitly ask for deployment of their application. Branch is required.",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "git_branch": {
-                          "type": "string"
-                        },
-                        "user_request": {
-                          "type": "string"
-                        },
-                        "programming_language": {
-                          "type": "string",
-                          "enum": [
-                            "PYTHON"
-                          ]
-                        }
-                      },
-                      "required": [
-                        "user_request",
-                        "git_branch",
-                        "programming_language"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "finish_discussion",
-                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "transition": {
-                          "type": "string",
-                          "enum": [
-                            "process_app_setup_7"
-                          ]
-                        }
-                      },
-                      "required": [
-                        "transition"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                }
-              ],
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    " If the user asks to deploy their application - call deploy user app. ",
-                    " Always ask for explicit confirmation to deploy the user application (like, please say Yes if you're ready to deploy)."
-                  ]
-                }
-              ],
-              "tool_choice": "auto",
-              "max_iteration": 30,
-              "approve": true
-            }
-          }
-        }
-      }
-    },
-    "app_requirements_step7_processing": {
-      "transitions": {
-        "process_app_setup_7_processing": {
-          "next": "app_requirements_step7",
-          "condition": {
-            "config": {
-              "type": "function",
-              "function": {
-                "name": "not_stage_completed",
-                "parameters": {
-                  "transition": "process_app_setup_7"
-                }
-              }
-            }
-          }
-        },
-        "process_app_setup_7_success": {
-          "next": "ready_to_lock_chat",
-          "condition": {
-            "config": {
-              "type": "function",
-              "function": {
-                "name": "is_stage_completed",
-                "parameters": {
-                  "transition": "process_app_setup_7"
                 }
               }
             }

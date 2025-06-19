@@ -61,7 +61,8 @@ class ServicesFactory:
                 workflow_helper_service=self.workflow_helper_service,
                 entity_service=self.entity_service,
                 cyoda_auth_service=self.cyoda_auth_service,
-                workflow_converter_service=self.workflow_converter_service
+                workflow_converter_service=self.workflow_converter_service,
+                scheduler_service=self.scheduler
             )
             self.openai_client = AsyncOpenAIClient()
             self.ai_agent = OpenAiAgent(client=self.openai_client)
@@ -124,7 +125,6 @@ class ServicesFactory:
             "dataset": self.dataset,
             "device_sessions": self.device_sessions,
             "cyoda_auth_service": self.cyoda_auth_service,
-            "scheduler": self.scheduler,
             "workflow_converter_service": self.workflow_converter_service
         }  # or directly paste the BeanFactory class here, then drop logic.init
 
@@ -138,7 +138,6 @@ entity_service = _services['entity_service']
 chat_lock = _services['chat_lock']
 fsm_implementation = _services['fsm']
 grpc_client = _services['grpc_client']
-scheduler = _services['scheduler']
 cyoda_auth_service = _services['cyoda_auth_service']
 chat_service = _services['chat_service']
 labels_config_service = _services['labels_config_service']

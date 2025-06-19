@@ -164,6 +164,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                     "valueType": vtype,
                     "value": {"@type": "String", "value": action["parameters"].get(key)}
                 })
+            dto["processParams"].extend(process_params)
 
     def _extract_processor_condition(action, process_criteria_ids, process_id, process_params):
         config_data = action.get("config", {}) or {}

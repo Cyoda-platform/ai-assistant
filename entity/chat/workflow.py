@@ -35,6 +35,7 @@ class ChatWorkflow(Workflow):
                  entity_service,
                  cyoda_auth_service,
                  workflow_converter_service,  # todo will need factory soon
+                 scheduler_service,
                  mock=False):
         self.dataset = dataset
         self.workflow_helper_service = workflow_helper_service
@@ -42,6 +43,7 @@ class ChatWorkflow(Workflow):
         self.mock = mock
         self.cyoda_auth_service = cyoda_auth_service
         self.workflow_converter_service = workflow_converter_service
+        self.scheduler_service = scheduler_service
 
     async def save_env_file(self, technical_id, entity: ChatEntity, **params):
         repository_name = get_repository_name(entity)
@@ -109,7 +111,7 @@ class ChatWorkflow(Workflow):
         )
         entity.scheduled_entities.append(scheduled_entity_id)
 
-        return f"Successfully scheduled {scheduled_action.value.replace('_', ' ')} with build ID {build_id}. Would you like to discuss anything else while my assistant is working on the job?"
+        return f"Successfully scheduled {scheduled_action.value.replace('_', ' ')} with build ID {build_id}."
 
     async def schedule_deploy_env(
             self,
@@ -283,7 +285,7 @@ class ChatWorkflow(Workflow):
         return await read_file_util(filename=params.get("filename"), technical_id=technical_id,
                                     repository_name=get_repository_name(entity))
 
-    async def finish_discussion(self, technical_id: str, entity: ChatEntity, **params: Any) -> None:
+    async def finish_discussion(self, technical_id: str, entity: AgenticFlowEntity, **params: Any) -> None:
         transition = params.get("transition")
         if transition is None:
             raise ValueError("Missing required parameter: 'transition'")
@@ -729,6 +731,7 @@ class ChatWorkflow(Workflow):
             return "Sorry, deploying Cyoda env is available only to logged in users. Please sign up or login!"
         # todo cloud manager needs to return namespace
         params['cyoda_env_name'] = f"{entity.user_id.lower()}.{config.CLIENT_HOST}"
+        await self.finish_discussion(technical_id=technical_id, entity=entity, **params)
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
@@ -736,6 +739,7 @@ class ChatWorkflow(Workflow):
             workflow_name=const.DeploymentFlow.DEPLOY_CYODA_ENV.value,
             params=params,
         )
+
 
     async def deploy_user_application(
             self, technical_id: str, entity: AgenticFlowEntity, **params
@@ -889,6 +893,14 @@ class ChatWorkflow(Workflow):
                     if os.path.isdir(os.path.join(entity_dir, name))]
 
         return entities
+
+    async def check_scheduled_entity_status(self, technical_id: str, entity: SchedulerEntity, **params):
+        status, next_transition = await self.scheduler_service.run_for_entity(technical_id=technical_id, entity=entity)
+        if status:
+            entity.status = status
+        if next_transition:
+            entity.triggered_entity_next_transition = next_transition
+
 
     def parse_from_string(self, escaped_code: str) -> str:
         return escaped_code.encode("utf-8").decode("unicode_escape")
