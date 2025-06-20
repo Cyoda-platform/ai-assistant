@@ -732,7 +732,8 @@ class ChatWorkflow(Workflow):
             return "Sorry, deploying Cyoda env is available only to logged in users. Please sign up or login!"
         # todo cloud manager needs to return namespace
         params['cyoda_env_name'] = f"{entity.user_id.lower()}.{config.CLIENT_HOST}"
-        await self.finish_discussion(technical_id=technical_id, entity=entity, **params)
+        if params.get("transition"):
+            await self.finish_discussion(technical_id=technical_id, entity=entity, **params)
         return await self._schedule_workflow(
             technical_id=technical_id,
             entity=entity,
