@@ -413,6 +413,7 @@ class ChatWorkflow(Workflow):
     async def build_general_application(self, technical_id: str, entity: ChatEntity, **params: Any):
         user_request = params.get("user_request")
         programming_language = params.get("programming_language")
+
         if not user_request:
             return "parameter user_request is required"
         if not programming_language:

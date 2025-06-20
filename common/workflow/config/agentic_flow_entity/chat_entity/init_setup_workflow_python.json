@@ -567,10 +567,11 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Step 4:** Let the user know: they should edit their `.env` file with the required environment-specific value for `CYODA_HOST` once their env has been deployed - they will get notification if they ask for deployment/redeployment. If their environment is not ready yet - they need to wait - they can work in a different chat while waiting.",
+                    "**Step 4:** Let the user know: they should edit their `.env` file with the required environment-specific value for `CYODA_HOST`. They will get the value once their env has been deployed - they will get notification if they have asked for deployment/redeployment. If their environment is not ready yet - they need to wait - they can work in a different chat while waiting.",
                     "- Let the user know: all other properties can stay at their defaults apart from CYODA_HOST.",
                     "- Let the user know: their branch name is used for `GRPC_PROCESSOR_TAG` (they can change it if they like).",
-                    "- Let the user know: if they are using shared environment they need to make sure they specify unique ENTITY_VERSION."
+                    "- Let the user know: if they are using shared environment they need to make sure they specify unique ENTITY_VERSION.",
+                    " Tell the users if they want to add a machine user once their environment is deployed they can ask for it. They will get CYODA_CLIENT_ID and CYODA_CLIENT_SECRET. "
                   ]
                 }
               ],
@@ -650,6 +651,43 @@
                       },
                       "required": [
                         "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_issue_technical_user",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "POST"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "file"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
                       ],
                       "additionalProperties": false
                     }
@@ -996,6 +1034,43 @@
                       "additionalProperties": false
                     }
                   }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_issue_technical_user",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "POST"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "file"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
                 }
               ],
               "messages": [
@@ -1077,7 +1152,7 @@
           "manual": true
         },
         "manual_approve": {
-          "next": "prompt_app_requirements_step7",
+          "next": "ready_to_lock_chat",
           "manual": true
         }
       }
@@ -1355,6 +1430,43 @@
                       },
                       "required": [
                         "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_issue_technical_user",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "POST"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "file"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
                       ],
                       "additionalProperties": false
                     }

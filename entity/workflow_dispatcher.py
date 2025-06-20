@@ -237,7 +237,8 @@ class WorkflowDispatcher:
         edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                              entity_model=const.ModelName.AI_MEMORY_EDGE_MESSAGE.value,
                                                              entity_version=env_config.ENTITY_VERSION,
-                                                             entity=AIMessage(role="assistant", content=ai_agent_resp),
+                                                             entity=AIMessage(role="assistant",
+                                                                              content=ai_agent_resp),
                                                              meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
         memory_tags = config.get("memory_tags", [env_config.GENERAL_MEMORY_TAG])
         for memory_tag in memory_tags:
@@ -318,7 +319,8 @@ class WorkflowDispatcher:
         if config_type in ("function", "prompt", "agent"):
 
             if response and response != "None":
-                if isinstance(response, dict) and response.get("type") and response.get("type")==const.UI_FUNCTION_PREFIX:
+                if isinstance(response, str) and response.strip().startswith('{\"type\": \"ui_function\"'):
+                    response = json.loads(response)
                     notification = FlowEdgeMessage(
                         publish=config.get("publish", False),
                         message=_post_process_response(response=f"{response}", config=config),
