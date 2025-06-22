@@ -433,7 +433,7 @@
                   "type": "function",
                   "function": {
                     "name": "ui_function_issue_technical_user",
-                    "description": " Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -454,6 +454,80 @@
                           "type": "string",
                           "enum": [
                             "file"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_list_all_technical_users",
+                    "description": "Please use ui_function_list_all_technical_users for requests like give me all technical/m2m users. This will return the list of M2M clients.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "GET"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "text"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_reset_client_secret",
+                    "description": "Please use ui_function_reset_client_secret for requests like please reset the client secret for my technical user. Please use clientId from the user input. The user needs to explicitly give you clientId.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "PUT"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients/{clientId}/secret"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "text"
                           ]
                         }
                       },

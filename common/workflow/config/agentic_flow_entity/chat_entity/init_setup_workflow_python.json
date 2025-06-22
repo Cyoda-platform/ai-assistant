@@ -74,7 +74,7 @@
                   "type": "function",
                   "function": {
                     "name": "read_link",
-                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "description": "Read content from a URL. Use this tool when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -106,7 +106,6 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -246,7 +245,7 @@
                   "type": "function",
                   "function": {
                     "name": "read_link",
-                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "description": "Read content from a URL. Use this tool when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -278,7 +277,6 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -621,7 +619,6 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -692,13 +689,88 @@
                       "additionalProperties": false
                     }
                   }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_list_all_technical_users",
+                    "description": "Please use ui_function_list_all_technical_users for requests like give me all technical/m2m users. This will return the list of M2M clients.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "GET"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "text"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_reset_client_secret",
+                    "description": "Please use ui_function_reset_client_secret for requests like please reset the client secret for my technical user. Please use clientId from the user input. The user needs to explicitly give you clientId.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "PUT"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients/{clientId}/secret"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "text"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
                 }
               ],
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "**Troubleshooting:** Let the user know: missing or malformed values may cause runtime errors—ensure there are no stray spaces and quotes only where needed."]
+                    "**Troubleshooting:** Let the user know: missing or malformed values may cause runtime errors—ensure there are no stray spaces and quotes only where needed."
+                  ]
                 }
               ],
               "tool_choice": "auto",
@@ -1000,7 +1072,6 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -1071,13 +1142,88 @@
                       "additionalProperties": false
                     }
                   }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_list_all_technical_users",
+                    "description": "Please use ui_function_list_all_technical_users for requests like give me all technical/m2m users. This will return the list of M2M clients.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "GET"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "text"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_reset_client_secret",
+                    "description": "Please use ui_function_reset_client_secret for requests like please reset the client secret for my technical user. Please use clientId from the user input. The user needs to explicitly give you clientId.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "PUT"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients/{clientId}/secret"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "text"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
                 }
               ],
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "**Troubleshooting:** Let the user know: if the import fails, they should verify their JSON formats and version compatibility, and check the Cloud logs for detailed import errors."]
+                    "**Troubleshooting:** Let the user know: if the import fails, they should verify their JSON formats and version compatibility, and check the Cloud logs for detailed import errors."
+                  ]
                 }
               ],
               "tool_choice": "auto",
@@ -1173,7 +1319,7 @@
                   "type": "function",
                   "function": {
                     "name": "read_link",
-                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "description": "Read content from a URL. Use this tool when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1252,7 +1398,7 @@
                   "type": "function",
                   "function": {
                     "name": "add_new_workflow",
-                    "description": "Launches workflow that is necessary to help the user add a new workflow. Key factor is that an application already exists and the user explicitly asks to add a new workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user add a new workflow. Key factor is that an application already exists and the user explicitly asks to add a new workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1318,7 +1464,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_existing_workflow",
-                    "description": "Launches workflow that is necessary to help the user edit an existing workflow/workflow json. Key factor is that an application already exists and the user explicitly asks to update a workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user edit an existing workflow/workflow json. Key factor is that an application already exists and the user explicitly asks to update a workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1400,7 +1546,6 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -1460,6 +1605,80 @@
                           "type": "string",
                           "enum": [
                             "file"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_list_all_technical_users",
+                    "description": "Please use ui_function_list_all_technical_users for requests like give me all technical/m2m users. This will return the list of M2M clients.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "GET"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "text"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_reset_client_secret",
+                    "description": "Please use ui_function_reset_client_secret for requests like please reset the client secret for my technical user. Please use clientId from the user input. The user needs to explicitly give you clientId.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "PUT"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients/{clientId}/secret"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "text"
                           ]
                         }
                       },

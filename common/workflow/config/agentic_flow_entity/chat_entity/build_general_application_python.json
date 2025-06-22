@@ -238,7 +238,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -381,7 +381,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -643,7 +643,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -1010,7 +1010,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -1270,7 +1270,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
