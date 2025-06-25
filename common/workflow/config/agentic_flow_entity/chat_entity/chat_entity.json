@@ -627,6 +627,7 @@
                       },
                       "required": [
                         "entity_name",
+                        "entity_version",
                         "git_branch",
                         "workflow_file_name",
                         "output_file_name",
@@ -1203,6 +1204,7 @@
                       },
                       "required": [
                         "entity_name",
+                        "entity_version",
                         "git_branch",
                         "workflow_file_name",
                         "output_file_name",
