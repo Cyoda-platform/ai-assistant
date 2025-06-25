@@ -55,7 +55,7 @@ def convert_condition(condition: dict) -> dict:
         return {
             "@bean": "com.cyoda.core.conditions.GroupCondition",
             "operator": condition.get("operator"),
-            "conditions": [convert_condition(sub) for sub in condition.get("conditions", [])],
+            "conditions": [convert_condition(sub) for sub in condition.get("parameters", [])],
         }
 
     elif condition_type == "simple":

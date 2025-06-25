@@ -47,7 +47,7 @@ class OpenAiAgent:
             return content, None
         except (json.JSONDecodeError, ValidationError) as e:
             error = str(e)
-            error = (error[:17] + '...') if len(error) > 20 else error
+            error = (error[:50] + '...') if len(error) > 20 else error
             msg = f"Validation failed on attempt {attempt}/{max_retries}: {error}. Please return correct json. "
             if attempt > 2:
                 msg = f"{msg}. If the task is too hard you can make the code shorter. Just ensure you return correct json."

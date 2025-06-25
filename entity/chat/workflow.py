@@ -17,7 +17,6 @@ from common.utils.function_extractor import extract_function
 from common.utils.result_validator import validate_ai_result
 from common.utils.utils import get_project_file_name, _git_push, _save_file, clone_repo, \
     parse_from_string, read_file_util, send_cyoda_request, get_repository_name, delete_file
-from common.utils.workflow_enricher import enrich_workflow
 from common.workflow.workflow_to_state_diagram_converter import convert_to_mermaid
 from entity.chat.chat import ChatEntity
 from entity.model import AgenticFlowEntity, SchedulerEntity
@@ -562,22 +561,6 @@ class ChatWorkflow(Workflow):
                          )
         return extracted_function
 
-    async def save_workflow_configuration(self, technical_id, entity: AgenticFlowEntity, **params):
-        "design_workflow_from_code"
-        edge_message_id = entity.edge_messages_store.get(params.get("transition"))
-        message_content = await self.entity_service.get_item(token=self.cyoda_auth_service,
-                                                             entity_model=const.ModelName.EDGE_MESSAGE_STORE.value,
-                                                             entity_version=config.ENTITY_VERSION,
-                                                             technical_id=edge_message_id,
-                                                             meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
-        workflow_json = json.loads(message_content)
-        workflow = enrich_workflow(workflow_json)
-        await _save_file(_data=json.dumps(workflow, indent=4, sort_keys=True),  # Prettified JSON
-                         item=f"entity/{entity.workflow_cache.get('entity_name')}/workflow.json",
-                         git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
-                         repository_name=get_repository_name(entity)
-                         )
-
     # =================================== generating_gen_app_workflow end =============================
     # ==================================== scheduler flow =======================================
 
@@ -742,7 +725,6 @@ class ChatWorkflow(Workflow):
             params=params,
         )
 
-
     async def deploy_user_application(
             self, technical_id: str, entity: AgenticFlowEntity, **params
     ) -> str:
@@ -903,7 +885,6 @@ class ChatWorkflow(Workflow):
         if next_transition:
             entity.triggered_entity_next_transition = next_transition
 
-
     def parse_from_string(self, escaped_code: str) -> str:
         return escaped_code.encode("utf-8").decode("unicode_escape")
 
@@ -912,30 +893,67 @@ class ChatWorkflow(Workflow):
         resolved_name = get_most_similar_entity(target=entity_name, entity_list=entity_names)
         return resolved_name if resolved_name else entity_name
 
-    async def convert_workflow_to_dto(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
-        entity_name = entity.workflow_cache.get("entity_name")
-        workflow_file_name = params.get("workflow_file_name").format(entity_name=entity_name)
-        entity_version = params.get("entity_version", config.CLIENT_ENTITY_VERSION)
+    async def convert_workflow_to_dto(
+            self,
+            technical_id: str,
+            entity: AgenticFlowEntity,
+            **params: Any,
+    ) -> str:
+        success_msg = "Successfully converted workflow config to cyoda dto"
+        error_msg = "Error while converting workflow"
         try:
-            git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
-            file_path = await get_project_file_name(git_branch_id=git_branch_id,
-                                                    file_name=workflow_file_name,
-                                                    repository_name=get_repository_name(entity))
-            async with aiofiles.open(file_path, 'r') as f:
-                content = await f.read()
-                workflow_contents = json.loads(content)
-                workflow_cyoda_dto = self.workflow_converter_service.convert_workflow(
-                    workflow_contents=workflow_contents,
-                    entity_name=entity_name,
-                    entity_version=entity_version,
-                    technical_id=git_branch_id)  # use git branch id
-                output_file_name = params.get("output_file_name").format(entity_name=entity_name)
+            # 1) Extract & validate parameters
+            entity_name = entity.workflow_cache.get("entity_name", params.get("entity_name"))
+            git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, params.get(const.GIT_BRANCH_PARAM))
 
-                await _save_file(_data=json.dumps(workflow_cyoda_dto),
-                                 item=output_file_name,
-                                 git_branch_id=git_branch_id,
-                                 repository_name=get_repository_name(entity))
-                return "Successfully converted workflow config to cyoda dto"
-        except Exception as e:
-            logger.exception(e)
-            return "Error while converting workflow"
+            if not (entity_name or git_branch_id):
+                raise ValueError("Missing entity_name in workflow_cache")
+
+            workflow_file_tmpl = params.get("workflow_file_name")
+            output_file_tmpl = params.get("output_file_name")
+            if not (workflow_file_tmpl and output_file_tmpl):
+                raise ValueError("Both workflow_file_name and output_file_name are required")
+
+            entity_version = params.get("entity_version", config.CLIENT_ENTITY_VERSION)
+            repo_name = get_repository_name(entity)
+
+            # 2) Compute file names
+            workflow_filename = workflow_file_tmpl.format(entity_name=entity_name)
+            output_filename = output_file_tmpl.format(entity_name=entity_name)
+
+            # 3) Load, transform, persist original workflow
+            project_path = await get_project_file_name(
+                git_branch_id=git_branch_id,
+                file_name=workflow_filename,
+                repository_name=repo_name,
+            )
+            workflow = await self.workflow_helper_service.read_json(project_path)
+
+            ordered_fsm = await self.workflow_helper_service.order_states_in_fsm(workflow)
+
+            # 2) Convert to DTO
+            dto = await self.workflow_converter_service.convert_workflow(
+                workflow_contents=workflow,
+                entity_name=entity_name,
+                entity_version=entity_version,
+                technical_id=git_branch_id,
+            )
+
+            # 3) Persist both JSON blobs in a loop
+            to_save = [
+                (workflow_filename, ordered_fsm),
+                (output_filename, dto),
+            ]
+            for path_or_item, data in to_save:
+                await self.workflow_helper_service.persist_json(
+                    path_or_item=path_or_item,
+                    data=data,
+                    git_branch_id=git_branch_id,
+                    repository_name=repo_name,
+                )
+
+            return success_msg
+
+        except Exception:
+            logger.exception("Failed to convert workflow for %s", technical_id)
+            return error_msg

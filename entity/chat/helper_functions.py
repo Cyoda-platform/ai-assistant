@@ -1,11 +1,13 @@
 import json
 import logging
 import os
+from typing import Dict, Any
 
+import aiofiles
 from common.config.config import config
 import common.config.const as const
-from common.utils.chat_util_functions import add_answer_to_finished_flow, _launch_transition
-from common.utils.utils import current_timestamp, get_current_timestamp_num
+from common.utils.chat_util_functions import add_answer_to_finished_flow
+from common.utils.utils import current_timestamp, get_current_timestamp_num, _save_file
 from entity.chat.chat import ChatEntity
 from entity.model import SchedulerEntity, FlowEdgeMessage
 
@@ -85,7 +87,6 @@ class WorkflowHelperService:
         entity.child_entities.append(child_technical_id)
         return child_technical_id
 
-
     async def launch_scheduled_workflow(self,
                                         entity_service,
                                         awaited_entity_ids,
@@ -110,3 +111,65 @@ class WorkflowHelperService:
                                                            entity=child_entity)
 
         return child_technical_id
+
+    async def order_states_in_fsm(self, fsm):
+        states = fsm["states"]
+        initial_state = fsm["initial_state"]
+        ordered_state_names = []
+        visited = set()
+
+        def dfs(state_name):
+            if state_name in visited or state_name not in states:
+                return
+            visited.add(state_name)
+            ordered_state_names.append(state_name)
+            transitions = states[state_name].get("transitions", {})
+            for transition in transitions.values():
+                next_state = transition.get("next")
+                if next_state:
+                    dfs(next_state)
+
+        dfs(initial_state)
+
+        # Add any orphan/unreachable states at the end (to preserve original input fully)
+        for state_name in states:
+            if state_name not in visited:
+                ordered_state_names.append(state_name)
+
+        # Reconstruct FSM with ordered states
+        ordered_states = {name: states[name] for name in ordered_state_names}
+        ordered_fsm = {
+            **fsm,
+            "states": ordered_states
+        }
+
+        return ordered_fsm
+
+    async def read_json(self, path: str) -> Dict:
+        """Helper to read JSON from disk asynchronously."""
+        async with aiofiles.open(path, mode="r") as f:
+            text = await f.read()
+        return json.loads(text)
+
+    async def persist_json(
+            self,
+            path_or_item: str,
+            data: Any,
+            git_branch_id: str,
+            repository_name: str,
+    ) -> None:
+        """
+        Serialize `data` to JSON and save via our common `_save_file` helper.
+        `path_or_item` may be either an existing file path or a target filename.
+        """
+        payload = json.dumps(
+            data,
+            indent=2
+        )
+        await _save_file(
+            _data=payload,
+            item=path_or_item,
+            git_branch_id=git_branch_id,
+            repository_name=repository_name,
+        )
+

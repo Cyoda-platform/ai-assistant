@@ -1,17 +1,13 @@
 import logging
-from datetime import timedelta
 from quart import Blueprint, jsonify
-from quart_rate_limiter import rate_limit
-
-import common.config.const as const
 from common.config.config import config
 from services.factory import labels_config_service
 
 labels_config_bp = Blueprint('labels_config', __name__, url_prefix=f"{config.API_PREFIX}/labels_config")
 logger = logging.getLogger(__name__)
 
+
 @labels_config_bp.route('', methods=['GET'])
-@rate_limit(const.RATE_LIMIT, timedelta(seconds=15))
 async def labels_config_full_map():
     """Return the entire structured TEXT_MAP as JSON."""
     labels_config = await labels_config_service.get_all()
@@ -19,7 +15,6 @@ async def labels_config_full_map():
 
 
 @labels_config_bp.route('/<path:key>', methods=['GET'])
-@rate_limit(const.RATE_LIMIT, timedelta(seconds=15))
 async def labels_config_item(key):
     """
     Return a single entry from TEXT_MAP.
@@ -35,8 +30,8 @@ async def labels_config_item(key):
         }), 404
     return jsonify({key: value})
 
+
 @labels_config_bp.route('/refresh', methods=['POST'])
-@rate_limit(const.RATE_LIMIT, timedelta(minutes=15))
 async def refresh_labels_config():
     """
     POST /config/labels/refresh

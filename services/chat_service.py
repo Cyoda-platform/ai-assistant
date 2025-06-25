@@ -63,15 +63,15 @@ class ChatService:
         if not user_id:
             raise InvalidTokenException("Invalid token")
 
-        chats = await self._get_entities_by_user_name_and_workflow_name(user_id,
-                                                                        const.ModelName.CHAT_BUSINESS_ENTITY.value)
+        chats = await self._get_entities_by_user_name(user_id=user_id,
+                                                      model=const.ModelName.CHAT_BUSINESS_ENTITY.value)
         if not user_id.startswith("guest."):
             transfers = await self._get_entities_by_user_name(user_id=user_id,
                                                               model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
             if transfers:
                 guest_id = transfers[0]["guest_user_id"]
-                chats += await self._get_entities_by_user_name_and_workflow_name(guest_id,
-                                                                                 const.ModelName.CHAT_BUSINESS_ENTITY.value)
+                chats += await self._get_entities_by_user_name(user_id=guest_id,
+                                                               model=const.ModelName.CHAT_BUSINESS_ENTITY.value)
 
         return [{
             "technical_id": c.technical_id,
@@ -82,8 +82,9 @@ class ChatService:
 
     async def add_chat(self, user_id: str, req_data: dict) -> dict:
         if user_id.startswith("guest."):
-            existing = await self._get_entities_by_user_name_and_workflow_name(user_id,
-                                                                               const.ModelName.CHAT_ENTITY.value)
+            existing = await self._get_entities_by_user_name_and_workflow_name(user_id=user_id,
+                                                                               model=const.ModelName.CHAT_ENTITY.value,
+                                                                               workflow_name=const.ModelName.CHAT_ENTITY.value)
             if len(existing) >= config.MAX_GUEST_CHATS:
                 raise GuestChatsLimitExceededException("Max guest chats limit reached")
 
@@ -345,7 +346,7 @@ class ChatService:
             }
         )
 
-    async def _get_entities_by_user_name_and_workflow_name(self, user_id, model):
+    async def _get_entities_by_user_name_and_workflow_name(self, user_id, model, workflow_name):
         return await self.entity_service.get_items_by_condition(
             token=self.cyoda_auth_service,
             entity_model=model,
@@ -354,9 +355,9 @@ class ChatService:
                 "cyoda": {
                     "operator": "AND",
                     "conditions": [
-                        {"jsonPath": "$.user_id", "operatorType": "EQUALS", "value": user_id, "type": "simple"},
-                        {"jsonPath": "$.workflow_name", "operatorType": "EQUALS",
-                         "value": const.ModelName.CHAT_BUSINESS_ENTITY.value, "type": "simple"},
+                        {"jsonPath": "$.user_id", "operatorType": "IEQUALS", "value": user_id, "type": "simple"},
+                        {"jsonPath": "$.workflow_name", "operatorType": "IEQUALS",
+                         "value": workflow_name, "type": "simple"},
                         {
                             "field": "state",
                             "operatorType": "INOT_EQUAL",
