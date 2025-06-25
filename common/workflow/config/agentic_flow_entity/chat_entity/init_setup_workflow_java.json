@@ -203,10 +203,15 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Step 2:** Let the user know: they should ensure their development environment is set up, including having Java and Gradle installed.",
-                    " _Let the user know: they should expect to see a `Login failed (404)` error in logs initially, as Cyoda isn’t configured yet._",
-                    "- Let the user know: if they encounter `ClassNotFoundException`, they should ensure all dependencies are properly defined in `build.gradle`.",
-                    "- Let the user know: if they encounter missing dependencies, they should run `./gradlew --refresh-dependencies` to resolve them."
+                    "**Step 2:** Let the user know: they can run the application in two ways — either directly from Gradle or by building and running the JAR manually.",
+                    "Let the user know: to run the app using Gradle, they should execute `./gradlew runApp`.",
+                    "Let the user know: to run the app manually, they should first build it using `./gradlew build` and then run `java -jar build/libs/java-client-template-1.0-SNAPSHOT.jar`.",
+                    "Let the user know: the app will be available at `http://localhost:8080/swagger-ui/index.html` once it starts.",
+                    "Let the user know: they must have Java 21 installed and set as the active version.",
+                    "Let the user know: they should be in the root directory of the project (`java-client-template`) before running any commands.",
+                    "Let the user know: it’s normal to see a `Login failed (404)` message in the logs — this happens when Cyoda is not yet configured.",
+                    "Let the user know: if they encounter a `ClassNotFoundException`, they should ensure all dependencies are declared in `build.gradle`.",
+                    "Let the user know: if dependencies are missing, they can run `./gradlew --refresh-dependencies` to resolve them."
                   ]
                 }
               ],
@@ -826,7 +831,14 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Step 5:** Let the user know: with their env configured, they should import the workflows by running:",
+                    "**Step 5:** Let the user know: with their env configured, they should import the workflows using one of the following options:",
+                    "",
+                    "**Option 1: Run via Gradle (recommended for local development)**",
+                    "```bash",
+                    "./gradlew runApp -PmainClass=com.java_template.common.tool.WorkflowImportTool",
+                    "```",
+                    "",
+                    "**Option 2: Build and run the JAR file (recommended for CI or scripting)**",
                     "```bash",
                     "./gradlew bootJarWorkflowImport",
                     "java -jar build/libs/java-client-template-1.0-SNAPSHOT-workflow-import.jar",
