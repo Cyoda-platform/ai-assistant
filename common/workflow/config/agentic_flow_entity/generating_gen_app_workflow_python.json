@@ -162,6 +162,9 @@
               "type": "prompt",
               "model": {
               },
+              "memory_tags": [
+                "format_workflow_json"
+              ],
               "messages": [
                 {
                   "role": "user",
@@ -176,12 +179,12 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "name",
+                    "workflow_name",
                     "initial_state",
                     "states"
                   ],
                   "properties": {
-                    "name": {
+                    "workflow_name": {
                       "type": "string"
                     },
                     "description": {

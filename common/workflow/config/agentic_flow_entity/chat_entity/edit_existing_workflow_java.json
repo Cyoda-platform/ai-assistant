@@ -51,12 +51,12 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "name",
+                    "workflow_name",
                     "initial_state",
                     "states"
                   ],
                   "properties": {
-                    "name": {
+                    "workflow_name": {
                       "type": "string"
                     },
                     "description": {

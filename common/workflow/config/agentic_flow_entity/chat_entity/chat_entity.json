@@ -605,20 +605,22 @@
                         "programming_language": {
                           "type": "string",
                           "enum": [
-                            "JAVA",
-                            "PYTHON"
+                            "PYTHON",
+                            "JAVA"
                           ]
                         },
                         "workflow_file_name": {
                           "type": "string",
                           "enum": [
-                            "entity/{entity_name}/workflow.json"
+                            "entity/{entity_name}/workflow.json",
+                            "src/main/java/com/java_template/entity/{entity_name}/Workflow.json"
                           ]
                         },
                         "output_file_name": {
                           "type": "string",
                           "enum": [
-                            "cyoda_dto/{entity_name}/workflow.json"
+                            "cyoda_dto/{entity_name}/workflow.json",
+                            "src/main/java/com/java_template/cyoda_dto/{entity_name}/workflow.json"
                           ]
                         },
                         "git_branch": {
@@ -1182,20 +1184,22 @@
                         "programming_language": {
                           "type": "string",
                           "enum": [
-                            "JAVA",
-                            "PYTHON"
+                            "PYTHON",
+                            "JAVA"
                           ]
                         },
                         "workflow_file_name": {
                           "type": "string",
                           "enum": [
-                            "entity/{entity_name}/workflow.json"
+                            "entity/{entity_name}/workflow.json",
+                            "src/main/java/com/java_template/entity/{entity_name}/Workflow.json"
                           ]
                         },
                         "output_file_name": {
                           "type": "string",
                           "enum": [
-                            "cyoda_dto/{entity_name}/workflow.json"
+                            "cyoda_dto/{entity_name}/workflow.json",
+                            "src/main/java/com/java_template/cyoda_dto/{entity_name}/workflow.json"
                           ]
                         },
                         "git_branch": {

@@ -113,11 +113,14 @@
     },
     "generated_workflow_json": {
       "transitions": {
-        "enrich_workflow": {
+        "format_workflow_json": {
           "next": "formatted_workflow_json",
           "action": {
             "name": "process_event",
             "config": {
+              "memory_tags": [
+                "format_workflow_json"
+              ],
               "type": "prompt",
               "model": {
               },
@@ -125,7 +128,7 @@
                 {
                   "role": "user",
                   "content": [
-                    "Return only valid JSON without any extra text without changes to the business logic. Please preserve original states order, it's an ordered dict."
+                    "Return only valid JSON without any extra text without changes to the business logic. You can make adjustments to the json, including business logic, if it does not comply with the json schema or fails validation."
                   ]
                 }
               ],
@@ -135,12 +138,12 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "name",
+                    "workflow_name",
                     "initial_state",
                     "states"
                   ],
                   "properties": {
-                    "name": {
+                    "workflow_name": {
                       "type": "string"
                     },
                     "description": {
@@ -293,7 +296,7 @@
     },
     "converted_workflow_json": {
       "transitions": {
-        "notify_user": {
+        "generate_workflow_processors": {
           "next": "generated_workflow_processors",
           "action": {
             "name": "process_event",

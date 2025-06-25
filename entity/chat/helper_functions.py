@@ -164,9 +164,7 @@ class WorkflowHelperService:
         """
         payload = json.dumps(
             data,
-            indent=2,
-            sort_keys=True,
-            ensure_ascii=False,
+            indent=2
         )
         await _save_file(
             _data=payload,

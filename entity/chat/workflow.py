@@ -941,7 +941,7 @@ class ChatWorkflow(Workflow):
 
             # 3) Persist both JSON blobs in a loop
             to_save = [
-                (project_path, ordered_fsm),
+                (workflow_filename, ordered_fsm),
                 (output_filename, dto),
             ]
             for path_or_item, data in to_save:
