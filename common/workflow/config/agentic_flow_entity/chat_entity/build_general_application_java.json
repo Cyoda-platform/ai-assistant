@@ -325,7 +325,7 @@
                     " Let's analyse this request for application building, and clarify any important functional requirements that necessary.",
                     " Max 3 questions and suggestions at a time - ask only if absolutely necessary. Keep it short so that the user is kept engaged. It is better to say something like - Would you like to A or B, Do i understand correct and you'd prefer A to B - etc",
                     " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
-                    " Do not ask about any specific frameworks or technologies, the final application will be in Java Spring Boot on Cyoda platform - no other choices.",
+                    " Do not ask about any specific frameworks, databases or technologies, the final application will be in Java Spring Boot on Cyoda platform - no other choices.",
                     " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. Format it with markdown.",
                     " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
                     " Be polite, please ",
@@ -493,7 +493,7 @@
                     " Ask questions if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations.",
                     " Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. Max tokens = 300.",
                     " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
-                    " Do not ask about any specific frameworks or technologies, the final application will be inJava Spring Boot on Cyoda platform - no other choices.",
+                    " Do not ask about any specific frameworks, databases or technologies, the final application will be inJava Spring Boot on Cyoda platform - no other choices.",
                     " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. format it with markdown ",
                     " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
                     " Call finish_discussion immediately after 6 attempts. Do not hold the user too long they will bored.",
@@ -579,7 +579,7 @@
                     "Outline the necessary API endpoints (adhering to Restful rules, any business logic that invokes external data source, retrieves data or does any calculations needs to be done in POST endpoint, GET is used only for my application results retrieval (external data retrieval should be implemented in POST endpoint)),",
                     "including details on request/response formats. Additionally, provide a visual representation of the user-app interaction using Mermaid diagrams (e.g. journey/sequence).",
                     "Ensure that **each Mermaid diagram is enclosed in a complete and valid Markdown code block**, starting with ```mermaid and ending with ``` (on a separate line).",
-                    "Please return markdown document without any additional information.",
+                    "Please return markdown document without any additional information and without wrapping it in triple backticks.",
                     "Make sure there are no unclosed Mermaid blocks — every diagram must end with a closing triple backtick on a separate line."
                   ]
                 }
@@ -855,7 +855,7 @@
               "input": {},
               "output": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/EntityControllerPrototype.java"
+                  "src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java"
                 ]
               },
               "messages": [
@@ -868,12 +868,13 @@
                     "Please use real API endpoints where possible. If you introduce mocks or placeholders, clearly mark them with a TODO comment indicating what should be replaced.",
                     "The goal is to validate the UX and the overall structure of the API before proceeding with a full implementation.",
                     "Use Spring Web (`@RestController`, `@RequestMapping`, etc.) and annotate endpoints clearly with HTTP verbs like `@GetMapping`, `@PostMapping`, etc.",
+                    "Add prefix 'prototype' to the base path in @RequestMapping",
                     "Do not include persistence or service layer implementations unless required for clarity—mock them with `Map` or `ConcurrentHashMap`.",
                     "Include proper logging using SLF4J (e.g., `Logger logger = LoggerFactory.getLogger(EntityControllerPrototype.class);`) and use `logger.info(...)` or `logger.error(...)` appropriately.",
                     "Lombok is already configured in the project via io.freefair.lombok plugin. Please use Lombok annotations like @Data, @Getter, @Setter, @AllArgsConstructor, @NoArgsConstructor, etc., instead of manually writing getters, setters, and constructors, and make sure to include the necessary Lombok imports in the generated code.",
                     "For asynchronous or background tasks, you may use `@Async` methods or `CompletableFuture.runAsync(...)`, and add TODO comments where fire-and-forget logic is used.",
                     "Add basic error handling using `@ExceptionHandler` where relevant, but keep it minimal.",
-                    "When handling ResponseStatusException, always use getStatusCode() instead of getStatus(), because getStatus() does not exist in this class.\n",
+                    "When handling ResponseStatusException, always use getStatusCode() instead of getStatus(). Do not use getReasonPhrase(); use getStatusCode().toString() instead for error field.",
                     "You are welcome to use patterns like `entityJobs.put(jobId, new JobStatus(\"processing\", requestedAt)); // fire-and-forget the processing` if relevant.",
                     "Avoid configuration files, focus only on controller logic in a single file.",
                     "When fetching and parsing JSON responses from external APIs, use ObjectMapper.readTree(...) to convert the raw response into a JsonNode, instead of deserializing directly into a Map or a List. This ensures compatibility with both JSON objects and arrays, and gives more flexibility during prototyping.",
@@ -903,13 +904,14 @@
               "input": {},
               "output": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/EntityControllerPrototype.java"
+                  "src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java"
                 ]
               },
               "messages": [
                 {
                   "role": "user",
                   "content": [
+                    "Use `package com.java_template.entity;` as the package declaration for this file.",
                     "Please, add validation annotations for request bodies and query parameters using javax/jakarta validation annotations:",
                     "import jakarta.validation.constraints.*;",
                     "Use @Validated on the controller class if needed to enable validation.",
@@ -966,7 +968,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "First Prototype Ready for Validation\nWe have completed the first prototype for your functional requirements.\nTo validate the API, please follow the steps below:\n**1. Run the Prototype**\nExecute the following commands to start the application:\n\n```bash\n./gradlew bootJarPrototype\njava -jar build/libs/java-client-template-1.0-SNAPSHOT-prototype.jar\n```\n\nor run Prototype.java directly from your IDE.\n**2. Validate the API**\nOnce the application is running, open your browser and navigate to:\n```http://localhost:8080/swagger-ui.html```\nor\n```http://localhost:8080/v3/api-docs```\nRequest and response examples can be found in:\n```src/main/java/com/java_template/entity/functional_requirement.md```\nThis will allow you to validate the API response. Please let me know when you are happy with the result.",
+              "question": "✅ First Prototype Ready!\n\nThe initial prototype based on your functional requirements is now ready! You can run and test it locally or directly in **GitHub Codespaces**.\n\n---\n\n### ▶️ How to Run the Prototype\n\n#### **Option 1: GitHub Codespaces **\nYou can open the repo in GitHub Codespaces and launch the prototype there:\n\n1. Open the repository in [GitHub Codespaces](https://github.com/Cyoda-platform/java-client-template/tree/{branch_name}).\n2. In the Codespace terminal, run:\n\n```bash\n# Update package list\nsudo apt update\n# Install Java 21 (headless — no GUI tools)\nsudo apt install -y openjdk-21-jdk-headless\n# Set Java 21 as active version\nexport JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64\nexport PATH=$JAVA_HOME/bin:$PATH\n# Run the prototype app\n./gradlew runApp -PmainClass=com.java_template.Prototype\n```\n\n3. Make the app accessible from the browser:\n - In the **Ports** panel (bottom of the IDE), right-click on port `8080` and select **\"Change Port Visibility\" → \"Public\"**\n - Alternatively, after starting the app, click **\"Make Public\"** in the popup.\n\n4. Preview the app in the browser:\n `/swagger-ui/index.html` - Swagger UI: `https://<your-codespace-url>/swagger-ui/index.html`\n - OpenAPI specification: `https://<your-codespace-url>/v3/api-docs`\n\n> *Codespaces will provide a forwarded port URL — just append `/swagger-ui/index.html` or `/v3/api-docs` to it.*\n\n---\n\n#### **Option 2: Local Environment**\n\n1. Make sure you're on the correct branch and up to date:\n\n```bash\ngit checkout {branch_name}\ngit pull\n```\n\n2. Run the app:\n\n```bash\n./gradlew runApp -PmainClass=com.java_template.Prototype\n```\n\n3. Open your browser and go to:\n- [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)\n- or [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)\n\n---\n\n### 🧪 Testing\n\nYou’ll find example requests and responses in:\n📄 `entity/functional_requirement.md`\n\nUse these to test the API via the Swagger UI.\n\n---\n\n### ✅ Approval or Feedback\n\nIf everything looks good, feel free to approve it.\nIf anything’s off or you’d like changes, just ping me here. 🙌\n\n> ⚠️ **Note:**: This code is part of an early alpha version of the system. Some parts may not compile or behave as expected.",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -1095,7 +1097,7 @@
                   "type": "function",
                   "function": {
                     "name": "read_file",
-                    "description": "Read the contents of src/main/java/com/java_template/entity/EntityControllerPrototype.java file.",
+                    "description": "Read the contents of src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java file.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1103,7 +1105,7 @@
                         "filename": {
                           "type": "string",
                           "enum": [
-                            "src/main/java/com/java_template/entity/EntityControllerPrototype.java"
+                            "src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java"
                           ]
                         }
                       },
@@ -1118,7 +1120,7 @@
                   "type": "function",
                   "function": {
                     "name": "save_file",
-                    "description": "Save changes to src/main/java/com/java_template/entity/EntityControllerPrototype.java to the repository so that the user can view the changes. Apply this if you make changes; omit if just answering a general question.",
+                    "description": "Save changes to src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java to the repository so that the user can view the changes. Apply this if you make changes; omit if just answering a general question.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1129,7 +1131,7 @@
                         "filename": {
                           "type": "string",
                           "enum": [
-                            "src/main/java/com/java_template/entity/EntityControllerPrototype.java"
+                            "src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java"
                           ]
                         }
                       },
@@ -1170,9 +1172,9 @@
                   "role": "user",
                   "content": [
                     " Hello! Please do your best to help the user with just generated EntityControllerPrototype.java code.",
-                    " If the user asks you to make any improvements or fix any issues please first read the file src/main/java/com/java_template/entity/EntityControllerPrototype.java to get the latest version.",
-                    " Then use your own judgement to introduce changes necessary for the user",
-                    " Finally save the changes to the EntityControllerPrototype.java file. And let the user know what changes you introduced and why.",
+                    " If the user asks you to make any improvements or fix any issues please first read the file src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java to get the latest version.",
+                    " Then use your own judgement to introduce changes necessary for the user. Do not simply reuse the file content you read; always generate a new, modified version of the code that reflects the user's latest requests.",
+                    " Finally, make sure to save the file only after you have applied the required changes. Carefully verify that the updated content reflects your modifications, and do not proceed with saving unless actual updates have been made. Finally apply the necessary changes to the src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java file. And let the user know what changes you introduced and why.",
                     " If the user just asks any general question or a question about the code, read the EntityControllerPrototype.java file if necessary, answer the question, no save needed in this case.",
                     " Call finish_discussion only once the user is happy with the result or asks to proceed. "
                   ]
@@ -1355,7 +1357,7 @@
                   "type": "function",
                   "function": {
                     "name": "read_file",
-                    "description": "Read the contents of src/main/java/com/java_template/entity/EntityControllerPrototype.java file.",
+                    "description": "Read the contents of src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java file.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1363,7 +1365,7 @@
                         "filename": {
                           "type": "string",
                           "enum": [
-                            "src/main/java/com/java_template/entity/EntityControllerPrototype.java"
+                            "src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java"
                           ]
                         }
                       },
@@ -1378,7 +1380,7 @@
                   "type": "function",
                   "function": {
                     "name": "save_file",
-                    "description": "Save changes to src/main/java/com/java_template/entity/EntityControllerPrototype.java to the repository so that the user can view the changes to the entity/EntityControllerPrototype.java. Apply this function if you make changes to entity/EntityControllerPrototype.java (fix issues, make improvements, adjustments according to the user request). No need to apply this function if the code does not require changes and you're answering a general question.",
+                    "description": "Save changes to src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java to the repository so that the user can view the changes to the entity/EntityControllerPrototype.java. Apply this function if you make changes to entity/EntityControllerPrototype.java (fix issues, make improvements, adjustments according to the user request). No need to apply this function if the code does not require changes and you're answering a general question.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1389,7 +1391,7 @@
                         "filename": {
                           "type": "string",
                           "enum": [
-                            "src/main/java/com/java_template/entity/EntityControllerPrototype.java"
+                            "src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java"
                           ]
                         }
                       },
@@ -1429,10 +1431,10 @@
                 {
                   "role": "user",
                   "content": [
-                    " Hello! Please do your best to help the user with just generated src/main/java/com/java_template/entity/EntityControllerPrototype.java code.",
-                    " If the user asks you to make any improvements or fix any issues please first read the file src/main/java/com/java_template/entity/EntityControllerPrototype.java to get the latest version.",
-                    " Then use your own judgement to introduce changes necessary for the user",
-                    " Finally save the changes to the src/main/java/com/java_template/entity/EntityControllerPrototype.java file. And let the user know what changes you introduced and why.",
+                    " Hello! Please do your best to help the user with just generated src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java code.",
+                    " If the user asks you to make any improvements or fix any issues please first read the file src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java to get the latest version.",
+                    " Then use your own judgement to introduce changes necessary for the user. Do not simply reuse the file content you read; always generate a new, modified version of the code that reflects the user's latest requests.",
+                    " Finally, make sure to save the file only after you have applied the required changes. Carefully verify that the updated content reflects your modifications, and do not proceed with saving unless actual updates have been made. Finally apply the necessary changes to the src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java file. And let the user know what changes you introduced and why.",
                     " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case.",
                     " Call finish_discussion only once the user is happy with the result or asks to proceed. "
                   ]
@@ -1542,6 +1544,33 @@
                     "    condition=condition",
                     ")",
                     "Note: when retrieving or returning entities via entityService.getItem / getItems / getItemsByCondition, the unique identifier is stored in the field \"technicalId\" (not \"id\"). Use \"technicalId\" to extract or compare entity IDs.\n",
+                    "Please use the following classes to construct search conditions for entity queries:",
+                    "Condition (com.java_template.common.util.Condition) and SearchConditionRequest (com.java_template.common.util.SearchConditionRequest)",
+                    "",
+                    "To create a single condition, wrap it into a SearchConditionRequest with one element in the list:",
+                    "SearchConditionRequest.group(\"AND\",",
+                    "    Condition.of(\"$.field\", \"EQUALS\", \"value\")",
+                    ")",
+                    "",
+                    "To create a group of multiple conditions with logical operator AND or OR, use:",
+                    "SearchConditionRequest.group(\"OR\",",
+                    "    Condition.of(\"$.field1\", \"EQUALS\", \"value1\"),",
+                    "    Condition.of(\"$.field2\", \"GREATER_THAN\", 10)",
+                    ")",
+                    "",
+                    "Supported operatorType values (for Condition):",
+                    "\"EQUALS\", \"NOT_EQUAL\", \"IEQUALS\", \"INOT_EQUAL\", \"IS_NULL\", \"NOT_NULL\",",
+                    "\"GREATER_THAN\", \"GREATER_OR_EQUAL\", \"LESS_THAN\", \"LESS_OR_EQUAL\",",
+                    "\"ICONTAINS\", \"ISTARTS_WITH\", \"IENDS_WITH\", \"INOT_CONTAINS\",",
+                    "\"INOT_STARTS_WITH\", \"INOT_ENDS_WITH\", \"MATCHES_PATTERN\",",
+                    "\"BETWEEN\", \"BETWEEN_INCLUSIVE\"",
+                    "",
+                    "Note: If the operatorType starts with the letter 'I', it means the comparison should ignore case (e.g., \"IEQUALS\" = equals ignoring case).",
+                    "",
+                    "Supported operator values (for SearchConditionRequest): \"AND\", \"OR\"",
+                    "",
+                    "Pass the resulting SearchConditionRequest as the third argument (condition) to:",
+                    "entityService.getItemsByCondition(entityModel, entityVersion, condition)",
                     "3. CompletableFuture<UUID> updatedItemId = entityService.updateItem(",
                     "    entityModel=\"{entity_name}\",",
                     "    entityVersion=ENTITY_VERSION,  # always use this constant",
@@ -1585,7 +1614,7 @@
               ],
               "input": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/EntityControllerPrototype.java"
+                  "src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java"
                 ]
               },
               "output": {

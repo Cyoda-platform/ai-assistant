@@ -266,7 +266,12 @@ class ChatWorkflow(Workflow):
         Saves data to a file using the provided chat id and file name.
         """
         try:
-            new_content = parse_from_string(escaped_code=params.get("new_content"))
+            repository_name = get_repository_name(entity)
+            if repository_name.startswith("java"):
+                new_content = params.get("new_content")
+            else:
+                new_content = parse_from_string(escaped_code=params.get("new_content"))
+            # new_content = parse_from_string(escaped_code=params.get("new_content"))
             await _save_file(_data=new_content,
                              item=params.get("filename"),
                              git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
@@ -599,15 +604,23 @@ class ChatWorkflow(Workflow):
             logger.exception("Modifications to main branch are not allowed")
             return "Modifications to main branch are not allowed"
         await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
-        app_api = await read_file_util(filename="routes/routes.py",
+        if repository_name.startswith("java"):
+            filename = "src/main/java/com/java_template/controller/Controller.java"
+        else:
+            filename = "routes/routes.py"
+        app_api = await read_file_util(filename=filename,
                                        technical_id=git_branch_id,
                                        repository_name=get_repository_name(entity))
         entities_description = []
         project_entities_list = await self.get_entities_list(branch_id=git_branch_id,
                                                              repository_name=get_repository_name(entity))
         for project_entity in project_entities_list:
+            if repository_name.startswith("java"):
+                filename = f"src/main/java/com/java_template/entity/{project_entity}/{project_entity}Workflow.java"
+            else:
+                filename = f"entity/{project_entity}/workflow.py"
             workflow_code = await read_file_util(technical_id=git_branch_id,
-                                                 filename=f"entity/{project_entity}/workflow.py",
+                                                 filename=filename,
                                                  repository_name=get_repository_name(entity))
             entities_description.append({project_entity: workflow_code})
 
@@ -889,6 +902,9 @@ class ChatWorkflow(Workflow):
 
     async def get_entities_list(self, branch_id: str, repository_name: str) -> list:
         entity_dir = f"{config.PROJECT_DIR}/{branch_id}/{repository_name}/entity"
+
+        if repository_name.startswith("java"):
+            entity_dir = f"{config.PROJECT_DIR}/{branch_id}/{repository_name}/src/main/java/com/java_template/entity"
 
         # List all subdirectories (each subdirectory is an entity)
         entities = [name for name in os.listdir(entity_dir)

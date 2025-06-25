@@ -35,8 +35,9 @@
                     "No more additional arguments can be passed.",
                     "Also, all workflow orchestration should be inside {workflow_function}. {workflow_function} should have only workflow orchestration code and no business logic. no other function can have workflow orchestration code.",
                     "{code}",
-                    "Please, call the class {entity_name}Workflow. Use package name 'com.java_template.entity.{entity_name}'. Add @Component annotation to the class. Use constructor for com.fasterxml.jackson.databind.ObjectMapper",
+                    "Please, convert {entity_name} to UpperCamelCase and keep using it this way. Call the class {entity_name}Workflow. Use package name 'com.java_template.entity.{entity_name}'. Add @Component annotation to the class.",
                     "Use 'import static com.java_template.common.config.Config.*;' to import ENTITY_VERSION.",
+                    "Provide all the imports and variables which are necessary and used in the code.",
                     "You cannot apply entityService.addItem/updateItem/deleteItem on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity.attribute.  The new state will be persisted. Do not add any test/extra code.",
                     "Remove all RestController methods and annotations, leave only workflow-related methods, which start with 'process'.",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting."
