@@ -4,7 +4,7 @@ import os
 
 from common.config.config import config
 import common.config.const as const
-from common.utils.chat_util_functions import add_answer_to_finished_flow
+from common.utils.chat_util_functions import add_answer_to_finished_flow, _launch_transition
 from common.utils.utils import current_timestamp, get_current_timestamp_num
 from entity.chat.chat import ChatEntity
 from entity.model import SchedulerEntity, FlowEdgeMessage
@@ -40,7 +40,8 @@ class WorkflowHelperService:
                                       workflow_name,
                                       user_request=None,
                                       workflow_cache=None,
-                                      edge_messages_store=None):
+                                      edge_messages_store=None,
+                                      resume_transition=None):
 
         child_entity: ChatEntity = ChatEntity.model_validate({
             "user_id": entity.user_id,
@@ -55,6 +56,7 @@ class WorkflowHelperService:
             "current_state": "",
             "workflow_cache": workflow_cache,
             "edge_messages_store": edge_messages_store,
+            "resume_transition": resume_transition,
             "transitions_memory": {
                 "conditions": {},
                 "current_iteration": {},
@@ -63,9 +65,9 @@ class WorkflowHelperService:
         })
         if user_request:
             user_request_message_id, last_modified = await add_answer_to_finished_flow(entity_service=entity_service,
-                                                                        answer=user_request,
-                                                                        cyoda_auth_service=self.cyoda_auth_service,
-                                                                        publish=False)
+                                                                                       answer=user_request,
+                                                                                       cyoda_auth_service=self.cyoda_auth_service,
+                                                                                       publish=False)
 
             child_entity.chat_flow.finished_flow.append(FlowEdgeMessage(type="answer",
                                                                         publish=False,
@@ -82,6 +84,7 @@ class WorkflowHelperService:
         entity.locked = True
         entity.child_entities.append(child_technical_id)
         return child_technical_id
+
 
     async def launch_scheduled_workflow(self,
                                         entity_service,

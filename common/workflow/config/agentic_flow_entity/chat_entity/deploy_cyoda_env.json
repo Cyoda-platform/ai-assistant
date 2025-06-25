@@ -65,7 +65,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "✅ Your [Cyoda environment](https://{cyoda_env_name}) has been successfully deployed!\n\nYou can now start your application locally. Would you like to proceed setting up the application?",
+              "notification": "✅ Your [Cyoda environment](https://{cyoda_env_name}) has been successfully deployed!\n\nYou can now proceed to setting up the application locally.",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -78,7 +78,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "⚠️ Sorry, we encountered internal issues while deploying your Cyoda environment.\n\nOur team has been notified and is looking into it. Please try again shortly, or reach out if the issue persists.",
+              "notification": "⚠️ Sorry, we encountered internal issues while deploying your Cyoda environment.\n\nOur team has been notified and is looking into it. Please try again shortly, or reach out if the issue persists. You can proceed with the current chat.",
               "publish": true,
               "allow_anonymous_users": true
             }

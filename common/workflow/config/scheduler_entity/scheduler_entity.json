@@ -4,16 +4,103 @@
   "states": {
     "none": {
       "transitions": {
+        "schedule": {
+          "next": "scheduled"
+        }
+      }
+    },
+    "scheduled": {
+      "transitions": {
         "wait": {
-          "next": "waiting"
+          "next": "waiting",
+          "action": {
+            "name": "schedule_transaction",
+            "type": "scheduled",
+            "parameters": {
+              "delay": "30000",
+              "timeout": "3600000",
+              "next_transition": "check_status"
+            }
+          }
         }
       }
     },
     "waiting": {
       "transitions": {
+        "check_status": {
+          "next": "checked_status",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "check_scheduled_entity_status",
+                "description": "",
+                "parameters": {
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "checked_status": {
+      "transitions": {
+        "complete": {
+          "next": "complete",
+          "condition": {
+            "name": "complete",
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "jsonPath": "status",
+                "operatorType": "equals (disregard case)",
+                "value": "complete",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        "wait": {
+          "next": "scheduled",
+          "condition": {
+            "name": "in_progress",
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "jsonPath": "status",
+                "operatorType": "equals (disregard case)",
+                "value": "in_progress",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        "error": {
+          "next": "error",
+          "condition": {
+            "name": "error",
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "jsonPath": "status",
+                "operatorType": "equals (disregard case)",
+                "value": "error",
+                "type": "simple"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "complete": {
+      "transitions": {
         "trigger_parent_entity": {
           "next": "unlocked_parent_entity",
-          "manual": true,
           "action": {
             "name": "process_event",
             "config": {
@@ -23,8 +110,7 @@
                 "description": "",
                 "parameters": {
                 }
-              },
-              "publish": false
+              }
             }
           }
         }

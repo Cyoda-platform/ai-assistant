@@ -11,20 +11,6 @@ default_workflow_criteria = {
             "condition": {
                 "group_condition_operator": "AND",
                 "conditions": [
-                    {
-                        "field_name": "entityModelName",
-                        "is_meta_field": True,
-                        "operation": "equals",
-                        "value": "ENTITY_MODEL_VAR",
-                        "value_type": "strings"
-                    },
-                    {
-                        "field_name": "entityModelVersion",
-                        "is_meta_field": True,
-                        "operation": "equals",
-                        "value": "ENTITY_VERSION_VAR",
-                        "value_type": "strings"
-                    }
                 ]
             }
         }

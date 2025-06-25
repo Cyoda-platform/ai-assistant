@@ -4,13 +4,168 @@
   "states": {
     "none": {
       "transitions": {
+        "initialize": {
+          "next": "initialized"
+        }
+      }
+    },
+    "initialized": {
+      "transitions": {
+        "build_new_app": {
+          "next": "building_new_app",
+          "condition": {
+            "name": "build_new_app_criteria",
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "equals (disregard case)",
+                "value": "build_new_app",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        "discuss_functional_requirements": {
+          "next": "chats_initialized",
+          "condition": {
+            "name": "discuss_functional_requirements_criteria",
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "equals (disregard case)",
+                "value": "discuss_functional_requirements",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        "edit_functional_requirements": {
+          "next": "functional_requirements_specified",
+          "condition": {
+            "name": "edit_functional_requirements_criteria",
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "equals (disregard case)",
+                "value": "edit_functional_requirements",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        "prototype_discussion_requested": {
+          "next": "prototype_discussion_requested_submitted_answer",
+          "condition": {
+            "name": "prototype_discussion_requested_criteria",
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "equals (disregard case)",
+                "value": "prototype_discussion_requested",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        "resume_migration": {
+          "next": "migration_confirmation_completed",
+          "condition": {
+            "name": "resume_migration_criteria",
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "equals (disregard case)",
+                "value": "resume_migration",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        "resume_prototype_cyoda_workflow": {
+          "next": "generated_initial_cyoda_prototype",
+          "condition": {
+            "name": "resume_prototype_cyoda_workflow_criteria",
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "equals (disregard case)",
+                "value": "resume_prototype_cyoda_workflow",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        "resume_gen_prototype_cyoda_workflow_json": {
+          "next": "finished_prototype_cyoda_workflow",
+          "condition": {
+            "name": "resume_gen_prototype_cyoda_workflow_json_criteria",
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "equals (disregard case)",
+                "value": "resume_gen_prototype_cyoda_workflow_json",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        "resume_gen_entities": {
+          "next": "finished_prototype_cyoda_workflow_json",
+          "condition": {
+            "name": "v_criteria",
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "equals (disregard case)",
+                "value": "resume_gen_entities",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        "resume_post_app_build_steps": {
+          "next": "finished_app_generation_flow",
+          "condition": {
+            "name": "resume_post_app_build_steps_criteria",
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "equals (disregard case)",
+                "value": "resume_post_app_build_steps",
+                "type": "simple"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "building_new_app": {
+      "transitions": {
         "welcome_user": {
           "next": "greeting_sent",
           "action": {
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification":  "👋 Welcome to Cyoda Application Builder!\nWe’re excited to work with you on building your app.\n\n🔧 Here's how the process works:\n\n**Define & confirm functional requirements**\nWe'll discuss what your app needs to do and confirm the necessary API endpoints.\n\n**Prototype phase**\nWe’ll create a controller-based sketch prototype focused on core logic only.\n\n**Backend migration**\nOnce you're happy with the prototype, we'll migrate it to the Cyoda backend, introducing our event-driven architecture and non-functional requirements.\n👉 Learn more: https://cyoda.com\n\n🚀 After that, you’ll get guidance on launching your app—and we can continue editing it as needed.\n\n🌱 We're in alpha!\nIf something goes wrong or you have questions, reach out on [Discord](https://discord.com/channels/791341703498956840) or click Retry in the entities progress window.\n\nLet’s build something great together!\n\n```mermaid\ngraph TD\n    A([Define & Confirm Functional Requirements]):::bar e1@== build_general_application.functional_requirements_specified\n    ==> B([Build Sketch Prototype]):::bar\n    B e2@== functional_requirements_generated ==> C([Validate Functionality & API Endpoints]):::bar\n    C e3@== prototype_discussion_requested ==> D{Are You Happy With the Prototype?}:::bar\n    D e4@== migration_confirmation_requested ==> E([Migrate to Cyoda Backend]):::bar\n    E e5@== finished_app_generation_flow ==> F([Event-Driven Architecture + Non-Functional Requirements]):::bar\n    F e6@== init_setup_workflow ==> G([Launch Your App]):::bar\n    G e7@== edit_existing_workflow ==> H([Iterate & Edit as Needed]):::bar\n\n    D e1@== No ==> B\n\n    H e8@== locked_chat ==> I([Need Help? Click Retry or Ask on Discord]):::bar\n    e1@{ animate: true }\n    e2@{ animate: true }\n    e3@{ animate: true }\n    e4@{ animate: true }\n    e5@{ animate: true }\n    e6@{ animate: true }\n    e7@{ animate: true }\n    e8@{ animate: true }\n    classDef bar stroke:#0f0\n```",
+              "notification":  "👋 Welcome to Cyoda Application Builder!\nWe’re excited to work with you on building your app.\n\n🔧 Here's how the process works:\n\n**Define & confirm functional requirements**\nWe'll discuss what your app needs to do and confirm the necessary API endpoints.\n\n**Prototype phase**\nWe’ll create a controller-based sketch prototype focused on core logic only.\n\n**Backend migration**\nOnce you're happy with the prototype, we'll migrate it to the Cyoda backend, introducing our event-driven architecture and non-functional requirements.\n👉 Learn more: https://cyoda.com\n\n🚀 After that, you’ll get guidance on launching your app—and we can continue editing it as needed.\n\n🌱 We're in alpha!\nIf something goes wrong or you have questions, reach out on [Discord](https://discord.gg/95rdAyBZr2) or click Retry in the entities progress window.\n\nLet’s build something great together!\n\n```mermaid\ngraph TD\n    A([Define & Confirm Functional Requirements]):::bar e1@== build_general_application.functional_requirements_specified\n    ==> B([Build Sketch Prototype]):::bar\n    B e2@== functional_requirements_generated ==> C([Validate Functionality & API Endpoints]):::bar\n    C e3@== prototype_discussion_requested ==> D{Are You Happy With the Prototype?}:::bar\n    D e4@== migration_confirmation_requested ==> E([Migrate to Cyoda Backend]):::bar\n    E e5@== finished_app_generation_flow ==> F([Event-Driven Architecture + Non-Functional Requirements]):::bar\n    F e6@== init_setup_workflow ==> G([Launch Your App]):::bar\n    G e7@== edit_existing_workflow ==> H([Iterate & Edit as Needed]):::bar\n\n    D e1@== No ==> B\n\n    H e8@== locked_chat ==> I([Need Help? Click Retry or Ask on Discord]):::bar\n    e1@{ animate: true }\n    e2@{ animate: true }\n    e3@{ animate: true }\n    e4@{ animate: true }\n    e5@{ animate: true }\n    e6@{ animate: true }\n    e7@{ animate: true }\n    e8@{ animate: true }\n    classDef bar stroke:#0f0\n```",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -83,7 +238,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -226,7 +381,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -488,7 +643,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -806,7 +961,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "✅ First Prototype Ready!\n\nThe initial prototype based on your functional requirements is now ready! You can run and test it locally or directly in **GitHub Codespaces**.\n\n---\n\n### ▶️ How to Run the Prototype\n\n#### **Option 1: GitHub Codespaces **\nYou can open the repo in GitHub Codespaces and launch the prototype there:\n\n1. Open the repository in [GitHub Codespaces](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}).\n2. In the Codespace terminal, run:\n\n```bash\npython entity/prototype.py\n```\n\n3. Preview the app in the browser:\n   - `/docs` → Swagger: `https://<your-codespace-url>/docs`\n   - `/scalar` → Scalar UI: `https://<your-codespace-url>/scalar`\n\n> *Codespaces will provide a forwarded port URL — just append `/docs` or `/scalar` to it.*\n\n---\n\n#### **Option 2: Local Environment**\n\n1. Make sure you're on the correct branch and up to date:\n\n```bash\ngit checkout {branch_name}\ngit pull\n```\n\n2. Run the app:\n\n```bash\npython entity/prototype.py\n```\n\n3. Open your browser and go to:\n- [http://localhost:8000/docs](http://localhost:8000/docs)\n- or [http://localhost:8000/scalar](http://localhost:8000/scalar)\n\n---\n\n### 🧪 Testing\n\nYou’ll find example requests and responses in:\n📄 `entity/functional_requirement.md`\n\nUse these to test the API via the Swagger or Scalar UI.\n\n---\n\n### ✅ Approval or Feedback\n\nIf everything looks good, feel free to approve it.\nIf anything’s off or you’d like changes, just ping me here. 🙌\n\n> ⚠️ **Note:** We're using the `quart-schema` library, which is sensitive to the positioning of annotations. If you run into issues related to schema validation, let me know — I’ll sort it out quickly.",
+              "question": "✅ First Prototype Ready!\n\nThe initial prototype based on your functional requirements is now ready! You can run and test it locally or directly in **GitHub Codespaces**.\n\n---\n\n### ▶️ How to Run the Prototype\n\n#### **Option 1: GitHub Codespaces **\nYou can open the repo in GitHub Codespaces and launch the prototype there:\n\n1. Open the repository in [GitHub Codespaces](https://github.com/Cyoda-platform/quart-client-template/tree/{git_branch}).\n2. In the Codespace terminal, run:\n\n```bash\npython entity/prototype.py\n```\n\n3. Preview the app in the browser:\n   - `/docs` → Swagger: `https://<your-codespace-url>/docs`\n   - `/scalar` → Scalar UI: `https://<your-codespace-url>/scalar`\n\n> *Codespaces will provide a forwarded port URL — just append `/docs` or `/scalar` to it.*\n\n---\n\n#### **Option 2: Local Environment**\n\n1. Make sure you're on the correct branch and up to date:\n\n```bash\ngit checkout {git_branch}\ngit pull\n```\n\n2. Run the app:\n\n```bash\npython entity/prototype.py\n```\n\n3. Open your browser and go to:\n- [http://localhost:8000/docs](http://localhost:8000/docs)\n- or [http://localhost:8000/scalar](http://localhost:8000/scalar)\n\n---\n\n### 🧪 Testing\n\nYou’ll find example requests and responses in:\n📄 `entity/functional_requirement.md`\n\nUse these to test the API via the Swagger or Scalar UI.\n\n---\n\n### ✅ Approval or Feedback\n\nIf everything looks good, feel free to approve it.\nIf anything’s off or you’d like changes, just ping me here. 🙌\n\n> ⚠️ **Note:** We're using the `quart-schema` library, which is sensitive to the positioning of annotations. If you run into issues related to schema validation, let me know — I’ll sort it out quickly.",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -855,7 +1010,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -1115,7 +1270,7 @@
                             "generate_processors",
                             "configure_trino",
                             "generate_entity",
-                            "start_python_app",
+                            "start_app",
                             "cyoda_best_practice"
                           ]
                         }
@@ -1424,13 +1579,13 @@
                     "    \"operator\": \"AND\",",
                     "    \"conditions\": [",
                     "      {",
-                    "        \"jsonPath\": \"$.failed\",",
+                    "        \"jsonPath\": \"$.my_attribute\",",
                     "        \"operatorType\": \"EQUALS\",",
                     "        \"value\": false,",
                     "        \"type\": \"simple\"",
                     "      },",
                     "      {",
-                    "        \"jsonPath\": \"$.last_modified\",",
+                    "        \"jsonPath\": \"$.my_attribute\",",
                     "        \"operatorType\": \"GREATER_THAN\",",
                     "        \"value\": 1,",
                     "        \"type\": \"simple\"",
@@ -1918,7 +2073,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "✅ Your application is ready in the {branch_name} branch!\n\n [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{branch_name}) \uD83D\uDC40 \n\nLet’s bring it to life — together. Please make sure you've logged in to proceed\n\n ",
+              "question": "✅ Your application is ready in the {git_branch} branch!\n\n [Cyoda GitHub](https://github.com/Cyoda-platform/quart-client-template/tree/{git_branch}) \uD83D\uDC40 \n\nLet’s bring it to life — together. Please make sure you've logged in to proceed\n\n ",
               "publish": true
             }
           }

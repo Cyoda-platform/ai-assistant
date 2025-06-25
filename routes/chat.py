@@ -50,6 +50,21 @@ async def delete_chat(technical_id):
     return jsonify(result), 200
 
 
+@chat_bp.route('/<technical_id>', methods=['PUT'])
+@rate_limit(const.RATE_LIMIT, timedelta(minutes=1))
+@auth_optional
+async def rename_chat(technical_id):
+    header = request.headers.get('Authorization')
+    data = await request.get_json()
+    chat_name = data.get('chat_name')
+    chat_description = data.get('chat_description')
+    result = await chat_service.rename_chat(auth_header=header,
+                                            technical_id=technical_id,
+                                            chat_name=chat_name,
+                                            chat_description=chat_description)
+    return jsonify(result), 200
+
+
 @chat_bp.route('/<technical_id>/text-questions', methods=['POST'])
 @rate_limit(const.RATE_LIMIT, timedelta(days=1))
 @auth_required

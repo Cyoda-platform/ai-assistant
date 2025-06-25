@@ -207,8 +207,8 @@ class WorkflowDispatcher:
                     edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                                          entity_model=const.ModelName.AI_MEMORY_EDGE_MESSAGE.value,
                                                                          entity_version=env_config.ENTITY_VERSION,
-                                                                         entity={"role": "user",
-                                                                                 "content": answer_content},
+                                                                         entity=AIMessage(role="user",
+                                                                                 content=answer_content),
                                                                          meta={
                                                                              "type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
                     memory.messages.get(memory_tag).append(AIMessage(edge_message_id=edge_message_id))
@@ -237,7 +237,8 @@ class WorkflowDispatcher:
         edge_message_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                              entity_model=const.ModelName.AI_MEMORY_EDGE_MESSAGE.value,
                                                              entity_version=env_config.ENTITY_VERSION,
-                                                             entity={"role": "assistant", "content": ai_agent_resp},
+                                                             entity=AIMessage(role="assistant",
+                                                                              content=ai_agent_resp),
                                                              meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE})
         memory_tags = config.get("memory_tags", [env_config.GENERAL_MEMORY_TAG])
         for memory_tag in memory_tags:
@@ -318,12 +319,21 @@ class WorkflowDispatcher:
         if config_type in ("function", "prompt", "agent"):
 
             if response and response != "None":
-                notification = FlowEdgeMessage(
-                    publish=config.get("publish", False),
-                    message=_post_process_response(response=f"{response}", config=config),
-                    approve=config.get("approve", False),
-                    type="question"
-                )
+                if isinstance(response, str) and response.strip().startswith('{\"type\": \"ui_function\"'):
+                    response = json.loads(response)
+                    notification = FlowEdgeMessage(
+                        publish=config.get("publish", False),
+                        message=_post_process_response(response=f"{response}", config=config),
+                        approve=config.get("approve", False),
+                        type=const.UI_FUNCTION_PREFIX
+                    )
+                else:
+                    notification = FlowEdgeMessage(
+                        publish=config.get("publish", False),
+                        message=_post_process_response(response=f"{response}", config=config),
+                        approve=config.get("approve", False),
+                        type="question"
+                    )
                 await self.add_edge_message(message=notification,
                                             flow=finished_flow,
                                             user_id=entity.user_id)
@@ -410,7 +420,7 @@ class WorkflowDispatcher:
             token=self.cyoda_auth_service,
             entity_model=const.ModelName.AI_MEMORY_EDGE_MESSAGE.value,
             entity_version=env_config.ENTITY_VERSION,
-            entity={"role": "assistant", "content": content},
+            entity=AIMessage(role="assistant", content=content),
             meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
         )
 
@@ -429,5 +439,5 @@ class WorkflowDispatcher:
             entity_version=env_config.ENTITY_VERSION,
             technical_id=memory_id,
             entity=chat_memory,
-            meta={const.TransitionKey.UPDATE.value: "update"}
+            meta={const.TransitionKey.UPDATE.value: "UPDATE"}
         )

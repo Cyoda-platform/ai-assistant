@@ -73,6 +73,7 @@ class JavaClasses(str, Enum):
 # === Transition keys ===
 @unique
 class TransitionKey(str, Enum):
+    DELETE = "delete"
     UPDATE = "update_transition"
     PROCESS_USER_INPUT = "submit_answer"
     MANUAL_APPROVE = "manual_approve"
@@ -81,12 +82,21 @@ class TransitionKey(str, Enum):
     UNLOCK_CHAT = "unlock_chat"
     FAIL = "fail"
     ROLLBACK = "rollback"
-
+    BUILD_NEW_APP = "build_new_app"
+    DISCUSS_FUNCTIONAL_REQUIREMENTS = "discuss_functional_requirements"
+    EDIT_FUNCTIONAL_REQUIREMENTS = "edit_functional_requirements"
+    PROTOTYPE_DISCUSSION_REQUESTED = "prototype_discussion_requested"
+    RESUME_MIGRATION = "resume_migration"
+    RESUME_PROTOTYPE_CYODA_WORKFLOW = "resume_prototype_cyoda_workflow"
+    RESUME_GEN_PROTOTYPE_CYODA_WORKFLOW_JSON = "resume_gen_prototype_cyoda_workflow_json"
+    RESUME_GEN_ENTITIES = "resume_gen_entities"
+    RESUME_POST_APP_BUILD_STEPS = "resume_post_app_build_steps"
 
 # === Model names ===
 @unique
 class ModelName(str, Enum):
     QUESTIONS_QUEUE = "questions_queue"
+    CHAT_BUSINESS_ENTITY = "chat_business_entity"
     CHAT_MEMORY = "chat_memory"
     FLOW_EDGE_MESSAGE = "flow_edge_message"
     AI_MEMORY_EDGE_MESSAGE = "ai_memory_edge_message"
@@ -154,10 +164,15 @@ class Notifications(str, Enum):
     PROCEED_TO_THE_NEXT_STEP = "Proceeded to the next step. You will see a notification soon!"
     DESIGN_PLEASE_WAIT = "Sorry, I haven't come up with an answer to the previous question yet. Please give me one more minute to think everything over 🤔⏳"
     FAILED_WORKFLOW = (
-        "⚠️ We encountered an error while processing the workflow **{technical_id}**. "
-        "Our team will look into it shortly.\n\nTo continue, please start a new chat.\n\n"
-        "We’re sorry for the inconvenience and appreciate your understanding."
+        "⚠️ We ran into an error while processing the workflow **{technical_id}**. "
+        "Our team will review the issue shortly.\n\n"
+        "In the meantime, you can continue working on your branch or application in a new chat. \n\n"
+        "Please start a new conversation and include your branch name along with what you'd like to do — \n\n"
+        "for example, continue prototyping, proceed with the generated Cyoda app, add new entities or workflow processors, \n\n"
+        "or make edits to existing components.\n\n"
+        "We apologize for the inconvenience and appreciate your understanding."
     )
+
     APPROVAL_NOTIFICATION = (
         "Give a thumbs up 👍 if you'd like to proceed to the next question. "
         "If you'd like to discuss further, let's chat 💬"
@@ -215,7 +230,7 @@ FILES_NOTIFICATIONS = {
     },
 }
 
-BRANCH_READY_NOTIFICATION = "🎉 **Your branch is live!**\nI’ve added a GitHub branch in our public repository where I’ll be posting updates.\nYou can check it out now or come back to it anytime:\n🔗 [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{branch_name}) 👀\n"
+BRANCH_READY_NOTIFICATION = "🎉 **Your branch is live!**\nI’ve added a GitHub branch in our public repository where I’ll be posting updates.\nYou can check it out now or come back to it anytime:\n🔗 [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch}) 👀\n"
 
 # === Miscellaneous design strings ===
 LOGIC_CODE_DESIGN_STR = "Additional logic code design"
@@ -237,3 +252,4 @@ MAX_SCHEDULER_POLLS = 120
 MAX_GUEST_CHAT_MESSAGES = 300
 MAX_CHAT_MESSAGES = 1500
 SCHEDULER_STATUS_WAITING = "waiting"
+UI_FUNCTION_PREFIX = "ui_function"

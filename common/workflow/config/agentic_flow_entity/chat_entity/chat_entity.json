@@ -428,6 +428,164 @@
                       "additionalProperties": false
                     }
                   }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_issue_technical_user",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "POST"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "file"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_list_all_technical_users",
+                    "description": "Please use ui_function_list_all_technical_users for requests like give me all technical/m2m users. This will return the list of M2M clients.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "GET"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "text"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_reset_client_secret",
+                    "description": "Please use ui_function_reset_client_secret for requests like please reset the client secret for my technical user. Please use clientId from the user input. The user needs to explicitly give you clientId.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "PUT"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients/{clientId}/secret"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "text"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "resume_build_general_application",
+                    "description": "Resumes building an application by branch_name. Do not use for editing existing applications. Use for queries like, please proceed with this application; i had an error - proceed building an app, continue this app/chat. Please outline how we can proceed so the user can select a transition (please use human readable transition names) and a programming language. Transition, git branch and programming language should be provided by the user! You cannot decide yourself",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
+                        },
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "build_new_app",
+                            "discuss_functional_requirements",
+                            "edit_functional_requirements",
+                            "prototype_discussion_requested",
+                            "resume_migration",
+                            "resume_prototype_cyoda_workflow",
+                            "resume_gen_prototype_cyoda_workflow_json",
+                            "resume_gen_entities",
+                            "resume_post_app_build_steps"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "transition",
+                        "programming_language"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
                 }
               ],
               "messages": [
@@ -867,6 +1025,90 @@
                       },
                       "required": [
                         "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_issue_technical_user",
+                    "description": " Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "POST"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "file"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "resume_build_general_application",
+                    "description": "Resumes building an application by branch_name. Do not use for editing existing applications. Use for queries like, please proceed with this application; i had an error - proceed building an app, continue this app/chat. Please outline how we can proceed so the user can select a transition (please use human readable transition names) and a programming language. Transition, git branch and programming language should be provided by the user! You cannot decide yourself",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
+                        },
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "build_new_app",
+                            "discuss_functional_requirements",
+                            "edit_functional_requirements",
+                            "prototype_discussion_requested",
+                            "resume_migration",
+                            "resume_prototype_cyoda_workflow",
+                            "resume_gen_prototype_cyoda_workflow_json",
+                            "resume_gen_entities",
+                            "resume_post_app_build_steps"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "transition",
+                        "programming_language"
                       ],
                       "additionalProperties": false
                     }
