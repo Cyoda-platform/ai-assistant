@@ -903,8 +903,10 @@ class ChatWorkflow(Workflow):
         error_msg = "Error while converting workflow"
         try:
             # 1) Extract & validate parameters
-            entity_name = entity.workflow_cache.get("entity_name")
-            if not entity_name:
+            entity_name = entity.workflow_cache.get("entity_name", params.get("entity_name"))
+            git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, params.get(const.GIT_BRANCH_PARAM))
+
+            if not (entity_name or git_branch_id):
                 raise ValueError("Missing entity_name in workflow_cache")
 
             workflow_file_tmpl = params.get("workflow_file_name")
@@ -913,7 +915,6 @@ class ChatWorkflow(Workflow):
                 raise ValueError("Both workflow_file_name and output_file_name are required")
 
             entity_version = params.get("entity_version", config.CLIENT_ENTITY_VERSION)
-            git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
             repo_name = get_repository_name(entity)
 
             # 2) Compute file names

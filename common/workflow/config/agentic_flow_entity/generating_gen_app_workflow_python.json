@@ -143,8 +143,30 @@
                     "\"ICONTAINS\", \"ISTARTS_WITH\", \"IENDS_WITH\", \"INOT_CONTAINS\",",
                     "\"INOT_STARTS_WITH\", \"INOT_ENDS_WITH\", \"MATCHES_PATTERN\",",
                     "\"BETWEEN\", \"BETWEEN_INCLUSIVE\"",
-                    "Ensure each process function is in externalized_processors.",
-                    "Return only valid JSON without extra information."
+                    "Return only valid JSON without any extra text. Return states ordered for the best human readability, like an ordered dictionary."
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "designed_workflow_config_from_code": {
+      "transitions": {
+        "enrich_workflow": {
+          "next": "formatted_workflow_json",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "model": {
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Return only valid JSON without any extra text without changes to the business logic. Please preserve original states order, it's an ordered dict."
                   ]
                 }
               ],
@@ -271,13 +293,24 @@
                     }
                   }
                 }
-              }
+              },
+              "input": {
+                "local_fs": [
+                  "entity/{entity_name}/workflow.json"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "entity/{entity_name}/workflow.json"
+                ]
+              },
+              "publish": false
             }
           }
         }
       }
     },
-    "designed_workflow_config_from_code": {
+    "formatted_workflow_json": {
       "transitions": {
         "convert_workflow_to_cyoda_dto": {
           "next": "converted_workflow_to_cyoda_dto",
