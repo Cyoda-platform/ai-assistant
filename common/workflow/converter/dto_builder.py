@@ -1,7 +1,6 @@
 import json
 
 from common.config import const
-from common.config.config import config
 from common.workflow.converter.constants import DEFAULT_PARAM_VALUES
 from common.workflow.converter.utils import (
     generate_id, current_timestamp, add_none_state_if_not_exists,
@@ -59,7 +58,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         "@bean": "com.cyoda.core.model.stateMachine.dto.FullWorkflowContainerDto",
         "workflow": [],
         "transitions": [],
-        "criterias": [fail_crit, succeed_crit, wrong_gen_crit],
+        "criterias": [fail_crit, succeed_crit, wrong_gen_crit] if ai else [],
         "processes": [],
         "states": [],
         "processParams": []
@@ -104,7 +103,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                     "rangeField": "false",
                     "value": workflow_name
                 }
-            ]
+            ] if ai else []
         },
         "aliasDefs": [],
         "parameters": [],
@@ -128,9 +127,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
         process_criteria_ids = []
         process_ids.append({"persisted": True, "persistedId": process_id, "runtimeId": 0})
 
-        if action.get("config"):
-            _extract_processor_condition(action, process_criteria_ids, process_id, process_params)
-        elif action.get("type") == "scheduled":
+        if action.get("type") == "scheduled":
             dto["processes"].append({
                 "persisted": True,
                 "owner": DEFAULT_PARAM_VALUES["owner"],
@@ -165,9 +162,12 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                     "value": {"@type": "String", "value": action["parameters"].get(key)}
                 })
             dto["processParams"].extend(process_params)
+        else:
+            _extract_processor_condition(action, process_criteria_ids, process_id, process_params)
+
 
     def _extract_processor_condition(action, process_criteria_ids, process_id, process_params):
-        config_data = action.get("config", {}) or {}
+        config_data = action.get("config", {})
         dto["processes"].append({
             "persisted": True,
             "owner": DEFAULT_PARAM_VALUES["owner"],
@@ -176,14 +176,14 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
             "name": action.get("name"),
             "entityClassName": class_name,
             "creationDate": current_timestamp(),
-            "description": config_data.get("description", ""),
+            "description": action.get("description", ""),
             "processorClassName": "net.cyoda.saas.externalize.processor.ExternalizedProcessor",
             "parameters": process_params,
             "fields": [],
-            "syncProcess": config_data.get("sync_process", DEFAULT_PARAM_VALUES["sync_process"]),
-            "newTransactionForAsync": config_data.get("new_transaction_for_async",
+            "syncProcess": action.get("sync_process", DEFAULT_PARAM_VALUES["sync_process"]),
+            "newTransactionForAsync": action.get("new_transaction_for_async",
                                                       DEFAULT_PARAM_VALUES["new_transaction_for_async"]),
-            "noneTransactionalForAsync": config_data.get("none_transactional_for_async",
+            "noneTransactionalForAsync": action.get("none_transactional_for_async",
                                                          DEFAULT_PARAM_VALUES["none_transactional_for_async"]),
             "isTemplate": False,
             "criteriaIds": process_criteria_ids,
@@ -221,7 +221,7 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
                         transition_criteria_id=None):
         transition_id = generate_id()
         criteria_ids = [transition_criteria_id] if transition_criteria_id else []
-        if not criteria_ids:
+        if not criteria_ids and ai:
             if transition_name == const.TransitionKey.FAIL.value:
                 criteria_ids.append(fail_crit_id)
             elif not transition_data.get("manual", False):
@@ -255,14 +255,14 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
 
         if "condition" in transition_data:
             condition_data = transition_data["condition"]
-            config_obj = condition_data.get("config", {})
+            config_obj = condition_data.get("config", condition_data if condition_data.get("type") and condition_data.get("type") == "function" else {})
             if config_obj:
                 function = config_obj.get("function", {})
                 criteria = {
                     "owner": DEFAULT_PARAM_VALUES["owner"],
-                    "calculation_nodes_tags": config_obj.get("calculation_nodes_tags", calculation_nodes_tags),
-                    "attach_entity": str(config_obj.get("attach_entity", DEFAULT_PARAM_VALUES["attach_entity"])).lower(),
-                    "calculation_response_timeout_ms": str(config_obj.get("calculation_response_timeout_ms",
+                    "calculation_nodes_tags": function.get("calculation_nodes_tags", calculation_nodes_tags),
+                    "attach_entity": str(function.get("attach_entity", DEFAULT_PARAM_VALUES["attach_entity"])).lower(),
+                    "calculation_response_timeout_ms": str(function.get("calculation_response_timeout_ms",
                                                                           DEFAULT_PARAM_VALUES["calculation_response_timeout_ms"])),
                     "retry_policy": config_obj.get("retry_policy", DEFAULT_PARAM_VALUES["retry_policy"]),
                     "name": function.get("name") or condition_data.get("name", DEFAULT_PARAM_VALUES["default_condition_name"]),

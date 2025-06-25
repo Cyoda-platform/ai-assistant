@@ -1,11 +1,12 @@
 import uuid
 import datetime
 
-from quart import Blueprint, request, jsonify
+from quart import Blueprint, jsonify
 from quart_rate_limiter import rate_limit
 import jwt
 
 from common.config.config import config
+from routes.rl_key_functions import ua_key_function
 
 token_bp = Blueprint('token', __name__, url_prefix=config.API_PREFIX)
 
@@ -13,8 +14,9 @@ token_bp = Blueprint('token', __name__, url_prefix=config.API_PREFIX)
 async def get_guest_token_preflight():
     return jsonify({})
 
+
 @token_bp.route('/get_guest_token', methods=['GET'])
-@rate_limit(limit=config.GUEST_TOKEN_LIMIT, period=datetime.timedelta(weeks=50))
+@rate_limit(limit=config.GUEST_TOKEN_LIMIT, period=datetime.timedelta(minutes=1), key_function=ua_key_function)
 async def get_guest_token():
     session_id = uuid.uuid4()
     now = datetime.datetime.utcnow()

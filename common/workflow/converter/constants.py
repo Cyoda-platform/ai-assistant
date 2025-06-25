@@ -1,5 +1,6 @@
 from common.config.config import config
 
+#todo remove textual keys
 OPERATION_MAPPING = {
     "equals (disregard case)": {"operation": "IEQUALS", "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals"},
     "not equal (disregard case)": {"operation": "INOT_EQUAL",
@@ -25,7 +26,33 @@ OPERATION_MAPPING = {
     "between (inclusive, match case)": {"operation": "BETWEEN_INCLUSIVE",
                                         "@bean": "com.cyoda.core.conditions.queryable.BetweenInclusive"},
     "is null": {"operation": "IS_NULL", "@bean": "com.cyoda.core.conditions.nonqueryable.IsNull"},
-    "is not null": {"operation": "NOT_NULL", "@bean": "com.cyoda.core.conditions.nonqueryable.NotNull"}
+    "is not null": {"operation": "NOT_NULL", "@bean": "com.cyoda.core.conditions.nonqueryable.NotNull"},
+    "IEQUALS": {"operation": "IEQUALS", "@bean": "com.cyoda.core.conditions.nonqueryable.IEquals"},
+    "INOT_EQUAL": {"operation": "INOT_EQUAL",
+                                   "@bean": "com.cyoda.core.conditions.nonqueryable.INotEquals"},
+    "BETWEEN": {"operation": "BETWEEN", "@bean": "com.cyoda.core.conditions.queryable.Between"},
+    "CONTAINS": {"operation": "CONTAINS", "@bean": "com.cyoda.core.conditions.nonqueryable.IContains"},
+    "ISTARTS_WITH": {"operation": "ISTARTS_WITH", "@bean": "com.cyoda.core.conditions.nonqueryable.IStartsWith"},
+    "IENDS_WITH": {"operation": "IENDS_WITH", "@bean": "com.cyoda.core.conditions.nonqueryable.IEndsWith"},
+    "INOT_CONTAINS": {"operation": "INOT_CONTAINS", "@bean": "com.cyoda.core.conditions.nonqueryable.INotContains"},
+    "INOT_STARTS_WITH": {"operation": "INOT_STARTS_WITH",
+                            "@bean": "com.cyoda.core.conditions.nonqueryable.INotStartsWith"},
+    "NOT_ENDS_WITH": {"operation": "NOT_ENDS_WITH", "@bean": "com.cyoda.core.conditions.nonqueryable.NotEndsWith"},
+    "INOT_ENDS_WITH": {"operation": "INOT_ENDS_WITH",
+                                               "@bean": "com.cyoda.core.conditions.nonqueryable.INotEndsWith"},
+    "EQUALS": {"operation": "EQUALS", "@bean": "com.cyoda.core.conditions.queryable.Equals"},
+    "NOT_EQUAL": {"operation": "NOT_EQUAL", "@bean": "com.cyoda.core.conditions.nonqueryable.NotEquals"},
+    "LESS_THAN": {"operation": "LESS_THAN", "@bean": "com.cyoda.core.conditions.queryable.LessThan"},
+    "GREATER_THAN": {"operation": "GREATER_THAN", "@bean": "com.cyoda.core.conditions.queryable.GreaterThan"},
+    "LESS_OR_EQUAL": {"operation": "LESS_OR_EQUAL",
+                              "@bean": "com.cyoda.core.conditions.queryable.LessThanEquals"},
+    "GREATER_OR_EQUAL": {"operation": "GREATER_OR_EQUAL",
+                                 "@bean": "com.cyoda.core.conditions.queryable.GreaterThanEquals"},
+    "BETWEEN_INCLUSIVE": {"operation": "BETWEEN_INCLUSIVE",
+                                        "@bean": "com.cyoda.core.conditions.queryable.BetweenInclusive"},
+    "IS_NULL": {"operation": "IS_NULL", "@bean": "com.cyoda.core.conditions.nonqueryable.IsNull"},
+    "NOT_NULL": {"operation": "NOT_NULL", "@bean": "com.cyoda.core.conditions.nonqueryable.NotNull"},
+
 }
 
 VALID_VALUE_TYPES = {

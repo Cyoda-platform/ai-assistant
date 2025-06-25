@@ -1,0 +1,87 @@
+{
+  "version": "1.0",
+  "description": "Template for FSM workflows with optional action/condition hooks",
+  "initial_state": "none",
+  "workflow_name": "test_converter",
+  "states": {
+    "none": {
+      "transitions": {
+        "test_transition_01": {
+          "next": "test_state_01"
+        }
+      }
+    },
+    "test_state_01": {
+      "transitions": {
+        "test_transition_02": {
+          "next": "test_state_02",
+          "action": {
+            "name": "test_ext_proc_with_config_01",
+            "config": {
+              "type": "question",
+              "question": "The entity has been successfully added. Please don’t hesitate to get in touch if I can assist further.",
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "test_state_02": {
+      "transitions": {
+        "test_transition_03": {
+          "next": "test_state_03",
+          "action": {
+            "name": "test_ext_proc_no_config_01"
+          }
+        }
+      }
+    },
+    "test_state_03": {
+      "transitions": {
+        "test_transition_04": {
+          "next": "test_state_04",
+          "condition": {
+            "type": "function",
+            "function": {
+              "name": "test_ext_criteria_with_config_01",
+              "description": "Completes iteration",
+              "parameters": {
+                "transition": "migration_confirmation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "test_state_04": {
+      "transitions": {
+        "test_transition_05": {
+          "next": "test_state_05",
+          "condition": {
+            "name": "test_ext_criteria_no_config_01"
+          }
+        }
+      }
+    },
+    "test_state_05": {
+      "transitions": {
+        "test_transition_05": {
+          "next": "test_state_06",
+          "condition": {
+            "name": "test_cond_criteria_with_config_01",
+            "type": "group",
+            "operator": "AND",
+            "parameters": [
+              {
+                "jsonPath": "entityModelName",
+                "operatorType": "equals (disregard case)",
+                "value": "chat_entity",
+                "type": "simple"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
