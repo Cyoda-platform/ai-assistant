@@ -5,12 +5,12 @@ from quart import Quart, send_from_directory
 from quart_cors import cors
 from quart_rate_limiter import RateLimiter, rate_limit
 import common.config.const as const
-from common.config.config import config
 from common.exception.errors import init_error_handlers
 from common.utils.event_loop import BackgroundEventLoop
 from routes.chat import chat_bp
 from routes.labels_config import labels_config_bp
 from routes.token import token_bp
+from routes.workflow import workflow_bp
 from services.factory import grpc_client
 
 logger = logging.getLogger(__name__)
@@ -63,5 +63,6 @@ def create_app():
     app.register_blueprint(token_bp)
     app.register_blueprint(chat_bp)
     app.register_blueprint(labels_config_bp)
+    app.register_blueprint(workflow_bp)
 
     return app

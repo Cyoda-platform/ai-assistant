@@ -37,19 +37,23 @@
                   "content": [
                     "# Please update processors functions according the new requirement \"{user_request}\".",
                     "Generate new process functions if necessary or update existing functions according to the user requirement.",
-                    "Processes should have name starting with 'process_' and take only one argument entity.",
+                    "Functions should take only one argument entity.",
                     "===============",
                     "Current entity data example is provided in the attachment: {entity_name}.json",
                     "===============",
                     "Current workflow configuration is provided in the attachment: workflow.json",
                     "===============",
                     "Current processors code is provided in the attachment: workflow.py",
+                    " If you add new functions, return the full result, not only the diff. ",
                     "Example:",
                     "async def process_some_name(entity: dict):",
                     "    final_result = do_some_user_request(...)",
                     "    entity[\"final_result\"] = final_result",
                     "    entity[\"workflowProcessed\"] = True",
                     "",
+                    "Example for condition functions:",
+                    "async def function_name(entity: dict) -> bool:\n        return True",
+                    " Response format: respond with only the code. No markdown, no comments, no explanation. ",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
                   ]
                 }

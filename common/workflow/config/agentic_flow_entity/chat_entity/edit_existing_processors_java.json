@@ -36,11 +36,12 @@
                   "content": [
                     "# Please update processors functions according the new requirement \"{user_request}\".",
                     "Generate new process functions if necessary or update existing functions according to the user requirement.",
-                    "Processes should have name starting with 'process_' and take only one argument entity.",
+                    "Methods should take only one argument entity.",
                     "===============",
                     "Current workflow configuration is provided in the attachment: workflow.json",
                     "===============",
                     "Current processors code is provided in the attachment: Workflow.java",
+                    " If you add new functions, return the full result, not only the diff. ",
                     "Example:",
                     "public CompletableFuture<ObjectNode> processSetDefaultStatus(ObjectNode entity) {",
                     "    if (!entity.has(\"status\")) {",
