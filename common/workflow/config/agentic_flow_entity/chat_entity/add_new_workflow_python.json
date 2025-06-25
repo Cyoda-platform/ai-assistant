@@ -24,51 +24,111 @@
                   "role": "user",
                   "content": [
                     "Please construct workflow json from this description/code/flow chart {user_request} using a typical finite-state machine (FSM) model.",
-                    "The FSM consists of states and transitions between them, represented as a directed graph.",
-                    "Each transition may have processes. Each process starts with 'process_' prefix.",
+                    "The FSM json should consist of an ordered dictionary of states. Each state has a dictionary of transitions. Each transition has a next attribute, with the next state.",
+                    "Each transition may have an action (will map directly to a function).",
                     "Ideally, there should be one process per transition. If user doesn't specify, derive from transition name.",
-                    "Each state except the initial ('None') must be reached by exactly one transition.",
-                    "Each transition must have both start and end state.",
-                    "Always start from an initial state 'None'.",
+                    "Always start from an initial state 'none'.",
                     "",
                     "JSON Example of the Workflow:",
-                    "",
-                    "{",
-                    "  \"name\": \"specify_name_that_describes_the_workflow\",",
-                    "  \"description\": \"describe_the_workflow\",",
-                    "  \"transitions\": [",
-                    "    {",
-                    "      \"name\": \"spark_happy_message\",",
-                    "      \"description\": \"Spark the happy message\",",
-                    "      \"start_state\": \"None\",",
-                    "      \"start_state_description\": \"Initial state\",",
-                    "      \"end_state\": \"Happy_message_sparked\",",
-                    "      \"end_state_description\": \"A happy message has been sparked\",",
-                    "      \"automated\": true",
-                    "    },",
-                    "    {",
-                    "      \"name\": \"send_happy_message\",",
-                    "      \"description\": \"Send the happy message\",",
-                    "      \"start_state\": \"Happy_message_sparked\",",
-                    "      \"start_state_description\": \"A happy message has been sparked\",",
-                    "      \"end_state\": \"Message_sent\",",
-                    "      \"end_state_description\": \"The happy message has been sent\",",
-                    "      \"automated\": true,",
-                    "      \"processes\": {",
-                    "        \"schedule_transition_processors\": [],",
-                    "        \"externalized_processors\": [",
-                    "          {",
-                    "            \"name\": \"process_example\",",
-                    "            \"description\": \"\"",
-                    "          }",
-                    "        ]",
-                    "      }",
-                    "    }",
-                    "  ]",
-                    "}",
-                    "",
-                    "Please ensure each function is listed under processes.externalized_processors.",
-                    "Return only valid JSON without any extra text."
+                    "{{",
+                    "  \"version\": \"1.0\",",
+                    "  \"description\": \"Template FSM with structured states, transitions, actions, and conditions\",",
+                    "  \"initial_state\": \"none\",",
+                    "  \"workflow_name\": \"template_workflow\",",
+                    "  \"states\": {{",
+                    "    \"none\": {{  #this is first state",
+                    "      \"transitions\": {{ #this is state transitions",
+                    "        \"transition_to_01\": {{ #this is transition name",
+                    "          \"next\": \"state_01\" #this is next state",
+                    "        }}",
+                    "      }}",
+                    "    }},",
+                    "    \"state_01\": {{",
+                    "      \"transitions\": {{",
+                    "        \"transition_to_02\": {{",
+                    "          \"next\": \"state_02\",",
+                    "          \"action\": {{",
+                    "            \"name\": \"function_name\"",
+                    "          }}",
+                    "        }}",
+                    "      }}",
+                    "    }},",
+                    "    \"state_02\": {{",
+                    "      \"transitions\": {{",
+                    "        \"transition_with_condition_simple\": {{",
+                    "          \"next\": \"state_condition_check_01\",",
+                    "          \"condition\": {{",
+                    "            \"type\": \"function\",",
+                    "            \"function\": {{",
+                    "              \"name\": \"function_name_returns_bool\"",
+                    "            }}",
+                    "          }}",
+                    "        }}",
+                    "      }}",
+                    "    }},",
+                    "    \"state_condition_check_01\": {{",
+                    "      \"transitions\": {{",
+                    "        \"transition_with_condition_group\": {{",
+                    "          \"next\": \"state_terminal\",",
+                    "          \"condition\": {{",
+                    "            \"type\": \"group\",",
+                    "            \"name\": \"condition_group_gamma\",",
+                    "            \"operator\": \"AND\",",
+                    "            \"parameters\": [",
+                    "              {{",
+                    "                \"jsonPath\": \"sampleFieldA\",",
+                    "                \"operatorType\": \"equals (disregard case)\",",
+                    "                \"value\": \"template_value_01\",",
+                    "                \"type\": \"simple\"",
+                    "              }}",
+                    "            ]",
+                    "          }}",
+                    "        }}",
+                    "      }}",
+                    "    }}",
+                    "  }}",
+                    "}}",
+                    "Available operator values:",
+                    "\"AND\", \"OR\", \"NOT\"",
+                    "Available operatorType values:",
+                    "\"EQUALS\", \"NOT_EQUAL\", \"IEQUALS\", \"INOT_EQUAL\", \"IS_NULL\", \"NOT_NULL\",",
+                    "\"GREATER_THAN\", \"GREATER_OR_EQUAL\", \"LESS_THAN\", \"LESS_OR_EQUAL\",",
+                    "\"ICONTAINS\", \"ISTARTS_WITH\", \"IENDS_WITH\", \"INOT_CONTAINS\",",
+                    "\"INOT_STARTS_WITH\", \"INOT_ENDS_WITH\", \"MATCHES_PATTERN\",",
+                    "\"BETWEEN\", \"BETWEEN_INCLUSIVE\"",
+                    "Return only valid JSON without any extra text. Return states ordered for the best human readability, like an ordered dictionary."
+                  ]
+                }
+              ],
+              "output": {
+                "local_fs": [
+                  "entity/{entity_name}/workflow.json"
+                ]
+              },
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "generated_workflow_json": {
+      "transitions": {
+        "format_workflow_json": {
+          "next": "formatted_workflow_json",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "memory_tags": [
+                "format_workflow_json"
+              ],
+              "type": "prompt",
+              "model": {
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Return only valid JSON without any extra text without changes to the business logic. You can make adjustments to the json, including business logic, if it does not comply with the json schema or fails validation."
                   ]
                 }
               ],
@@ -78,49 +138,46 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "name",
-                    "transitions"
+                    "workflow_name",
+                    "initial_state",
+                    "states"
                   ],
                   "properties": {
-                    "name": {
+                    "workflow_name": {
                       "type": "string"
                     },
-                    "transitions": {
-                      "type": "array",
-                      "items": {
+                    "description": {
+                      "type": "string"
+                    },
+                    "initial_state": {
+                      "type": "string",
+                      "enum": [
+                        "none"
+                      ]
+                    },
+                    "states": {
+                      "type": "object",
+                      "additionalProperties": {
                         "type": "object",
                         "required": [
-                          "name",
-                          "start_state",
-                          "end_state",
-                          "automated"
+                          "transitions"
                         ],
                         "properties": {
-                          "name": {
-                            "type": "string"
-                          },
-                          "start_state": {
-                            "type": "string"
-                          },
-                          "end_state": {
-                            "type": "string"
-                          },
-                          "automated": {
-                            "type": "boolean"
-                          },
-                          "processes": {
+                          "transitions": {
                             "type": "object",
-                            "properties": {
-                              "schedule_transition_processors": {
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {}
-                                }
-                              },
-                              "externalized_processors": {
-                                "type": "array",
-                                "items": {
+                            "additionalProperties": {
+                              "type": "object",
+                              "required": [
+                                "next"
+                              ],
+                              "properties": {
+                                "next": {
+                                  "type": "string"
+                                },
+                                "manual": {
+                                  "type": "boolean"
+                                },
+                                "action": {
                                   "type": "object",
                                   "required": [
                                     "name"
@@ -128,6 +185,65 @@
                                   "properties": {
                                     "name": {
                                       "type": "string"
+                                    }
+                                  }
+                                },
+                                "condition": {
+                                  "type": "object",
+                                  "required": [
+                                    "type"
+                                  ],
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "function",
+                                        "group",
+                                        "simple"
+                                      ]
+                                    },
+                                    "function": {
+                                      "type": "object",
+                                      "required": [
+                                        "name"
+                                      ],
+                                      "properties": {
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "operator": {
+                                      "type": "string"
+                                    },
+                                    "parameters": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "jsonPath",
+                                          "operatorType",
+                                          "value",
+                                          "type"
+                                        ],
+                                        "properties": {
+                                          "jsonPath": {
+                                            "type": "string"
+                                          },
+                                          "operatorType": {
+                                            "type": "string"
+                                          },
+                                          "value": {
+                                            "type": "string"
+                                          },
+                                          "type": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
                                     }
                                   }
                                 }
@@ -140,18 +256,23 @@
                   }
                 }
               },
-              "output": {
+              "input": {
                 "local_fs": [
-                 "entity/{entity_name}/workflow.json"
+                  "entity/{entity_name}/workflow.json"
                 ]
               },
-              "publish": true
+              "output": {
+                "local_fs": [
+                  "entity/{entity_name}/workflow.json"
+                ]
+              },
+              "publish": false
             }
           }
         }
       }
     },
-    "generated_workflow_json": {
+    "formatted_workflow_json": {
       "transitions": {
         "convert_workflow_to_cyoda_dto": {
           "next": "converted_workflow_json",
@@ -175,7 +296,7 @@
     },
     "converted_workflow_json": {
       "transitions": {
-        "notify_user": {
+        "generate_workflow_processors": {
           "next": "generated_workflow_processors",
           "action": {
             "name": "process_event",
@@ -190,13 +311,13 @@
                 {
                   "role": "user",
                   "content": [
-                    "# Please implement processors for the newly generated workflow according to the user requirement {user_request}.",
+                    "# Please implement action functions (processors) for the newly generated workflow according to the user requirement {user_request}.",
                     "If the requirement is not specific enough just add a template with example code.",
                     "Generate new process functions if necessary or update existing functions according to the user requirement.",
-                    "Processes should have name starting with 'process_' and take only one argument entity.",
+                    "Processes should take only one argument entity.",
                     "",
                     "Example:",
-                    "async def process_some_name(entity: dict):",
+                    "async def function_name(entity: dict):",
                     "    final_result = do_some_user_request(...)",
                     "    entity[\"final_result\"] = final_result",
                     "    entity[\"workflowProcessed\"] = True",
@@ -207,7 +328,7 @@
               ],
               "output": {
                 "local_fs": [
-                 "entity/{entity_name}/workflow.py"
+                  "entity/{entity_name}/workflow.py"
                 ]
               },
               "publish": true

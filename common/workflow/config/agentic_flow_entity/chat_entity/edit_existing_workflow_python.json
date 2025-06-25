@@ -35,8 +35,13 @@
                   "content": [
                     "You are provided entity workflow json.",
                     "Please update it based on the user request \"{user_request}\".",
-                    "Processes should have name starting with 'process_'.",
-                    "Please return only workflow json only."
+                    "Please return only workflow json only.",
+                    "Reference information: ",
+                    "You can use additional parameters for the workflow json. ",
+                    " For example you can set transitions to manual:",
+                    "{{\"transitions\": {{\n \"example_transition_name\": {{\n\"next\": \"example_state_2\",\n\"manual\": true}}}}}}",
+                    " Or if the user wants more control over action/processor. They can set these parameters explicitly:",
+                    "\"action\": {\n  \"name\": \"example_name\",\n \"owner\": \"CYODA\",\n\"user\": \"CYODA\",\n \"attach_entity\": \"true\",\n  \"calculation_response_timeout_ms\": \"300000\",\n  \"retry_policy\": \"FIXED\", or \"NONE\"\n \"sync_process\": \"false\",\n \"new_transaction_for_async\": \"true\",\n \"none_transactional_for_async\": \"false\",\n\"calculation_nodes_tags\": \"user_provided_value\"\n } "
                   ]
                 }
               ],
@@ -46,49 +51,46 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "name",
-                    "transitions"
+                    "workflow_name",
+                    "initial_state",
+                    "states"
                   ],
                   "properties": {
-                    "name": {
+                    "workflow_name": {
                       "type": "string"
                     },
-                    "transitions": {
-                      "type": "array",
-                      "items": {
+                    "description": {
+                      "type": "string"
+                    },
+                    "initial_state": {
+                      "type": "string",
+                      "enum": [
+                        "none"
+                      ]
+                    },
+                    "states": {
+                      "type": "object",
+                      "additionalProperties": {
                         "type": "object",
                         "required": [
-                          "name",
-                          "start_state",
-                          "end_state",
-                          "automated"
+                          "transitions"
                         ],
                         "properties": {
-                          "name": {
-                            "type": "string"
-                          },
-                          "start_state": {
-                            "type": "string"
-                          },
-                          "end_state": {
-                            "type": "string"
-                          },
-                          "automated": {
-                            "type": "boolean"
-                          },
-                          "processes": {
+                          "transitions": {
                             "type": "object",
-                            "properties": {
-                              "schedule_transition_processors": {
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {}
-                                }
-                              },
-                              "externalized_processors": {
-                                "type": "array",
-                                "items": {
+                            "additionalProperties": {
+                              "type": "object",
+                              "required": [
+                                "next"
+                              ],
+                              "properties": {
+                                "next": {
+                                  "type": "string"
+                                },
+                                "manual": {
+                                  "type": "boolean"
+                                },
+                                "action": {
                                   "type": "object",
                                   "required": [
                                     "name"
@@ -96,6 +98,65 @@
                                   "properties": {
                                     "name": {
                                       "type": "string"
+                                    }
+                                  }
+                                },
+                                "condition": {
+                                  "type": "object",
+                                  "required": [
+                                    "type"
+                                  ],
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "function",
+                                        "group",
+                                        "simple"
+                                      ]
+                                    },
+                                    "function": {
+                                      "type": "object",
+                                      "required": [
+                                        "name"
+                                      ],
+                                      "properties": {
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "operator": {
+                                      "type": "string"
+                                    },
+                                    "parameters": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "jsonPath",
+                                          "operatorType",
+                                          "value",
+                                          "type"
+                                        ],
+                                        "properties": {
+                                          "jsonPath": {
+                                            "type": "string"
+                                          },
+                                          "operatorType": {
+                                            "type": "string"
+                                          },
+                                          "value": {
+                                            "type": "string"
+                                          },
+                                          "type": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
                                     }
                                   }
                                 }
@@ -150,13 +211,8 @@
                 {
                   "role": "user",
                   "content": [
-                    "# Please outline the processors functions according the new requirement \"{user_request}\" that need to be either added or updated.",
-                    " And ask the user to proceed with calling update processors command to proceed.",
-                    "",
-                    "Entity data example:",
-                    "{entity_name}",
-
-                    ""
+                    " Please outline the action functions according the new requirement \"{user_request}\" that need to be either added or updated.",
+                    " And ask the user to proceed with calling update processors command to proceed."
                   ]
                 }
               ],
