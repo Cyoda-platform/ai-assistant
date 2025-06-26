@@ -378,7 +378,7 @@
                   "entity/{entity_name}/workflow.py"
                 ]
               },
-              "publish": true
+              "publish": false
             }
           }
         }
