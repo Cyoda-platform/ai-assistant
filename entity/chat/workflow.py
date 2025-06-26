@@ -119,8 +119,8 @@ class ChatWorkflow(Workflow):
             **params
     ) -> str:
         return await self._schedule_deploy(
-            technical_id,
-            entity,
+            technical_id=technical_id,
+            entity=entity,
             scheduled_action=config.ScheduledAction.SCHEDULE_CYODA_ENV_DEPLOY
         )
 
@@ -908,6 +908,26 @@ class ChatWorkflow(Workflow):
         entity_names = await self.get_entities_list(branch_id=branch_id, repository_name=repository_name)
         resolved_name = get_most_similar_entity(target=entity_name, entity_list=entity_names)
         return resolved_name if resolved_name else entity_name
+
+    async def get_env_deploy_status(
+            self,
+            technical_id: str,
+            entity: AgenticFlowEntity,
+            **params: Any,
+    ) -> str:
+        build_id = params.get("build_id")
+        if not build_id:
+            raise ValueError("Missing build_id in params")
+        status_url = f"{config.DEPLOY_CYODA_ENV_STATUS}?build_id={build_id}"
+        resp = await send_cyoda_request(
+            cyoda_auth_service=self.cyoda_auth_service,
+            method="get",
+            base_url=status_url,
+            path=''
+        )
+        deploy_state = resp.get("json", {}).get("state")
+        deploy_status = resp.get("json", {}).get("status")
+        return f"Current deploy state {deploy_state}. Current deploy status {deploy_status}"
 
     async def convert_workflow_to_dto(
             self,

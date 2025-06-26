@@ -4,22 +4,6 @@
   "states": {
     "none": {
       "transitions": {
-        "notify_env_deployment": {
-          "next": "notified_env_deployment",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "notification",
-              "notification": "Hello! Let's start deploying your Cyoda environment. I will let you know once it's ready",
-              "publish": true,
-              "allow_anonymous_users": true
-            }
-          }
-        }
-      }
-    },
-    "notified_env_deployment": {
-      "transitions": {
         "schedule_deploy_env": {
           "next": "scheduled_deploy_env",
           "action": {
@@ -40,7 +24,7 @@
     "scheduled_deploy_env": {
       "transitions": {
         "lock_chat": {
-          "next": "locked_chat",
+          "next": "locked_chat_while_deployment",
           "action": {
             "name": "process_event",
             "config": {
@@ -56,7 +40,7 @@
         }
       }
     },
-    "locked_chat": {
+    "locked_chat_while_deployment": {
       "transitions": {
         "finish_deployment_success": {
           "next": "deployed_env",

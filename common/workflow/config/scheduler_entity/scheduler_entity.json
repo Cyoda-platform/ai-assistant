@@ -53,10 +53,10 @@
             "name": "complete",
             "type": "group",
             "operator": "AND",
-            "conditions": [
+            "parameters": [
               {
                 "jsonPath": "status",
-                "operatorType": "equals (disregard case)",
+                "operatorType": "IEQUALS",
                 "value": "complete",
                 "type": "simple"
               }
@@ -69,10 +69,10 @@
             "name": "in_progress",
             "type": "group",
             "operator": "AND",
-            "conditions": [
+            "parameters": [
               {
                 "jsonPath": "status",
-                "operatorType": "equals (disregard case)",
+                "operatorType": "IEQUALS",
                 "value": "in_progress",
                 "type": "simple"
               }
@@ -85,10 +85,10 @@
             "name": "error",
             "type": "group",
             "operator": "AND",
-            "conditions": [
+            "parameters": [
               {
                 "jsonPath": "status",
-                "operatorType": "equals (disregard case)",
+                "operatorType": "IEQUALS",
                 "value": "error",
                 "type": "simple"
               }
