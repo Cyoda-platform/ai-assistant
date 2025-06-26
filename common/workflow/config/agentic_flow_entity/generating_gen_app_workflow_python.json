@@ -352,7 +352,7 @@
                   "role": "user",
                   "content": [
                     "# Please make sure all action functions and condition functions for the newly generated workflow are implemented in the code.",
-                    "Generate new action functions and condition functions if necessary.",
+                    "Generate new action functions and condition functions if necessary and remove any 'orphan' functions.",
                     "Processes should take only one argument entity.",
                     "",
                     "Example:",
@@ -363,7 +363,7 @@
                     "",
                     "Example for condition functions:",
                     "async def function_name(entity: dict) -> bool:\n        return True",
-                    " Response format: respond with only the code. No markdown, no comments, no explanation. "
+                    " Response format: respond with only the full complete code. No markdown, no comments, no explanation. "
                   ]
                 }
               ],

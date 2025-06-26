@@ -878,7 +878,7 @@
                     "You are welcome to use patterns like `entityJobs.put(jobId, new JobStatus(\"processing\", requestedAt)); // fire-and-forget the processing` if relevant.",
                     "Avoid configuration files, focus only on controller logic in a single file.",
                     "When fetching and parsing JSON responses from external APIs, use ObjectMapper.readTree(...) to convert the raw response into a JsonNode, instead of deserializing directly into a Map or a List. This ensures compatibility with both JSON objects and arrays, and gives more flexibility during prototyping.",
-                    "Use `package com.java_template.entity;` as the package declaration for this file.",
+                    "Use `package com.java_template.entity.prototype;` as the package declaration for this file",
                     "Please double-check that you are using all the information provided earlier."
                   ]
                 }
@@ -911,7 +911,7 @@
                 {
                   "role": "user",
                   "content": [
-                    "Use `package com.java_template.entity;` as the package declaration for this file.",
+                    "Use `package com.java_template.entity.prototype;` as the package declaration for this file",
                     "Please, add validation annotations for request bodies and query parameters using javax/jakarta validation annotations:",
                     "import jakarta.validation.constraints.*;",
                     "Use @Validated on the controller class if needed to enable validation.",
