@@ -30,7 +30,7 @@
                   "role": "user",
                   "content": [
                     "Which workflow would you recommend for this code?",
-                    "Could you split this code into functions, each function should have name starting with 'process_'. These functions are async (example: async process_{entity_name}(entity: dict): )",
+                    "Could you split this code into functions. These functions are async (example: async process_{entity_name}(entity: dict): )",
                     "It can take only one argument entity data and can modify this entity data state, so please also remove any unnecessary entity_service.update(this entity) calls = as you can do it by changing entity attributes directly, e.g. entity['attribute'] = new_value.",
                     "No more additional arguments can be passed.",
                     "Also, all workflow orchestration should be inside {workflow_function}. {workflow_function} should have only workflow orchestration code and no business logic. no other function can have workflow orchestration code.",
@@ -73,8 +73,9 @@
                     "The FSM json should consist of an ordered dictionary of states. Each state has a dictionary of transitions. Each transition has a next attribute, with the next state.",
                     "Each transition may have an action (will map directly to a function).",
                     "Action names/condition functions should be the same as functions names in the attached code.",
-                    "Ideally, there should be one process per transition. If user doesn't specify, derive from transition name.",
+                    "Ideally, there should be one action per transition. If user doesn't specify, derive from transition name.",
                     "Always start from an initial state 'none'.",
+                    "If we have multiple transitions from one state we need a condition for each transition to decide which to use\n",
                     "",
                     "JSON Example of the Workflow:",
                     "{{",
@@ -336,6 +337,54 @@
       }
     },
     "converted_workflow_to_cyoda_dto": {
+      "transitions": {
+        "update_processors_according_to_workflow": {
+          "next": "updated_processors_according_to_workflow",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "memory_tags": [
+                "update_processors_according_to_workflow"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "# Please make sure all action functions and condition functions for the newly generated workflow are implemented in the code.",
+                    "Generate new action functions and condition functions if necessary and remove any 'orphan' functions.",
+                    "Processes should take only one argument entity.",
+                    "",
+                    "Example:",
+                    "async def function_name(entity: dict):",
+                    "    final_result = do_some_user_request(...)",
+                    "    entity[\"final_result\"] = final_result",
+                    "    entity[\"workflowProcessed\"] = True",
+                    "",
+                    "Example for condition functions:",
+                    "async def function_name(entity: dict) -> bool:\n        return True",
+                    " Response format: respond with only the full complete code. No markdown, no comments, no explanation. "
+                  ]
+                }
+              ],
+              "input": {
+                "local_fs": [
+                  "entity/{entity_name}/workflow.json",
+                  "entity/{entity_name}/workflow.py"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "entity/{entity_name}/workflow.py"
+                ]
+              },
+              "publish": false
+            }
+          }
+        }
+      }
+    },
+    "updated_processors_according_to_workflow": {
       "transitions": {
         "lock_chat": {
           "next": "locked_chat"

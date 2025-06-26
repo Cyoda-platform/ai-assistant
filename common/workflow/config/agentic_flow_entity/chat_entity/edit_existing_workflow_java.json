@@ -211,7 +211,7 @@
                 {
                   "role": "user",
                   "content": [
-                    "# Please outline the processors functions according the new requirement \"{user_request}\" that need to be either added or updated.",
+                    "# Please outline the actions (processors) functions according the new requirement \"{user_request}\" that need to be either added or updated.",
                     " And ask the user to proceed with calling update processors command to proceed.",
                     "",
                     "Entity data example:",

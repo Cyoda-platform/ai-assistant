@@ -285,7 +285,7 @@
                   "type": "function",
                   "function": {
                     "name": "edit_existing_processors",
-                    "description": "Launches workflow that is necessary to help the user update workflow processors code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/workflow.py code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user update workflow actions(processors) code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/workflow.py code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -634,6 +634,26 @@
                         "workflow_file_name",
                         "output_file_name",
                         "programming_language"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_env_deploy_status",
+                    "description": "Use if the user wants to know the status of their environment build/deploy.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "build_id": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "build_id"
                       ],
                       "additionalProperties": false
                     }
@@ -1086,7 +1106,7 @@
                   "type": "function",
                   "function": {
                     "name": "ui_function_issue_technical_user",
-                    "description": " Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1107,6 +1127,80 @@
                           "type": "string",
                           "enum": [
                             "file"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_list_all_technical_users",
+                    "description": "Please use ui_function_list_all_technical_users for requests like give me all technical/m2m users. This will return the list of M2M clients.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "GET"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "text"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "path",
+                        "response_format"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_reset_client_secret",
+                    "description": "Please use ui_function_reset_client_secret for requests like please reset the client secret for my technical user. Please use clientId from the user input. The user needs to explicitly give you clientId.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "PUT"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients/{clientId}/secret"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "text"
                           ]
                         }
                       },
@@ -1213,6 +1307,26 @@
                         "workflow_file_name",
                         "output_file_name",
                         "programming_language"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_env_deploy_status",
+                    "description": "Use if the user wants to know the status of their environment build/deploy.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "build_id": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "build_id"
                       ],
                       "additionalProperties": false
                     }

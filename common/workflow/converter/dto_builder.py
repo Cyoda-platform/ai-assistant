@@ -168,6 +168,8 @@ def convert_json_to_workflow_dto(input_json, class_name, calculation_nodes_tags,
 
     def _extract_processor_condition(action, process_criteria_ids, process_id, process_params):
         config_data = action.get("config", {})
+        if calculation_nodes_tags:
+            config_data["calculation_nodes_tags"] = calculation_nodes_tags
         dto["processes"].append({
             "persisted": True,
             "owner": DEFAULT_PARAM_VALUES["owner"],

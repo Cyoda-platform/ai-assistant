@@ -26,8 +26,9 @@
                     "Please construct workflow json from this description/code/flow chart {user_request} using a typical finite-state machine (FSM) model.",
                     "The FSM json should consist of an ordered dictionary of states. Each state has a dictionary of transitions. Each transition has a next attribute, with the next state.",
                     "Each transition may have an action (will map directly to a function).",
-                    "Ideally, there should be one process per transition. If user doesn't specify, derive from transition name.",
+                    "Ideally, there should be one action per transition. If user doesn't specify, derive from transition name.",
                     "Always start from an initial state 'none'.",
+                    "If we have multiple transitions from one state we need a condition for each transition to decide which to use\n",
                     "",
                     "JSON Example of the Workflow:",
                     "{{",
@@ -322,6 +323,8 @@
                     "    entity[\"final_result\"] = final_result",
                     "    entity[\"workflowProcessed\"] = True",
                     "",
+                    "Example for condition functions:",
+                    "async def function_name(entity: dict) -> bool:\n        return True",
                     " Response format: respond with only the code. No markdown, no comments, no explanation. "
                   ]
                 }

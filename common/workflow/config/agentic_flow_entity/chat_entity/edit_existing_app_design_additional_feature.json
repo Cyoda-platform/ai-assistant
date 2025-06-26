@@ -25,10 +25,10 @@
                   "content": [
                     "Please analyse the user requirement and provide a modification plan for the existing application.",
                     "Cyoda application organises logic around entities with attached workflows. Data is abstracted into entity.",
-                    "Code (logic) is abstracted into workflow external processors. Such workflow is triggered right before the entity is saved and can modify entity data, so that only the updated data is saved.",
-                    "Workflow processors code can also work with other entities via entity service.",
+                    "Code (logic) is abstracted into workflow external actions/processors. Such workflow is triggered right before the entity is saved and can modify entity data, so that only the updated data is saved.",
+                    "Workflow actions(processors) code can also work with other entities via entity service.",
                     "",
-                    "Currently we have the following entities with the following workflow processors attached:",
+                    "Currently we have the following entities with the following workflow actions (processors) attached:",
                     "{entities_description}",
                     "",
                     "You are also provided with the routes/routes.py or Controller containing application endpoints:",

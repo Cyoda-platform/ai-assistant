@@ -1,13 +1,19 @@
+import logging
 from pathlib import Path
-
 from common.config.config import config
 from common.workflow.converter.workflow_converter import convert
 
-if __name__ == "__main__":
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
+entity_dir = Path(__file__).resolve().parent.parent.parent.parent / 'entity'
+
+API_V_WORKFLOWS_ = "api/v1/workflows"
+
+
+def main():
     CONFIG_DIR = Path("config")
     OUTPUT_ROOT = Path("outputs")
-    CALCULATION_NODE_TAGS = "ai_assistant"
 
     for file_path in CONFIG_DIR.rglob("*"):
         if not file_path.is_file():
@@ -43,3 +49,7 @@ if __name__ == "__main__":
         )
 
         print(f"Conversion completed. Result saved to {output_file}")
+
+
+if __name__ == "__main__":
+    main()
