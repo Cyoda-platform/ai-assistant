@@ -30,7 +30,7 @@
                   "role": "user",
                   "content": [
                     "Which workflow would you recommend for this code?",
-                    "Could you split this code into methods, each method should have name starting with 'process'. It should return CompletableFuture<ObjectNode>",
+                    "Could you split this code into methods. It should return CompletableFuture<ObjectNode>",
                     "It can take only one argument ObjectNode entity and can modify this entity state, so please also remove any unnecessary entityService.updateItem(this entity) calls = as you can do it by changing entity attributes directly, e.g. entity.attribute = new_value.",
                     "No more additional arguments can be passed.",
                     "Also, all workflow orchestration should be inside {workflow_function}. {workflow_function} should have only workflow orchestration code and no business logic. no other function can have workflow orchestration code.",
@@ -39,7 +39,7 @@
                     "Use 'import static com.java_template.common.config.Config.*;' to import ENTITY_VERSION.",
                     "Provide all the imports and variables which are necessary and used in the code.",
                     "You cannot apply entityService.addItem/updateItem/deleteItem on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity.attribute.  The new state will be persisted. Do not add any test/extra code.",
-                    "Remove all RestController methods and annotations, leave only workflow-related methods, which start with 'process'.",
+                    "Remove all RestController methods and annotations, leave only workflow-related methods.",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting."
                   ]
                 }
@@ -77,7 +77,7 @@
                     "The FSM json should consist of an ordered dictionary of states. Each state has a dictionary of transitions. Each transition has a next attribute, with the next state.",
                     "Each transition may have an action (will map directly to a function).",
                     "Action names/condition functions should be the same as functions names in the attached code.",
-                    "Ideally, there should be one process per transition. If user doesn't specify, derive from transition name.",
+                    "Ideally, there should be one action (process) per transition. If user doesn't specify, derive from transition name.",
                     "Always start from an initial state 'none'.",
                     "If we have multiple transitions from one state we need a condition for each transition to decide which to use\n",
                     "",
@@ -341,6 +341,58 @@
       }
     },
     "converted_workflow_to_cyoda_dto": {
+      "transitions": {
+        "update_processors_according_to_workflow": {
+          "next": "updated_processors_according_to_workflow",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "memory_tags": [
+                "update_processors_according_to_workflow"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "# Please make sure all action functions and condition functions for the newly generated workflow are implemented in the code.",
+                    "Generate new action functions and condition functions if necessary.",
+                    "Processes should take only one argument entity.",
+                    "Example:",
+                    "public CompletableFuture<ObjectNode> exampleName(ObjectNode entity) {",
+                    "    if (!entity.has(\"status\")) {",
+                    "     entity.put(\"status\", \"pending\");",
+                    "    }",
+                    "return CompletableFuture.completedFuture(entity);",
+                    "  }",
+                    "Example for condition functions:",
+                    "public CompletableFuture<ObjectNode> exampleName(ObjectNode entity) {",
+                    "  boolean value = true; ",
+                    "  entity.put(\"success\", value)",
+                    "return CompletableFuture.completedFuture(entity);",
+                    "  }",
+                    " Response format: respond with only the code. No markdown, no comments, no explanation. "
+                  ]
+                }
+              ],
+              "input": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.json",
+                  "src/main/java/com/java_template/entity/{entity_name}/{entity_name}Workflow.java"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/{entity_name}/{entity_name}Workflow.java"
+                ]
+              },
+              "publish": false
+            }
+          }
+        }
+      }
+    },
+    "updated_processors_according_to_workflow": {
       "transitions": {
         "lock_chat": {
           "next": "locked_chat"

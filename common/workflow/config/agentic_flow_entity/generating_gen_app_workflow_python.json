@@ -30,7 +30,7 @@
                   "role": "user",
                   "content": [
                     "Which workflow would you recommend for this code?",
-                    "Could you split this code into functions, each function should have name starting with 'process_'. These functions are async (example: async process_{entity_name}(entity: dict): )",
+                    "Could you split this code into functions. These functions are async (example: async process_{entity_name}(entity: dict): )",
                     "It can take only one argument entity data and can modify this entity data state, so please also remove any unnecessary entity_service.update(this entity) calls = as you can do it by changing entity attributes directly, e.g. entity['attribute'] = new_value.",
                     "No more additional arguments can be passed.",
                     "Also, all workflow orchestration should be inside {workflow_function}. {workflow_function} should have only workflow orchestration code and no business logic. no other function can have workflow orchestration code.",
@@ -73,7 +73,7 @@
                     "The FSM json should consist of an ordered dictionary of states. Each state has a dictionary of transitions. Each transition has a next attribute, with the next state.",
                     "Each transition may have an action (will map directly to a function).",
                     "Action names/condition functions should be the same as functions names in the attached code.",
-                    "Ideally, there should be one process per transition. If user doesn't specify, derive from transition name.",
+                    "Ideally, there should be one action per transition. If user doesn't specify, derive from transition name.",
                     "Always start from an initial state 'none'.",
                     "If we have multiple transitions from one state we need a condition for each transition to decide which to use\n",
                     "",

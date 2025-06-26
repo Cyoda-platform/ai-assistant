@@ -49,7 +49,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "✅ Your [Cyoda environment](https://{cyoda_env_name}) has been successfully deployed!\n\nYou can now proceed to setting up the application locally.",
+              "notification": "✅ Your [Cyoda environment](https://{cyoda_env_name}) has been successfully deployed!\n\nYou can now proceed to setting up the application locally. Please let me know if you would like to add a new machine user to get oauth2 credentials.",
               "publish": true,
               "allow_anonymous_users": true
             }
