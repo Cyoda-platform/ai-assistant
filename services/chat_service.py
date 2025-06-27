@@ -25,7 +25,7 @@ from common.utils.utils import (
 )
 from entity.chat.chat import ChatEntity, ChatBusinessEntity
 from entity.model import FlowEdgeMessage, ChatMemory, ModelConfig, AgenticFlowEntity, AIMessage, ChatFlow, \
-    TransitionsMemory
+    TransitionsMemory, WorkflowEntity
 
 logger = logging.getLogger(__name__)
 
@@ -429,18 +429,19 @@ class ChatService:
                     )
                     has_kids = bool(
                         getattr(child, "child_entities", None) or getattr(child, "scheduled_entities", None))
-                    if child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) and has_kids:
-                        if await _traverse(child, child_id):
+                    if isinstance(chat, WorkflowEntity):
+                        if child.current_state and child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) and has_kids:
+                            if await _traverse(child, child_id):
+                                return True
+                        if not child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value):
+                            await _launch_transition(self.entity_service, child.technical_id, self.cyoda_auth_service, None,
+                                                     const.TransitionKey.MANUAL_RETRY.value)
+                            if chat.chat_flow.finished_flow and chat.chat_flow.finished_flow[-1].type == "answer" and not \
+                                    chat.chat_flow.finished_flow[-1].consumed:
+                                await _launch_transition(self.entity_service, child.technical_id, self.cyoda_auth_service,
+                                                         None,
+                                                         const.TransitionKey.PROCESS_USER_INPUT.value)
                             return True
-                    if not child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value):
-                        await _launch_transition(self.entity_service, child.technical_id, self.cyoda_auth_service, None,
-                                                 const.TransitionKey.MANUAL_RETRY.value)
-                        if chat.chat_flow.finished_flow and chat.chat_flow.finished_flow[-1].type == "answer" and not \
-                                chat.chat_flow.finished_flow[-1].consumed:
-                            await _launch_transition(self.entity_service, child.technical_id, self.cyoda_auth_service,
-                                                     None,
-                                                     const.TransitionKey.PROCESS_USER_INPUT.value)
-                        return True
                 if is_root:
                     for t in (const.TransitionKey.MANUAL_RETRY.value, const.TransitionKey.UNLOCK_CHAT.value,
                               const.TransitionKey.PROCESS_USER_INPUT.value):

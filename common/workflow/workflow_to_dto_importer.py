@@ -44,7 +44,7 @@ class CyodaInitService:
                     raise
                 workflows = workflows_response['json']
                 for workflow in workflows:
-                    if workflow.get('name') and workflow['name'] == dto_workflow_name:
+                    if workflow.get('name') and workflow['name'] == dto_workflow_name and workflow['active']:
                         workflow['active']=False
                         deactivate_response = await send_cyoda_request(cyoda_auth_service=token, method="put",
                                                                        base_url=config.CYODA_API_URL,

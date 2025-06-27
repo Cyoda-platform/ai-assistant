@@ -599,7 +599,7 @@ class ChatWorkflow(Workflow):
                                                              repository_name=get_repository_name(entity))
         for project_entity in project_entities_list:
             if repository_name.startswith("java"):
-                filename = f"src/main/java/com/java_template/entity/{project_entity}/{project_entity}Workflow.java"
+                filename = f"src/main/java/com/java_template/entity/{project_entity}/Workflow.java"
             else:
                 filename = f"entity/{project_entity}/workflow.py"
             workflow_code = await read_file_util(technical_id=git_branch_id,
