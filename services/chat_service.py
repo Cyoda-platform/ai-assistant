@@ -430,7 +430,7 @@ class ChatService:
                     has_kids = bool(
                         getattr(child, "child_entities", None) or getattr(child, "scheduled_entities", None))
                     if isinstance(chat, WorkflowEntity):
-                        if child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) and has_kids:
+                        if child.current_state and child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) and has_kids:
                             if await _traverse(child, child_id):
                                 return True
                         if not child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value):
