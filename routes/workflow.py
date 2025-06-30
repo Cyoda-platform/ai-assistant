@@ -23,4 +23,4 @@ async def create_chat(technical_id, entity_name, entity_version):
         entity_version=entity_version,
         technical_id=technical_id,
     )
-    return jsonify(result), 400 if result.get("error") else 2000
+    return jsonify(result), 400 if result.get("error") else 200
