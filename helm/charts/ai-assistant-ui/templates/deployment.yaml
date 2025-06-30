@@ -119,6 +119,8 @@ spec:
             value: "{{ .Values.pollingInterval }}"
           - name: APP_CYODA_CLIENT_HOST_value
             value: "{{ .Values.clientHostName }}"
+          - name: APP_CYODA_CLIENT_ENV_PREFIX_value
+            value: "{{ .Values.clientEnvPrefix }}"
           envFrom:
             - configMapRef:
                 name: ai-assistant-ui-config
