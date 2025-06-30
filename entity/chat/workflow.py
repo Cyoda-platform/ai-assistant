@@ -99,8 +99,8 @@ class ChatWorkflow(Workflow):
         build_id = build_info['build_id']
         build_namespace = build_info['build_namespace']
         entity.workflow_cache['build_namespace'] = build_namespace
-        if not (build_id and build_namespace):
-            raise ValueError("No build info not found in the response")
+        if not build_id or not build_namespace:
+            raise ValueError("Build information missing from the response")
 
         # Schedule the workflow
         # todo check for the next transition
