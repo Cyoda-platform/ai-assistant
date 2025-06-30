@@ -296,6 +296,7 @@ class WorkflowDispatcher:
                                                      git_branch_id=branch_name_id,
                                                      file_name=file_name,
                                                      repository_name=repository_name)
+        file_contents = ""
         try:
             async with aiofiles.open(file_path, 'r') as file:
                 file_contents = await file.read()
