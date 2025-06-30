@@ -95,10 +95,12 @@ class ChatWorkflow(Workflow):
         )
 
         # Validate response
-        build_info = resp.get("json", {})
-        build_id = build_info.get("build_id")
-        if not build_id:
-            raise ValueError("No build_id found in the response")
+        build_info = resp.get('json', {})
+        build_id = build_info['build_id']
+        build_namespace = build_info['build_namespace']
+        entity.workflow_cache['build_namespace'] = build_namespace
+        if not build_id or build_namespace:
+            raise ValueError("No build info not found in the response")
 
         # Schedule the workflow
         # todo check for the next transition
@@ -108,6 +110,7 @@ class ChatWorkflow(Workflow):
             triggered_entity_id=technical_id,
             scheduled_action=scheduled_action
         )
+
         entity.scheduled_entities.append(scheduled_entity_id)
 
         return f"Successfully scheduled {scheduled_action.value.replace('_', ' ')} with build ID {build_id}."
@@ -727,7 +730,7 @@ class ChatWorkflow(Workflow):
             # raise GuestChatsLimitExceededException()
             return "Sorry, deploying Cyoda env is available only to logged in users. Please sign up or login!"
         # todo cloud manager needs to return namespace
-        params['cyoda_env_name'] = f"{entity.user_id.lower()}.{config.CLIENT_HOST}"
+        params['client_host'] = f"{config.CLIENT_HOST}"
         if params.get("transition"):
             await self.finish_discussion(technical_id=technical_id, entity=entity, **params)
         return await self._schedule_workflow(
