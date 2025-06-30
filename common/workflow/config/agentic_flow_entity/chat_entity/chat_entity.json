@@ -544,7 +544,7 @@
                   "type": "function",
                   "function": {
                     "name": "resume_build_general_application",
-                    "description": "Resumes building an application by branch_name. Do not use for editing existing applications. Use for queries like, please proceed with this application; i had an error - proceed building an app, continue this app/chat. Please outline how we can proceed so the user can select a transition (please use human readable transition names) and a programming language. Transition, git branch and programming language should be provided by the user! You cannot decide yourself",
+                    "description": "Resumes building an application by branch_name. Use for queries like, please proceed with this app; i had an error - proceed building an app, continue/resume this app/chat. Please ask to specify a programming language. Transition, git branch and programming language should be provided by the user! You cannot decide yourself. The user doesn't know what the transitions mean so you might want to ask: have you finished the functional requirements (if no - discuss_functional_requirements or edit_functional_requirements), then - have they succeeded with the app prototype (if no: prototype_discussion_requested), have they confirmed the start of migration (if no: resume_migration)? Did they have issues after the start of migration (yes - resume_migration) , do they need setup assistance (resume_post_app_build_steps)?",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -669,6 +669,7 @@
                     " You are promoting Cyoda design values: architecting complex event-driven systems based on Cyoda stack: state machine, trino integration, dynamic workflows. Core design component in Cyoda is an entity. It has a workflow that is triggered by some event. If you are asked more about Cyoda, please, use get_cyoda_guidelines tool to get more information. ",
                     " For other questions, please use your general knowledge if it’s sufficient, but if not, feel free to use any of the useful tools provided to you.",
                     " If you're unsure, don't hesitate to ask the user for more information.",
+                    " If you're using resume build tool do not outline transitions, but rather give a user human readable questions about their current stage and decide yourself based on the user answer.",
                     " Here is the user's request:"
                   ]
                 }
@@ -1217,7 +1218,7 @@
                   "type": "function",
                   "function": {
                     "name": "resume_build_general_application",
-                    "description": "Resumes building an application by branch_name. Do not use for editing existing applications. Use for queries like, please proceed with this application; i had an error - proceed building an app, continue this app/chat. Please outline how we can proceed so the user can select a transition (please use human readable transition names) and a programming language. Transition, git branch and programming language should be provided by the user! You cannot decide yourself",
+                    "description": "Resumes building an application by branch_name. Use for queries like, please proceed with this app; i had an error - proceed building an app, continue/resume this app/chat. Please ask to specify a programming language. Transition, git branch and programming language should be provided by the user! You cannot decide yourself. The user doesn't know what the transitions mean so you might want to ask: have you finished the functional requirements (if no - discuss_functional_requirements or edit_functional_requirements), then - have they succeeded with the app prototype (if no: prototype_discussion_requested), have they confirmed the start of migration (if no: resume_migration)? Did they have issues after the start of migration (yes - resume_migration) , do they need setup assistance (resume_post_app_build_steps)?",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1342,6 +1343,7 @@
                     " You are promoting Cyoda design values: architecting complex event-driven systems based on Cyoda stack: state machine, trino integration, dynamic workflows. Core design component in Cyoda is an entity. It has a workflow that is triggered by some event. If you are asked more about Cyoda, please, use get_cyoda_guidelines tool to get more information. ",
                     " For other questions, please use your general knowledge if it’s sufficient, but if not, feel free to use any of the useful tools provided to you.",
                     " If you're unsure, don't hesitate to ask the user for more information.",
+                    " If you're using resume build tool do not outline transitions, but rather give a user human readable questions about their current stage and decide yourself based on the user answer.",
                     " Here is the user's request:"
                   ]
                 }
