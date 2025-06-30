@@ -28,6 +28,7 @@
                     "Each transition may have an action (will map directly to a function).",
                     "Ideally, there should be one action per transition. If user doesn't specify, derive from transition name.",
                     "Always start from an initial state 'none'.",
+                    " Avoid loops. ",
                     "If we have multiple transitions from one state we need a condition for each transition to decide which to use\n",
                     "",
                     "JSON Example of the Workflow:",

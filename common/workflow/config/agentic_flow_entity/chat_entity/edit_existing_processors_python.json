@@ -53,7 +53,6 @@
                     "",
                     "Example for condition functions:",
                     "async def function_name(entity: dict) -> bool:\n        return True",
-                    " Response format: respond with only the code. No markdown, no comments, no explanation. ",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
                   ]
                 }

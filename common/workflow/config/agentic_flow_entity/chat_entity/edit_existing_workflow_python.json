@@ -36,6 +36,7 @@
                     "You are provided entity workflow json.",
                     "Please update it based on the user request \"{user_request}\".",
                     "Please return only workflow json only.",
+                    " Avoid loops. ",
                     "Reference information: ",
                     "You can use additional parameters for the workflow json. ",
                     " For example you can set transitions to manual:",
