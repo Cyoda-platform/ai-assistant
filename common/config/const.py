@@ -168,7 +168,7 @@ class Notifications(str, Enum):
         "Our team will review the issue shortly.\n\n"
         "In the meantime, you can continue working on your branch or application in a new chat. \n\n"
         "Please start a new conversation and include your branch name along with what you'd like to do — \n\n"
-        "We apologize for the inconvenience and appreciate your understanding.",
+        "We apologize for the inconvenience and appreciate your understanding."
         "Please let us know at [Discord](https://discord.gg/95rdAyBZr2). We're here to help!"
     )
 
