@@ -93,7 +93,7 @@
                   "type": "function",
                   "function": {
                     "name": "build_general_application",
-                    "description": "Launches workflow that is necessary to build a new application. Do not use for editing existing applications. Do not ask user any additional information. Only Python with Cyoda framework are available.",
+                    "description": "Launches workflow that is necessary to build a new application. Do not use for editing existing applications. Do not ask user any additional information regarding app logic. Only Python/Java with Cyoda framework are available. Let the user choose explicitly building_flow: cyoda native for event-driven apps and general for all the rest including quickstarts.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -107,11 +107,19 @@
                             "JAVA",
                             "PYTHON"
                           ]
+                        },
+                        "building_flow": {
+                          "type": "string",
+                          "enum": [
+                            "general",
+                            "cyoda"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
-                        "programming_language"
+                        "programming_language",
+                        "building_flow"
                       ],
                       "additionalProperties": false
                     }
@@ -767,7 +775,7 @@
                   "type": "function",
                   "function": {
                     "name": "build_general_application",
-                    "description": "Launches workflow that is necessary to build a new application. Do not use for editing existing applications. Do not ask user any additional information. Only Python with Cyoda framework are available.",
+                    "description": "Launches workflow that is necessary to build a new application. Do not use for editing existing applications. Do not ask user any additional information regarding app logic. Only Python/Java with Cyoda framework are available. Let the user choose explicitly building_flow: cyoda native for event-driven apps and general for all the rest including quickstarts.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -781,11 +789,19 @@
                             "JAVA",
                             "PYTHON"
                           ]
+                        },
+                        "building_flow": {
+                          "type": "string",
+                          "enum": [
+                            "general",
+                            "cyoda"
+                          ]
                         }
                       },
                       "required": [
                         "user_request",
-                        "programming_language"
+                        "programming_language",
+                        "building_flow"
                       ],
                       "additionalProperties": false
                     }
