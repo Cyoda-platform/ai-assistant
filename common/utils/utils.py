@@ -455,7 +455,7 @@ async def send_cyoda_request(
     Send an HTTP request to the Cyoda API with automatic retry on 401.
     """
     token = cyoda_auth_service.get_access_token()
-    max_attempt = 2
+    max_attempt = 5
     for attempt in range(max_attempt):
         try:
             if method.lower() == "get":
