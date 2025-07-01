@@ -20,27 +20,16 @@
               "publish": false,
               "model": {},
               "input": {},
-              "output": {
-                "local_fs": [
-                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.java"
-                ]
-              },
+              "output": {},
               "messages": [
                 {
                   "role": "user",
                   "content": [
                     "Which workflow would you recommend for this code?",
-                    "Could you split this code into methods. It should return CompletableFuture<ObjectNode>",
-                    "It can take only one argument ObjectNode entity and can modify this entity state, so please also remove any unnecessary entityService.updateItem(this entity) calls = as you can do it by changing entity attributes directly, e.g. entity.attribute = new_value.",
-                    "No more additional arguments can be passed.",
-                    "Also, all workflow orchestration should be inside {workflow_function}. {workflow_function} should have only workflow orchestration code and no business logic. no other function can have workflow orchestration code.",
-                    "{code}",
-                    "Call the class Workflow. Use package name 'com.java_template.entity.{entity_name}'. Add @Component(\"{entity_name}\") annotation to the class.",
-                    "Use 'import static com.java_template.common.config.Config.*;' to import ENTITY_VERSION.",
-                    "Provide all the imports and variables which are necessary and used in the code.",
-                    "You cannot apply entityService.addItem/updateItem/deleteItem on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity.attribute.  The new state will be persisted. Do not add any test/extra code.",
-                    "Remove all RestController methods and annotations, leave only workflow-related methods.",
-                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting."
+                    " How would you split this code into functions and condition functions (return boolean) so that you can use them in the workflow transitions",
+
+                    "{code}"
+
                   ]
                 }
               ]
@@ -73,14 +62,13 @@
                 {
                   "role": "user",
                   "content": [
-                    "Please construct workflow JSON using a typical FSM model.",
+                    "Please construct workflow JSON using a typical FSM model based on your previous observations.",
                     "The FSM json should consist of an ordered dictionary of states. Each state has a dictionary of transitions. Each transition has a next attribute, with the next state.",
-                    "Each transition may have an action (will map directly to a function).",
-                    "Action names/condition functions should be the same as functions names in the attached code.",
-                    "Ideally, there should be one action (process) per transition. If user doesn't specify, derive from transition name.",
+                    "Each transition may have an action (a name of a function).",
+                    "Each transition may have a condition (a name of a condition function or a group condition).",
                     "Always start from an initial state 'none'.",
                     " Avoid loops. ",
-                    "If we have multiple transitions from one state we need a condition for each transition to decide which to use\n",
+                    "If we have multiple transitions from one state, each transition should have a condition to decide which to use\n",
                     "",
                     "JSON Example of the Workflow:",
                     "{{",
@@ -101,7 +89,7 @@
                     "        \"transition_to_02\": {{",
                     "          \"next\": \"state_02\",",
                     "          \"action\": {{",
-                    "            \"name\": \"function_name\"",
+                    "            \"name\": \"functionName\"",
                     "          }}",
                     "        }}",
                     "      }}",
@@ -113,7 +101,7 @@
                     "          \"condition\": {{",
                     "            \"type\": \"function\",",
                     "            \"function\": {{",
-                    "              \"name\": \"function_name_returns_bool\"",
+                    "              \"name\": \"functionName\"",
                     "            }}",
                     "          }}",
                     "        }}",
@@ -141,7 +129,7 @@
                     "    }}",
                     "  }}",
                     "}}",
-                    "Available operator values:",
+                    "Available operator values for group condition. Not allowed for function condition:",
                     "\"AND\", \"OR\", \"NOT\"",
                     "Available operatorType values:",
                     "\"EQUALS\", \"NOT_EQUAL\", \"IEQUALS\", \"INOT_EQUAL\", \"IS_NULL\", \"NOT_NULL\",",
@@ -349,37 +337,45 @@
             "name": "process_event",
             "config": {
               "type": "prompt",
-              "memory_tags": [
-                "update_processors_according_to_workflow"
-              ],
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "# Please make sure all action functions and condition functions for the newly generated workflow are implemented in the code.",
-                    "Generate new action functions and condition functions if necessary and remove any 'orphan' functions.",
-                    "Processes should take only one argument entity.",
+                    "Please generate functions for the provided workflow json, base them on the initial code. So basically you need to split the initial code into these functions, so that it compiles.",
+                    " Do not miss any logic from the initial code. ",
+                    " {code} ",
+
                     "Example:",
-                    "public CompletableFuture<ObjectNode> exampleName(ObjectNode entity) {",
-                    "    if (!entity.has(\"status\")) {",
+                    "public CompletableFuture<ObjectNode> functionName(ObjectNode entity) {{",
+                    "    if (!entity.has(\"status\")) {{",
                     "     entity.put(\"status\", \"pending\");",
-                    "    }",
+                    "    }}",
                     "return CompletableFuture.completedFuture(entity);",
-                    "  }",
+                    "  }}",
                     "Example for condition functions:",
-                    "public CompletableFuture<ObjectNode> exampleName(ObjectNode entity) {",
+                    "public CompletableFuture<ObjectNode> functionName(ObjectNode entity) {{",
                     "  boolean value = true; ",
                     "  entity.put(\"success\", value)",
                     "return CompletableFuture.completedFuture(entity);",
-                    "  }",
-                    " Response format: respond with only the full complete code. No markdown, no comments, no explanation. "
+                    "  }}",
+
+                    "It can take only one argument entity: ObjectNode entity and can modify this entity state, so please also remove any unnecessary entity_service.update(this entity) calls = as you can do it by changing entity attributes directly, e.g. entity['attribute'] = new_value.",
+                    "No more additional arguments can be passed.",
+
+                    "You cannot apply entityService.addItem/updateItem/deleteItem on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity.attribute.  The new state will be persisted. Do not add any test/extra code.",
+                    "Call the class Workflow. Use package name 'com.java_template.entity.{entity_name}'. Add @Component(\"{entity_name}\") annotation to the class.",
+                    "Use 'import static com.java_template.common.config.Config.*;' to import ENTITY_VERSION.",
+                    "Provide all the imports and variables which are necessary and used in the code.",
+                    "You cannot apply entityService.addItem/updateItem/deleteItem on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity.attribute.  The new state will be persisted. Do not add any test/extra code.",
+                    "Include proper logging using org.slf4j.Logger (e.g., `Logger logger = LoggerFactory.getLogger(EntityControllerPrototype.class);`) and use `logger.info(...)` or `logger.error(...)` appropriately.",
+                    "use private final RestTemplate restTemplate = new RestTemplate(); if necessary",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting."
                   ]
                 }
               ],
               "input": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.json",
-                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.java"
+                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.json"
                 ]
               },
               "output": {

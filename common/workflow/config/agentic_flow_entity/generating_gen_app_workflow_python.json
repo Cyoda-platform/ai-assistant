@@ -20,23 +20,16 @@
               "publish": false,
               "model": {},
               "input": {},
-              "output": {
-                "local_fs": [
-                  "entity/{entity_name}/workflow.py"
-                ]
-              },
+              "output": {},
               "messages": [
                 {
                   "role": "user",
                   "content": [
                     "Which workflow would you recommend for this code?",
-                    "Could you split this code into functions. These functions are async (example: async process_{entity_name}(entity: dict): )",
-                    "It can take only one argument entity data and can modify this entity data state, so please also remove any unnecessary entity_service.update(this entity) calls = as you can do it by changing entity attributes directly, e.g. entity['attribute'] = new_value.",
-                    "No more additional arguments can be passed.",
-                    "Also, all workflow orchestration should be inside {workflow_function}. {workflow_function} should have only workflow orchestration code and no business logic. no other function can have workflow orchestration code.",
-                    "{code}",
-                    "You cannot apply entity_service.add/update/delete on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity['attribute'].  The new state will be persisted. Do not add any test/extra code.",
-                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Python comments (# like this) are allowed, but avoid extra narrative or markdown-style formatting."
+                    " How would you split this code into functions and condition functions (return boolean) so that you can use them in the workflow transitions",
+
+                    "{code}"
+
                   ]
                 }
               ]
@@ -55,11 +48,7 @@
               "type": "prompt",
               "publish": false,
               "model": {},
-              "input": {
-                "local_fs": [
-                  "entity/{entity_name}/workflow.py"
-                ]
-              },
+              "input": {},
               "output": {
                 "local_fs": [
                   "entity/{entity_name}/workflow.json"
@@ -69,14 +58,13 @@
                 {
                   "role": "user",
                   "content": [
-                    "Please construct workflow JSON using a typical FSM model.",
+                    "Please construct workflow JSON using a typical FSM model based on your previous observations.",
                     "The FSM json should consist of an ordered dictionary of states. Each state has a dictionary of transitions. Each transition has a next attribute, with the next state.",
-                    "Each transition may have an action (will map directly to a function).",
-                    "Action names/condition functions should be the same as functions names in the attached code.",
-                    "Ideally, there should be one action per transition. If user doesn't specify, derive from transition name.",
+                    "Each transition may have an action (a name of a function).",
+                    "Each transition may have a condition (a name of a condition function or a group condition).",
                     "Always start from an initial state 'none'.",
                     " Avoid loops. ",
-                    "If we have multiple transitions from one state we need a condition for each transition to decide which to use\n",
+                    "If we have multiple transitions from one state, each transition should have a condition to decide which to use\n",
                     "",
                     "JSON Example of the Workflow:",
                     "{{",
@@ -109,7 +97,7 @@
                     "          \"condition\": {{",
                     "            \"type\": \"function\",",
                     "            \"function\": {{",
-                    "              \"name\": \"function_name_returns_bool\"",
+                    "              \"name\": \"function_name\"",
                     "            }}",
                     "          }}",
                     "        }}",
@@ -137,7 +125,7 @@
                     "    }}",
                     "  }}",
                     "}}",
-                    "Available operator values:",
+                    "Available operator values for group condition. Not allowed for function condition:",
                     "\"AND\", \"OR\", \"NOT\"",
                     "Available operatorType values:",
                     "\"EQUALS\", \"NOT_EQUAL\", \"IEQUALS\", \"INOT_EQUAL\", \"IS_NULL\", \"NOT_NULL\",",
@@ -345,16 +333,14 @@
             "name": "process_event",
             "config": {
               "type": "prompt",
-              "memory_tags": [
-                "update_processors_according_to_workflow"
-              ],
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "# Please make sure all action functions and condition functions for the newly generated workflow are implemented in the code.",
-                    "Generate new action functions and condition functions if necessary and remove any 'orphan' functions.",
-                    "Processes should take only one argument entity.",
+                    "Please generate functions for the provided workflow json, base them on the initial code. So basically you need to split the initial code into these functions, so that it compiles.",
+                    " Do not miss any logic from the initial code. ",
+                    " {code} ",
+
                     "",
                     "Example:",
                     "async def function_name(entity: dict):",
@@ -364,14 +350,26 @@
                     "",
                     "Example for condition functions:",
                     "async def function_name(entity: dict) -> bool:\n        return True",
+
+                    "These functions are async (example: async function_name(entity: dict): )",
+                    "It can take only one argument entity data and can modify this entity data state, so please also remove any unnecessary entity_service.update(this entity) calls = as you can do it by changing entity attributes directly, e.g. entity['attribute'] = new_value.",
+                    "No more additional arguments can be passed.",
+
+                    "You cannot apply entity_service.add/update/delete on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity['attribute'].  The new state will be persisted. Do not add any test/extra code.",
+                    "please use correct logging, e.g.:\nimport logging\nlogger = logging.getLogger(__name__)\nlogger.setLevel(logging.INFO)\nlogger.exception(e)",
+                    "use 'from common.config.config import ENTITY_VERSION' to import ENTITY_VERSION",
+                    "from app_init.app_init import BeanFactory",
+                    "factory = BeanFactory(config={{'CHAT_REPOSITORY': 'cyoda'}})",
+                    "entity_service: EntityService = factory.get_services()['entity_service'] (can be used for different entities, not the current one)",
+                    "cyoda_auth_service = factory.get_services()[\"cyoda_auth_service\"]",
+                    "Use to log error stack trace logger.exception(e)",
                     " Response format: respond with only the full complete code. No markdown, no comments, no explanation. "
                   ]
                 }
               ],
               "input": {
                 "local_fs": [
-                  "entity/{entity_name}/workflow.json",
-                  "entity/{entity_name}/workflow.py"
+                  "entity/{entity_name}/workflow.json"
                 ]
               },
               "output": {

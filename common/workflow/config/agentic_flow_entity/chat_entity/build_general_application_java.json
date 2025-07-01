@@ -165,7 +165,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "👋 Welcome to Cyoda Application Builder!\nWe’re excited to work with you on building your app.\n\n🔧 Here's how the process works:\n\n**Define & confirm functional requirements**\nWe'll discuss what your app needs to do and confirm the necessary API endpoints.\n\n**Prototype phase**\nWe’ll create a controller-based sketch prototype focused on core logic only.\n\n**Backend migration**\nOnce you're happy with the prototype, we'll migrate it to the Cyoda backend, introducing our event-driven architecture and non-functional requirements.\n👉 Learn more: https://cyoda.com\n\n🚀 After that, you’ll get guidance on launching your app—and we can continue editing it as needed.\n\n🌱 We're in alpha!\nIf something goes wrong or you have questions, reach out on [Discord](https://discord.gg/95rdAyBZr2) or click Retry in the entities progress window.\n\nLet’s build something great together!\n\n```mermaid\ngraph TD\n    A([Define & Confirm Functional Requirements]):::bar e1@== build_general_application.functional_requirements_specified\n    ==> B([Build Sketch Prototype]):::bar\n    B e2@== functional_requirements_generated ==> C([Validate Functionality & API Endpoints]):::bar\n    C e3@== prototype_discussion_requested ==> D{Are You Happy With the Prototype?}:::bar\n    D e4@== migration_confirmation_requested ==> E([Migrate to Cyoda Backend]):::bar\n    E e5@== finished_app_generation_flow ==> F([Event-Driven Architecture + Non-Functional Requirements]):::bar\n    F e6@== init_setup_workflow ==> G([Launch Your App]):::bar\n    G e7@== edit_existing_workflow ==> H([Iterate & Edit as Needed]):::bar\n\n    D e1@== No ==> B\n\n    H e8@== locked_chat ==> I([Need Help? Click Retry or Ask on Discord]):::bar\n    e1@{ animate: true }\n    e2@{ animate: true }\n    e3@{ animate: true }\n    e4@{ animate: true }\n    e5@{ animate: true }\n    e6@{ animate: true }\n    e7@{ animate: true }\n    e8@{ animate: true }\n    classDef bar stroke:#0f0\n```",
+              "notification": "👋 Welcome to Cyoda Application Builder!\nWe’re excited to work with you on building your app.\n\n🔧 Here's how the process works:\n\n**Define & confirm functional requirements**\nWe'll discuss what your app needs to do and confirm the necessary API endpoints.\n\n**Prototype phase**\nWe’ll create a controller-based sketch prototype focused on core logic only.\n\n**Backend migration**\nOnce you're happy with the prototype, we'll migrate it to the Cyoda backend, introducing our event-driven architecture and non-functional requirements.\n👉 Learn more: https://cyoda.com\n\n🚀 After that, you’ll get guidance on launching your app—and we can continue editing it as needed.\n\n🌱 We're in alpha!\nIf something goes wrong or you have questions, reach out on [Discord](https://discord.gg/95rdAyBZr2) or click Restart workflows in the entities progress window.\n\nLet’s build something great together!\n\n```mermaid\ngraph TD\n    A([Define & Confirm Functional Requirements]):::bar e1@== build_general_application.functional_requirements_specified\n    ==> B([Build Sketch Prototype]):::bar\n    B e2@== functional_requirements_generated ==> C([Validate Functionality & API Endpoints]):::bar\n    C e3@== prototype_discussion_requested ==> D{Are You Happy With the Prototype?}:::bar\n    D e4@== migration_confirmation_requested ==> E([Migrate to Cyoda Backend]):::bar\n    E e5@== finished_app_generation_flow ==> F([Event-Driven Architecture + Non-Functional Requirements]):::bar\n    F e6@== init_setup_workflow ==> G([Launch Your App]):::bar\n    G e7@== edit_existing_workflow ==> H([Iterate & Edit as Needed]):::bar\n\n    D e1@== No ==> B\n\n    H e8@== locked_chat ==> I([Need Help? Click Retry or Ask on Discord]):::bar\n    e1@{ animate: true }\n    e2@{ animate: true }\n    e3@{ animate: true }\n    e4@{ animate: true }\n    e5@{ animate: true }\n    e6@{ animate: true }\n    e7@{ animate: true }\n    e8@{ animate: true }\n    classDef bar stroke:#0f0\n```",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -950,6 +950,7 @@
                     "Always place @PostMapping/@GetMapping as the first annotation.",
                     "Use @Valid with @RequestBody for POST/PUT, and with @ModelAttribute for GET.",
                     "Add a comment explaining the workaround where needed, especially if using @ModelAttribute in GET.",
+                    "Include proper logging using SLF4J (e.g., `Logger logger = LoggerFactory.getLogger(EntityControllerPrototype.class);`) and use `logger.info(...)` or `logger.error(...)` appropriately.",
                     "",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Java comments are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```."
                   ]
@@ -1488,7 +1489,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "🚀 **Let’s generate your application code!**\n\nI’ll take care of everything — no need to lift a finger.\n\n⏳ While the code is being generated (~5 min), feel free to grab a coffee ☕ and relax.\n\n**Here’s what’s happening behind the scenes:**\n- **Entity Design:** Defining JSON structures for your entities (`entity/*`)\n- **Workflow Design:** Mapping transitions (`entity/*/workflow.json`)\n- **Workflow Processor:** Java logic that powers it all (`entity/*/*Workflow.java`)\n\n🛠️ This step brings your app to life — from requirements to real, running code.\n\n✅ I’ll notify you as soon as everything’s ready to review.\n\nWant to dive deeper into the concepts?\nCheck these out:\n- [What’s an Entity Database?](https://medium.com/@paul_42036/whats-an-entity-database-11f8538b631a)\n- [Entity Workflows for Event-Driven Architectures](https://medium.com/@paul_42036/entity-workflows-for-event-driven-architectures-4d491cf898a5)",
+              "notification": "🚀 **Let’s generate your application code!**\n\nI’ll take care of everything — no need to lift a finger.\n\n⏳ While the code is being generated (~10 min), feel free to grab a coffee ☕ and relax.\n\n**Here’s what’s happening behind the scenes:**\n- **Entity Design:** Defining JSON structures for your entities (`entity/*`)\n- **Workflow Design:** Mapping transitions (`entity/*/workflow.json`)\n- **Workflow Processor:** Java logic that powers it all (`entity/*/*Workflow.java`)\n\n🛠️ This step brings your app to life — from requirements to real, running code.\n\n✅ I’ll notify you as soon as everything’s ready to review.\n\nWant to dive deeper into the concepts?\nCheck these out:\n- [What’s an Entity Database?](https://medium.com/@paul_42036/whats-an-entity-database-11f8538b631a)\n- [Entity Workflows for Event-Driven Architectures](https://medium.com/@paul_42036/entity-workflows-for-event-driven-architectures-4d491cf898a5)",
               "publish": true
             }
           }
@@ -1771,6 +1772,8 @@
                     "Include the full content of the workflow function as part of this entity model.",
                     "The code has a workflow function that is passed into the EntityService.",
                     " We need to extract the full content of this workflow function and include it in the JSON structure under the entity model node.",
+                    " Make sure to include any necessary implementation details ",
+
                     "2. File Without Workflow Node:",
                     "Provide the entire Java code, but remove all references to the workflow argument.",
                     "The idea here is to remove any references to the workflow argument,",
@@ -1780,6 +1783,7 @@
                     "In summary, you want:",
                     "A structured JSON representation that contains an entity_model node with references to entity_model and the workflow function's name and content.",
                     "A separate file_without_workflow node, which is the original Java code with all references to workflow removed.",
+                    " Make sure to include any necessary implementation details ",
                     "JSON Output Example for `file_without_workflow`:",
                     "{",
                     "  \"code\": \"service = entity_service(entity_model='example')\"",
@@ -1789,7 +1793,7 @@
                     "{",
                     "  \"entity_models\": [",
                     "    {",
-                    "      \"entity_model_name\": \"example\",",
+                    "      \"entity_model_name\": \"example\", #always lowercase",
                     "      \"workflow_function\": {",
                     "        \"name\": \"my_workflow\",",
                     "        \"content\": \"private CompletableFuture<ObjectNode> processPet(ObjectNode entity) {\n    logger.info(\"Workflow processPet started for entity: {}\",\",",
@@ -1917,6 +1921,7 @@
                   "content": [
                     "hello, please update Controller.java file contents renaming its class to Controller and fixing imports. Remember you are Spring Boot developer.",
                     "inject com.fasterxml.jackson.databind.ObjectMapper via constructor instead of creating a new one.",
+                    "Include proper logging using org.slf4j.Logger (e.g., `Logger logger = LoggerFactory.getLogger(EntityControllerPrototype.class);`) and use `logger.info(...)` or `logger.error(...)` appropriately.",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Java comments are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```."
                   ]
                 }
