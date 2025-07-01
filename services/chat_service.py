@@ -336,10 +336,16 @@ class ChatService:
             condition={
                 "cyoda": {
                     "operator": "AND",
-                    "conditions": [{
-                        "jsonPath": "$.user_id", "operatorType": "EQUALS",
-                        "value": user_id, "type": "simple"
-                    }],
+                    "conditions": [
+                        {
+                            "jsonPath": "$.user_id", "operatorType": "EQUALS",
+                            "value": user_id, "type": "simple"
+                        },
+                        {
+                            "field": "state", "operatorType": "INOT_EQUAL",
+                            "value": "deleted", "type": "lifecycle"
+                        }
+                    ],
                     "type": "group"
                 },
                 "local": {"key": "user_id", "value": user_id}
@@ -429,17 +435,21 @@ class ChatService:
                     )
                     has_kids = bool(
                         getattr(child, "child_entities", None) or getattr(child, "scheduled_entities", None))
-                    #todo check why child can be null
+                    # todo check why child can be null
                     if child and isinstance(chat, WorkflowEntity):
-                        if child.current_state and child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) and has_kids:
+                        if child.current_state and child.current_state.startswith(
+                                const.TransitionKey.LOCKED_CHAT.value) and has_kids:
                             if await _traverse(child, child_id):
                                 return True
                         if not child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value):
-                            await _launch_transition(self.entity_service, child.technical_id, self.cyoda_auth_service, None,
+                            await _launch_transition(self.entity_service, child.technical_id, self.cyoda_auth_service,
+                                                     None,
                                                      const.TransitionKey.MANUAL_RETRY.value)
-                            if chat.chat_flow.finished_flow and chat.chat_flow.finished_flow[-1].type == "answer" and not \
+                            if chat.chat_flow.finished_flow and chat.chat_flow.finished_flow[
+                                -1].type == "answer" and not \
                                     chat.chat_flow.finished_flow[-1].consumed:
-                                await _launch_transition(self.entity_service, child.technical_id, self.cyoda_auth_service,
+                                await _launch_transition(self.entity_service, child.technical_id,
+                                                         self.cyoda_auth_service,
                                                          None,
                                                          const.TransitionKey.PROCESS_USER_INPUT.value)
                             return True
