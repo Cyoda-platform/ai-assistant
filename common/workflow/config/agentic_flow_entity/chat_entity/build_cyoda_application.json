@@ -1,0 +1,512 @@
+{
+  "initial_state": "none",
+  "workflow_name": "init_entity_workflow_config",
+  "states": {
+    "none": {
+      "transitions": {
+        "start_chat": {
+          "next": "prompt_entity_definition"
+        }
+      }
+    },
+    "prompt_entity_definition": {
+      "transitions": {
+        "prompt_sent": {
+          "next": "entity_definition",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "approve": true,
+              "publish": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Great! Let’s start by defining your **entities**.",
+                    "Entities are essential objects your application will work with",
+                    "**Step 1:** Please list the core entities your app will process. For each, include a name and 2–3 important attributes.",
+                    "_Tip: A good entity definition helps ensure proper schema, transformations, and downstream workflows._"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "entity_definition": {
+      "transitions": {
+        "submit_answer": {
+          "next": "entity_definition_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "prompt_workflow_config",
+          "manual": true
+        }
+      }
+    },
+    "entity_definition_submitted_answer": {
+      "transitions": {
+        "process_user_input": {
+          "next": "entity_definition_processing",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "approve": true,
+              "allow_anonymous_users": true,
+              "publish": true,
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_new_entity_for_existing_app",
+                    "description": "Launches workflow that is necessary to help the user add a new entity to the existing application. Key factor is that an application already exists and the user explicitly asks to add a new entity (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "entity_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "finish_discussion",
+                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "entities_created"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Troubleshooting:** If unsure, start with just one entity and a few attributes, e.g. `Customer: id, name, signup_date`."
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "entity_definition_processing": {
+      "transitions": {
+        "entities_created_success": {
+          "next": "prompt_workflow_config",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "parameters": {
+                  "transition": "entities_created"
+                }
+              }
+            }
+          }
+        },
+        "entities_created_processing": {
+          "next": "entity_definition",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "entities_created"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "prompt_workflow_config": {
+      "transitions": {
+        "prompt_sent": {
+          "next": "workflow_config",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "approve": true,
+              "publish": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Step 2:** Now, let’s configure your workflow.",
+                    "Please describe the sequence of actions the app should take when processing your entities.",
+                    "_Example: For a `Transaction`, first validate, then enrich with external data, then store._"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "workflow_config": {
+      "transitions": {
+        "submit_answer": {
+          "next": "workflow_config_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "prompt_workflow_code",
+          "manual": true
+        }
+      }
+    },
+    "workflow_config_submitted_answer": {
+      "transitions": {
+        "process_user_input": {
+          "next": "workflow_config_processing",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "approve": true,
+              "allow_anonymous_users": true,
+              "publish": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Tip:** A good workflow config includes: source trigger, transformation steps, and destination(s)."
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "workflow_config_processing": {
+      "transitions": {
+        "workflow_config_success": {
+          "next": "prompt_workflow_code",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "parameters": {
+                  "transition": "workflow_configured"
+                }
+              }
+            }
+          }
+        },
+        "workflow_config_processing": {
+          "next": "workflow_config",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "workflow_configured"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "prompt_workflow_code": {
+      "transitions": {
+        "prompt_sent": {
+          "next": "workflow_code",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "approve": true,
+              "publish": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Step 3:** Time to generate your workflow code.",
+                    "Based on your config, we’ll help scaffold the necessary code files and handlers.",
+                    "_Let us know if you'd like it in Python, YAML, or both._"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "workflow_code": {
+      "transitions": {
+        "submit_answer": {
+          "next": "workflow_code_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "prompt_api_setup",
+          "manual": true
+        }
+      }
+    },
+    "workflow_code_submitted_answer": {
+      "transitions": {
+        "process_user_input": {
+          "next": "workflow_code_processing",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "approve": true,
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Tip:** Include any naming preferences, or let us know where the code should be saved or tested."
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "workflow_code_processing": {
+      "transitions": {
+        "workflow_code_success": {
+          "next": "prompt_api_setup",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "parameters": {
+                  "transition": "workflow_code_generated"
+                }
+              }
+            }
+          }
+        },
+        "workflow_code_processing": {
+          "next": "workflow_code",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "workflow_code_generated"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "prompt_api_setup": {
+      "transitions": {
+        "prompt_sent": {
+          "next": "api_setup",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "approve": true,
+              "publish": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Step 4:** Let’s set up APIs to expose your workflow.",
+                    "Do you want REST endpoints, Webhooks, or internal triggers?",
+                    "Let us know what endpoints should be exposed, and what data should be returned."
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "api_setup": {
+      "transitions": {
+        "submit_answer": {
+          "next": "api_setup_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "complete",
+          "manual": true
+        }
+      }
+    },
+    "api_setup_submitted_answer": {
+      "transitions": {
+        "process_user_input": {
+          "next": "api_setup_processing",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "approve": true,
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Troubleshooting:** If unsure, we can suggest a default REST endpoint with `/api/<entity_name>` pattern."
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "api_setup_processing": {
+      "transitions": {
+        "api_setup_success": {
+          "next": "complete",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "parameters": {
+                  "transition": "api_created"
+                }
+              }
+            }
+          }
+        },
+        "api_setup_processing": {
+          "next": "api_setup",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "api_created"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "complete": {
+      "transitions": {}
+    }
+  }
+}

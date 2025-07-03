@@ -420,12 +420,19 @@ class ChatWorkflow(Workflow):
     async def build_general_application(self, technical_id: str, entity: ChatEntity, **params: Any):
         user_request = params.get("user_request")
         programming_language = params.get("programming_language")
-
+        building_flow = params.get("building_flow")
         if not user_request:
             return "parameter user_request is required"
         if not programming_language:
             return "parameter programming_language is required"
-        workflow_name = const.ModelName.GEN_APP_ENTITY_JAVA.value if programming_language == "JAVA" else const.ModelName.GEN_APP_ENTITY_PYTHON.value
+        if not building_flow:
+            return "parameter building_flow is required"
+
+        if building_flow == "cyoda":
+            workflow_name = "build_cyoda_application"
+        else:
+            workflow_name = const.ModelName.GEN_APP_ENTITY_JAVA.value if programming_language == "JAVA" else const.ModelName.GEN_APP_ENTITY_PYTHON.value
+
         child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
             entity_service=self.entity_service,
             technical_id=technical_id,

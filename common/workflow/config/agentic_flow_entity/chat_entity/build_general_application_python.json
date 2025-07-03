@@ -1629,14 +1629,14 @@
                 {
                   "role": "user",
                   "content": [
-                    "Please, transform data about entities {entities_list} into the following json: {",
+                    "Please, transform data about entities {entities_list} into the following json: {{",
                     "    \"entities\": [",
-                    "        {",
+                    "        {{",
                     "            \"entity_name\": \"\", //put entity name here, lowercase, underscore",
                     "            \"entity_data_example\": \"\", //put entity data golden json example according to the requirement, list all entity attributes specified by the user or relevant to the request body",
-                    "        }",
+                    "        }}",
                     "    ]",
-                    "}"
+                    "}}"
                   ]
                 }
               ],
