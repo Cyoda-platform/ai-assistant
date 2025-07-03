@@ -15,9 +15,10 @@ logger = logging.getLogger(__name__)
 
 
 class WorkflowHelperService:
-    def __init__(self, cyoda_auth_service, mock=False):
+    def __init__(self, cyoda_auth_service, entity_service, mock=False):
         self.mock = mock
         self.cyoda_auth_service = cyoda_auth_service
+        self.entity_service = entity_service
 
     if config.MOCK_AI == "true":
         # generate_mock_data()
@@ -35,7 +36,6 @@ class WorkflowHelperService:
 
     # =============================
     async def launch_agentic_workflow(self,
-                                      entity_service,
                                       technical_id,
                                       entity,
                                       entity_model,
@@ -66,7 +66,7 @@ class WorkflowHelperService:
             }
         })
         if user_request:
-            user_request_message_id, last_modified = await add_answer_to_finished_flow(entity_service=entity_service,
+            user_request_message_id, last_modified = await add_answer_to_finished_flow(entity_service=self.entity_service,
                                                                                        answer=user_request,
                                                                                        cyoda_auth_service=self.cyoda_auth_service,
                                                                                        publish=False)
@@ -78,7 +78,7 @@ class WorkflowHelperService:
                                                                         last_modified=last_modified,
                                                                         user_id=entity.user_id))
 
-        child_technical_id = await entity_service.add_item(token=self.cyoda_auth_service,
+        child_technical_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                            entity_model=entity_model,
                                                            entity_version=config.ENTITY_VERSION,
                                                            entity=child_entity)
@@ -88,7 +88,6 @@ class WorkflowHelperService:
         return child_technical_id
 
     async def launch_scheduled_workflow(self,
-                                        entity_service,
                                         awaited_entity_ids,
                                         triggered_entity_id,
                                         triggered_entity_next_transition: str = None,
@@ -105,7 +104,7 @@ class WorkflowHelperService:
             last_modified=get_current_timestamp_num()
         )
 
-        child_technical_id = await entity_service.add_item(token=self.cyoda_auth_service,
+        child_technical_id = await self.entity_service.add_item(token=self.cyoda_auth_service,
                                                            entity_model=const.ModelName.SCHEDULER_ENTITY.value,
                                                            entity_version=config.ENTITY_VERSION,
                                                            entity=child_entity)
