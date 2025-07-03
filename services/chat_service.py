@@ -31,23 +31,32 @@ logger = logging.getLogger(__name__)
 
 
 class ChatService:
-    def __init__(self, entity_service, cyoda_auth_service, chat_lock, ai_agent):
+    def __init__(self, entity_service, cyoda_auth_service, chat_lock, ai_agent, data_service):
         self.entity_service: EntityService = entity_service
         self.chat_lock = chat_lock
         self.ai_agent = ai_agent
         self.cyoda_auth_service = cyoda_auth_service
+        self.data_service=data_service
 
     async def transfer_chats(self, guest_token, auth_header):
         guest_user_id = self._get_user_id(auth_header=f"Bearer {guest_token}")
         user_id = self._get_user_id(auth_header=auth_header)
 
-        transfer_chats_entities = await self._get_entities_by_user_name(user_id=user_id,
+        transfer_chats_entities = await self.data_service.get_entities_by_user_name(user_id=user_id,
                                                                         model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
 
         transfer_chats_entity = {
             "user_id": user_id,
             "guest_user_id": guest_user_id
         }
+        chat_transferred_to_different_account = any(
+            entity.get("user_id") != user_id and entity.get("guest_user_id") == guest_user_id
+            for entity in transfer_chats_entities
+        )
+        if chat_transferred_to_different_account:
+            raise GuestChatsLimitExceededException(
+                "Sorry, your guest chats have already been transferred to a different account. Please log in with your previous account.")
+
         # Check if an entity with matching user_id and guest_user_id already exists
         already_exists = any(
             entity.get("user_id") == user_id and entity.get("guest_user_id") == guest_user_id
@@ -69,21 +78,20 @@ class ChatService:
         if not user_id:
             raise InvalidTokenException("Invalid token")
 
-        chats = await self._get_entities_by_user_name(user_id=user_id,
+        chats = await self.data_service.get_entities_by_user_name(user_id=user_id,
                                                       model=const.ModelName.CHAT_BUSINESS_ENTITY.value)
         if not user_id.startswith("guest."):
-            transfers = await self._get_entities_by_user_name(user_id=user_id,
+            transfers = await self.data_service.get_entities_by_user_name(user_id=user_id,
                                                               model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
             guest_user_ids = set()
             for transfer in transfers:
                 guest_id = transfer["guest_user_id"]
                 if guest_id not in guest_user_ids:
-                    chats += await self._get_entities_by_user_name(
+                    chats += await self.data_service.get_entities_by_user_name(
                         user_id=guest_id,
                         model=const.ModelName.CHAT_BUSINESS_ENTITY.value
                     )
                     guest_user_ids.add(guest_id)
-
 
         return [{
             "technical_id": c.technical_id,
@@ -94,7 +102,7 @@ class ChatService:
 
     async def add_chat(self, user_id: str, req_data: dict) -> dict:
         if user_id.startswith("guest."):
-            existing = await self._get_entities_by_user_name_and_workflow_name(user_id=user_id,
+            existing = await self.data_service.get_entities_by_user_name_and_workflow_name(user_id=user_id,
                                                                                model=const.ModelName.CHAT_ENTITY.value,
                                                                                workflow_name=const.ModelName.CHAT_ENTITY.value)
             if len(existing) >= config.MAX_GUEST_CHATS:
@@ -317,7 +325,7 @@ class ChatService:
         if not is_guest_to_reg:
             raise InvalidTokenException()
 
-        ents = await self._get_entities_by_user_name(user_id, const.ModelName.TRANSFER_CHATS_ENTITY.value)
+        ents = await self.data_service.get_entities_by_user_name(user_id, const.ModelName.TRANSFER_CHATS_ENTITY.value)
         if not ents or ents[0]["guest_user_id"] != chat.user_id:
             raise InvalidTokenException()
 
@@ -340,54 +348,6 @@ class ChatService:
         except jwt.InvalidTokenError:
             return None
 
-    async def _get_entities_by_user_name(self, user_id, model):
-        return await self.entity_service.get_items_by_condition(
-            token=self.cyoda_auth_service,
-            entity_model=model,
-            entity_version=config.ENTITY_VERSION,
-            condition={
-                "cyoda": {
-                    "operator": "AND",
-                    "conditions": [
-                        {
-                            "jsonPath": "$.user_id", "operatorType": "EQUALS",
-                            "value": user_id, "type": "simple"
-                        },
-                        {
-                            "field": "state", "operatorType": "INOT_EQUAL",
-                            "value": "deleted", "type": "lifecycle"
-                        }
-                    ],
-                    "type": "group"
-                },
-                "local": {"key": "user_id", "value": user_id}
-            }
-        )
-
-    async def _get_entities_by_user_name_and_workflow_name(self, user_id, model, workflow_name):
-        return await self.entity_service.get_items_by_condition(
-            token=self.cyoda_auth_service,
-            entity_model=model,
-            entity_version=config.ENTITY_VERSION,
-            condition={
-                "cyoda": {
-                    "operator": "AND",
-                    "conditions": [
-                        {"jsonPath": "$.user_id", "operatorType": "IEQUALS", "value": user_id, "type": "simple"},
-                        {"jsonPath": "$.workflow_name", "operatorType": "IEQUALS",
-                         "value": workflow_name, "type": "simple"},
-                        {
-                            "field": "state",
-                            "operatorType": "INOT_EQUAL",
-                            "value": "deleted",
-                            "type": "lifecycle"
-                        }
-                    ],
-                    "type": "group"
-                },
-                "local": {"key": "user_id", "value": user_id}
-            }
-        )
 
     async def _submit_question_helper(self, auth_header, technical_id, chat, question, user_file=None):
         if not question:

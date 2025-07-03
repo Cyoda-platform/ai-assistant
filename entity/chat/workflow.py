@@ -24,9 +24,6 @@ from entity.workflow import Workflow
 
 logger = logging.getLogger(__name__)
 
-entry_point_to_stack = {
-}
-
 
 class ChatWorkflow(Workflow):
     def __init__(self, dataset,
@@ -35,6 +32,7 @@ class ChatWorkflow(Workflow):
                  cyoda_auth_service,
                  workflow_converter_service,  # todo will need factory soon
                  scheduler_service,
+                 data_service,
                  mock=False):
         self.dataset = dataset
         self.workflow_helper_service = workflow_helper_service
@@ -43,6 +41,7 @@ class ChatWorkflow(Workflow):
         self.cyoda_auth_service = cyoda_auth_service
         self.workflow_converter_service = workflow_converter_service
         self.scheduler_service = scheduler_service
+        self.data_service=data_service
 
     async def save_env_file(self, technical_id, entity: ChatEntity, **params):
         repository_name = get_repository_name(entity)
@@ -105,7 +104,6 @@ class ChatWorkflow(Workflow):
         # Schedule the workflow
         # todo check for the next transition
         scheduled_entity_id = await self.workflow_helper_service.launch_scheduled_workflow(
-            entity_service=self.entity_service,
             awaited_entity_ids=[build_id],
             triggered_entity_id=technical_id,
             scheduled_action=scheduled_action
@@ -427,7 +425,6 @@ class ChatWorkflow(Workflow):
             return "parameter programming_language is required"
         workflow_name = const.ModelName.GEN_APP_ENTITY_JAVA.value if programming_language == "JAVA" else const.ModelName.GEN_APP_ENTITY_PYTHON.value
         child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
-            entity_service=self.entity_service,
             technical_id=technical_id,
             entity=entity,
             entity_model=const.ModelName.CHAT_ENTITY.value,
@@ -488,7 +485,6 @@ class ChatWorkflow(Workflow):
                 }
 
                 child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
-                    entity_service=self.entity_service,
                     technical_id=technical_id,
                     entity=entity,
                     entity_model=const.ModelName.AGENTIC_FLOW_ENTITY.value,
@@ -501,7 +497,6 @@ class ChatWorkflow(Workflow):
             if awaited_entity_ids:
                 # todo, need some way to identify next allowed transition
                 scheduled_entity_id = await self.workflow_helper_service.launch_scheduled_workflow(
-                    entity_service=self.entity_service,
                     awaited_entity_ids=awaited_entity_ids,
                     triggered_entity_id=technical_id,
                     triggered_entity_next_transition="update_routes_file"
@@ -573,7 +568,6 @@ class ChatWorkflow(Workflow):
     # ==================================== scheduler flow =======================================
 
     async def trigger_parent_entity(self, technical_id, entity: SchedulerEntity, **params):
-        "design_workflow_from_code"
         await _launch_transition(entity_service=self.entity_service,
                                  technical_id=entity.triggered_entity_id,
                                  cyoda_auth_service=self.cyoda_auth_service,
@@ -631,7 +625,6 @@ class ChatWorkflow(Workflow):
             'entities_description': entities_description_id,
         }
         child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
-            entity_service=self.entity_service,
             technical_id=technical_id,
             entity=entity,
             entity_model=const.ModelName.CHAT_ENTITY.value,
@@ -658,7 +651,6 @@ class ChatWorkflow(Workflow):
         await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
 
         child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
-            entity_service=self.entity_service,
             technical_id=technical_id,
             entity=entity,
             entity_model=const.ModelName.CHAT_ENTITY.value,
@@ -708,7 +700,6 @@ class ChatWorkflow(Workflow):
 
         # Launch the actual agentic workflow
         child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
-            entity_service=self.entity_service,
             technical_id=technical_id,
             entity=entity,
             entity_model=entity_model,

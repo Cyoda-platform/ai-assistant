@@ -18,13 +18,21 @@ logger = logging.getLogger(__name__)
 
 
 class WorkflowDispatcher:
-    def __init__(self, cls, cls_instance, ai_agent, entity_service, cyoda_auth_service, mock=False):
+    def __init__(self,
+                 cls,
+                 cls_instance,
+                 ai_agent,
+                 entity_service,
+                 cyoda_auth_service,
+                 user_service: "UserService",
+                 mock=False):
         self.cls = cls
         self.cls_instance = cls_instance
         self.methods_dict = self._collect_subclass_methods()
         self.ai_agent = ai_agent
         self.entity_service = entity_service
         self.cyoda_auth_service = cyoda_auth_service
+        self.user_service = user_service
 
     def _collect_subclass_methods(self):
 
@@ -53,6 +61,7 @@ class WorkflowDispatcher:
     async def process_event(self, entity: WorkflowEntity, action, technical_id):
         response = "returned empty response"
         try:
+            entity.user_id = await self.user_service.get_entity_account(user_id=entity.user_id)
             config = action.get("config")
             action_name = action.get("name")
 

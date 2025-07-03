@@ -10,7 +10,9 @@ from common.auth.cyoda_auth import CyodaAuthService
 from common.grpc_client.grpc_client import GrpcClient
 from common.repository.cyoda.cyoda_repository import CyodaRepository
 from common.repository.in_memory_db import InMemoryRepository
+from common.service.data_retrieval_service import DataRetrievalService
 from common.service.service import EntityServiceImpl
+from common.service.user_service import UserService
 from common.workflow.converter.workflow_converter_service import CyodaWorkflowConverterService
 from entity.model_registry import model_registry
 from entity.chat.helper_functions import WorkflowHelperService
@@ -47,12 +49,15 @@ class ServicesFactory:
             self.cyoda_auth_service = CyodaAuthService()
             self.dataset = {}
             self.device_sessions = {}
-            self.workflow_helper_service = WorkflowHelperService(cyoda_auth_service=self.cyoda_auth_service)
-            self.workflow = Workflow()
-
             self.entity_repository = self._create_repository(repo_type=env_config.CHAT_REPOSITORY,
                                                              cyoda_auth_service=self.cyoda_auth_service)
             self.entity_service = EntityServiceImpl(repository=self.entity_repository, model_registry=model_registry)
+            self.data_service = DataRetrievalService(cyoda_auth_service=self.cyoda_auth_service, entity_service=self.entity_service)
+            self.user_service = UserService(cyoda_auth_service=self.cyoda_auth_service, entity_service=self.entity_service, data_service=self.data_service)
+            self.workflow_helper_service = WorkflowHelperService(cyoda_auth_service=self.cyoda_auth_service, entity_service=self.entity_service)
+            self.workflow = Workflow()
+
+
             self.scheduler = Scheduler(entity_service=self.entity_service, cyoda_auth_service=self.cyoda_auth_service)
 
 
@@ -62,7 +67,8 @@ class ServicesFactory:
                 entity_service=self.entity_service,
                 cyoda_auth_service=self.cyoda_auth_service,
                 workflow_converter_service=self.workflow_converter_service,
-                scheduler_service=self.scheduler
+                scheduler_service=self.scheduler,
+                data_service=self.data_service
             )
             self.openai_client = AsyncOpenAIClient()
             self.ai_agent = OpenAiAgent(client=self.openai_client)
@@ -72,12 +78,14 @@ class ServicesFactory:
                 cls_instance=self.chat_workflow,
                 ai_agent=self.ai_agent,
                 entity_service=self.entity_service,
-                cyoda_auth_service=self.cyoda_auth_service
+                cyoda_auth_service=self.cyoda_auth_service,
+                user_service=self.user_service
             )
             self.chat_service = ChatService(entity_service=self.entity_service,
                                             cyoda_auth_service=self.cyoda_auth_service,
                                             chat_lock=self.chat_lock,
-                                            ai_agent=self.ai_agent)
+                                            ai_agent=self.ai_agent,
+                                            data_service=self.data_service)
             self.labels_config_service = LabelsConfigService()
             self.grpc_client = GrpcClient(workflow_dispatcher=self.workflow_dispatcher,
                                           auth=self.cyoda_auth_service,
