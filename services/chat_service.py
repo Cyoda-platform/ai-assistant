@@ -44,18 +44,24 @@ class ChatService:
         transfer_chats_entities = await self._get_entities_by_user_name(user_id=user_id,
                                                                         model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
 
-        if transfer_chats_entities:
-            raise GuestChatsLimitExceededException(
-                "Sorry, your guest chats have already been transferred. Only one guest session is allowed.")
-
         transfer_chats_entity = {
             "user_id": user_id,
             "guest_user_id": guest_user_id
         }
-        await self.entity_service.add_item(token=self.cyoda_auth_service,
-                                           entity_model=const.ModelName.TRANSFER_CHATS_ENTITY.value,
-                                           entity_version=config.ENTITY_VERSION,
-                                           entity=transfer_chats_entity)
+        # Check if an entity with matching user_id and guest_user_id already exists
+        already_exists = any(
+            entity.get("user_id") == user_id and entity.get("guest_user_id") == guest_user_id
+            for entity in transfer_chats_entities
+        )
+
+        # Add only if not already present
+        if not already_exists:
+            await self.entity_service.add_item(
+                token=self.cyoda_auth_service,
+                entity_model=const.ModelName.TRANSFER_CHATS_ENTITY.value,
+                entity_version=config.ENTITY_VERSION,
+                entity=transfer_chats_entity
+            )
 
     # public methods used by routes
     # todo stream chats not to load all of them into memory
@@ -68,10 +74,16 @@ class ChatService:
         if not user_id.startswith("guest."):
             transfers = await self._get_entities_by_user_name(user_id=user_id,
                                                               model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
-            if transfers:
-                guest_id = transfers[0]["guest_user_id"]
-                chats += await self._get_entities_by_user_name(user_id=guest_id,
-                                                               model=const.ModelName.CHAT_BUSINESS_ENTITY.value)
+            guest_user_ids = set()
+            for transfer in transfers:
+                guest_id = transfer["guest_user_id"]
+                if guest_id not in guest_user_ids:
+                    chats += await self._get_entities_by_user_name(
+                        user_id=guest_id,
+                        model=const.ModelName.CHAT_BUSINESS_ENTITY.value
+                    )
+                    guest_user_ids.add(guest_id)
+
 
         return [{
             "technical_id": c.technical_id,
