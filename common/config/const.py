@@ -229,7 +229,7 @@ FILES_NOTIFICATIONS = {
     },
 }
 
-BRANCH_READY_NOTIFICATION = "🎉 **Your branch is live!**\nI’ve added a GitHub branch in our public repository where I’ll be posting updates.\nYou can check it out now or come back to it anytime:\n🔗 [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch}) 👀\n"
+BRANCH_READY_NOTIFICATION = "🎉 **Your branch is live!**\nI’ve added a GitHub branch in our public repository where I’ll be posting updates.\nYou can check it out now or come back to it anytime:\n🔗 [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch}) {git_branch} 👀 \n"
 
 # === Miscellaneous design strings ===
 LOGIC_CODE_DESIGN_STR = "Additional logic code design"
@@ -252,3 +252,18 @@ MAX_GUEST_CHAT_MESSAGES = 300
 MAX_CHAT_MESSAGES = 1500
 SCHEDULER_STATUS_WAITING = "waiting"
 UI_FUNCTION_PREFIX = "ui_function"
+
+CYODA_WELCOME_MESSAGE = """\
+Hi! I’m Cyoda 🧚 and I’ll be guiding you on your journey!
+
+We’re currently in alpha, so you might run into a few bumps. No worries — if you need help, just reach out on [Discord](https://discord.gg/95rdAyBZr2)!
+
+Cyoda is entity-based — each entity follows its own workflow.  
+I'm also workflow-driven! To track progress, open the *Entities Data* window.
+
+I’ll be kicking off new workflows for you — you’ll see them appear in that window. Once a flow reaches the **locked** state, it’s done and dusted ✅.
+
+Curious about what I can do? Just ask: **"Show me your agent tools."**
+
+Have fun exploring!
+"""

@@ -313,31 +313,40 @@
                 {
                   "role": "user",
                   "content": [
-                    "# Please implement action functions (processors) for the newly generated workflow according to the user requirement {user_request}.",
-                    "If the requirement is not specific enough just add a template with example code.",
-                    "Generate new process functions if necessary or update existing methods according to the user requirement.",
-                    "It should return CompletableFuture<ObjectNode>",
-                    "It can take only one argument ObjectNode entity and can modify this entity state",
-                    "No more additional arguments can be passed.",
+                    "Please generate functions for the provided workflow json.",
+                    " Do not miss any logic from the {user_request}. ",
+
                     "Example:",
-                    "public CompletableFuture<ObjectNode> functionName(ObjectNode entity) {",
-                    "    if (!entity.has(\"status\")) {",
+                    "public CompletableFuture<ObjectNode> functionName(ObjectNode entity) {{",
+                    "    if (!entity.has(\"status\")) {{",
                     "     entity.put(\"status\", \"pending\");",
-                    "    }",
+                    "    }}",
                     "return CompletableFuture.completedFuture(entity);",
-                    "  }",
+                    "  }}",
                     "Example for condition functions:",
-                    "public CompletableFuture<ObjectNode> functionName(ObjectNode entity) {",
+                    "public CompletableFuture<ObjectNode> functionName(ObjectNode entity) {{",
                     "  boolean value = true; ",
                     "  entity.put(\"success\", value)",
                     "return CompletableFuture.completedFuture(entity);",
-                    "  }",
-                    "Please, call the class Workflow. Use package name 'com.java_template.entity.{entity_name}'. Use @Component(\"{entity_name}\") ",
-                    "You cannot apply entityService.addItem/updateItem/deleteItem on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity.attribute.  The new state will be persisted. Do not add any test/extra code.",
+                    "  }}",
+
+                    "No more additional arguments can be passed.",
+                    "You cannot apply entityService.addItem/updateItem/deleteItem on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity.attribute.  The new state will be persisted. Do not add any test code.",
+                    "Call the class Workflow. Use package name 'com.java_template.entity.{entity_name}'. Add @Component(\"{entity_name}\") annotation to the class.",
+                    "Use 'import static com.java_template.common.config.Config.*;' to import ENTITY_VERSION.",
+                    "Use 'import static com.java_template.common.service.EntityService;' to import EntityService bean only if necessary.",
+                    "Provide all the imports and variables which are necessary and used in the code.",
+                    "Include proper logging using org.slf4j.Logger (e.g., `Logger logger = LoggerFactory.getLogger(EntityControllerPrototype.class);`) and use `logger.info(...)` or `logger.error(...)` appropriately.",
+                    "Use private final RestTemplate restTemplate = new RestTemplate(); if necessary",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting."
                   ]
                 }
               ],
+              "input": {
+                "local_fs": [
+                  "src/main/java/com/java_template/entity/{entity_name}/Workflow.json"
+                ]
+              },
               "output": {
                 "local_fs": [
                   "src/main/java/com/java_template/entity/{entity_name}/Workflow.java"

@@ -42,7 +42,7 @@
                     " For example you can set transitions to manual:",
                     "{{\"transitions\": {{\n \"example_transition_name\": {{\n\"next\": \"example_state_2\",\n\"manual\": true}}}}}}",
                     " Or if the user wants more control over action/processor. They can set these parameters explicitly:",
-                    "\"action\": {\n  \"name\": \"example_name\",\n \"owner\": \"CYODA\",\n\"user\": \"CYODA\",\n \"attach_entity\": \"true\",\n  \"calculation_response_timeout_ms\": \"300000\",\n  \"retry_policy\": \"FIXED\", or \"NONE\"\n \"sync_process\": \"false\",\n \"new_transaction_for_async\": \"true\",\n \"none_transactional_for_async\": \"false\",\n\"calculation_nodes_tags\": \"user_provided_value\"\n } "
+                    "\"action\": {{\n  \"name\": \"example_name\",\n \"owner\": \"CYODA\",\n\"user\": \"CYODA\",\n \"attach_entity\": \"true\",\n  \"calculation_response_timeout_ms\": \"300000\",\n  \"retry_policy\": \"FIXED\", or \"NONE\"\n \"sync_process\": \"false\",\n \"new_transaction_for_async\": \"true\",\n \"none_transactional_for_async\": \"false\",\n\"calculation_nodes_tags\": \"user_provided_value\"\n }} "
                   ]
                 }
               ],
