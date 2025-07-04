@@ -346,7 +346,7 @@
                     " {code} ",
 
                     "Example:",
-                    "public CompletableFuture<ObjectNode> functionName(ObjectNode entity) {{",
+                    "public java.util.concurrent.CompletableFuture<ObjectNode> functionName(ObjectNode entity) {{",
                     "    if (!entity.has(\"status\")) {{",
                     "     entity.put(\"status\", \"pending\");",
                     "    }}",
@@ -363,10 +363,10 @@
                     "You cannot apply entityService.addItem/updateItem/deleteItem on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity.attribute.  The new state will be persisted. Do not add any test code.",
                     "Please, call the class Workflow. Use package name 'com.java_template.entity.{entity_name}'. Add @Component(\"{entity_name}\") annotation to the class.",
                     "Use 'import static com.java_template.common.config.Config.*;' to import ENTITY_VERSION.",
-                    "Use 'import static com.java_template.common.service.EntityService;' to import EntityService bean only if necessary.",
+                    "Use 'import static com.java_template.common.service.EntityService;' to import EntityService bean only if necessary. If you use EntityService, please inject it via constructor.",
                     "Provide all the imports and variables which are necessary and used in the code.",
                     "Include proper logging using org.slf4j.Logger (e.g., `Logger logger = LoggerFactory.getLogger(EntityControllerPrototype.class);`) and use `logger.info(...)` or `logger.error(...)` appropriately.",
-                    "Use private final RestTemplate restTemplate = new RestTemplate(); if necessary",
+                    "Use private final org.springframework.web.client.RestTemplate restTemplate = new RestTemplate(); if necessary",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting."
                   ]
                 }
