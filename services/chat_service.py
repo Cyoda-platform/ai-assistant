@@ -36,14 +36,14 @@ class ChatService:
         self.chat_lock = chat_lock
         self.ai_agent = ai_agent
         self.cyoda_auth_service = cyoda_auth_service
-        self.data_service=data_service
+        self.data_service = data_service
 
     async def transfer_chats(self, guest_token, auth_header):
         guest_user_id = self._get_user_id(auth_header=f"Bearer {guest_token}")
         user_id = self._get_user_id(auth_header=auth_header)
 
         transfer_chats_entities = await self.data_service.get_entities_by_user_name(user_id=user_id,
-                                                                        model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
+                                                                                    model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
 
         transfer_chats_entity = {
             "user_id": user_id,
@@ -79,20 +79,25 @@ class ChatService:
             raise InvalidTokenException("Invalid token")
 
         chats = await self.data_service.get_entities_by_user_name(user_id=user_id,
-                                                      model=const.ModelName.CHAT_BUSINESS_ENTITY.value)
+                                                                  model=const.ModelName.CHAT_BUSINESS_ENTITY.value)
+        transfer_chats = []
         if not user_id.startswith("guest."):
             transfers = await self.data_service.get_entities_by_user_name(user_id=user_id,
-                                                              model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
+                                                                          model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
+
             guest_user_ids = set()
+
             for transfer in transfers:
                 guest_id = transfer["guest_user_id"]
                 if guest_id not in guest_user_ids:
-                    chats += await self.data_service.get_entities_by_user_name(
+                    transfer_chats += await self.data_service.get_entities_by_user_name(
                         user_id=guest_id,
                         model=const.ModelName.CHAT_BUSINESS_ENTITY.value
                     )
                     guest_user_ids.add(guest_id)
-
+        if transfer_chats:
+            chats += transfer_chats
+            chats = sorted(chats, key=lambda chat: chat.last_modified, reverse=True)
         return [{
             "technical_id": c.technical_id,
             "name": c.name,
@@ -103,8 +108,8 @@ class ChatService:
     async def add_chat(self, user_id: str, req_data: dict) -> dict:
         if user_id.startswith("guest."):
             existing = await self.data_service.get_entities_by_user_name_and_workflow_name(user_id=user_id,
-                                                                               model=const.ModelName.CHAT_ENTITY.value,
-                                                                               workflow_name=const.ModelName.CHAT_ENTITY.value)
+                                                                                           model=const.ModelName.CHAT_ENTITY.value,
+                                                                                           workflow_name=const.ModelName.CHAT_ENTITY.value)
             if len(existing) >= config.MAX_GUEST_CHATS:
                 raise GuestChatsLimitExceededException("Max guest chats limit reached")
 
@@ -321,12 +326,16 @@ class ChatService:
         if chat.user_id == user_id:
             return
 
+        if not chat.user_id.startswith('guest.'):
+            raise InvalidTokenException()
+
         is_guest_to_reg = chat.user_id.startswith("guest.") and not user_id.startswith("guest.")
         if not is_guest_to_reg:
             raise InvalidTokenException()
 
-        ents = await self.data_service.get_entities_by_user_name(user_id, const.ModelName.TRANSFER_CHATS_ENTITY.value)
-        if not ents or ents[0]["guest_user_id"] != chat.user_id:
+        transfer_chats = await self.data_service.get_entities_by_user_name(user_id, const.ModelName.TRANSFER_CHATS_ENTITY.value)
+        has_transfer = any(transfer_chat['guest_user_id'] == chat.user_id for transfer_chat in transfer_chats)
+        if not transfer_chats or not has_transfer:
             raise InvalidTokenException()
 
     def _get_user_id(self, auth_header):
@@ -347,7 +356,6 @@ class ChatService:
             raise TokenExpiredException()
         except jwt.InvalidTokenError:
             return None
-
 
     async def _submit_question_helper(self, auth_header, technical_id, chat, question, user_file=None):
         if not question:
