@@ -41,7 +41,7 @@ class ChatWorkflow(Workflow):
         self.cyoda_auth_service = cyoda_auth_service
         self.workflow_converter_service = workflow_converter_service
         self.scheduler_service = scheduler_service
-        self.data_service=data_service
+        self.data_service = data_service
 
     async def save_env_file(self, technical_id, entity: ChatEntity, **params):
         repository_name = get_repository_name(entity)
@@ -111,7 +111,7 @@ class ChatWorkflow(Workflow):
 
         entity.scheduled_entities.append(scheduled_entity_id)
 
-        return f"Successfully scheduled {scheduled_action.value.replace('_', ' ')} with build ID {build_id}. Your environment will be available at: https://{build_namespace}.{config.CLIENT_HOST}"
+        return f"Successfully scheduled {scheduled_action.value.replace('_', ' ')} with build ID {build_id}. Your environment will be available at: https://{build_namespace}.{config.CLIENT_HOST}. You will be notified once your environment is ready. You can check the status of the deployment by asking 'check deploy status for build ID {build_id}'."
 
     async def schedule_deploy_env(
             self,
@@ -778,6 +778,27 @@ class ChatWorkflow(Workflow):
             workflow_name=workflow_name,
             params=params,
         )
+
+    async def get_user_info(
+            self,
+            technical_id: str,
+            entity: AgenticFlowEntity,
+            **params
+    ) -> str:
+        """
+        Retrieves and caches the Cyoda environment URL based on the user ID,
+        and returns relevant information for the response.
+        """
+
+        if 'cyoda_env_url' not in entity.workflow_cache:
+            if entity.user_id.startswith('guest.'):
+                url = "please, log in to deploy"
+            else:
+                url = f"https://client-{entity.user_id}.{config.CLIENT_HOST}"
+            entity.workflow_cache['cyoda_env_url'] = url
+
+        cache_json = json.dumps(entity.workflow_cache)
+        return f"Please use this information for your answer: {cache_json}"
 
     async def add_new_entity_for_existing_app(
             self, technical_id: str, entity: AgenticFlowEntity, **params

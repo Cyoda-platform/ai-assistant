@@ -375,6 +375,26 @@
                 {
                   "type": "function",
                   "function": {
+                    "name": "get_user_info",
+                    "description": "Use this tool to get user information like user environment URL, user branch name etc",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
                     "name": "deploy_cyoda_env",
                     "description": "Launches workflow that is necessary to deploy Cyoda environment for the user. User needs to explicitly ask for deployment of Cyoda environment.",
                     "strict": true,
@@ -445,6 +465,26 @@
               "allow_anonymous_users": true,
               "model": {},
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_user_info",
+                    "description": "Use this tool to get user information like user environment URL, user branch name etc",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -603,6 +643,26 @@
               "allow_anonymous_users": true,
               "model": {},
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_user_info",
+                    "description": "Use this tool to get user information like user environment URL, user branch name etc",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -885,6 +945,26 @@
               "allow_anonymous_users": true,
               "model": {},
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_user_info",
+                    "description": "Use this tool to get user information like user environment URL, user branch name etc",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -1355,6 +1435,26 @@
               "allow_anonymous_users": true,
               "model": {},
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_user_info",
+                    "description": "Use this tool to get user information like user environment URL, user branch name etc",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
