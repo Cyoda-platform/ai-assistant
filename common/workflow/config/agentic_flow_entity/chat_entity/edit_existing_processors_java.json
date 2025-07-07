@@ -38,17 +38,17 @@
                     "Generate new action (process) functions if necessary or update existing functions according to the user requirement.",
                     "Methods should take only one argument entity.",
                     "===============",
-                    "Current workflow configuration is provided in the attachment: workflow.json",
+                    "Current workflow configuration is provided in the attachment: Workflow.json",
                     "===============",
                     "Current actions (processors) code is provided in the attachment: Workflow.java",
                     " If you add new functions, return the full result, not only the diff. ",
                     "Example:",
-                    "public CompletableFuture<ObjectNode> setDefaultStatus(ObjectNode entity) {",
-                    "    if (!entity.has(\"status\")) {",
+                    "public CompletableFuture<ObjectNode> setDefaultStatus(ObjectNode entity) {{",
+                    "    if (!entity.has(\"status\")) {{",
                     "     entity.put(\"status\", \"pending\");",
-                    "    }",
+                    "    }}",
                     "return CompletableFuture.completedFuture(entity);",
-                    "  }",
+                    "  }}",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting."
                   ]
                 }

@@ -129,7 +129,7 @@ class ChatService:
                 type="notification",
                 publish=True,
                 consumed=True,
-                message="Hi! I'm Cyoda 🧚. Let me take a look at your question…",
+                message=const.CYODA_WELCOME_MESSAGE,
                 last_modified=last_modified
             ),
             meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
