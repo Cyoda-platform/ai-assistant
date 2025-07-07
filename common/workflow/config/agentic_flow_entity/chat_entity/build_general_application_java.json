@@ -1829,6 +1829,7 @@
                     ");",
                     "```",
                     "You can remove unused code, but make sure the code that doesn't reference workflow functions stays intact.",
+                    "file_without_workflow should not have any workflow functions.",
                     "JSON Output Example for `file_without_workflow`:",
                     "{",
                     "  \"code\": \"return entityService.addItem(\\n    entityModel = \\\"example\\\",\\n    entityVersion = ENTITY_VERSION,\\n    entity = data\\n);\"",
@@ -1966,6 +1967,7 @@
                   "content": [
                     "hello, please update Controller.java file contents renaming its class to Controller and fixing imports. Remember you are Spring Boot developer.",
                     "inject com.fasterxml.jackson.databind.ObjectMapper via constructor instead of creating a new one.",
+                    " It is ok to remove the code that is never used ",
                     "Include proper logging using org.slf4j.Logger (e.g., `Logger logger = LoggerFactory.getLogger(EntityControllerPrototype.class);`) and use `logger.info(...)` or `logger.error(...)` appropriately.",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Java comments are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```."
                   ]
