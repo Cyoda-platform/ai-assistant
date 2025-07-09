@@ -1188,9 +1188,9 @@ def get_current_timestamp_num(lower_timedelta=0):
 def get_repository_name(entity: "WorkflowEntity"):
     programming_language = entity.workflow_cache.get("programming_language")
     if programming_language:
-        if programming_language == "PYTHON":
+        if programming_language.lower() == "PYTHON".lower():
             return config.PYTHON_REPOSITORY_NAME
-        if programming_language == "JAVA":
+        if programming_language.lower() == "JAVA".lower():
             return config.JAVA_REPOSITORY_NAME
     repository_name = config.JAVA_REPOSITORY_NAME if entity.workflow_name.endswith(
         "java") else config.PYTHON_REPOSITORY_NAME

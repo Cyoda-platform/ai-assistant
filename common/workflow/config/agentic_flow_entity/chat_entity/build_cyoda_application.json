@@ -5,64 +5,246 @@
     "none": {
       "transitions": {
         "start_chat": {
-          "next": "prompt_entity_definition"
+          "next": "building_new_app"
         }
       }
     },
-    "prompt_entity_definition": {
+    "building_new_app": {
       "transitions": {
-        "prompt_sent": {
-          "next": "entity_definition",
+        "welcome_user": {
+          "next": "greeting_sent",
           "action": {
             "name": "process_event",
             "config": {
-              "type": "prompt",
-              "approve": true,
+              "type": "notification",
+              "notification": "👋 Welcome to Cyoda Application Builder!\nWe’re excited to work with you on building your app.\n\n🔧 Here's how the process works:\n\n**Define & confirm functional requirements**\nWe'll discuss what your app needs to do and confirm the necessary API endpoints.\n\n**Prototype phase**\nWe’ll create a controller-based sketch prototype focused on core logic only.\n\n**Backend migration**\nOnce you're happy with the prototype, we'll migrate it to the Cyoda backend, introducing our event-driven architecture and non-functional requirements.\n👉 Learn more: https://cyoda.com\n\n🚀 After that, you’ll get guidance on launching your app—and we can continue editing it as needed.\n\n🌱 We're in alpha!\nIf something goes wrong or you have questions, reach out on [Discord](https://discord.gg/95rdAyBZr2) or click Retry in the entities progress window.\n\nLet’s build something great together!\n\n",
               "publish": true,
-              "model": {},
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "Great! Let’s start by defining your **entities**.",
-                    "Entities are essential objects your application will work with",
-                    "**Step 1:** Please list the core entities your app will process. For each, include a name and 2–3 important attributes.",
-                    "_Tip: A good entity definition helps ensure proper schema, transformations, and downstream workflows._"
-                  ]
-                }
-              ]
+              "allow_anonymous_users": true
             }
           }
         }
       }
     },
-    "entity_definition": {
+    "greeting_sent": {
       "transitions": {
-        "submit_answer": {
-          "next": "entity_definition_submitted_answer",
-          "manual": true
-        },
-        "manual_approve": {
-          "next": "prompt_workflow_config",
-          "manual": true
+        "clone_repo": {
+          "next": "repository_cloned",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "clone_repo",
+                "description": "Clones template repository"
+              },
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
         }
       }
     },
-    "entity_definition_submitted_answer": {
+    "repository_cloned": {
       "transitions": {
-        "process_user_input": {
-          "next": "entity_definition_processing",
+        "init_chats": {
+          "next": "chats_initialized",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "init_chats",
+                "description": "Initialises ai service"
+              },
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "chats_initialized": {
+      "transitions": {
+        "process_initial_question": {
+          "next": "app_requirements_requested",
           "action": {
             "name": "process_event",
             "config": {
               "type": "agent",
-              "approve": true,
-              "allow_anonymous_users": true,
               "publish": true,
-              "tool_choice": "auto",
-              "max_iteration": 30,
+              "allow_anonymous_users": true,
               "model": {},
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Hello! You are a Java Spring Boot developer.",
+                    " You're building a backend application.",
+                    " Currently you are focusing on functional requirements, and will cover any non-functional requirement later.",
+                    " Let's analyse this request for application building, and clarify any important functional requirements that necessary.",
+                    " Max 3 questions and suggestions at a time - ask only if absolutely necessary. Keep it short so that the user is kept engaged. It is better to say something like - Would you like to A or B, Do i understand correct and you'd prefer A to B - etc",
+                    " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
+                    " Do not ask about any specific frameworks, databases or technologies, the final application will be in Java Spring Boot on Cyoda platform - no other choices.",
+                    " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. Format it with markdown.",
+                    " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
+                    " Be polite, please ",
+                    " Here is my requirement: "
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_requested": {
+      "transitions": {
+        "submit_answer": {
+          "next": "app_requirements_requested_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "app_requirements_finalized",
+          "manual": true
+        }
+      }
+    },
+    "app_requirements_requested_submitted_answer": {
+      "transitions": {
+        "process_user_input": {
+          "next": "app_requirements_requested_processing",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -130,8 +312,415 @@
                 {
                   "type": "function",
                   "function": {
+                    "name": "finish_discussion",
+                    "description": "Use if you have enough information or the user asks to proceed to the next question. Summarise the requirement in a couple of sentences and set to true if the user chooses your example answers or after 6 attempts! Do not hold the user too long.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_application_requirement"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Hello! You are a Java Spring Boot developer.",
+                    " You're building a backend application.",
+                    " Currently you are focusing on functional requirements, and will cover any non-functional requirement later.",
+                    " Let's analyse this request for application building, and clarify any important functional requirements that necessary.",
+                    " Max 3 questions and suggestions at a time - ask only if absolutely necessary. Keep it short so that the user is kept engaged. It is better to say something like - Would you like to A or B, Do i understand correct and you'd prefer A to B - etc",
+                    " Ask questions if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations.",
+                    " Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. Max tokens = 300.",
+                    " If there are any links or action requests in my requirement, please first follow these links or do any requested action in order to get the full understanding, and only then proceed to answering the question.",
+                    " Do not ask about any specific frameworks, databases or technologies, the final application will be inJava Spring Boot on Cyoda platform - no other choices.",
+                    " At the end of the message provide an example human-readable response that the user can just copy paste if they don't have any specific in mind. format it with markdown ",
+                    " Do not clarify any non-functional details, including health checks, deployment details, recovery from failure, logs (just use logger)",
+                    " Call finish_discussion immediately after 6 attempts. Do not hold the user too long they will bored.",
+                    " Be polite, please ",
+                    " Here is my requirement: "
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_requested_processing": {
+      "transitions": {
+        "process_application_requirement_processing": {
+          "next": "app_requirements_requested",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "description": "not_stage_completed",
+                "parameters": {
+                  "transition": "process_application_requirement"
+                }
+              }
+            }
+          }
+        },
+        "process_application_requirement_success": {
+          "next": "app_requirements_finalized",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "description": "Clones template repository",
+                "parameters": {
+                  "transition": "process_application_requirement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_finalized": {
+      "transitions": {
+        "ask_about_api": {
+          "next": "proceeded_to_functional_requirements",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "Next up: functional requirements.\nStay tuned — thoughtful thinking in progress. \uD83E\uDDE0✨",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "proceeded_to_functional_requirements": {
+      "transitions": {
+        "define_functional_requirements": {
+          "next": "functional_requirements_specified",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Please, help me define the functional requirements for my project.",
+                    "Outline the necessary API endpoints (adhering to Restful rules, any business logic that invokes external data source, retrieves data or does any calculations needs to be done in POST endpoint, GET is used only for my application results retrieval (external data retrieval should be implemented in POST endpoint)),",
+                    "including details on request/response formats. Additionally, provide a visual representation of the user-app interaction using Mermaid diagrams (e.g. journey/sequence).",
+                    "Ensure that **each Mermaid diagram is enclosed in a complete and valid Markdown code block**, starting with ```mermaid and ending with ``` (on a separate line).",
+                    "Please return markdown document without any additional information and without wrapping it in triple backticks.",
+                    "Make sure there are no unclosed Mermaid blocks — every diagram must end with a closing triple backtick on a separate line."
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "functional_requirements_specified": {
+      "transitions": {
+        "ask_about_api": {
+          "next": "api_inquired",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "question",
+              "question": "Would you like to improve or make adjustments to the functional requirements and the API?\nOpen to feedback if you’ve got any ideas — I’m all ears\uD83D\uDC42\uD83D\uDC42, well... sort of\uD83D\uDE0F.",
+              "publish": true,
+              "approve": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "api_inquired": {
+      "transitions": {
+        "submit_answer": {
+          "next": "api_inquired_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "api_discussion_completed",
+          "manual": true
+        }
+      }
+    },
+    "api_inquired_submitted_answer": {
+      "transitions": {
+        "process_user_input": {
+          "next": "api_inquired_processing",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_cyoda_guidelines",
+                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "workflow_name": {
+                          "type": "string",
+                          "enum": [
+                            "generate_workflow",
+                            "generate_processors",
+                            "configure_trino",
+                            "generate_entity",
+                            "start_app",
+                            "cyoda_best_practice"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "workflow_name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_link",
+                    "description": "Read content from a URL. Use this function when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_scrape",
+                    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "selector": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "selector"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "finish_discussion",
+                    "description": "Use if the user asks to proceed or if the user is satisfied with the current result (e.g. says it is correct, valid, works for them). If set to false notify the user you're going to proceed with prototype generation.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "discuss_api"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    " Please, adjust the the functional requirements and the API according to the user request. ",
+                    " Once the user is happy with the result or has no more questions, please call finish_discussion. "
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "approve": true
+            }
+          }
+        }
+      }
+    },
+    "api_inquired_processing": {
+      "transitions": {
+        "process_api_inquiry_processing": {
+          "next": "api_inquired",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "discuss_api"
+                }
+              }
+            }
+          }
+        },
+        "process_api_inquiry_success": {
+          "next": "api_discussion_completed",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "parameters": {
+                  "transition": "discuss_api"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "api_discussion_completed": {
+      "transitions": {
+        "notify_prototype_generation": {
+          "next": "prompt_entity_definition",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "🌟 Let’s get started on building the CYODA application! 🛠",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "prompt_entity_definition": {
+      "transitions": {
+        "prompt_sent": {
+          "next": "entity_definition",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "approve": true,
+              "publish": true,
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Let’s start by defining your **entities**.",
+                    "In Cyoda ntities are essential objects a client application will work with",
+                    "Please help the user list the core entities based on the user requirement. For each, include a name and 2–3 important attributes."
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "entity_definition": {
+      "transitions": {
+        "submit_answer": {
+          "next": "entity_definition_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "prompt_workflow_config",
+          "manual": true
+        }
+      }
+    },
+    "entity_definition_submitted_answer": {
+      "transitions": {
+        "process_user_input": {
+          "next": "entity_definition_processing",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "approve": true,
+              "allow_anonymous_users": true,
+              "publish": true,
+              "tool_choice": "auto",
+              "max_iteration": 30,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
                     "name": "add_new_entity_for_existing_app",
-                    "description": "Launches workflow that is necessary to help the user add a new entity to the existing application. Key factor is that an application already exists and the user explicitly asks to add a new entity (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "description": "Launches workflow that is necessary to help the user add a new entity. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -141,11 +730,23 @@
                         },
                         "entity_name": {
                           "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
+                        },
+                        "git_branch": {
+                          "type": "string"
                         }
                       },
                       "required": [
                         "user_request",
-                        "entity_name"
+                        "entity_name",
+                        "programming_language",
+                        "git_branch"
                       ],
                       "additionalProperties": false
                     }
@@ -179,7 +780,7 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Troubleshooting:** If unsure, start with just one entity and a few attributes, e.g. `Customer: id, name, signup_date`."
+                    "Once the user specifies the entity name, call add_new_entity_for_existing_app for each entity the user asks for. You should explicitly ask for the git branch name if you do not have it in the context. Pass the branch name and programming_language that the user specified to add_new_entity_for_existing_app git_branch."
                   ]
                 }
               ]
@@ -236,8 +837,9 @@
                   "role": "user",
                   "content": [
                     "**Step 2:** Now, let’s configure your workflow.",
-                    "Please describe the sequence of actions the app should take when processing your entities.",
-                    "_Example: For a `Transaction`, first validate, then enrich with external data, then store._"
+                    "Please describe the sequence of actions the app should take when processing the  entities.",
+                    "Base the workflow on the user requirement. ",
+                    " Prompt the user to validate the workflows."
                   ]
                 }
               ]
@@ -270,11 +872,108 @@
               "allow_anonymous_users": true,
               "publish": true,
               "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_new_entity_for_existing_app",
+                    "description": "Launches workflow that is necessary to help the user add a new entity to the existing application. Key factor is that an application already exists and the user explicitly asks to add a new entity (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
+                        },
+                        "git_branch": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "entity_name",
+                        "programming_language",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_new_workflow",
+                    "description": "Launches workflow that is necessary to help the user add a new workflow. Key factor is that an application already exists and the user explicitly asks to add a new workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
+                        },
+                        "git_branch": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "entity_name",
+                        "programming_language",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "finish_discussion",
+                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "workflow_configured"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "**Tip:** A good workflow config includes: source trigger, transformation steps, and destination(s)."
+                    "Once the user specifies the workflow, call add_new_workflow for each entity that the user specifies. You should explicitly ask for the git branch name if you do not have it in the context. Pass the branch name and programming_language that the user specified to add_new_workflow."
                   ]
                 }
               ]
@@ -330,9 +1029,7 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Step 3:** Time to generate your workflow code.",
-                    "Based on your config, we’ll help scaffold the necessary code files and handlers.",
-                    "_Let us know if you'd like it in Python, YAML, or both._"
+                    "Prompt the user to confirm the workflow."
                   ]
                 }
               ]
@@ -364,12 +1061,181 @@
               "approve": true,
               "publish": true,
               "allow_anonymous_users": true,
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_new_entity_for_existing_app",
+                    "description": "Launches workflow that is necessary to help the user add a new entity to the existing application. Key factor is that an application already exists and the user explicitly asks to add a new entity (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
+                        },
+                        "git_branch": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "entity_name",
+                        "programming_language",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_new_workflow",
+                    "description": "Launches workflow that is necessary to help the user add a new workflow. Key factor is that an application already exists and the user explicitly asks to add a new workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
+                        },
+                        "git_branch": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "entity_name",
+                        "programming_language",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "finish_discussion",
+                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "workflow_code_generated"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_existing_workflow",
+                    "description": "Launches workflow that is necessary to help the user edit an existing workflow/workflow json. Key factor is that an application already exists and the user explicitly asks to update a workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name",
+                        "programming_language"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_existing_processors",
+                    "description": "Launches workflow that is necessary to help the user update workflow processors code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/workflow.py code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name",
+                        "programming_language"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
               "model": {},
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "**Tip:** Include any naming preferences, or let us know where the code should be saved or tested."
+                    "Call a necessary tool according to the user request. Provide git_branch and programming_language. Ask the user if you don't have it."
                   ]
                 }
               ]
@@ -425,9 +1291,7 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Step 4:** Let’s set up APIs to expose your workflow.",
-                    "Do you want REST endpoints, Webhooks, or internal triggers?",
-                    "Let us know what endpoints should be exposed, and what data should be returned."
+                    "Let the user know that it is time to set up the api for the application."
                   ]
                 }
               ]
@@ -460,6 +1324,207 @@
               "publish": true,
               "allow_anonymous_users": true,
               "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_new_entity_for_existing_app",
+                    "description": "Launches workflow that is necessary to help the user add a new entity to the existing application. Key factor is that an application already exists and the user explicitly asks to add a new entity (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself. Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
+                        },
+                        "git_branch": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "entity_name",
+                        "programming_language",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_new_workflow",
+                    "description": "Launches workflow that is necessary to help the user add a new workflow. Key factor is that an application already exists and the user explicitly asks to add a new workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
+                        },
+                        "git_branch": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "entity_name",
+                        "programming_language",
+                        "git_branch"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "finish_discussion",
+                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "workflow_code_generated"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_existing_workflow",
+                    "description": "Launches workflow that is necessary to help the user edit an existing workflow/workflow json. Key factor is that an application already exists and the user explicitly asks to update a workflow (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name",
+                        "programming_language"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_existing_processors",
+                    "description": "Launches workflow that is necessary to help the user update workflow processors code. Key factor is that an application already exists and the user explicitly asks to edit/update workflow processors/functions/workflow.py code (else default to edit_existing_app_design_additional_feature). if the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "entity_name": {
+                          "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "entity_name",
+                        "programming_language"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "edit_api_existing_app",
+                    "description": "Launches workflow that is necessary to help the user edit/update existing api (routes.py). Key factor is that an application already exists and the user explicitly asks to add changes to its api/routes/routes.py  (else default to edit_existing_app_design_additional_feature). If the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "git_branch": {
+                          "type": "string"
+                        },
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "programming_language": {
+                          "type": "string",
+                          "enum": [
+                            "JAVA",
+                            "PYTHON"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "git_branch",
+                        "programming_language"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
               "messages": [
                 {
                   "role": "user",

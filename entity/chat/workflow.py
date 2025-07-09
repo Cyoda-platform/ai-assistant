@@ -431,8 +431,8 @@ class ChatWorkflow(Workflow):
         if building_flow == "cyoda":
             workflow_name = "build_cyoda_application"
         else:
-            workflow_name = const.ModelName.GEN_APP_ENTITY_JAVA.value if programming_language == "JAVA" else const.ModelName.GEN_APP_ENTITY_PYTHON.value
-
+            workflow_name = const.ModelName.GEN_APP_ENTITY_JAVA.value if programming_language.lower() == "java" else const.ModelName.GEN_APP_ENTITY_PYTHON.value
+        # todo need to launch flow in the dispatcher - otherwise memory does not get updated in the parent entity
         child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
             entity_service=self.entity_service,
             technical_id=technical_id,
@@ -658,7 +658,7 @@ class ChatWorkflow(Workflow):
         git_branch_id = params.get(const.GIT_BRANCH_PARAM)
 
         transition = params.get("transition")
-        repository_name = config.JAVA_REPOSITORY_NAME if programming_language == "JAVA" else config.PYTHON_REPOSITORY_NAME
+        repository_name = config.JAVA_REPOSITORY_NAME if programming_language.lower() == "java" else config.PYTHON_REPOSITORY_NAME
         if git_branch_id and git_branch_id == "main":
             logger.exception("Modifications to main branch are not allowed")
             return "Modifications to main branch are not allowed"
@@ -789,7 +789,7 @@ class ChatWorkflow(Workflow):
         programming_language = params.get("programming_language")
         if not programming_language:
             return "parameter programming_language is required"
-        workflow_name = const.ModelName.INIT_SETUP_WORKFLOW_JAVA.value if programming_language == "JAVA" else const.ModelName.INIT_SETUP_WORKFLOW_PYTHON.value
+        workflow_name = const.ModelName.INIT_SETUP_WORKFLOW_JAVA.value if programming_language.lower() == "java" else const.ModelName.INIT_SETUP_WORKFLOW_PYTHON.value
 
         return await self._schedule_workflow(
             technical_id=technical_id,
@@ -805,7 +805,7 @@ class ChatWorkflow(Workflow):
         programming_language = params.get("programming_language")
         if not programming_language:
             return "parameter programming_language is required"
-        workflow_name = const.ModelName.ADD_NEW_ENTITY_JAVA.value if programming_language == "JAVA" else const.ModelName.ADD_NEW_ENTITY_PYTHON.value
+        workflow_name = const.ModelName.ADD_NEW_ENTITY_JAVA.value if programming_language.lower() == "java" else const.ModelName.ADD_NEW_ENTITY_PYTHON.value
 
         return await self._schedule_workflow(
             technical_id=technical_id,
@@ -822,7 +822,7 @@ class ChatWorkflow(Workflow):
         programming_language = params.get("programming_language")
         if not programming_language:
             return "parameter programming_language is required"
-        workflow_name = const.ModelName.ADD_NEW_WORKFLOW_JAVA.value if programming_language == "JAVA" else const.ModelName.ADD_NEW_WORKFLOW_PYTHON.value
+        workflow_name = const.ModelName.ADD_NEW_WORKFLOW_JAVA.value if programming_language.lower() == "java" else const.ModelName.ADD_NEW_WORKFLOW_PYTHON.value
 
         return await self._schedule_workflow(
             technical_id=technical_id,
@@ -840,7 +840,7 @@ class ChatWorkflow(Workflow):
         programming_language = params.get("programming_language")
         if not programming_language:
             return "parameter programming_language is required"
-        workflow_name = const.ModelName.EDIT_API_EXISTING_APP_JAVA.value if programming_language == "JAVA" else const.ModelName.EDIT_API_EXISTING_APP_PYTHON.value
+        workflow_name = const.ModelName.EDIT_API_EXISTING_APP_JAVA.value if programming_language.lower() == "java" else const.ModelName.EDIT_API_EXISTING_APP_PYTHON.value
 
         return await self._schedule_workflow(
             technical_id=technical_id,
@@ -857,7 +857,7 @@ class ChatWorkflow(Workflow):
         programming_language = params.get("programming_language")
         if not programming_language:
             return "parameter programming_language is required"
-        workflow_name = const.ModelName.EDIT_EXISTING_PROCESSORS_JAVA.value if programming_language == "JAVA" else const.ModelName.EDIT_EXISTING_PROCESSORS_PYTHON.value
+        workflow_name = const.ModelName.EDIT_EXISTING_PROCESSORS_JAVA.value if programming_language.lower() == "java" else const.ModelName.EDIT_EXISTING_PROCESSORS_PYTHON.value
 
         return await self._schedule_workflow(
             technical_id=technical_id,
@@ -875,7 +875,7 @@ class ChatWorkflow(Workflow):
         programming_language = params.get("programming_language")
         if not programming_language:
             return "parameter programming_language is required"
-        workflow_name = const.ModelName.EDIT_EXISTING_WORKFLOW_JAVA.value if programming_language == "JAVA" else const.ModelName.EDIT_EXISTING_WORKFLOW_PYTHON.value
+        workflow_name = const.ModelName.EDIT_EXISTING_WORKFLOW_JAVA.value if programming_language.lower() == "java" else const.ModelName.EDIT_EXISTING_WORKFLOW_PYTHON.value
 
         return await self._schedule_workflow(
             technical_id=technical_id,
