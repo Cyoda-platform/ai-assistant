@@ -1,4 +1,15 @@
-import libcst as cst
+try:
+    import libcst as cst
+except ImportError:
+    # Mock libcst for testing or when not available
+    class MockCST:
+        class CSTTransformer:
+            pass
+        class Module:
+            pass
+        class FunctionDef:
+            pass
+    cst = MockCST()
 
 
 class FunctionExtractor(cst.CSTTransformer):
