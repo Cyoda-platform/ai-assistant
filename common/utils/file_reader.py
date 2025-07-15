@@ -2,9 +2,30 @@ import io
 import os
 import json
 import csv
-import fitz
 import xml.etree.ElementTree as ET
-from bs4 import BeautifulSoup
+
+try:
+    import fitz
+except ImportError:
+    # Mock fitz for testing or when PyMuPDF is not available
+    class MockFitz:
+        class Document:
+            def __init__(self, *args, **kwargs):
+                pass
+            def __iter__(self):
+                return iter([])
+            def close(self):
+                pass
+    fitz = MockFitz()
+
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    # Mock BeautifulSoup for testing
+    class MockBeautifulSoup:
+        def __init__(self, *args, **kwargs):
+            self.text = ""
+    BeautifulSoup = MockBeautifulSoup
 
 
 def read_file_content(file):

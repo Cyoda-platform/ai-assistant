@@ -25,6 +25,7 @@ class AIMessage(WorkflowEntity):
     edge_message_id: Optional[str] = None
     role: Optional[str] = None
     content: Optional[Any] = None
+    messages: Optional[Any] = None
 
 class ChatMemory(WorkflowEntity):
     model_config = ConfigDict(extra="forbid")
