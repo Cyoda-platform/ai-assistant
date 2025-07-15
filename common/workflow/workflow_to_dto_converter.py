@@ -12,8 +12,8 @@ API_V_WORKFLOWS_ = "api/v1/workflows"
 
 
 def main():
-    CONFIG_DIR = Path("config")
-    OUTPUT_ROOT = Path("outputs")
+    CONFIG_DIR = Path(__file__).resolve().parent / "config"
+    OUTPUT_ROOT = Path(__file__).resolve().parent / "outputs"
 
     for file_path in CONFIG_DIR.rglob("*"):
         if not file_path.is_file():
@@ -31,7 +31,8 @@ def main():
         input_file = str(file_path)
 
         # Build the output path under outputs/ preserving subdirs
-        output_file = OUTPUT_ROOT / file_path
+        relative_path = file_path.relative_to(CONFIG_DIR)
+        output_file = OUTPUT_ROOT / relative_path
         output_dir = output_file.parent
         output_dir.mkdir(parents=True, exist_ok=True)
         workflow_name = file_path.relative_to(CONFIG_DIR).parts[-1].split(".")[0]

@@ -26,7 +26,16 @@ Ideal for generating reports, dashboards, and insights.
 
 == 1. Set Up the Python Environment
 
-Make sure you have Python installed.
+Make sure you have Python 3.12 installed.
+
+Create and activate a virtual environment:
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+```
+
+In your IDE, select this virtual environment as the Python interpreter if needed.
 
 Install the required dependencies:
 
@@ -36,7 +45,7 @@ Install the required dependencies:
 
 == 2. Configure Environment Variables
 
-Create a `.env` file in the project root.
+Rename the `.env.template` file to `.env`.
 
 Add the environment variable values provided to you.
 
@@ -57,7 +66,7 @@ Check the terminal output to verify that the application starts successfully.
 Run the following script to convert workflows:
 
 ```bash
-  python common/workflow/workflow_to_dto_converter.py main
+  python -m common.workflow.workflow_to_dto_converter
 ```
 
 This will generate the `outputs/config` directory.
