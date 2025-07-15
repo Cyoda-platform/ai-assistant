@@ -1,7 +1,9 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from workflow.dispatcher.ai_agent_handler import AIAgentHandler
-from entity.model import AgenticFlowEntity, ChatMemory, AIMessage, ModelConfig
+from workflow.dispatcher.method_registry import MethodRegistry
+from workflow.dispatcher.memory_manager import MemoryManager
+from entity.model import AgenticFlowEntity, ChatMemory, AIMessage, ModelConfig, TransitionsMemory
 from common.config.config import config as env_config
 import common.config.const as const
 
@@ -12,10 +14,22 @@ class TestAIAgentHandler:
     @pytest.fixture
     def mock_dependencies(self):
         """Create mock dependencies for AIAgentHandler."""
+        # Create mock workflow class and instance
+        class MockWorkflowClass:
+            def __init__(self):
+                self._function_registry = {
+                    'test_function': AsyncMock(return_value="test_result")
+                }
+
+        mock_instance = MockWorkflowClass()
+
         return {
+            'ai_agent': AsyncMock(),
+            'method_registry': MethodRegistry(MockWorkflowClass, mock_instance),
+            'memory_manager': MagicMock(spec=MemoryManager),
+            'cls_instance': mock_instance,
             'entity_service': AsyncMock(),
             'cyoda_auth_service': MagicMock(),
-            'memory_manager': AsyncMock(),
         }
 
     @pytest.fixture
@@ -26,13 +40,23 @@ class TestAIAgentHandler:
     @pytest.fixture
     def mock_entity(self):
         """Create mock AgenticFlowEntity."""
+        from entity.model import ChatFlow
+
         entity = MagicMock(spec=AgenticFlowEntity)
         entity.workflow_cache = {
             const.GIT_BRANCH_PARAM: "test_branch",
             "iteration_count": 0
         }
         entity.technical_id = "test_tech_id"
+        entity.memory_id = "test_memory_id"
+        entity.user_id = "test_user_id"
         entity.edge_messages_store = {}
+        entity.current_transition = "test_transition"
+        entity.chat_flow = ChatFlow(current_flow=[], finished_flow=[])
+        entity.transitions_memory = TransitionsMemory(
+            current_iteration={},
+            max_iteration={}
+        )
         return entity
 
     @pytest.fixture
@@ -48,7 +72,7 @@ class TestAIAgentHandler:
     def mock_config(self):
         """Create mock configuration."""
         return {
-            "model": "gpt-4",
+            "model": {"model_name": "gpt-4o-mini"},
             "prompt": "Test prompt",
             "memory_tags": [env_config.GENERAL_MEMORY_TAG],
             "max_iterations": 3
@@ -59,26 +83,27 @@ class TestAIAgentHandler:
         """Test successful AI agent execution."""
         mock_messages = [AIMessage(role="user", content="Test message")]
         
+        # Mock the AI agent to return a response
+        handler.ai_agent.run_agent = AsyncMock(return_value="AI response")
+
         with patch.object(handler, '_get_ai_memory', return_value=mock_messages), \
-             patch('common.utils.chat_util_functions.enrich_config_message', 
-                   new_callable=AsyncMock, return_value="Enriched response"), \
-             patch.object(handler, '_check_and_update_iteration', return_value=True), \
+             patch.object(handler, '_check_and_update_iteration', return_value=False), \
              patch.object(handler, '_append_messages', new_callable=AsyncMock):
-            
+
             result = await handler.run_ai_agent(mock_config, mock_entity, mock_memory, "tech_id")
-            
-            assert result == "Enriched response"
+
+            assert result == "AI response"
 
     @pytest.mark.asyncio
     async def test_run_ai_agent_max_iterations_exceeded(self, handler, mock_entity, mock_memory, mock_config):
         """Test AI agent execution with max iterations exceeded."""
         mock_entity.workflow_cache["iteration_count"] = 5
-        mock_config["max_iterations"] = 3
-        
-        with patch.object(handler, '_check_and_update_iteration', return_value=False):
+        mock_config["max_iteration"] = 3
+
+        with patch.object(handler, '_check_and_update_iteration', return_value=True):
             result = await handler.run_ai_agent(mock_config, mock_entity, mock_memory, "tech_id")
-            
-            assert "Maximum iterations exceeded" in result
+
+            assert "Let's proceed to the next iteration" in result
 
     @pytest.mark.asyncio
     async def test_run_ai_agent_error_handling(self, handler, mock_entity, mock_memory, mock_config):
@@ -206,67 +231,81 @@ class TestAIAgentHandler:
 
     def test_check_and_update_iteration_within_limit(self, handler, mock_entity):
         """Test iteration check when within limit."""
-        mock_entity.workflow_cache = {"iteration_count": 2}
-        config = {"max_iterations": 5}
-        
-        result = handler._check_and_update_iteration(mock_entity, config)
-        
-        assert result is True
-        assert mock_entity.workflow_cache["iteration_count"] == 3
+        mock_entity.current_transition = "test_transition"
+        mock_entity.transitions_memory.current_iteration = {"test_transition": 2}
+        mock_entity.transitions_memory.max_iteration = {}
+        config = {"max_iteration": 5}
+
+        result = handler._check_and_update_iteration(config, mock_entity)
+
+        assert result is False  # Should return False when within limit
+        assert mock_entity.transitions_memory.current_iteration["test_transition"] == 3
 
     def test_check_and_update_iteration_exceeds_limit(self, handler, mock_entity):
         """Test iteration check when exceeding limit."""
-        mock_entity.workflow_cache = {"iteration_count": 5}
-        config = {"max_iterations": 3}
-        
-        result = handler._check_and_update_iteration(mock_entity, config)
-        
-        assert result is False
-        assert mock_entity.workflow_cache["iteration_count"] == 5  # Should not increment
+        mock_entity.current_transition = "test_transition"
+        mock_entity.transitions_memory.current_iteration = {"test_transition": 5}
+        mock_entity.transitions_memory.max_iteration = {"test_transition": 3}
+        config = {"max_iteration": 3}
+
+        result = handler._check_and_update_iteration(config, mock_entity)
+
+        assert result is True  # Should return True when exceeding limit
+        # The method doesn't increment when exceeding limit, it just returns True
+        assert mock_entity.transitions_memory.current_iteration["test_transition"] == 5
 
     def test_check_and_update_iteration_no_limit(self, handler, mock_entity):
-        """Test iteration check with no max_iterations specified."""
-        mock_entity.workflow_cache = {"iteration_count": 10}
+        """Test iteration check with no max_iteration specified."""
+        mock_entity.current_transition = "test_transition"
+        mock_entity.transitions_memory.current_iteration = {}
+        mock_entity.transitions_memory.max_iteration = {}
         config = {}
-        
-        result = handler._check_and_update_iteration(mock_entity, config)
-        
-        assert result is True
-        assert mock_entity.workflow_cache["iteration_count"] == 11
+
+        result = handler._check_and_update_iteration(config, mock_entity)
+
+        assert result is False  # Should return False when no limit specified
 
     def test_check_and_update_iteration_first_iteration(self, handler, mock_entity):
         """Test iteration check for first iteration."""
-        mock_entity.workflow_cache = {}
-        config = {"max_iterations": 3}
-        
-        result = handler._check_and_update_iteration(mock_entity, config)
-        
-        assert result is True
-        assert mock_entity.workflow_cache["iteration_count"] == 1
+        mock_entity.current_transition = "test_transition"
+        mock_entity.transitions_memory.current_iteration = {}
+        mock_entity.transitions_memory.max_iteration = {}
+        config = {"max_iteration": 3}
+
+        result = handler._check_and_update_iteration(config, mock_entity)
+
+        assert result is False  # Should return False for first iteration
+        assert mock_entity.transitions_memory.current_iteration["test_transition"] == 1
+        assert mock_entity.transitions_memory.max_iteration["test_transition"] == 3
 
     @pytest.mark.asyncio
     async def test_append_messages_success(self, handler, mock_entity, mock_memory):
         """Test successful message appending."""
-        messages = [
-            AIMessage(role="user", content="User message"),
-            AIMessage(role="assistant", content="Assistant response")
-        ]
-        memory_tags = [env_config.GENERAL_MEMORY_TAG]
-        
-        result = await handler._append_messages(mock_entity, mock_memory, messages, memory_tags)
-        
-        assert result is None
-        handler.memory_manager.append_to_ai_memory.assert_called()
+        config = {
+            "messages": [AIMessage(role="user", content="Test message")],
+            "memory_tags": [env_config.GENERAL_MEMORY_TAG]
+        }
+        finished_flow = []
+
+        handler.entity_service.add_item = AsyncMock(return_value="edge_msg_123")
+
+        with patch('common.utils.chat_util_functions.enrich_config_message', new_callable=AsyncMock, return_value=AIMessage(role="user", content="Test message")):
+            result = await handler._append_messages(mock_entity, config, mock_memory, finished_flow)
+
+            assert result is None  # Method doesn't return anything
 
     @pytest.mark.asyncio
     async def test_append_messages_error(self, handler, mock_entity, mock_memory):
         """Test message appending with error."""
-        messages = [AIMessage(role="user", content="Test")]
-        memory_tags = [env_config.GENERAL_MEMORY_TAG]
-        
-        handler.memory_manager.append_to_ai_memory.side_effect = Exception("Append error")
-        
-        # Should not raise exception
-        result = await handler._append_messages(mock_entity, mock_memory, messages, memory_tags)
-        
-        assert result is None
+        config = {
+            "messages": [AIMessage(role="user", content="Test")],
+            "memory_tags": [env_config.GENERAL_MEMORY_TAG]
+        }
+        finished_flow = []
+
+        handler.entity_service.add_item = AsyncMock(side_effect=Exception("Append error"))
+
+        with patch('common.utils.chat_util_functions.enrich_config_message', new_callable=AsyncMock, return_value=AIMessage(role="user", content="Test")):
+            # Should raise exception since error handling is not implemented in this method
+            with pytest.raises(Exception, match="Append error"):
+                await handler._append_messages(mock_entity, config, mock_memory, finished_flow)

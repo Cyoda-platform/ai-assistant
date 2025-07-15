@@ -100,21 +100,32 @@ class MethodRegistry:
     async def dispatch_method(self, method_name: str, **params) -> Any:
         """
         Dispatch a method call.
-        
+
         Args:
             method_name: Name of the method to call
             **params: Parameters to pass to the method
-            
+
         Returns:
             Result of the method call
-            
+
         Raises:
             ValueError: If method not found
         """
         try:
             method = self.get_method(method_name=method_name)
             logger.debug(f"Dispatching method: {method_name}")
-            return await method(cls_instance=self.cls_instance, **params)
+
+            # Check if this is a registry method (wrapped) or traditional method
+            if hasattr(self.cls_instance, '_function_registry') and method_name in self.cls_instance._function_registry:
+                # This is a registry method, call the wrapper
+                return await method(cls_instance=self.cls_instance, **params)
+            else:
+                # This is a traditional method, call it on the instance
+                bound_method = getattr(self.cls_instance, method_name)
+                if inspect.iscoroutinefunction(bound_method):
+                    return await bound_method(**params)
+                else:
+                    return bound_method(**params)
         except Exception as e:
             logger.exception(f"Error dispatching method '{method_name}': {e}")
             raise

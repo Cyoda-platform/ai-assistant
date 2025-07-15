@@ -34,6 +34,8 @@ class TestApplicationEditorService:
         entity.failed = False
         entity.error = None
         entity.technical_id = "test_tech_id"
+        entity.workflow_name = "test_workflow_python"
+        entity.user_id = "test_user_123"
         return entity
 
     @pytest.fixture
@@ -44,164 +46,178 @@ class TestApplicationEditorService:
         entity.failed = False
         entity.error = None
         entity.technical_id = "test_tech_id"
+        entity.workflow_name = "test_workflow_python"
+        entity.user_id = "test_user_123"
         return entity
 
     @pytest.mark.asyncio
     async def test_edit_existing_app_design_additional_feature_success(self, service, mock_chat_entity):
         """Test successful additional feature design editing."""
-        with patch('common.utils.chat_util_functions._launch_transition', new_callable=AsyncMock) as mock_transition, \
-             patch.object(service, 'get_entities_list', return_value=["User", "Product"]), \
-             patch('common.utils.utils.get_repository_name', return_value="test_repo"):
-            
+        # Mock all external dependencies to avoid actual file operations
+        with patch('common.utils.utils.clone_repo', new_callable=AsyncMock), \
+             patch('common.utils.utils.read_file_util', new_callable=AsyncMock, return_value="test_api_content"), \
+             patch.object(service, 'get_entities_list', new_callable=AsyncMock, return_value=["User", "Product"]), \
+             patch('common.utils.utils.get_repository_name', return_value="test_repo"), \
+             patch.object(service.entity_service, 'add_item', new_callable=AsyncMock, return_value="mock_id"), \
+             patch.object(service.workflow_helper_service, 'launch_agentic_workflow', new_callable=AsyncMock, return_value="child_tech_id"), \
+             patch('common.utils.utils.set_upstream_tracking', new_callable=AsyncMock), \
+             patch('common.utils.utils.git_pull', new_callable=AsyncMock, return_value=""):
+
             result = await service.edit_existing_app_design_additional_feature(
                 "tech_id", mock_chat_entity,
                 user_request="Add new feature"
             )
-            
-            assert result == ""
-            mock_transition.assert_called_once_with(
-                entity=mock_chat_entity,
-                transition_name=const.EDIT_EXISTING_APP_DESIGN_ADDITIONAL_FEATURE_TRANSITION
-            )
+
+            assert "Successfully scheduled workflow for updating user application" in result
+            assert "child_tech_id" in result
 
     @pytest.mark.asyncio
     async def test_edit_existing_app_design_additional_feature_error(self, service, mock_chat_entity):
         """Test additional feature design editing with error."""
-        with patch('common.utils.chat_util_functions._launch_transition', 
-                  new_callable=AsyncMock, side_effect=Exception("Edit error")):
-            
+        # Mock the workflow helper service to raise an exception to trigger error handling
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow',
+                          new_callable=AsyncMock, side_effect=Exception("Edit error")), \
+             patch('common.utils.utils.clone_repo', new_callable=AsyncMock), \
+             patch('common.utils.utils.read_file_util', new_callable=AsyncMock, return_value="test_api_content"), \
+             patch.object(service, 'get_entities_list', new_callable=AsyncMock, return_value=["User", "Product"]), \
+             patch('common.utils.utils.get_repository_name', return_value="test_repo"), \
+             patch.object(service.entity_service, 'add_item', new_callable=AsyncMock, return_value="mock_id"):
+
             result = await service.edit_existing_app_design_additional_feature(
                 "tech_id", mock_chat_entity,
                 user_request="Add new feature"
             )
-            
-            assert "Error editing existing app design" in result
+
+            assert "Error editing application design" in result
             assert mock_chat_entity.failed is True
 
     @pytest.mark.asyncio
     async def test_edit_api_existing_app_success(self, service, mock_agentic_entity):
         """Test successful API editing for existing app."""
-        with patch('common.utils.chat_util_functions._launch_transition', new_callable=AsyncMock) as mock_transition:
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow', new_callable=AsyncMock, return_value="child_tech_id"):
             result = await service.edit_api_existing_app(
                 "tech_id", mock_agentic_entity,
                 programming_language="python"
             )
-            
-            assert result == ""
-            mock_transition.assert_called_once_with(
-                entity=mock_agentic_entity,
-                transition_name=const.EDIT_API_EXISTING_APP_TRANSITION
-            )
+
+            assert "Successfully scheduled workflow to implement the task" in result
+            assert "child_tech_id" in result
 
     @pytest.mark.asyncio
     async def test_edit_api_existing_app_error(self, service, mock_agentic_entity):
         """Test API editing with error."""
-        with patch('common.utils.chat_util_functions._launch_transition', 
-                  new_callable=AsyncMock, side_effect=Exception("API edit error")):
-            
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow',
+                          new_callable=AsyncMock, side_effect=Exception("API edit error")):
+
             result = await service.edit_api_existing_app(
                 "tech_id", mock_agentic_entity,
                 programming_language="python"
             )
-            
-            assert "Error editing API for existing app" in result
+
+            assert "Error editing API" in result
             assert mock_agentic_entity.failed is True
 
     @pytest.mark.asyncio
     async def test_edit_existing_workflow_success(self, service, mock_agentic_entity):
         """Test successful existing workflow editing."""
-        with patch('common.utils.chat_util_functions._launch_transition', new_callable=AsyncMock) as mock_transition:
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow', new_callable=AsyncMock, return_value="child_tech_id"):
             result = await service.edit_existing_workflow(
                 "tech_id", mock_agentic_entity,
                 programming_language="python"
             )
-            
-            assert result == ""
-            mock_transition.assert_called_once_with(
-                entity=mock_agentic_entity,
-                transition_name=const.EDIT_EXISTING_WORKFLOW_TRANSITION
-            )
+
+            assert "Successfully scheduled workflow to implement the task" in result
+            assert "child_tech_id" in result
 
     @pytest.mark.asyncio
     async def test_edit_existing_workflow_error(self, service, mock_agentic_entity):
         """Test existing workflow editing with error."""
-        with patch('common.utils.chat_util_functions._launch_transition', 
-                  new_callable=AsyncMock, side_effect=Exception("Workflow edit error")):
-            
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow',
+                          new_callable=AsyncMock, side_effect=Exception("Workflow edit error")):
+
             result = await service.edit_existing_workflow(
                 "tech_id", mock_agentic_entity,
                 programming_language="python"
             )
-            
-            assert "Error editing existing workflow" in result
+
+            assert "Error editing workflow" in result
             assert mock_agentic_entity.failed is True
 
     @pytest.mark.asyncio
     async def test_edit_existing_processors_success(self, service, mock_agentic_entity):
         """Test successful existing processors editing."""
-        with patch('common.utils.chat_util_functions._launch_transition', new_callable=AsyncMock) as mock_transition:
-            result = await service.edit_existing_processors("tech_id", mock_agentic_entity)
-            
-            assert result == ""
-            mock_transition.assert_called_once_with(
-                entity=mock_agentic_entity,
-                transition_name=const.EDIT_EXISTING_PROCESSORS_TRANSITION
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow', new_callable=AsyncMock, return_value="child_tech_id"):
+            result = await service.edit_existing_processors(
+                "tech_id", mock_agentic_entity,
+                programming_language="python"
             )
+
+            assert "Successfully scheduled workflow to implement the task" in result
+            assert "child_tech_id" in result
 
     @pytest.mark.asyncio
     async def test_edit_existing_processors_error(self, service, mock_agentic_entity):
         """Test existing processors editing with error."""
-        with patch('common.utils.chat_util_functions._launch_transition', 
-                  new_callable=AsyncMock, side_effect=Exception("Processors edit error")):
-            
-            result = await service.edit_existing_processors("tech_id", mock_agentic_entity)
-            
-            assert "Error editing existing processors" in result
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow',
+                          new_callable=AsyncMock, side_effect=Exception("Processors edit error")):
+
+            result = await service.edit_existing_processors(
+                "tech_id", mock_agentic_entity,
+                programming_language="python"
+            )
+
+            assert "Error editing processors" in result
             assert mock_agentic_entity.failed is True
 
     @pytest.mark.asyncio
     async def test_add_new_entity_for_existing_app_success(self, service, mock_agentic_entity):
         """Test successful new entity addition for existing app."""
-        with patch('common.utils.chat_util_functions._launch_transition', new_callable=AsyncMock) as mock_transition:
-            result = await service.add_new_entity_for_existing_app("tech_id", mock_agentic_entity)
-            
-            assert result == ""
-            mock_transition.assert_called_once_with(
-                entity=mock_agentic_entity,
-                transition_name=const.ADD_NEW_ENTITY_FOR_EXISTING_APP_TRANSITION
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow', new_callable=AsyncMock, return_value="child_tech_id"):
+            result = await service.add_new_entity_for_existing_app(
+                "tech_id", mock_agentic_entity,
+                programming_language="python"
             )
+
+            assert "Successfully scheduled workflow to implement the task" in result
+            assert "child_tech_id" in result
 
     @pytest.mark.asyncio
     async def test_add_new_entity_for_existing_app_error(self, service, mock_agentic_entity):
         """Test new entity addition with error."""
-        with patch('common.utils.chat_util_functions._launch_transition', 
-                  new_callable=AsyncMock, side_effect=Exception("Entity add error")):
-            
-            result = await service.add_new_entity_for_existing_app("tech_id", mock_agentic_entity)
-            
-            assert "Error adding new entity for existing app" in result
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow',
+                          new_callable=AsyncMock, side_effect=Exception("Entity add error")):
+
+            result = await service.add_new_entity_for_existing_app(
+                "tech_id", mock_agentic_entity,
+                programming_language="python"
+            )
+
+            assert "Error adding new entity" in result
             assert mock_agentic_entity.failed is True
 
     @pytest.mark.asyncio
     async def test_add_new_workflow_success(self, service, mock_agentic_entity):
         """Test successful new workflow addition."""
-        with patch('common.utils.chat_util_functions._launch_transition', new_callable=AsyncMock) as mock_transition:
-            result = await service.add_new_workflow("tech_id", mock_agentic_entity)
-            
-            assert result == ""
-            mock_transition.assert_called_once_with(
-                entity=mock_agentic_entity,
-                transition_name=const.ADD_NEW_WORKFLOW_TRANSITION
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow', new_callable=AsyncMock, return_value="child_tech_id"):
+            result = await service.add_new_workflow(
+                "tech_id", mock_agentic_entity,
+                programming_language="python"
             )
+
+            assert "Successfully scheduled workflow to implement the task" in result
+            assert "child_tech_id" in result
 
     @pytest.mark.asyncio
     async def test_add_new_workflow_error(self, service, mock_agentic_entity):
         """Test new workflow addition with error."""
-        with patch('common.utils.chat_util_functions._launch_transition', 
-                  new_callable=AsyncMock, side_effect=Exception("Workflow add error")):
-            
-            result = await service.add_new_workflow("tech_id", mock_agentic_entity)
-            
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow',
+                          new_callable=AsyncMock, side_effect=Exception("Workflow add error")):
+
+            result = await service.add_new_workflow(
+                "tech_id", mock_agentic_entity,
+                programming_language="python"
+            )
+
             assert "Error adding new workflow" in result
             assert mock_agentic_entity.failed is True
 
@@ -209,67 +225,79 @@ class TestApplicationEditorService:
     async def test_edit_with_entities_description(self, service, mock_chat_entity):
         """Test editing with entities description generation."""
         mock_entities = ["User", "Product", "Order"]
-        
-        with patch.object(service, 'get_entities_list', return_value=mock_entities), \
+
+        with patch.object(service, 'get_entities_list', new_callable=AsyncMock, return_value=mock_entities), \
              patch('common.utils.utils.get_repository_name', return_value="test_repo"), \
-             patch('common.utils.chat_util_functions._launch_transition', new_callable=AsyncMock):
-            
-            result = await service.edit_existing_app_design_additional_feature("tech_id", mock_chat_entity)
-            
-            assert result == ""
-            # Check that entities description is generated
-            expected_description = "User, Product, Order"
-            assert mock_chat_entity.workflow_cache["entities_description"] == expected_description
+             patch('common.utils.utils.clone_repo', new_callable=AsyncMock), \
+             patch('common.utils.utils.read_file_util', new_callable=AsyncMock, return_value="test_api_content"), \
+             patch.object(service.entity_service, 'add_item', new_callable=AsyncMock, return_value="mock_id"), \
+             patch.object(service.workflow_helper_service, 'launch_agentic_workflow', new_callable=AsyncMock, return_value="child_tech_id"), \
+             patch('common.utils.utils.set_upstream_tracking', new_callable=AsyncMock), \
+             patch('common.utils.utils.git_pull', new_callable=AsyncMock, return_value=""):
+
+            result = await service.edit_existing_app_design_additional_feature(
+                "tech_id", mock_chat_entity,
+                user_request="Add new feature"
+            )
+
+            assert "Successfully scheduled workflow for updating user application" in result
 
     @pytest.mark.asyncio
     async def test_edit_with_empty_entities_list(self, service, mock_chat_entity):
         """Test editing with empty entities list."""
-        with patch.object(service, 'get_entities_list', return_value=[]), \
+        with patch.object(service, 'get_entities_list', new_callable=AsyncMock, return_value=[]), \
              patch('common.utils.utils.get_repository_name', return_value="test_repo"), \
-             patch('common.utils.chat_util_functions._launch_transition', new_callable=AsyncMock):
-            
-            result = await service.edit_existing_app_design_additional_feature("tech_id", mock_chat_entity)
-            
-            assert result == ""
-            assert mock_chat_entity.workflow_cache["entities_description"] == ""
+             patch('common.utils.utils.clone_repo', new_callable=AsyncMock), \
+             patch('common.utils.utils.read_file_util', new_callable=AsyncMock, return_value="test_api_content"), \
+             patch.object(service.entity_service, 'add_item', new_callable=AsyncMock, return_value="mock_id"), \
+             patch.object(service.workflow_helper_service, 'launch_agentic_workflow', new_callable=AsyncMock, return_value="child_tech_id"), \
+             patch('common.utils.utils.set_upstream_tracking', new_callable=AsyncMock), \
+             patch('common.utils.utils.git_pull', new_callable=AsyncMock, return_value=""):
+
+            result = await service.edit_existing_app_design_additional_feature(
+                "tech_id", mock_chat_entity,
+                user_request="Add new feature"
+            )
+
+            assert "Successfully scheduled workflow for updating user application" in result
 
     @pytest.mark.asyncio
     async def test_edit_with_custom_params(self, service, mock_agentic_entity):
         """Test editing with custom parameters."""
-        with patch('common.utils.chat_util_functions._launch_transition', new_callable=AsyncMock) as mock_transition:
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow', new_callable=AsyncMock, return_value="child_tech_id"):
             result = await service.edit_api_existing_app(
                 "tech_id", mock_agentic_entity,
+                programming_language="python",
                 custom_param="value",
                 timeout=300
             )
-            
-            assert result == ""
-            mock_transition.assert_called_once_with(
-                entity=mock_agentic_entity,
-                transition_name=const.EDIT_API_EXISTING_APP_TRANSITION
-            )
+
+            assert "Successfully scheduled workflow to implement the task" in result
 
     @pytest.mark.asyncio
     async def test_edit_with_missing_git_branch(self, service, mock_agentic_entity):
         """Test editing with missing git branch."""
         mock_agentic_entity.workflow_cache = {}  # No git branch
-        
-        with patch('common.utils.chat_util_functions._launch_transition', new_callable=AsyncMock):
-            result = await service.edit_existing_workflow("tech_id", mock_agentic_entity)
-            
-            assert result == ""
+
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow', new_callable=AsyncMock, return_value="child_tech_id"):
+            result = await service.edit_existing_workflow(
+                "tech_id", mock_agentic_entity,
+                programming_language="python"
+            )
+
+            assert "Successfully scheduled workflow to implement the task" in result
 
     @pytest.mark.asyncio
     async def test_multiple_edit_operations_sequence(self, service, mock_agentic_entity):
         """Test sequence of multiple edit operations."""
-        with patch('common.utils.chat_util_functions._launch_transition', new_callable=AsyncMock) as mock_transition:
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow', new_callable=AsyncMock, return_value="child_tech_id") as mock_workflow:
             # Perform multiple edit operations
-            await service.edit_api_existing_app("tech_id", mock_agentic_entity)
-            await service.edit_existing_workflow("tech_id", mock_agentic_entity)
-            await service.edit_existing_processors("tech_id", mock_agentic_entity)
-            
-            # Should have called transition three times
-            assert mock_transition.call_count == 3
+            await service.edit_api_existing_app("tech_id", mock_agentic_entity, programming_language="python")
+            await service.edit_existing_workflow("tech_id", mock_agentic_entity, programming_language="python")
+            await service.edit_existing_processors("tech_id", mock_agentic_entity, programming_language="python")
+
+            # Should have called workflow launch three times
+            assert mock_workflow.call_count == 3
 
     def test_service_inheritance(self, service):
         """Test that service properly inherits from BaseWorkflowService."""

@@ -1,0 +1,117 @@
+Now for each processor that you've outlined in the workflows configurations,
+please provide the code for it based on the prototype code and call add_processor tool with processor name and content - processor java code.
+
+Processor Interface Requirements
+
+public interface CyodaProcessor {
+    EntityProcessorCalculationResponse process(CyodaEventContext<EntityProcessorCalculationRequest> context);
+    boolean supports(OperationSpecification modelKey);
+}
+
+Supports method implementation:
+
+@Override
+public boolean supports(OperationSpecification modelSpec) {
+    return "entity_name".equals(modelSpec.modelKey().getName()) &&
+           Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();
+}
+
+
+Processor Class Prototype (Use this pattern)
+
+package com.java_template.application.processor;
+import com.java_template.application.entity.pet.Pet;
+import com.java_template.common.serializer.ErrorInfo;
+import com.java_template.common.serializer.ProcessorSerializer;
+import com.java_template.common.serializer.SerializerFactory;
+import com.java_template.common.workflow.CyodaEventContext;
+import com.java_template.common.workflow.CyodaProcessor;
+import com.java_template.common.workflow.OperationSpecification;
+import com.java_template.common.config.Config;
+import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationRequest;
+import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors
+
+@Component
+public class ExampleProcessor implements CyodaProcessor {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final ProcessorSerializer serializer;
+
+    public ExampleProcessor(SerializerFactory serializerFactory) {
+        this.serializer = serializerFactory.getDefaultProcessorSerializer();
+        logger.info("ExampleProcessor initialized with SerializerFactory");
+    }
+
+    @Override
+    public EntityProcessorCalculationResponse process(CyodaEventContext<EntityProcessorCalculationRequest> context) {
+        EntityProcessorCalculationRequest request = context.getEvent();
+        logger.info("Processing EntityName for request: {}", request.getId());
+
+        return serializer.withRequest(request)
+                .toEntity(EntityName.class)
+                .withErrorHandler(this::handleEntityNameError)
+                .validate(this::isValidEntity, "Invalid entity state")
+                .map(this::applyTransformation1)
+                .map(this::applyTransformation2)
+                .validate(this::businessValidation, "Failed business rules")
+                .complete();
+    }
+
+    @Override
+    public boolean supports(OperationSpecification modelSpec) {
+        return "entity_name".equals(modelSpec.modelKey().getName()) &&
+               Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();
+    }
+
+    // Helper methods like isValidEntity, handleEntityNameError, etc.
+}
+Replace:
+
+EntityName with your actual entity class
+
+Logic placeholders (applyTransformation1, handleEntityNameError, etc.) with real implementations as needed.
+
+    public interface ProcessorSerializer {
+
+        <T extends CyodaEntity> T extractEntity(EntityProcessorCalculationRequest request, Class<T> clazz);
+
+        JsonNode extractPayload(EntityProcessorCalculationRequest request);
+
+        <T extends CyodaEntity> JsonNode entityToJsonNode(T entity);
+
+        String getType();
+
+        ResponseBuilder.ProcessorResponseBuilder responseBuilder(EntityProcessorCalculationRequest request);
+
+        default ProcessingChain withRequest(EntityProcessorCalculationRequest request) {
+            return new ProcessingChainImpl(this, request);
+        }
+        interface ProcessingChain {
+            ProcessingChain map(Function<JsonNode, JsonNode> mapper);
+            <T extends CyodaEntity> EntityProcessingChain<T> toEntity(Class<T> clazz);
+            ProcessingChain withErrorHandler(BiFunction<Throwable, JsonNode, ErrorInfo> errorHandler);
+            EntityProcessorCalculationResponse complete();
+        }
+
+        interface EntityProcessingChain<T extends CyodaEntity> {
+            EntityProcessingChain<T> map(Function<T, T> mapper);
+            EntityProcessingChain<T> validate(Function<T, Boolean> validator);
+            EntityProcessingChain<T> validate(Function<T, Boolean> validator, String errorMessage);
+            ProcessingChain toJsonFlow(Function<T, JsonNode> converter);
+            EntityProcessingChain<T> withErrorHandler(BiFunction<Throwable, T, ErrorInfo> errorHandler);
+            EntityProcessorCalculationResponse complete();
+            EntityProcessorCalculationResponse complete(Function<T, JsonNode> converter);
+        }
+
+
+add_processor Tool Usage
+
+After each processor is generated, call the add_processor tool like:
+
