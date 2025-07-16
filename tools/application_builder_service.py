@@ -3,10 +3,54 @@ from typing import Any
 
 import common.config.const as const
 from common.config.config import config
-from common.utils.utils import clone_repo, get_repository_name
+from common.utils.utils import clone_repo
 from entity.chat.chat import ChatEntity
 from entity.model import AgenticFlowEntity
 from tools.base_service import BaseWorkflowService
+from tools.repository_resolver import resolve_repository_name_with_language_param
+
+
+class WorkflowNameResolver:
+    """
+    Resolver for determining workflow names based on programming language.
+    Follows the same pattern as repository resolver for consistency.
+    """
+
+    @staticmethod
+    def resolve_general_app_workflow_name(programming_language: str) -> str:
+        """
+        Resolve general application workflow name based on programming language.
+
+        Args:
+            programming_language: Programming language (case-insensitive)
+
+        Returns:
+            Workflow name for the language
+        """
+        language_upper = programming_language.upper()
+
+        if language_upper == "JAVA":
+            return const.ModelName.GEN_APP_ENTITY_JAVA.value
+        else:
+            return const.ModelName.GEN_APP_ENTITY_PYTHON.value
+
+    @staticmethod
+    def resolve_setup_workflow_name(programming_language: str) -> str:
+        """
+        Resolve setup workflow name based on programming language.
+
+        Args:
+            programming_language: Programming language (case-insensitive)
+
+        Returns:
+            Setup workflow name for the language
+        """
+        language_upper = programming_language.upper()
+
+        if language_upper == "JAVA":
+            return const.ModelName.INIT_SETUP_WORKFLOW_JAVA.value
+        else:
+            return const.ModelName.INIT_SETUP_WORKFLOW_PYTHON.value
 
 
 class ApplicationBuilderService(BaseWorkflowService):
@@ -39,11 +83,7 @@ class ApplicationBuilderService(BaseWorkflowService):
             programming_language = params.get("programming_language")
 
             # Determine workflow name based on programming language
-            workflow_name = (
-                const.ModelName.GEN_APP_ENTITY_JAVA.value 
-                if programming_language == "JAVA" 
-                else const.ModelName.GEN_APP_ENTITY_PYTHON.value
-            )
+            workflow_name = WorkflowNameResolver.resolve_general_app_workflow_name(programming_language)
 
             # Launch agentic workflow
             child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
@@ -87,16 +127,15 @@ class ApplicationBuilderService(BaseWorkflowService):
             transition = params.get("transition")
 
             # Determine repository name based on programming language
-            repository_name = (
-                config.JAVA_REPOSITORY_NAME 
-                if programming_language == "JAVA" 
-                else config.PYTHON_REPOSITORY_NAME
-            )
+            repository_name = resolve_repository_name_with_language_param(entity, programming_language)
 
             # Validate branch (no modifications to main branch allowed)
             if git_branch_id and git_branch_id == "main":
                 self.logger.exception("Modifications to main branch are not allowed")
                 return "Modifications to main branch are not allowed"
+
+            # Determine workflow name based on programming language
+            workflow_name = WorkflowNameResolver.resolve_general_app_workflow_name(programming_language)
 
             # Clone repository if branch ID provided
             if git_branch_id:
@@ -107,7 +146,7 @@ class ApplicationBuilderService(BaseWorkflowService):
                 technical_id=technical_id,
                 entity=entity,
                 entity_model=const.ModelName.CHAT_ENTITY.value,
-                workflow_name=const.ModelName.GEN_APP_ENTITY_PYTHON.value,
+                workflow_name=workflow_name,
                 workflow_cache=params,
                 resume_transition=transition,
                 edge_messages_store=None
@@ -142,11 +181,7 @@ class ApplicationBuilderService(BaseWorkflowService):
             programming_language = params.get("programming_language")
 
             # Determine workflow name based on programming language
-            workflow_name = (
-                const.ModelName.INIT_SETUP_WORKFLOW_JAVA.value 
-                if programming_language == "JAVA" 
-                else const.ModelName.INIT_SETUP_WORKFLOW_PYTHON.value
-            )
+            workflow_name = WorkflowNameResolver.resolve_setup_workflow_name(programming_language)
 
             return await self._schedule_workflow(
                 technical_id=technical_id,
@@ -178,7 +213,7 @@ class ApplicationBuilderService(BaseWorkflowService):
         """
         try:
             # Clone the repo based on branch ID if provided
-            repository_name = get_repository_name(entity)
+            repository_name = resolve_repository_name_with_language_param(entity)
             git_branch_id: str = params.get(const.GIT_BRANCH_PARAM, entity.workflow_cache.get(const.GIT_BRANCH_PARAM))
             
             if git_branch_id:

@@ -1081,7 +1081,8 @@ def parse_entity(model_cls, resp: Any) -> Any:
         return None
 
 
-async def read_file_util(filename, technical_id, repository_name: str):
+async def read_file_util(filename, technical_id, repository_name: str, git_branch_id: str=None):
+    technical_id = git_branch_id or technical_id
     await git_pull(git_branch_id=technical_id, repository_name=repository_name)
     target_dir = os.path.join(f"{config.PROJECT_DIR}/{technical_id}/{repository_name}", "")
     file_path = os.path.join(target_dir, filename)

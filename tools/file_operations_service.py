@@ -1,13 +1,14 @@
 import json
+import os
 import aiofiles
 from typing import List
 
 import common.config.const as const
-from common.config.config import config
 from common.utils.utils import (
     get_project_file_name, _git_push, _save_file, clone_repo,
-    parse_from_string, read_file_util, get_repository_name, delete_file
+    read_file_util, delete_file
 )
+from tools.repository_resolver import resolve_repository_name_with_language_param
 from entity.chat.chat import ChatEntity
 from entity.model import AgenticFlowEntity
 from tools.base_service import BaseWorkflowService
@@ -32,7 +33,8 @@ class FileOperationsService(BaseWorkflowService):
             Success message or error
         """
         try:
-            repository_name = get_repository_name(entity)
+            # Use repository resolver to determine repository name
+            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
             file_name = await get_project_file_name(
                 file_name=params.get("filename"),
                 git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
@@ -53,6 +55,7 @@ class FileOperationsService(BaseWorkflowService):
             return "Environment file saved successfully"
             
         except Exception as e:
+            self.logger.exception("Error saving environment file: %s", str(e))
             return self._handle_error(entity, e, "Error saving environment file")
 
     async def save_file(self, technical_id: str, entity: ChatEntity, **params) -> str:
@@ -73,8 +76,9 @@ class FileOperationsService(BaseWorkflowService):
             )
             if not is_valid:
                 return error_msg
-                
-            repository_name = get_repository_name(entity)
+
+            # Use repository resolver to determine repository name
+            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
             if repository_name.startswith("java"):
                 new_content = params.get("new_content")
             else:
@@ -89,7 +93,177 @@ class FileOperationsService(BaseWorkflowService):
             return "File saved successfully"
             
         except Exception as e:
+            self.logger.exception("Error during saving file: %s", str(e))
             return self._handle_error(entity, e, "Error during saving file")
+
+    async def get_file_contents(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
+        """
+        Get file contents by path for agent use.
+
+        Args:
+            technical_id: Technical identifier
+            entity: Agentic flow entity
+            **params: Parameters including file_path
+
+        Returns:
+            File content or error message
+        """
+        try:
+            is_valid, error_msg = await self._validate_required_params(params, ["file_path"])
+            if not is_valid:
+                return error_msg
+
+            # Use repository resolver to determine repository name
+            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
+
+            return await read_file_util(
+                filename=params.get("file_path"),
+                technical_id=technical_id,
+                repository_name=repository_name,
+                git_branch_id=git_branch_id
+            )
+
+        except Exception as e:
+            self.logger.exception("Error reading file: %s", str(e))
+            return self._handle_error(entity, e, "Error reading file")
+
+    async def list_directory_files(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
+        """
+        List all files in a directory for agent use.
+
+        Args:
+            technical_id: Technical identifier
+            entity: Agentic flow entity
+            **params: Parameters including directory_path
+
+        Returns:
+            JSON string with list of files or error message
+        """
+        try:
+            is_valid, error_msg = await self._validate_required_params(params, ["directory_path"])
+            if not is_valid:
+                return error_msg
+
+            directory_path = params.get("directory_path")
+            git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
+
+            # Use repository resolver to determine repository name
+            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+
+            # Get full directory path
+            full_directory_path = await get_project_file_name(
+                file_name=directory_path,
+                git_branch_id=git_branch_id,
+                repository_name=repository_name
+            )
+
+            # List files in directory using async operations
+            if await self._directory_exists(full_directory_path):
+                files = await self._list_files_in_directory(full_directory_path)
+
+                return json.dumps({
+                    "directory": directory_path,
+                    "files": sorted(files),
+                    "count": len(files)
+                })
+            else:
+                return json.dumps({
+                    "directory": directory_path,
+                    "files": [],
+                    "count": 0,
+                    "message": "Directory does not exist or is not accessible"
+                })
+
+        except Exception as e:
+            self.logger.exception("Error listing directory files: %s", str(e))
+            return self._handle_error(entity, e, "Error listing directory files")
+
+    async def _directory_exists(self, directory_path: str) -> bool:
+        """
+        Check if directory exists asynchronously.
+
+        Args:
+            directory_path: Path to directory
+
+        Returns:
+            True if directory exists and is a directory
+        """
+        try:
+            return os.path.exists(directory_path) and os.path.isdir(directory_path)
+        except Exception as e:
+            self.logger.debug("Error checking directory existence for %s: %s", directory_path, str(e))
+            return False
+
+    async def _list_files_in_directory(self, directory_path: str) -> List[str]:
+        """
+        List files in directory asynchronously.
+
+        Args:
+            directory_path: Path to directory
+
+        Returns:
+            List of file names
+        """
+        try:
+            files = []
+            for file_name in os.listdir(directory_path):
+                file_path = os.path.join(directory_path, file_name)
+                if os.path.isfile(file_path):
+                    files.append(file_name)
+            return files
+        except Exception as e:
+            self.logger.debug("Error listing files in directory %s: %s", directory_path, str(e))
+            return []
+
+    async def get_entity_pojo_contents(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
+        """
+        Get entity POJO contents to understand the data model.
+
+        Args:
+            technical_id: Technical identifier
+            entity: Agentic flow entity
+            **params: Parameters including entity_name
+
+        Returns:
+            Entity POJO content or error message
+        """
+        try:
+            is_valid, error_msg = await self._validate_required_params(params, ["entity_name"])
+            if not is_valid:
+                return error_msg
+
+            entity_name = params.get("entity_name")
+
+            # Use repository resolver to determine repository name
+            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
+
+            # Try common entity POJO paths
+            possible_paths = [
+                f"src/main/java/com/java_template/application/entity/{entity_name}.java",
+                f"src/main/java/com/java_template/application/entity/{entity_name}Entity.java",
+            ]
+
+            for entity_path in possible_paths:
+                try:
+                    content = await read_file_util(
+                        filename=entity_path,
+                        technical_id=technical_id,
+                        repository_name=repository_name,
+                        git_branch_id=git_branch_id
+                    )
+                    if content and content.strip():
+                        return f"Entity POJO found at {entity_path}:\n\n{content}"
+                except Exception as e:
+                    self.logger.debug("Entity POJO not found at path %s: %s", entity_path, str(e))
+                    continue
+
+            return f"Entity POJO not found for '{entity_name}'. Tried paths: {', '.join(possible_paths)}"
+
+        except Exception as e:
+            self.logger.exception("Error reading entity POJO: %s", str(e))
+            return self._handle_error(entity, e, "Error reading entity POJO")
 
     async def read_file(self, technical_id: str, entity: ChatEntity, **params) -> str:
         """
@@ -108,13 +282,19 @@ class FileOperationsService(BaseWorkflowService):
             if not is_valid:
                 return error_msg
                 
+            # Use repository resolver to determine repository name
+            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
+
             return await read_file_util(
                 filename=params.get("filename"),
                 technical_id=technical_id,
-                repository_name=get_repository_name(entity)
+                repository_name=repository_name,
+                git_branch_id=git_branch_id
             )
             
         except Exception as e:
+            self.logger.exception("Error reading file: %s", str(e))
             return self._handle_error(entity, e, "Error reading file")
 
     async def clone_repo(self, technical_id: str, entity: ChatEntity, **params) -> str:
@@ -131,7 +311,8 @@ class FileOperationsService(BaseWorkflowService):
             Success message with branch information
         """
         try:
-            repository_name = get_repository_name(entity)
+            # Use repository resolver to determine repository name
+            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
 
             await clone_repo(git_branch_id=technical_id, repository_name=repository_name)
 
@@ -151,6 +332,7 @@ class FileOperationsService(BaseWorkflowService):
             )
             
         except Exception as e:
+            self.logger.exception("Error cloning repository: %s", str(e))
             return self._handle_error(entity, e, "Error cloning repository")
 
     async def delete_files(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
@@ -169,17 +351,21 @@ class FileOperationsService(BaseWorkflowService):
             files: List[str] = params.get("files", [])
             if not files:
                 return "No files specified for deletion"
-                
+
+            # Use repository resolver to determine repository name
+            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+
             for file_name in files:
                 await delete_file(
                     _data=technical_id,
                     item=file_name,
                     git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
-                    repository_name=get_repository_name(entity)
+                    repository_name=repository_name
                 )
             return ""
             
         except Exception as e:
+            self.logger.exception("Error deleting files: %s", str(e))
             return self._handle_error(entity, e, "Error deleting files")
 
     async def save_entity_templates(self, technical_id: str, entity: ChatEntity, **params) -> str:
@@ -195,10 +381,13 @@ class FileOperationsService(BaseWorkflowService):
             Success message or error
         """
         try:
+            # Use repository resolver to determine repository name
+            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+
             file_path = await get_project_file_name(
                 file_name="entity/entities_data_design.json",
                 git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
-                repository_name=get_repository_name(entity)
+                repository_name=repository_name
             )
 
             async with aiofiles.open(file_path, 'r') as f:
@@ -224,12 +413,13 @@ class FileOperationsService(BaseWorkflowService):
                     _data=data_str,
                     item=target_item,
                     git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
-                    repository_name=get_repository_name(entity)
+                    repository_name=repository_name
                 )
                 
             return "Entity templates saved successfully"
 
         except Exception as e:
+            self.logger.exception("Error saving entity templates: %s", str(e))
             return self._handle_error(entity, e, "Error saving entity templates")
 
     async def add_application_resource(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
@@ -270,6 +460,7 @@ class FileOperationsService(BaseWorkflowService):
             return f"Successfully added application resource: {resource_path} ({character_count} characters)"
 
         except Exception as error:
+            self.logger.exception("Error adding application resource: %s", str(error))
             return self._handle_error(entity, error, f"Error adding application resource: {error}")
 
     def _is_unsafe_path(self, path: str) -> bool:
@@ -298,8 +489,7 @@ class FileOperationsService(BaseWorkflowService):
         Returns:
             Repository name
         """
-        from tools.repository_resolver import resolve_repository_name
-        return resolve_repository_name(entity)
+        return resolve_repository_name_with_language_param(entity, "JAVA")
 
     def _get_git_branch_id(self, entity: AgenticFlowEntity, technical_id: str) -> str:
         """Get git branch ID from entity cache or fallback to technical ID.
