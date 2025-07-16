@@ -140,6 +140,7 @@ class ChatWorkflow(Workflow):
             'clone_repo': self.file_operations_service.clone_repo,
             'delete_files': self.file_operations_service.delete_files,
             'save_entity_templates': self.file_operations_service.save_entity_templates,
+            'add_application_resource': self.file_operations_service.add_application_resource,
 
             # Web Operations
             'web_search': self.web_operations_service.web_search,

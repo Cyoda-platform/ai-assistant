@@ -228,6 +228,106 @@ class FileOperationsService(BaseWorkflowService):
                 )
                 
             return "Entity templates saved successfully"
-            
+
         except Exception as e:
             return self._handle_error(entity, e, "Error saving entity templates")
+
+    async def add_application_resource(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
+
+        validation_result = await self._validate_required_params(
+            params, ["resource_path", "file_contents"]
+        )
+        is_valid, error_message = validation_result
+        if not is_valid:
+            return error_message
+
+        # Extract validated parameters
+        resource_path = params["resource_path"]
+        file_contents = params["file_contents"]
+
+        # Validate resource path security
+        if self._is_unsafe_path(resource_path):
+            return "Error: Invalid resource path. Path must be relative and not contain '..' or start with '/'"
+
+        try:
+            # Determine repository and branch information
+            repository_name = self._get_repository_name(entity)
+            git_branch_id = self._get_git_branch_id(entity, technical_id)
+
+            # Log the operation
+            self._log_resource_operation(resource_path, entity, repository_name)
+
+            # Save the resource file
+            await _save_file(
+                _data=file_contents,
+                item=resource_path,
+                git_branch_id=git_branch_id,
+                repository_name=repository_name
+            )
+
+            # Return success message
+            character_count = len(file_contents)
+            return f"Successfully added application resource: {resource_path} ({character_count} characters)"
+
+        except Exception as error:
+            return self._handle_error(entity, error, f"Error adding application resource: {error}")
+
+    def _is_unsafe_path(self, path: str) -> bool:
+        """Check if a resource path is unsafe for security reasons.
+
+        Args:
+            path: Resource path to validate
+
+        Returns:
+            True if path is unsafe, False if safe
+        """
+        if not path:
+            return True
+        if path.startswith('/'):
+            return True
+        if '..' in path:
+            return True
+        return False
+
+    def _get_repository_name(self, entity: AgenticFlowEntity) -> str:
+        """Get repository name for the entity using the resolver.
+
+        Args:
+            entity: Agentic flow entity
+
+        Returns:
+            Repository name
+        """
+        from tools.repository_resolver import resolve_repository_name
+        return resolve_repository_name(entity)
+
+    def _get_git_branch_id(self, entity: AgenticFlowEntity, technical_id: str) -> str:
+        """Get git branch ID from entity cache or fallback to technical ID.
+
+        Args:
+            entity: Agentic flow entity
+            technical_id: Technical identifier as fallback
+
+        Returns:
+            Git branch identifier
+        """
+        if const.GIT_BRANCH_PARAM in entity.workflow_cache:
+            return entity.workflow_cache[const.GIT_BRANCH_PARAM]
+        return technical_id
+
+    def _log_resource_operation(self, resource_path: str, entity: AgenticFlowEntity, repository_name: str) -> None:
+        """Log the resource addition operation for debugging.
+
+        Args:
+            resource_path: Path of the resource being added
+            entity: Agentic flow entity
+            repository_name: Name of the target repository
+        """
+        programming_language = "unknown"
+        if "programming_language" in entity.workflow_cache:
+            programming_language = entity.workflow_cache["programming_language"]
+
+        self.logger.info(
+            f"Adding application resource: {resource_path} "
+            f"for {programming_language} project in {repository_name}"
+        )

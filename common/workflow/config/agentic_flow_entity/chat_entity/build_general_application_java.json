@@ -1709,7 +1709,7 @@
     "generated_improved_prototype_cyoda_workflow": {
       "transitions": {
         "finish_prototype_cyoda_workflow": {
-          "next": "finished_prototype_cyoda_workflow",
+          "next": "started_workflow_generation",
           "action": {
             "name": "process_event",
             "config": {
@@ -1740,184 +1740,66 @@
         }
       }
     },
-    "finished_prototype_cyoda_workflow": {
+    "started_workflow_generation": {
       "transitions": {
-        "transform_prototype_cyoda_workflow": {
-          "next": "finished_prototype_cyoda_workflow_json",
+        "extract_entities_from_prototype": {
+          "next": "entities_extracted",
           "action": {
             "name": "process_event",
             "config": {
-              "type": "prompt",
+              "type": "agent",
               "publish": false,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_application_resource",
+                    "description": "Add application resource file with path and content",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "resource_path": {
+                          "type": "string",
+                          "description": "Full relative path to the resource including filename"
+                        },
+                        "file_contents": {
+                          "type": "string",
+                          "description": "Content of the file to be written"
+                        }
+                      },
+                      "required": [
+                        "resource_path",
+                        "file_contents"
+                      ]
+                    }
+                  }
+                }
+              ],
               "memory_tags": [
-                "generate_prototype_cyoda_workflow"
+                "generate_workflow_from_prototype"
               ],
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "You are given a Java Spring Boot code that includes definitions and usage of an `entityService` bean.",
-                    "This service `addItem` method accepts an `entityModel` argument and optionally a `workflow` function reference.",
-                    "## 1. Entity Model Node:",
-                    "Task: Extract all `entityModel` references passed to `entityService.addItem(...)`.",
-                    "Example Java code:",
-                    "```java",
-                    "import java.util.UUID;",
-                    "import com.java_template.common.service.EntityService",
-                    "import java.util.concurrent.CompletableFuture;",
+                    "You are provided with prototype code in Java 21 Spring boot",
                     "",
-                    "public class MyService {",
-                    "    private final EntityService entityService;",
+                    "You need to identify each entity that is saved with entityService.addItems(ENTITY_NAME, ENTITY_VERSION, entititesToAdd, this::workflowFunction);",
                     "",
-                    "    public MyService(EntityService entityService) {",
-                    "        this.entityService = entityService;",
-                    "    }",
+                    "For each entity, call add_application_resource with:",
+                    "- resource_path: 'src/main/java/com/java_template/application/entity/{entity_name}/{EntityName}.java'",
+                    "- file_contents: entity java pojo with lombok data annotation",
                     "",
-                    "    public CompletableFuture<UUID> createEntity(Data data) {",
-                    "        return entityService.addItem(",
-                    "            entityModel = \"example\",",
-                    "            entityVersion = ENTITY_VERSION,",
-                    "            entity = data,",
-                    "            workflow = this::processExample",
-                    "        );",
-                    "    }",
+                    "Entity naming: {entity_name} lowercase underscore, {EntityName} PascalCase",
                     "",
-                    "    private Data processExample(Data data) {",
-                    "        // Sample processing",
-                    "        data.setProcessed(true);",
-                    "        return data;",
-                    "    }",
-                    "}",
-                    "```",
-                    "- Here, `entityModel` is `'example'`",
-                    "- `workflow` is a reference to `processExample`, which must be fully extracted",
-                    "You must extract:",
-                    "- `entity_model_name`: e.g. `'example'`",
-                    "- Workflow function details:",
-                    "    - `name`: the method name, e.g. `processExample`",
-                    "    - `content`: the full method block",
-                    "    - `code_with_necessary_imports_and_constants`: include any top-level imports or constants used by the method, if applicable",
-                    "JSON Output Example for `entity_models`:",
-                    "```json",
-                    "{",
-                    "  \"entity_model_name\": \"example\",",
-                    "  \"workflow_function\": {",
-                    "    \"name\": \"processExample\",",
-                    "    \"content\": \"private Data processExample(Data data) {\\n    data.setProcessed(true);\\n    return data;\\n}\",",
-                    "    \"code_with_necessary_imports_and_constants\": \"import java.util.UUID;\\nimport java.util.concurrent.CompletableFuture;\"",
-                    "  }",
-                    "}",
-                    "```",
-                    "## 2. File Without Workflow Node:",
-                    "Task: Return the full original Java code, but with all `workflow` arguments removed.",
-                    "For the above code, this means:",
-                    "- Original:",
-                    "```java",
-                    "return entityService.addItem(",
-                    "    entityModel = \"example\",",
-                    "    entityVersion = ENTITY_VERSION,",
-                    "    entity = data,",
-                    "    workflow = this::processExample",
-                    ");",
-                    "```",
-                    "- Becomes:",
-                    "```java",
-                    "return entityService.addItem(",
-                    "    entityModel = \"example\",",
-                    "    entityVersion = ENTITY_VERSION,",
-                    "    entity = data",
-                    ");",
-                    "```",
-                    "You can remove unused code, but make sure the code that doesn't reference workflow functions stays intact.",
-                    "file_without_workflow should not have any workflow functions.",
-                    "JSON Output Example for `file_without_workflow`:",
-                    "{",
-                    "  \"code\": \"return entityService.addItem(\\n    entityModel = \\\"example\\\",\\n    entityVersion = ENTITY_VERSION,\\n    entity = data\\n);\"",
-                    "}",
-                    "```",
-                    "## Combined JSON Structure Example (Final Output):",
-                    "{",
-                    "  \"entity_models\": [",
-                    "    {",
-                    "      \"entity_model_name\": \"example\", #always lowercase",
-                    "      \"workflow_function\": {",
-                    "        \"name\": \"processExample\",",
-                    "        \"content\": \"private Data processExample(Data data):\\n    data.setProcessed(true);\\n    return data;\",",
-                    "        \"code_with_necessary_imports_and_constants\": \"import java.util.UUID;\\nimport java.util.concurrent.CompletableFuture;\"",
-                    "      }",
-                    "    }",
-                    "  ],",
-                    "  \"file_without_workflow\": {",
-                    "    \"code\": \"return entityService.addItem(\\n    entityModel = \\\"example\\\",\\n    entityVersion = ENTITY_VERSION,\\n    entity = data\\n);\"",
-                    "  }"
+                    "Prototype code:"
                   ]
                 }
               ],
-              "response_format": {
-                "name": "workflow_schema",
-                "description": "Schema for entity models and workflow functions",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "entity_models": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "entity_model_name": {
-                            "type": "string"
-                          },
-                          "workflow_function": {
-                            "type": "object",
-                            "properties": {
-                              "name": {
-                                "type": "string"
-                              },
-                              "code_with_necessary_imports_and_constants": {
-                                "type": "string"
-                              },
-                              "content": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "name",
-                              "content"
-                            ]
-                          }
-                        },
-                        "required": [
-                          "entity_model_name",
-                          "workflow_function"
-                        ]
-                      }
-                    },
-                    "file_without_workflow": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "code"
-                      ]
-                    }
-                  },
-                  "required": [
-                    "entity_models",
-                    "file_without_workflow"
-                  ]
-                }
-              },
               "input": {
                 "local_fs": [
                   "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
-                ]
-              },
-              "output": {
-                "local_fs": [
-                  "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.json"
                 ]
               }
             }
@@ -1925,25 +1807,475 @@
         }
       }
     },
-    "finished_prototype_cyoda_workflow_json": {
+    "entities_extracted": {
       "transitions": {
-        "register_workflow_with_app": {
-          "next": "finished_app_generation_flow",
+        "generate_workflows_from_prototype": {
+          "next": "workflows_generated",
           "action": {
             "name": "process_event",
             "config": {
-              "type": "function",
-              "function": {
-                "name": "register_workflow_with_app",
-                "description": "register_workflow_with_app",
-                "parameters": {
-                  "filename": "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.json",
-                  "routes_file": "src/main/java/com/java_template/controller/Controller.java"
+              "type": "agent",
+              "publish": false,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_application_resource",
+                    "description": "Add application resource file with path and content",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "resource_path": {
+                          "type": "string",
+                          "description": "Full relative path to the resource including filename"
+                        },
+                        "file_contents": {
+                          "type": "string",
+                          "description": "Content of the file to be written"
+                        }
+                      },
+                      "required": [
+                        "resource_path",
+                        "file_contents"
+                      ]
+                    }
+                  }
                 }
-              },
-              "publish": false
+              ],
+              "memory_tags": [
+                "generate_workflow_from_prototype"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Now that you've outlined the entities from the prototype code, please,",
+                    "for each entity workflow function generate workflow configuration json that represents",
+                    "best the workflow of the entity and call add_application_resource with workflow name in camel case (like java class) and content - workflow json.",
+                    "Workflow is a finite state machine (FSM) that consists of states and transitions.",
+                    "Each state has a dictionary of transitions. Each transition has a next attribute, with the next state.",
+                    "Each transition may have an action (a name of a processor java class that will implement the process code).",
+                    "Each transition may have a condition (a name of a condition java class that will implement the validation code or a group condition).",
+                    "Always start from an initial state 'none'.",
+                    "Avoid loops.",
+                    "",
+                    "Call add_application_resource with:",
+                    "- resource_path: 'src/main/java/com/java_template/application/entity/{entity_name}/Workflow.json'",
+                    "- file_contents: workflow json configuration",
+                    "",
+                    "JSON Example of the Workflow:",
+                    "{",
+                    "  \"version\": \"1.0\",",
+                    "  \"description\": \"Template FSM with structured states, transitions, processors, and criterions\",",
+                    "  \"initial_state\": \"state_initial\",",
+                    "  \"workflow_name\": \"template_workflow\",",
+                    "  \"states\": {",
+                    "    \"state_initial\": {",
+                    "      \"transitions\": {",
+                    "        \"transition_to_01\": {",
+                    "          \"next\": \"state_01\"",
+                    "        }",
+                    "      }",
+                    "    },",
+                    "    \"state_01\": {",
+                    "      \"transitions\": {",
+                    "        \"transition_to_02\": {",
+                    "          \"next\": \"state_02\",",
+                    "          \"manual\": true,",
+                    "          \"processors\": [",
+                    "            {",
+                    "              \"name\": \"ExampleProcessorName\"",
+                    "            }",
+                    "          ]",
+                    "        }",
+                    "      }",
+                    "    },",
+                    "    \"state_02\": {",
+                    "      \"transitions\": {",
+                    "        \"transition_with_criterion_simple\": {",
+                    "          \"next\": \"state_criterion_check_01\",",
+                    "          \"processors\": [",
+                    "            {",
+                    "              \"name\": \"ExampleProcessorName\"",
+                    "            }",
+                    "          ],",
+                    "          \"criteria\": [",
+                    "            {",
+                    "              \"type\": \"function\",",
+                    "              \"function\": {",
+                    "                \"name\": \"ExampleCriterionName\"",
+                    "              }",
+                    "            }",
+                    "          ]",
+                    "        }",
+                    "      }",
+                    "    },",
+                    "    \"state_criterion_check_01\": {",
+                    "      \"transitions\": {",
+                    "        \"transition_with_criterion_group\": {",
+                    "          \"next\": \"state_terminal\",",
+                    "          \"criteria\": [",
+                    "            {",
+                    "              \"type\": \"group\",",
+                    "              \"name\": \"criterion_group_gamma\",",
+                    "              \"operator\": \"AND\",",
+                    "              \"parameters\": [",
+                    "                {",
+                    "                  \"jsonPath\": \"sampleFieldA\",",
+                    "                  \"operatorType\": \"EQUALS\",",
+                    "                  \"value\": \"template_value_01\",",
+                    "                  \"type\": \"simple\"",
+                    "                }",
+                    "              ]",
+                    "            }",
+                    "          ]",
+                    "        }",
+                    "      }",
+                    "    }",
+                    "  }",
+                    "}"
+                  ]
+                }
+              ]
             }
           }
+        }
+      }
+    },
+    "workflows_generated": {
+      "transitions": {
+        "generate_processors_from_workflows": {
+          "next": "processors_generated",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": false,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_application_resource",
+                    "description": "Add application resource file with path and content",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "resource_path": {
+                          "type": "string",
+                          "description": "Full relative path to the resource including filename"
+                        },
+                        "file_contents": {
+                          "type": "string",
+                          "description": "Content of the file to be written"
+                        }
+                      },
+                      "required": [
+                        "resource_path",
+                        "file_contents"
+                      ]
+                    }
+                  }
+                }
+              ],
+              "memory_tags": [
+                "generate_workflow_from_prototype"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Now for each processor that you've outlined in the workflows configurations,",
+                    "please provide the code for it based on the prototype code and call add_application_resource tool with processor name and content - processor java code.",
+                    "",
+                    "Call add_application_resource with:",
+                    "- resource_path: 'src/main/java/com/java_template/application/processor/{ProcessorName}.java'",
+                    "- file_contents: processor java code using CyodaProcessor interface",
+                    "",
+                    "Processor Interface Requirements",
+                    "",
+                    "public interface CyodaProcessor {",
+                    "    EntityProcessorCalculationResponse process(CyodaEventContext<EntityProcessorCalculationRequest> context);",
+                    "    boolean supports(OperationSpecification modelKey);",
+                    "}",
+                    "",
+                    "Supports method implementation:",
+                    "",
+                    "@Override",
+                    "public boolean supports(OperationSpecification modelSpec) {",
+                    "    return \"entity_name\".equals(modelSpec.modelKey().getName()) &&",
+                    "           Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
+                    "}",
+                    "",
+                    "",
+                    "Processor Class Prototype (Use this pattern)",
+                    "",
+                    "package com.java_template.application.processor;",
+                    "import com.java_template.application.entity.pet.Pet;",
+                    "import com.java_template.common.serializer.ErrorInfo;",
+                    "import com.java_template.common.serializer.ProcessorSerializer;",
+                    "import com.java_template.common.serializer.SerializerFactory;",
+                    "import com.java_template.common.workflow.CyodaEventContext;",
+                    "import com.java_template.common.workflow.CyodaProcessor;",
+                    "import com.java_template.common.workflow.OperationSpecification;",
+                    "import com.java_template.common.config.Config;",
+                    "import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationRequest;",
+                    "import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationResponse;",
+                    "import org.slf4j.Logger;",
+                    "import org.slf4j.LoggerFactory;",
+                    "import org.springframework.stereotype.Component;",
+                    "import java.util.ArrayList;",
+                    "import java.util.List;",
+                    "import java.util.Set;",
+                    "import java.util.stream.Collectors",
+                    "",
+                    "@Component",
+                    "public class ExampleProcessor implements CyodaProcessor {",
+                    "",
+                    "    private final Logger logger = LoggerFactory.getLogger(this.getClass());",
+                    "    private final ProcessorSerializer serializer;",
+                    "",
+                    "    public ExampleProcessor(SerializerFactory serializerFactory) {",
+                    "        this.serializer = serializerFactory.getDefaultProcessorSerializer();",
+                    "        logger.info(\"ExampleProcessor initialized with SerializerFactory\");",
+                    "    }",
+                    "",
+                    "    @Override",
+                    "    public EntityProcessorCalculationResponse process(CyodaEventContext<EntityProcessorCalculationRequest> context) {",
+                    "        EntityProcessorCalculationRequest request = context.getEvent();",
+                    "        logger.info(\"Processing EntityName for request: {}\", request.getId());",
+                    "",
+                    "        return serializer.withRequest(request)",
+                    "                .toEntity(EntityName.class)",
+                    "                .withErrorHandler(this::handleEntityNameError)",
+                    "                .validate(this::isValidEntity, \"Invalid entity state\")",
+                    "                .map(this::applyTransformation1)",
+                    "                .map(this::applyTransformation2)",
+                    "                .validate(this::businessValidation, \"Failed business rules\")",
+                    "                .complete();",
+                    "    }",
+                    "",
+                    "    @Override",
+                    "    public boolean supports(OperationSpecification modelSpec) {",
+                    "        return \"entity_name\".equals(modelSpec.modelKey().getName()) &&",
+                    "               Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
+                    "    }",
+                    "",
+                    "    // Helper methods like isValidEntity, handleEntityNameError, etc.",
+                    "}",
+                    "Replace:",
+                    "",
+                    "EntityName with your actual entity class",
+                    "",
+                    "Logic placeholders (applyTransformation1, handleEntityNameError, etc.) with real implementations as needed.",
+                    "",
+                    "    public interface ProcessorSerializer {",
+                    "",
+                    "        <T extends CyodaEntity> T extractEntity(EntityProcessorCalculationRequest request, Class<T> clazz);",
+                    "",
+                    "        JsonNode extractPayload(EntityProcessorCalculationRequest request);",
+                    "",
+                    "        <T extends CyodaEntity> JsonNode entityToJsonNode(T entity);",
+                    "",
+                    "        String getType();",
+                    "",
+                    "        ResponseBuilder.ProcessorResponseBuilder responseBuilder(EntityProcessorCalculationRequest request);",
+                    "",
+                    "        default ProcessingChain withRequest(EntityProcessorCalculationRequest request) {",
+                    "            return new ProcessingChainImpl(this, request);",
+                    "        }",
+                    "        interface ProcessingChain {",
+                    "            ProcessingChain map(Function<JsonNode, JsonNode> mapper);",
+                    "            <T extends CyodaEntity> EntityProcessingChain<T> toEntity(Class<T> clazz);",
+                    "            ProcessingChain withErrorHandler(BiFunction<Throwable, JsonNode, ErrorInfo> errorHandler);",
+                    "            EntityProcessorCalculationResponse complete();",
+                    "        }",
+                    "",
+                    "        interface EntityProcessingChain<T extends CyodaEntity> {",
+                    "            EntityProcessingChain<T> map(Function<T, T> mapper);",
+                    "            EntityProcessingChain<T> validate(Function<T, Boolean> validator);",
+                    "            EntityProcessingChain<T> validate(Function<T, Boolean> validator, String errorMessage);",
+                    "            ProcessingChain toJsonFlow(Function<T, JsonNode> converter);",
+                    "            EntityProcessingChain<T> withErrorHandler(BiFunction<Throwable, T, ErrorInfo> errorHandler);",
+                    "            EntityProcessorCalculationResponse complete();",
+                    "            EntityProcessorCalculationResponse complete(Function<T, JsonNode> converter);",
+                    "        }",
+                    "",
+                    "",
+                    "add_application_resource Tool Usage",
+                    "",
+                    "After each processor is generated, call the add_application_resource tool like:"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "processors_generated": {
+      "transitions": {
+        "generate_criteria_from_workflows": {
+          "next": "criteria_generated",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": false,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_application_resource",
+                    "description": "Add application resource file with path and content",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "resource_path": {
+                          "type": "string",
+                          "description": "Full relative path to the resource including filename"
+                        },
+                        "file_contents": {
+                          "type": "string",
+                          "description": "Content of the file to be written"
+                        }
+                      },
+                      "required": [
+                        "resource_path",
+                        "file_contents"
+                      ]
+                    }
+                  }
+                }
+              ],
+              "memory_tags": [
+                "generate_workflow_from_prototype"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Now for each criterion that you've outlined in the workflows configurations,",
+                    "please provide the code for it based on the prototype code and call add_application_resource tool with criterion name and content - criterion java code.",
+                    "",
+                    "Call add_application_resource with:",
+                    "- resource_path: 'src/main/java/com/java_template/application/criteria/{CriteriaName}.java'",
+                    "- file_contents: criteria java code using CyodaCriterion interface",
+                    "",
+                    "Criterion Interface Requirements",
+                    "",
+                    "public interface CyodaCriterion {",
+                    "    EntityCriteriaCalculationResponse check(CyodaEventContext<EntityCriteriaCalculationRequest> request);",
+                    "    boolean supports(OperationSpecification opsSpec);",
+                    "}",
+                    "",
+                    "Supports method implementation:",
+                    "",
+                    "@Override",
+                    "public boolean supports(OperationSpecification modelSpec) {",
+                    "    return \"entity_name\".equals(modelSpec.modelKey().getName()) &&",
+                    "           Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
+                    "}",
+                    "",
+                    "",
+                    "Processor Class Criterion (Use this pattern)",
+                    "",
+                    "import com.java_template.application.entity.pet.Pet;",
+                    "import com.java_template.common.serializer.CriterionSerializer;",
+                    "import com.java_template.common.serializer.ErrorInfo;",
+                    "import com.java_template.common.serializer.EvaluationOutcome;",
+                    "import com.java_template.common.serializer.ReasonAttachmentStrategy;",
+                    "import com.java_template.common.serializer.SerializerFactory;",
+                    "import com.java_template.common.config.Config;",
+                    "import com.java_template.common.workflow.CyodaCriterion;",
+                    "import com.java_template.common.workflow.CyodaEventContext;",
+                    "import com.java_template.common.workflow.OperationSpecification;",
+                    "import org.cyoda.cloud.api.event.common.ModelSpec;",
+                    "import org.cyoda.cloud.api.event.processing.EntityCriteriaCalculationRequest;",
+                    "import org.cyoda.cloud.api.event.processing.EntityCriteriaCalculationResponse;",
+                    "import org.slf4j.Logger;",
+                    "import org.slf4j.LoggerFactory;",
+                    "import org.springframework.stereotype.Component;",
+                    "import java.util.Set;",
+                    "@Component",
+                    "public class ExampleCriterion implements CyodaCriterion {",
+                    "",
+                    "    private final Logger logger = LoggerFactory.getLogger(this.getClass());",
+                    "    private final CriterionSerializer serializer;",
+                    "",
+                    "    public ExampleCriterion(SerializerFactory serializerFactory) {",
+                    "        this.serializer = serializerFactory.getDefaultCriteriaSerializer();",
+                    "        logger.info(\"ExampleCriterion initialized with SerializerFactory\");",
+                    "    }",
+                    "",
+                    "    @Override",
+                    "        public EntityCriteriaCalculationResponse check(CyodaEventContext<EntityCriteriaCalculationRequest> context) {",
+                    "            EntityCriteriaCalculationRequest request = context.getEvent();",
+                    "            logger.debug(\"Checking EntityName validity for request: {}\", request.getId());",
+                    "",
+                    "            return serializer.withRequest(request)",
+                    "                .evaluateEntity(EntityName.class, this::validateEntityName)",
+                    "                .withReasonAttachment(ReasonAttachmentStrategy.toWarnings())",
+                    "                .withErrorHandler((error, entityName) -> {",
+                    "                    logger.debug(\"EntityName validation failed for request: {}\", request.getId(), error);",
+                    "                    return ErrorInfo.validationError(\"EntityName validation failed: \" + error.getMessage());",
+                    "                })",
+                    "                .complete();",
+                    "        }",
+                    "",
+                    "    @Override",
+                    "    public boolean supports(OperationSpecification modelSpec) {",
+                    "        return \"entity_name\".equals(modelSpec.modelKey().getName()) &&",
+                    "               Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
+                    "    }",
+                    "",
+                    "    // Helper methods like isValidEntity, handleEntityNameError, etc.",
+                    "}",
+                    "Replace:",
+                    "",
+                    "EntityName with your actual entity class",
+                    "",
+                    "Logic placeholders (applyTransformation1, handleEntityNameError, etc.) with real implementations as needed.",
+                    "",
+                    "    public interface CriterionSerializer {",
+                    "        <T extends CyodaEntity> T extractEntity(EntityCriteriaCalculationRequest request, Class<T> clazz);",
+                    "        JsonNode extractPayload(EntityCriteriaCalculationRequest request);",
+                    "        <T extends CyodaEntity> JsonNode entityToJsonNode(T entity);",
+                    "        String getType();",
+                    "        ResponseBuilder.CriterionResponseBuilder responseBuilder(EntityCriteriaCalculationRequest request);",
+                    "        default EvaluationChain withRequest(EntityCriteriaCalculationRequest request) {",
+                    "            return new EvaluationChainImpl(this, request);",
+                    "        }",
+                    "        interface EvaluationChain {",
+                    "            EvaluationChain evaluate(Function<JsonNode, EvaluationOutcome> evaluator);",
+                    "            <T extends CyodaEntity> EvaluationChain evaluateEntity(Class<T> clazz, Function<T, EvaluationOutcome> evaluator);",
+                    "            EvaluationChain withErrorHandler(BiFunction<Throwable, JsonNode, ErrorInfo> errorHandler);",
+                    "            EvaluationChain withReasonAttachment(ReasonAttachmentStrategy strategy);",
+                    "            EntityCriteriaCalculationResponse complete();",
+                    "        }",
+                    "",
+                    "@FunctionalInterface",
+                    "public interface ReasonAttachmentStrategy {",
+                    "    void attachReason(EntityCriteriaCalculationResponse response, EvaluationReason reason);",
+                    "",
+                    "",
+                    "add_application_resource Tool Usage",
+                    "",
+                    "After each criterion is generated, call the add_application_resource tool like:"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "criteria_generated": {
+      "transitions": {
+        "finish_app_generation_flow": {
+          "next": "finished_app_generation_flow"
         }
       }
     },
@@ -1951,7 +2283,6 @@
       "transitions": {
         "update_routes_file": {
           "next": "updated_routes_file",
-          "manual": true,
           "action": {
             "name": "process_event",
             "config": {
