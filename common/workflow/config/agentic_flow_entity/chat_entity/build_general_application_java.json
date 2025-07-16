@@ -833,7 +833,7 @@
               "input": {},
               "output": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/functional_requirement.md"
+                  "src/main/java/com/java_template/prototype/functional_requirement.md"
                 ]
               }
             }
@@ -855,7 +855,7 @@
               "input": {},
               "output": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java"
+                  "src/main/java/com/java_template/prototype/EntityControllerPrototype.java"
                 ]
               },
               "messages": [
@@ -879,7 +879,7 @@
                     "You are welcome to use patterns like `entityJobs.put(jobId, new JobStatus(\"processing\", requestedAt)); // fire-and-forget the processing` if relevant.",
                     "Avoid configuration files, focus only on controller logic in a single file.",
                     "When fetching and parsing JSON responses from external APIs, use com.fasterxml.jackson.databind.ObjectMapper.readTree(...) to convert the raw response into a JsonNode, instead of deserializing directly into a Map or a List. This ensures compatibility with both JSON objects and arrays.",
-                    "Use `package com.java_template.entity.prototype;` as the package declaration for this file",
+                    "Use `package com.java_template.prototype;` as the package declaration for this file",
                     "Please double-check that you are using all the information provided earlier."
                   ]
                 }
@@ -905,14 +905,14 @@
               "input": {},
               "output": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java"
+                  "src/main/java/com/java_template/prototype/EntityControllerPrototype.java"
                 ]
               },
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "Use `package com.java_template.entity.prototype;` as the package declaration for this file",
+                    "Use `package com.java_template.prototype;` as the package declaration for this file",
                     "Please, add validation annotations for request bodies and query parameters using javax/jakarta validation annotations:",
                     "import jakarta.validation.constraints.*;",
                     "Use @Validated on the controller class if needed to enable validation.",
@@ -1099,7 +1099,7 @@
                   "type": "function",
                   "function": {
                     "name": "read_file",
-                    "description": "Read the contents of src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java file.",
+                    "description": "Read the contents of src/main/java/com/java_template/prototype/EntityControllerPrototype.java file.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1107,7 +1107,7 @@
                         "filename": {
                           "type": "string",
                           "enum": [
-                            "src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java"
+                            "src/main/java/com/java_template/prototype/EntityControllerPrototype.java"
                           ]
                         }
                       },
@@ -1122,7 +1122,7 @@
                   "type": "function",
                   "function": {
                     "name": "save_file",
-                    "description": "Save changes to src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java to the repository so that the user can view the changes. Apply this if you make changes; omit if just answering a general question.",
+                    "description": "Save changes to src/main/java/com/java_template/prototype/EntityControllerPrototype.java to the repository so that the user can view the changes. Apply this if you make changes; omit if just answering a general question.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1133,7 +1133,7 @@
                         "filename": {
                           "type": "string",
                           "enum": [
-                            "src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java"
+                            "src/main/java/com/java_template/prototype/EntityControllerPrototype.java"
                           ]
                         }
                       },
@@ -1174,9 +1174,9 @@
                   "role": "user",
                   "content": [
                     " Hello! Please do your best to help the user with just generated EntityControllerPrototype.java code.",
-                    " If the user asks you to make any improvements or fix any issues please first read the file src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java to get the latest version.",
+                    " If the user asks you to make any improvements or fix any issues please first read the file src/main/java/com/java_template/prototype/EntityControllerPrototype.java to get the latest version.",
                     " Then use your own judgement to introduce changes necessary for the user. Do not simply reuse the file content you read; always generate a new, modified version of the code that reflects the user's latest requests.",
-                    " Finally, make sure to save the file only after you have applied the required changes. Carefully verify that the updated content reflects your modifications, and do not proceed with saving unless actual updates have been made. Finally apply the necessary changes to the src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java file. And let the user know what changes you introduced and why.",
+                    " Finally, make sure to save the file only after you have applied the required changes. Carefully verify that the updated content reflects your modifications, and do not proceed with saving unless actual updates have been made. Finally apply the necessary changes to the src/main/java/com/java_template/prototype/EntityControllerPrototype.java file. And let the user know what changes you introduced and why.",
                     " If the user just asks any general question or a question about the code, read the EntityControllerPrototype.java file if necessary, answer the question, no save needed in this case.",
                     " Call finish_discussion only once the user is happy with the result or asks to proceed. "
                   ]
@@ -1359,7 +1359,7 @@
                   "type": "function",
                   "function": {
                     "name": "read_file",
-                    "description": "Read the contents of src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java file.",
+                    "description": "Read the contents of src/main/java/com/java_template/prototype/EntityControllerPrototype.java file.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1367,7 +1367,7 @@
                         "filename": {
                           "type": "string",
                           "enum": [
-                            "src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java"
+                            "src/main/java/com/java_template/prototype/EntityControllerPrototype.java"
                           ]
                         }
                       },
@@ -1382,7 +1382,7 @@
                   "type": "function",
                   "function": {
                     "name": "save_file",
-                    "description": "Save changes to src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java to the repository so that the user can view the changes to the entity/EntityControllerPrototype.java. Apply this function if you make changes to entity/EntityControllerPrototype.java (fix issues, make improvements, adjustments according to the user request). No need to apply this function if the code does not require changes and you're answering a general question.",
+                    "description": "Save changes to src/main/java/com/java_template/prototype/EntityControllerPrototype.java to the repository so that the user can view the changes to the entity/EntityControllerPrototype.java. Apply this function if you make changes to entity/EntityControllerPrototype.java (fix issues, make improvements, adjustments according to the user request). No need to apply this function if the code does not require changes and you're answering a general question.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1393,7 +1393,7 @@
                         "filename": {
                           "type": "string",
                           "enum": [
-                            "src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java"
+                            "src/main/java/com/java_template/prototype/EntityControllerPrototype.java"
                           ]
                         }
                       },
@@ -1433,10 +1433,10 @@
                 {
                   "role": "user",
                   "content": [
-                    " Hello! Please do your best to help the user with just generated src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java code.",
-                    " If the user asks you to make any improvements or fix any issues please first read the file src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java to get the latest version.",
+                    " Hello! Please do your best to help the user with just generated src/main/java/com/java_template/prototype/EntityControllerPrototype.java code.",
+                    " If the user asks you to make any improvements or fix any issues please first read the file src/main/java/com/java_template/prototype/EntityControllerPrototype.java to get the latest version.",
                     " Then use your own judgement to introduce changes necessary for the user. Do not simply reuse the file content you read; always generate a new, modified version of the code that reflects the user's latest requests.",
-                    " Finally, make sure to save the file only after you have applied the required changes. Carefully verify that the updated content reflects your modifications, and do not proceed with saving unless actual updates have been made. Finally apply the necessary changes to the src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java file. And let the user know what changes you introduced and why.",
+                    " Finally, make sure to save the file only after you have applied the required changes. Carefully verify that the updated content reflects your modifications, and do not proceed with saving unless actual updates have been made. Finally apply the necessary changes to the src/main/java/com/java_template/prototype/EntityControllerPrototype.java file. And let the user know what changes you introduced and why.",
                     " If the user just asks any general question or a question about the code, read the prototype file if necessary, answer the question, no save needed in this case.",
                     " Call finish_discussion only once the user is happy with the result or asks to proceed. "
                   ]
@@ -1519,29 +1519,29 @@
                     "Your task is to refactor the code so that all interactions with the local cache are replaced by calls to an external service called com.java_template.common.service.EntityService. Note, that EntityService is a bean, so inject it with CyodaEntityControllerPrototype constructor.",
                     "You can use only these functions for replacement - if this is not enough just skip and leave as is",
                     "1. CompletableFuture<UUID> idFuture = entityService.addItem(",
-                    "    entityModel=\"{entity_name}\",",
+                    "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,  # always use this constant",
                     "    entity=data  # the validated data object",
                     ")",
                     "Note: entityService.addItem returns technicalId of the created entity.",
                     "CompletableFuture<List<UUID>> addItems idsFuture = entityService.addItems(",
-                    "    entityModel=\"{entity_name}\",",
+                    "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,  # always use this constant",
                     "    entities=data",
                     ")",
                     "Note: entityService.addItems returns a list of technicalIds of the created entities.",
                     "2. Data retrieval:",
                     "CompletableFuture<ObjectNode> itemFuture = entityService.getItem(",
-                    "    entityModel=\"{entity_name}\",",
+                    "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,",
                     "    technicalId=<id>",
                     ")",
                     "CompletableFuture<ArrayNode> itemsFuture = entityService.getItems(",
-                    "    entityModel=\"{entity_name}\",",
+                    "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,",
                     ")",
                     "CompletableFuture<ArrayNode> filteredItemsFuture = entityService.getItemsByCondition(",
-                    "    entityModel=\"{entity_name}\",",
+                    "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,",
                     "    condition=condition",
                     ")",
@@ -1574,7 +1574,7 @@
                     "Pass the resulting SearchConditionRequest as the third argument (condition) to:",
                     "entityService.getItemsByCondition(entityModel, entityVersion, condition)",
                     "3. CompletableFuture<UUID> updatedItemId = entityService.updateItem(",
-                    "    entityModel=\"{entity_name}\",",
+                    "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,  # always use this constant",
                     "    technicalId=id, #technicalId is required",
                     "    entity=data,",
@@ -1582,13 +1582,13 @@
                     "Note: entityService.updateItem returns technicalId of the updated entity.",
                     "Use @JsonIgnore on fields like 'technicalId' and pass the original Java object directly to addItem or updateItem without converting to ObjectNode.",
                     "4. CompletableFuture<UUID> deletedItemId = entityService.deleteItem(",
-                    "    entityModel=\"{entity_name}\",",
+                    "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,  # always use this constant",
                     "    technicalId=id,",
                     ")",
                     "Note: entityService.deleteItem returns technicalId of the deleted entity.",
                     "5. CompletableFuture<ArrayNode> deletedItemsInfo = entityService.deleteItems(",
-                    "    entityModel=\"{entity_name}\",",
+                    "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,  # always use this constant",
                     ")",
                     "Note: entityService.deleteItems returns an array containing result information, for example: '[{\"entityModelClassId\": \"d16a966a-37e4-11f0-8bfa-00000ae966a9\",\"deleteResult\": {\"numberOfEntitites\": 18,\"numberOfEntititesRemoved\": 18,\"idToError\": {}}}]'",
@@ -1611,12 +1611,12 @@
               ],
               "input": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/prototype/EntityControllerPrototype.java"
+                  "src/main/java/com/java_template/prototype/EntityControllerPrototype.java"
                 ]
               },
               "output": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/CyodaEntityControllerPrototype.java"
+                  "src/main/java/com/java_template/prototype/CyodaEntityControllerPrototype.java"
                 ]
               }
             }
@@ -1644,24 +1644,24 @@
                     "Hello, entityService.addItem has changed, now it additionally expects entity workflow function as an argument. This function will be applied to the entity before it is persisted.",
                     "e.g.",
                     "CompletableFuture<UUID> idFuture = entityService.addItem(",
-                    "    entityModel=\"{entity_name}\",",
+                    "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,  // always use this constant",
                     "    entity=data,  // the validated data object",
-                    "    workflow=process{entity_name} // Workflow function applied to the entity asynchronously before persistence. This function takes this entity data as the only argument and returns it back. You can change entity state inside this function, get and add entities with a different entityModel (but cannot add/update/delete entity of the same entityModel - it will cause infinite recursion)",
+                    "    workflow=process{EntityName} // Workflow function applied to the entity asynchronously before persistence. This function takes this entity data as the only argument and returns it back. You can change entity state inside this function, get and add entities with a different entityModel (but cannot add/update/delete entity of the same entityModel - it will cause infinite recursion)",
                     ")",
-                    "workflow=process{entity_name}, this function should have a prefix 'process' which is followed by the entity name.",
+                    "workflow=process{EntityName}, this function should have a prefix 'process' which is followed by the entity name.",
                     "Could you please update this code: add workflow function as a parameter and implement it. Return complete Java code."
                   ]
                 }
               ],
               "input": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/CyodaEntityControllerPrototype.java"
+                  "src/main/java/com/java_template/prototype/CyodaEntityControllerPrototype.java"
                 ]
               },
               "output": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
+                  "src/main/java/com/java_template/prototype/PrototypeCyodaWorkflow.java"
                 ]
               }
             }
@@ -1686,10 +1686,10 @@
                 {
                   "role": "user",
                   "content": [
-                    "What do you think, can we move any logic from the endpoint inside newly added functions (workflow=process{entity_name}) that will be invoked right before persisting entity.",
+                    "What do you think, can we move any logic from the endpoint inside newly added functions (workflow=process{EntityName}) that will be invoked right before persisting entity.",
                     "It will make our code more robust and will 'free' the controllers from excessive logic.",
-                    "Any async task (including fire and forget functions) is definitely a candidate to be replaced with process{entity_name} function as workflow function supports asynchronous code and is a direct alternative for such tasks. It is the right approach - this is required.",
-                    "Please do your best to move all the async functions to workflow=process{entity_name} functions.",
+                    "Any async task (including fire and forget functions) is definitely a candidate to be replaced with process{EntityName} function as workflow function supports asynchronous code and is a direct alternative for such tasks. It is the right approach - this is required.",
+                    "Please do your best to move all the async functions to workflow=process{EntityName} functions.",
                     "Workflow function applied to the entity asynchronously before persistence. This function takes this entity data as the only argument. You can change entity state inside this function e.g. entity.put(...).",
                     "You can get and add secondary/supplementary/raw data entities of a different entityModel.",
                     "You cannot apply entityService.addItem/updateItem/deleteItem on the current entity! The entity is an ObjectNode. If you need to change this entity state - modify directly e.g. entity.put(...). The new state will be persisted."
@@ -1698,7 +1698,7 @@
               ],
               "output": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
+                  "src/main/java/com/java_template/prototype/PrototypeCyodaWorkflow.java"
                 ]
               }
             }
@@ -1732,7 +1732,7 @@
               ],
               "output": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
+                  "src/main/java/com/java_template/prototype/PrototypeCyodaWorkflow.java"
                 ]
               }
             }
@@ -1788,10 +1788,43 @@
                     "You need to identify each entity that is saved with entityService.addItems(ENTITY_NAME, ENTITY_VERSION, entititesToAdd, this::workflowFunction);",
                     "",
                     "For each entity, call add_application_resource with:",
-                    "- resource_path: 'src/main/java/com/java_template/application/entity/{entity_name}/{EntityName}.java'",
+                    "- resource_path: 'src/main/java/com/java_template/application/entity/{EntityName}.java'",
                     "- file_contents: entity java pojo with lombok data annotation",
                     "",
-                    "Entity naming: {entity_name} lowercase underscore, {EntityName} PascalCase",
+                    "Use this entity class template (replace EntityName with your actual entity name):",
+                    "",
+                    "package com.java_template.application.entity;",
+                    "",
+                    "import com.java_template.common.workflow.CyodaEntity;",
+                    "import com.java_template.common.workflow.OperationSpecification;",
+                    "import org.cyoda.cloud.api.event.common.ModelSpec;",
+                    "import lombok.Data;",
+                    "",
+                    "@Data",
+                    "public class EntityName implements CyodaEntity {",
+                    "//some data here",
+                    "",
+                    "    public EntityName() {}",
+                    "",
+                    "    @Override",
+                    "    public OperationSpecification getModelKey() {",
+                    "        ModelSpec modelSpec = new ModelSpec();",
+                    "        modelSpec.setName(\"entityName\");",
+                    "        modelSpec.setVersion(Integer.parseInt(ENTITY_VERSION));",
+                    "        return new OperationSpecification.Entity(modelSpec, \"entityName\");",
+                    "    }",
+                    "",
+                    "    @Override",
+                    "    public boolean isValid() {",
+                    "        return true",
+                    "    }",
+                    "}",
+                    "",
+                    "Replace:",
+                    "- EntityName with your actual entity class name (PascalCase)",
+                    "- entityName with your actual entity name (camelCase)",
+                    "- Add appropriate fields based on the prototype code",
+                    "- Implement proper validation logic in isValid() method",
                     "",
                     "Prototype code:"
                   ]
@@ -1799,7 +1832,7 @@
               ],
               "input": {
                 "local_fs": [
-                  "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
+                  "src/main/java/com/java_template/prototype/PrototypeCyodaWorkflow.java"
                 ]
               }
             }
@@ -1861,7 +1894,7 @@
                     "Avoid loops.",
                     "",
                     "Call add_application_resource with:",
-                    "- resource_path: 'src/main/java/com/java_template/application/entity/{entity_name}/Workflow.json'",
+                    "- resource_path: 'src/main/java/com/java_template/application/entity/{EntityName}.json'",
                     "- file_contents: workflow json configuration",
                     "",
                     "JSON Example of the Workflow:",
@@ -1986,11 +2019,16 @@
                 {
                   "role": "user",
                   "content": [
-                    "Now for each processor that you've outlined in the workflows configurations,",
+                    "Now for each processor name that you've outlined in the workflows configurations,",
+                    "  like here:        \"processors\": [",
+                    "            {",
+                    "              \"name\": \"ExampleProcessorName\"",
+                    "            }",
+                    "          ],",
                     "please provide the code for it based on the prototype code and call add_application_resource tool with processor name and content - processor java code.",
                     "",
                     "Call add_application_resource with:",
-                    "- resource_path: 'src/main/java/com/java_template/application/processor/{ProcessorName}.java'",
+                    "- resource_path: 'src/main/java/com/java_template/application/processor/{ExampleProcessorName}.java'",
                     "- file_contents: processor java code using CyodaProcessor interface",
                     "",
                     "Processor Interface Requirements",
@@ -2004,7 +2042,8 @@
                     "",
                     "@Override",
                     "public boolean supports(OperationSpecification modelSpec) {",
-                    "    return \"entity_name\".equals(modelSpec.modelKey().getName()) &&",
+                    "    return \"ProcessorName\".equals(modelSpec.operationName()) &&",
+                    "           \"entityName\".equals(modelSpec.modelKey().getName()) &&",
                     "           Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
                     "}",
                     "",
@@ -2012,7 +2051,7 @@
                     "Processor Class Prototype (Use this pattern)",
                     "",
                     "package com.java_template.application.processor;",
-                    "import com.java_template.application.entity.pet.Pet;",
+                    "import com.java_template.application.entity.EntityName;",
                     "import com.java_template.common.serializer.ErrorInfo;",
                     "import com.java_template.common.serializer.ProcessorSerializer;",
                     "import com.java_template.common.serializer.SerializerFactory;",
@@ -2031,14 +2070,14 @@
                     "import java.util.stream.Collectors",
                     "",
                     "@Component",
-                    "public class ExampleProcessor implements CyodaProcessor {",
+                    "public class ExampleProcessorName implements CyodaProcessor {",
                     "",
                     "    private final Logger logger = LoggerFactory.getLogger(this.getClass());",
                     "    private final ProcessorSerializer serializer;",
                     "",
-                    "    public ExampleProcessor(SerializerFactory serializerFactory) {",
+                    "    public ExampleProcessorName(SerializerFactory serializerFactory) {",
                     "        this.serializer = serializerFactory.getDefaultProcessorSerializer();",
-                    "        logger.info(\"ExampleProcessor initialized with SerializerFactory\");",
+                    "        logger.info(\"ExampleProcessorName initialized with SerializerFactory\");",
                     "    }",
                     "",
                     "    @Override",
@@ -2058,7 +2097,8 @@
                     "",
                     "    @Override",
                     "    public boolean supports(OperationSpecification modelSpec) {",
-                    "        return \"entity_name\".equals(modelSpec.modelKey().getName()) &&",
+                    "        return \"ExampleProcessorName\".equals(modelSpec.operationName()) &&",
+                    "               \"entityName\".equals(modelSpec.modelKey().getName()) &&",
                     "               Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
                     "    }",
                     "",
@@ -2066,7 +2106,9 @@
                     "}",
                     "Replace:",
                     "",
+                    "ExampleProcessorName with the actual processor name from workflow configuration (processors.name)",
                     "EntityName with your actual entity class",
+                    "entityName with your actual entity name (camelCase)",
                     "",
                     "Logic placeholders (applyTransformation1, handleEntityNameError, etc.) with real implementations as needed.",
                     "",
@@ -2157,11 +2199,19 @@
                 {
                   "role": "user",
                   "content": [
-                    "Now for each criterion that you've outlined in the workflows configurations,",
+                    "Now for each criterion (if the workflow json has any criteria of type function and only for them) that you've outlined in the workflows configurations,",
+                    "  like here:        \"criteria\": [",
+                    "            {",
+                    "              \"type\": \"function\",",
+                    "              \"function\": {",
+                    "                \"name\": \"ExampleCriterionName\"",
+                    "              }",
+                    "            }",
+                    "          ]",
                     "please provide the code for it based on the prototype code and call add_application_resource tool with criterion name and content - criterion java code.",
                     "",
                     "Call add_application_resource with:",
-                    "- resource_path: 'src/main/java/com/java_template/application/criteria/{CriteriaName}.java'",
+                    "- resource_path: 'src/main/java/com/java_template/application/criteria/{ExampleCriterionName}.java'",
                     "- file_contents: criteria java code using CyodaCriterion interface",
                     "",
                     "Criterion Interface Requirements",
@@ -2175,14 +2225,15 @@
                     "",
                     "@Override",
                     "public boolean supports(OperationSpecification modelSpec) {",
-                    "    return \"entity_name\".equals(modelSpec.modelKey().getName()) &&",
+                    "    return \"ExampleCriterionName\".equals(modelSpec.operationName()) &&",
+                    "           \"entityName\".equals(modelSpec.modelKey().getName()) &&",
                     "           Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
                     "}",
                     "",
                     "",
                     "Processor Class Criterion (Use this pattern)",
                     "",
-                    "import com.java_template.application.entity.pet.Pet;",
+                    "import com.java_template.application.entity.EntityName;",
                     "import com.java_template.common.serializer.CriterionSerializer;",
                     "import com.java_template.common.serializer.ErrorInfo;",
                     "import com.java_template.common.serializer.EvaluationOutcome;",
@@ -2200,14 +2251,14 @@
                     "import org.springframework.stereotype.Component;",
                     "import java.util.Set;",
                     "@Component",
-                    "public class ExampleCriterion implements CyodaCriterion {",
+                    "public class ExampleCriterionName implements CyodaCriterion {",
                     "",
                     "    private final Logger logger = LoggerFactory.getLogger(this.getClass());",
                     "    private final CriterionSerializer serializer;",
                     "",
-                    "    public ExampleCriterion(SerializerFactory serializerFactory) {",
+                    "    public ExampleCriterionName(SerializerFactory serializerFactory) {",
                     "        this.serializer = serializerFactory.getDefaultCriteriaSerializer();",
-                    "        logger.info(\"ExampleCriterion initialized with SerializerFactory\");",
+                    "        logger.info(\"ExampleCriterionName initialized with SerializerFactory\");",
                     "    }",
                     "",
                     "    @Override",
@@ -2227,7 +2278,8 @@
                     "",
                     "    @Override",
                     "    public boolean supports(OperationSpecification modelSpec) {",
-                    "        return \"entity_name\".equals(modelSpec.modelKey().getName()) &&",
+                    "        return \"ExampleCriterionName\".equals(modelSpec.operationName()) &&",
+                    "               \"entityName\".equals(modelSpec.modelKey().getName()) &&",
                     "               Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
                     "    }",
                     "",
@@ -2235,7 +2287,9 @@
                     "}",
                     "Replace:",
                     "",
+                    "ExampleCriterionName with the actual criterion name from workflow configuration (criteria.function.name)",
                     "EntityName with your actual entity class",
+                    "entityName with your actual entity name (camelCase)",
                     "",
                     "Logic placeholders (applyTransformation1, handleEntityNameError, etc.) with real implementations as needed.",
                     "",
@@ -2290,7 +2344,7 @@
               "publish": false,
               "model": {},
               "memory_tags": [
-                "update_routes_file"
+                "generate_workflow_from_prototype"
               ],
               "messages": [
                 {
@@ -2357,8 +2411,8 @@
                 "description": "delete_files",
                 "parameters": {
                   "files": [
-                    "src/main/java/com/java_template/entity/CyodaEntityControllerPrototype.java",
-                    "src/main/java/com/java_template/entity/PrototypeCyodaWorkflow.java"
+                    "src/main/java/com/java_template/prototype/CyodaEntityControllerPrototype.java",
+                    "src/main/java/com/java_template/prototype/PrototypeCyodaWorkflow.java"
                   ]
                 }
               },
