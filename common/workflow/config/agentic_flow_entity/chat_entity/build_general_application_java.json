@@ -1893,7 +1893,7 @@
                     "Always start from an initial state 'none'.",
                     "Avoid loops.",
                     "",
-                    "Call add_application_resource with:",
+                    "Call add_application_resource for each entity with:",
                     "- resource_path: 'src/main/java/com/java_template/application/entity/{EntityName}.json'",
                     "- file_contents: workflow json configuration",
                     "",
@@ -1918,7 +1918,7 @@
                     "          \"manual\": true,",
                     "          \"processors\": [",
                     "            {",
-                    "              \"name\": \"ExampleProcessorName\"",
+                    "              \"name\": \"ExampleProcessorName1\" #you'll need to implement this processor java class",
                     "            }",
                     "          ]",
                     "        }",
@@ -1930,14 +1930,14 @@
                     "          \"next\": \"state_criterion_check_01\",",
                     "          \"processors\": [",
                     "            {",
-                    "              \"name\": \"ExampleProcessorName\"",
+                    "              \"name\": \"ExampleProcessorName2\" #you'll need to implement this processor java class",
                     "            }",
                     "          ],",
                     "          \"criteria\": [",
                     "            {",
                     "              \"type\": \"function\",",
                     "              \"function\": {",
-                    "                \"name\": \"ExampleCriterionName\"",
+                    "                \"name\": \"ExampleCriterionName1\" #you'll need to implement this criterion java class",
                     "              }",
                     "            }",
                     "          ]",
@@ -1979,6 +1979,83 @@
     "workflows_generated": {
       "transitions": {
         "generate_processors_from_workflows": {
+          "next": "operations_extracted",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": false,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_application_resource",
+                    "description": "Add application resource file with path and content",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "resource_path": {
+                          "type": "string",
+                          "description": "Full relative path to the resource including filename"
+                        },
+                        "file_contents": {
+                          "type": "string",
+                          "description": "Content of the file to be written"
+                        }
+                      },
+                      "required": [
+                        "resource_path",
+                        "file_contents"
+                      ]
+                    }
+                  }
+                }
+              ],
+              "memory_tags": [
+                "generate_workflow_from_prototype"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Please analyze all the workflow JSON files you have created and extract all processor names and criteria names.",
+                    "",
+                    "Create a consolidated operations.json file that lists all processors and criteria from all workflows.",
+                    "",
+                    "Call add_application_resource with:",
+                    "- resource_path: 'src/main/java/com/java_template/application/operations.json'",
+                    "- file_contents: JSON containing all processor and criteria names",
+                    "",
+                    "Expected JSON format:",
+                    "{",
+                    "  \"processors\": [",
+                    "    \"ExampleProcessorName1\",",
+                    "    \"ExampleProcessorName2\"",
+                    "  ],",
+                    "  \"criteria\": [",
+                    "    \"ExampleCriterionName1\",",
+                    "  ]",
+                    "}",
+                    "",
+                    "Extract processor names from workflows where processors are defined as:",
+                    "\"processors\": [{ \"name\": \"ExampleProcessorName1\" }]",
+                    "",
+                    "Extract criteria names from workflows where criteria are defined as:",
+                    "\"criteria\": [{ \"type\": \"function\", \"function\": { \"name\": \"ExampleCriterionName1\" } }]",
+                    "",
+                    "Only include criteria of type 'function', ignore group criteria."
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "operations_extracted": {
+      "transitions": {
+        "analyze_workflows_and_extract_operations": {
           "next": "processors_generated",
           "action": {
             "name": "process_event",
@@ -2020,11 +2097,6 @@
                   "role": "user",
                   "content": [
                     "Now for each processor name that you've outlined in the workflows configurations,",
-                    "  like here:        \"processors\": [",
-                    "            {",
-                    "              \"name\": \"ExampleProcessorName\"",
-                    "            }",
-                    "          ],",
                     "please provide the code for it based on the prototype code and call add_application_resource tool with processor name and content - processor java code.",
                     "",
                     "Call add_application_resource with:",
@@ -2150,7 +2222,14 @@
                     "After each processor is generated, call the add_application_resource tool like:"
                   ]
                 }
-              ]
+              ],
+              "input": {
+                "local_fs": [
+                  "src/main/java/com/java_template/prototype/PrototypeCyodaWorkflow.java",
+                  "src/main/java/com/java_template/application/operations.json"
+
+                ]
+              }
             }
           }
         }
@@ -2200,14 +2279,6 @@
                   "role": "user",
                   "content": [
                     "Now for each criterion (if the workflow json has any criteria of type function and only for them) that you've outlined in the workflows configurations,",
-                    "  like here:        \"criteria\": [",
-                    "            {",
-                    "              \"type\": \"function\",",
-                    "              \"function\": {",
-                    "                \"name\": \"ExampleCriterionName\"",
-                    "              }",
-                    "            }",
-                    "          ]",
                     "please provide the code for it based on the prototype code and call add_application_resource tool with criterion name and content - criterion java code.",
                     "",
                     "Call add_application_resource with:",
@@ -2309,6 +2380,12 @@
                     "            EvaluationChain withReasonAttachment(ReasonAttachmentStrategy strategy);",
                     "            EntityCriteriaCalculationResponse complete();",
                     "        }",
+                    "",
+                    "// EvaluationOutcome usage:",
+                    "// Success: EvaluationOutcome.success()",
+                    "// Failure: EvaluationOutcome.fail(\"reason\") or EvaluationOutcome.fail(\"reason\", category)",
+                    "// Categories: businessRuleFailure(), dataQualityFailure(), structuralFailure()",
+                    "// Check: outcome.isSuccess(), outcome.isFailure()",
                     "",
                     "@FunctionalInterface",
                     "public interface ReasonAttachmentStrategy {",
