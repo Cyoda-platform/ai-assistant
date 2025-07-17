@@ -1518,8 +1518,7 @@
                     "Currently, the code uses local in‑memory dictionaries (and counters) to store and manage data for one or more entity types.",
                     "Your task is to refactor the code so that all interactions with the local cache are replaced by calls to an external service called com.java_template.common.service.EntityService. Note, that EntityService is a bean, so inject it with CyodaEntityControllerPrototype constructor.",
                     "",
-                    "IMPORTANT: Refactor ONLY the main business entities (maximum 3 entities) that have significant business logic. Keep minor/utility entities in local cache.",
-                    "Focus on entities that represent core business concepts with meaningful operations, not simple lookup tables or configuration data.",
+                    "IMPORTANT: Refactor ONLY the main entities (maximum 3 entities, orchestration entities like 'Job', 'Task' take precedence, then business domain entities) that have significant logic. Keep minor/utility entities in local cache.",
                     "",
                     "You can use only these functions for replacement - if this is not enough just skip and leave as is",
                     "1. CompletableFuture<UUID> idFuture = entityService.addItem(",
@@ -1598,7 +1597,7 @@
                     "Note: entityService.deleteItems returns an array containing result information, for example: '[{\"entityModelClassId\": \"d16a966a-37e4-11f0-8bfa-00000ae966a9\",\"deleteResult\": {\"numberOfEntitites\": 18,\"numberOfEntititesRemoved\": 18,\"idToError\": {}}}]'",
                     "use 'import static com.java_template.common.config.Config.*;' to import ENTITY_VERSION",
                     "Add this code:",
-                    "package com.java_template.entity;",
+                    "package com.java_template.prototype;",
                     "use this class name 'CyodaEntityControllerPrototype'",
                     "Lombok is already configured in the project via io.freefair.lombok plugin. Please use Lombok annotations like @Data, @Getter, @Setter, @AllArgsConstructor, @NoArgsConstructor, etc., instead of manually writing getters, setters, and constructors, and make sure to include the necessary Lombok imports in the generated code.",
                     "Make sure to assign a unique @RequestMapping path to each controller to avoid conflicts. Do not reuse the same base path across multiple controllers.\n",
@@ -1786,9 +1785,9 @@
                     "Focus on entities that have meaningful business operations beyond simple data manipulation.",
                     "",
                     "Workflow is a finite state machine (FSM) that consists of states and transitions.",
-                    "Each state has a dictionary of transitions. Each transition has a next attribute, with the next state.",
-                    "Each transition may have an action (a name of a processor java class that will implement the process code).",
-                    "Each transition may have a condition (a name of a condition java class that will implement the validation code or a group condition).",
+                    "Each state has a list of transitions. Each transition has a next attribute, with the next state.",
+                    "Each transition may have an processor (a name of a processor java class that will implement the process code).",
+                    "Each transition may have a criterion (a name of a condition java class that will implement the validation code or a group condition).",
                     "Always start from an initial state 'none'.",
                     "Avoid loops.",
                     "",
@@ -1811,7 +1810,7 @@
                     "      }",
                     "    },",
                     "    \"state_01\": {",
-                    "      \"transitions\": {",
+                    "      \"transitions\": [",
                     "        \"transition_to_02\": {",
                     "          \"next\": \"state_02\",",
                     "          \"manual\": true,",
@@ -1821,10 +1820,10 @@
                     "            }",
                     "          ]",
                     "        }",
-                    "      }",
+                    "      ]",
                     "    },",
                     "    \"state_02\": {",
-                    "      \"transitions\": {",
+                    "      \"transitions\": [",
                     "        \"transition_with_criterion_simple\": {",
                     "          \"next\": \"state_criterion_check_01\",",
                     "          \"processors\": [",
@@ -1841,7 +1840,7 @@
                     "            }",
                     "          ]",
                     "        }",
-                    "      }",
+                    "      ]",
                     "    },",
                     "  }",
                     "}"
@@ -1985,14 +1984,12 @@
                     "        EntityProcessorCalculationRequest request = context.getEvent();",
                     "        logger.info(\"Processing EntityName for request: {}\", request.getId());",
                     "",
+                    "        // Fluent entity processing with validation",
                     "        return serializer.withRequest(request)",
-                    "                .toEntity(EntityName.class)",
-                    "                .withErrorHandler(this::handleEntityNameError)",
-                    "                .validate(this::isValidEntity, \"Invalid entity state\")",
-                    "                .map(this::applyTransformation1)",
-                    "                .map(this::applyTransformation2)",
-                    "                .validate(this::businessValidation, \"Failed business rules\")",
-                    "                .complete();",
+                    "            .toEntity(EntityName.class)",
+                    "            .validate(this::isValidEntity, \"Invalid entity state\")",
+                    "            .map(this::applyTransformation1)",
+                    "            .complete();",
                     "    }",
                     "",
                     "    @Override",
@@ -2002,7 +1999,7 @@
                     "               Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
                     "    }",
                     "",
-                    "    // Helper methods like isValidEntity, handleEntityNameError, etc.",
+                    "    // Helper methods like isValidEntity, applyTransformation1, etc.",
                     "}",
                     "Replace:",
                     "",
@@ -2010,7 +2007,7 @@
                     "EntityName with your actual entity class",
                     "entityName with your actual entity name (camelCase)",
                     "",
-                    "Logic placeholders (applyTransformation1, handleEntityNameError, etc.) with real implementations as needed.",
+                    "Logic placeholders (applyTransformation1, isValidEntity, etc.) with real implementations as needed.",
                     "ONLY use existing entity properties - do not access non-existent getters/setters.",
                     "",
                     "    public interface ProcessorSerializer {",
@@ -2184,19 +2181,14 @@
                     "    }",
                     "",
                     "    @Override",
-                    "        public EntityCriteriaCalculationResponse check(CyodaEventContext<EntityCriteriaCalculationRequest> context) {",
-                    "            EntityCriteriaCalculationRequest request = context.getEvent();",
-                    "            logger.debug(\"Checking EntityName validity for request: {}\", request.getId());",
+                    "    public EntityCriteriaCalculationResponse check(CyodaEventContext<EntityCriteriaCalculationRequest> context) {",
+                    "        EntityCriteriaCalculationRequest request = context.getEvent();",
                     "",
-                    "            return serializer.withRequest(request)",
-                    "                .evaluateEntity(EntityName.class, this::validateEntityName)",
-                    "                .withReasonAttachment(ReasonAttachmentStrategy.toWarnings())",
-                    "                .withErrorHandler((error, entityName) -> {",
-                    "                    logger.debug(\"EntityName validation failed for request: {}\", request.getId(), error);",
-                    "                    return ErrorInfo.validationError(\"EntityName validation failed: \" + error.getMessage());",
-                    "                })",
-                    "                .complete();",
-                    "        }",
+                    "        return serializer.withRequest(request)",
+                    "            .evaluateEntity(EntityName.class, this::applyValidation1)",
+                    "            .withReasonAttachment(ReasonAttachmentStrategy.toWarnings())",
+                    "            .complete();",
+                    "    }",
                     "",
                     "    @Override",
                     "    public boolean supports(OperationSpecification modelSpec) {",
@@ -2205,7 +2197,7 @@
                     "               Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
                     "    }",
                     "",
-                    "    // Helper methods like isValidEntity, handleEntityNameError, etc.",
+                    "    // Helper methods like isValidEntity, applyValidation1, etc.",
                     "}",
                     "Replace:",
                     "",
@@ -2271,7 +2263,7 @@
             "name": "process_event",
             "config": {
               "type": "agent",
-              "publish": true,
+              "publish": false,
               "allow_anonymous_users": true,
               "model": {},
               "memory_tags": [
@@ -2433,29 +2425,6 @@
                       "additionalProperties": false
                     }
                   }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "add_application_resource",
-                    "description": "Save the refactored Controller.java file",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "resource_path": {
-                          "type": "string",
-                          "description": "Path where to save the controller file: 'src/main/java/com/java_template/controller/Controller.java'"
-                        },
-                        "file_contents": {
-                          "type": "string",
-                          "description": "Complete Java code content for the refactored Controller class"
-                        }
-                      },
-                      "required": ["resource_path", "file_contents"],
-                      "additionalProperties": false
-                    }
-                  }
                 }
               ],
               "messages": [
@@ -2476,16 +2445,19 @@
                     "3. Review any specific entities, processors, and criteria files (if you need to understand what was moved)",
                     "4. Create a new Controller class that:",
                     "   - Keeps the REST API endpoints from CyodaEntityControllerPrototype",
-                    "   - PRESERVES ALL EntityService invocations, especially .addItems() calls - these MUST stay intact",
+                    "   - PRESERVES ALL EntityService invocations, especially .addItem() calls - these MUST stay intact",
                     "   - Removes business logic that was moved to processors/criteria",
                     "   - Removes code that is no longer necessary",
                     "   - Renames the class to 'Controller'",
                     "   - Fixes imports appropriately",
+                    "   - Do not import anything from CyodaEntityControllerPrototype directly, as CyodaEntityControllerPrototype will be deleted. Either move dtos from there to your code or use entities from the entity package",
                     "   - Injects ObjectMapper via constructor instead of creating new instances",
                     "   - Includes proper SLF4J logging",
                     "   - Follows Spring Boot best practices",
+                    "   - Use package com.java_template.controller;",
+                    "   - Make sure at least oone entityService.addItem() call is present in the controller.",
                     "",
-                    "CRITICAL: EntityService calls (especially .addItems()) must remain in the controller because:",
+                    "CRITICAL: EntityService calls (especially .addItem()) must remain in the controller because:",
                     "- Processors are triggered by Cyoda external orchestration AFTER entity persistence",
                     "- The controller is responsible for persisting entities via EntityService",
                     "- Business logic was moved to processors, but persistence logic stays in controller",
@@ -2493,12 +2465,18 @@
                     "IMPORTANT: Focus on keeping only the API layer responsibilities - routing, request/response handling, and delegation to services.",
                     "Remove any business logic, data processing, or validation that should be in processors/criteria, but keep all EntityService persistence calls.",
                     "",
-                    "Use add_application_resource to save the final Controller.java file."
+                    "OUTPUT: Provide the complete refactored Controller.java code. The system will automatically save it to the correct location.",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```."
                   ]
                 }
               ],
               "tool_choice": "auto",
               "max_iteration": 10,
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/controller/Controller.java"
+                ]
+              },
               "approve": true
             }
           }
@@ -2524,7 +2502,7 @@
                   "filename": ".env.template"
                 }
               },
-              "publish": true
+              "publish": false
             }
           }
         }
