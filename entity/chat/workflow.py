@@ -195,6 +195,7 @@ class ChatWorkflow(Workflow):
             'add_new_workflow': self.application_editor_service.add_new_workflow,
 
             # Workflow Management
+            'launch_gen_app_workflows': self.workflow_management_service.launch_gen_app_workflows,
             'register_workflow_with_app': self.workflow_management_service.register_workflow_with_app,
             'validate_workflow_design': self.workflow_management_service.validate_workflow_design,
             'has_workflow_code_validation_succeeded': self.workflow_management_service.has_workflow_code_validation_succeeded,
