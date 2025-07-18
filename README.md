@@ -1,86 +1,180 @@
+<br>
+<div style="text-align: center;">
+  <img src="assets/logo.png" alt="AI Assistant Logo" width="150" />
+</div>
+
+<h1 style="text-align: center; margin-top: 0;">AI Assistant</h1>
+
+<div style="text-align: center;">
+  <strong>
+    Build, deploy and scale data-intensive operational services.
+  </strong><br/>
+Cyoda’s AI Assistant creates complete prototype backend services for the <a href="https://www.cyoda.com/application-platform">Cyoda Application Platform</a>.<br/>  
+It automates entity design, workflows, processes, rules, and queries, enabling developers to build scalable services 20x faster.
+
+</div>
+
+---
+
+## 🔗 Quick Links
+
+- [🚀 Features](#-features)
+- [🛠️ Setup (for Local Use)](#-setup-for-local-use)
+  - [1. Clone the Repository](#1-clone-the-repository)
+  - [2. Set Up the Python Environment](#2-set-up-the-python-environment)
+  - [3. Configure Environment Variables](#3-configure-environment-variables)
+- [📄 Workflow Setup (One-Time)](#-workflow-setup-one-time)
+  - [4. Convert Workflows](#4-convert-workflows)
+  - [5. Import Workflows to Cyoda](#5-import-workflows-to-cyoda)
+- [💻 Run the Backend Application](#-run-the-backend-application)
+- [🖥️ Run the UI](#-run-the-ui)
+- [📁 Project Structure](#-project-structure)
+- [📚 License](#-license)
+- [🙋‍♂️ Support](#-support)
+
+---
+
+## 🚀 Features
+
 Building applications that support:
 
-*Data Ingestion, Processing, and Validation
-
-*Batch Processing and Scheduling
-
-*User Interaction and Notification Systems
-
-*Reporting, Analytics, and Data Aggregation
-
-*Data Enrichment and Secondary Data Generation
-
-*Business Logic Implementation
-
-*System & API Integration
-
-*Data Backup, Recovery, Export/Import
-
+- Data Ingestion, Processing, and Validation
+- Batch Processing and Scheduling
+- User Interaction and Notification Systems
+- Reporting, Analytics, and Data Aggregation
+- Data Enrichment and Secondary Data Generation
+- Business Logic Implementation
+- System & API Integration
+- Data Backup, Recovery, Export/Import
 
 Purpose:
-Summarizing data from multiple sources to provide a holistic view (e.g., aggregating sales data across multiple regions).
+Summarizing data from multiple sources to provide a holistic view (e.g., aggregating sales data across multiple regions).  
 Ideal for generating reports, dashboards, and insights.
 
+---
 
-= 🧠 How to Run AI Assistant Locally
+## 🛠️ Setup (for Local Use)
+*Prefer using the assistant locally to keep your projects private.*
 
-== 1. Set Up the Python Environment
+### 📦 Prerequisites
 
-Make sure you have Python 3.12 installed.
+- Python 3.12
+- Git
+- Access to Cyoda environment
+- API keys for:
+  - AI provider (e.g. OpenAI)
+  - Search API provider (if used)
 
-Create and activate a virtual environment:
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Cyoda-platform/ai-assistant.git
+cd ai-assistant
+```
+
+### 2. Set Up the Python Environment
 
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-In your IDE, select this virtual environment as the Python interpreter if needed.
+**Note**: After creating and activating the virtual environment (venv) via the terminal,  
+you may need to manually select this venv as the Python interpreter in your IDE (e.g., PyCharm, VSCode).  
+This ensures that IDE features like Run, Debug, and code completion work correctly with the project environment.
 
-Install the required dependencies:
+### 3. Configure Environment Variables
+
+Rename `.env.template` to `.env`:
 
 ```bash
-  pip install -r requirements.txt
+cp .env.template .env
 ```
 
-== 2. Configure Environment Variables
+Fill in the required variables:
 
-Rename the `.env.template` file to `.env`.
+```env
+# Example
+CYODA_API_KEY=your_cyoda_key
+CYODA_API_SECRET=your_cyoda_secret
+CYODA_HOST=your_cyoda_host
+OPENAI_API_KEY=your_openai_key
+PROJECT_DIR=/home/yourname/projects
+```
 
-Add the environment variable values provided to you.
+---
 
-== 3. Launch the Application
+## 📄 Workflow Setup (One-Time)
 
-Run the application:
+⚠️ Temporary Step
+
+### 4. Convert Workflows
+
+Convert workflow JSONs to Cyoda DTO format:
 
 ```bash
-  python app.py
+python -m common.workflow.workflow_to_dto_converter
 ```
 
-Check the terminal output to verify that the application starts successfully.
+This generates output files in the `outputs/` folder.
 
-== ⚠️ Temporary Step (One-Time Setup)
+**Note:** This manual step will be removed in future versions.
 
-=== 4. Convert Workflows
-
-Run the following script to convert workflows:
-
-```bash
-  python -m common.workflow.workflow_to_dto_converter
-```
-
-This will generate the `outputs/config` directory.
-
-=== 5. Import Workflows
+### 5. Import Workflows to Cyoda
 
 Manually import all workflows from the `outputs/config` directory into your Cyoda environment.
 
-this is a temporary inconvenience
+---
 
-== ✅ Done
+## 💻 Run the Backend Application
 
-The application should now be available and running locally.
+```bash
+python app.py
+```
 
-== 🔗 UI Repository
+✅ Done. The application will be available at http://localhost:5000.
 
-Frontend repository: https://github.com/Cyoda-platform/ai-assistant-ui
+---
+
+## 🖥️ Run the UI
+
+Clone and run the [AI Assistant UI](https://github.com/Cyoda-platform/ai-assistant-ui) project:
+
+```bash
+git clone https://github.com/Cyoda-platform/ai-assistant-ui
+cd ai-assistant-ui
+```
+For detailed setup and running instructions, please refer to the [AI Assistant UI README](https://github.com/Cyoda-platform/ai-assistant-ui#readme).
+
+---
+
+## 📁 Project Structure
+
+```text
+ai-assistant/
+├── app.py                              # Entry point of the application
+├── requirements.txt                    # Python dependencies
+├── .env.template                       # Example environment configuration
+
+├── common/                             # Core logic and modules
+│   └── workflow/                       # Workflows and workflow tools
+│       ├── config/                     # Workflow files (to be converted)
+│       │   └── example_workflow.json   # Example source workflow
+│       ├── outputs/                    # Converted files (e.g., DTOs)
+│       │   └── example_output.json     # Example converted output
+│       └── workflow_to_dto_converter.py # Converts workflows to DTO format
+```
+
+---
+
+## 📚 License
+
+This project is licensed under the Apache License 2.0. See the [LICENSE](./LICENSE) file for details.
+
+---
+
+## 🙋‍♂️ Support
+
+For questions or contributions, open an issue or pull request in this repository.  
+If something goes wrong or you have questions, reach out on [Discord](https://discord.gg/95rdAyBZr2).
