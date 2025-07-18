@@ -495,6 +495,13 @@
                     " You're building a backend application.",
                     " Currently you are focusing on functional requirements, and will cover any non-functional requirement later.",
                     " Let's analyse this request for application building, and clarify any important functional requirements that necessary.",
+                    "Please, help the uset define the functional requirements using an Event-Driven Architecture (EDA) approach.",
+                    "",
+                    "IMPORTANT: Think in terms of entities and events. In EDA:",
+                    "- Each entity add/update operation is an EVENT that triggers automated processing",
+                    "- When you save an entity, Cyoda automatically calls processEntity events",
+                    " For example if we need to ingest data we can have a job entity. Once job entity is saved, processJob event is called where we ingests the data.",
+                    "- Focus on business entities, job entities, or orchestration entities that represent your domain",
                     " Max 3 questions and suggestions at a time - ask only if absolutely necessary. Keep it short so that the user is kept engaged. It is better to say something like - Would you like to A or B, Do i understand correct and you'd prefer A to B - etc",
                     " Ask questions if something is not clear enough and make suggestions that will help us formulate formal specification in the next iterations.",
                     " Make sure your answers are friendly but up-to-the point and do not start with any exclamations, but rather answer the question. Max tokens = 300.",
@@ -584,31 +591,89 @@
                 {
                   "role": "user",
                   "content": [
-                    "Please, help me define the functional requirements for my project using an Event-Driven Architecture (EDA) approach.",
+                    "Please help me define the functional requirements for my project using an Event-Driven Architecture (EDA) approach.",
                     "",
-                    "IMPORTANT: Think in terms of entities and events. In EDA:",
-                    "- Each entity add/update operation is an EVENT that triggers automated processing",
-                    "- When you save an entity, Cyoda automatically calls processEntity events",
+                    "## IMPORTANT EDA CONCEPTS:",
+                    "In Event-Driven Architecture:",
+                    "- Each entity add/update operation is an **EVENT** that triggers automated processing",
+                    "- When you save an entity, Cyoda automatically calls `processEntityName()` events",
+                    "- Example: Save a `Job` entity → triggers `processJob()` event → performs data ingestion",
                     "- Focus on business entities, job entities, or orchestration entities that represent your domain",
+                    "- **Key Pattern**: Entity persistence triggers the process method that does the heavy lifting",
                     "",
-                    "Please outline:",
-                    "1. Business entities that need to be persisted (these will trigger events when saved)",
-                    " Max 3 entities are allowed. Orchestration entities like 'Job', 'Task' take precedence, then business domain entities.",
-                    "2. API endpoints following these rules:",
-                    "   - POST endpoints: For adding/updating entities (triggers events) and any business logic",
-                    "   - GET endpoints: Only for retrieving application results (no external data retrieval)",
-                    "   - Any business logic involving external data sources, calculations, or processing should be in POST endpoints",
-                    "3. Event processing workflows that should happen after entity persistence",
-                    "4. Request/response formats for your endpoints",
+                    "## RESPONSE STRUCTURE:",
+                    "**Start your answer with outlining the entities and their fields in this format:**",
                     "",
-                    "Additionally, provide a visual representation of the user-app interaction using Mermaid diagrams (e.g. journey/sequence) showing:",
-                    "- Entity creation/update flows",
+                    "### 1. Entity Definitions",
+                    "```",
+                    "EntityName:",
+                    "- field1: DataType (description/purpose)",
+                    "- field2: DataType (description/purpose)",
+                    "- status: StatusEnum (entity lifecycle state)",
+                    "```",
+                    "",
+                    "### 2. Process Method Flows",
+                    "**Continue with explaining the basic flow of each processEntityName() method:**",
+                    "",
+                    "**Example:**",
+                    "```",
+                    "processJob() Flow:",
+                    "1. Initial State: Job created with PENDING status",
+                    "2. Validation: Check job parameters and data sources",
+                    "3. Processing: Execute data ingestion/transformation",
+                    "4. Completion: Update status to COMPLETED/FAILED",
+                    "5. Notification: Send results to configured endpoints",
+                    "```",
+                    "",
+                    "## REQUIREMENTS TO DEFINE:",
+                    "",
+                    "### 1. Business Entities (Max 3, Min 1)",
+                    "- **Orchestration entities** (Job, Task, Workflow) take precedence",
+                    "- **Business domain entities** (Order, Customer, Product) are secondary",
+                    "- **Limit**: Only ONE orchestration entity allowed",
+                    "- **Requirement**: At least one entity is mandatory",
+                    "",
+                    "### 2. API Endpoints Design Rules",
+                    "- **POST endpoints**: Entity creation (triggers events) + business logic",
+                    "- **GET endpoints**: ONLY for retrieving stored application results",
+                    "- **Business logic rule**: External data sources, calculations, processing → POST endpoints",
+                    "- **EDA Principle**: Favor immutable entity creation over updates/deletes to maintain event history",
+                    "- **Data Modification**: Instead of PUT/PATCH/DELETE, use POST to create new entity states or status changes",
+                    "This architectural decision aligns well with modern microservices and event-driven patterns where data flows through events rather than direct modifications",
+                    "",
+                    "### 3. Event Processing Workflows",
+                    "Detail what happens in each `processEntityName()` method after entity persistence.",
+                    "",
+                    "### 4. Request/Response Formats",
+                    "Specify JSON structures for all API endpoints.",
+                    "",
+                    "## VISUAL REPRESENTATION:",
+                    "Provide Mermaid diagrams showing:",
+                    "",
+                    "**State Diagram Example:**",
+                    "```mermaid",
+                    "stateDiagram-v2",
+                    "    [*] --> EntityCreated",
+                    "    EntityCreated --> Processing : processEntity()",
+                    "    Processing --> Completed : success",
+                    "    Processing --> Failed : error",
+                    "    Completed --> [*]",
+                    "    Failed --> [*]",
+                    "```",
+                    "",
+                    "**Required Diagrams:**",
+                    "- Entity lifecycle state diagrams",
                     "- Event-driven processing chains",
-                    "- User interaction patterns",
-                    " Do not overcomplicate the requirements. Keep it minimalistic.",
-                    "Ensure that **each Mermaid diagram is enclosed in a complete and valid Markdown code block**, starting with ```mermaid and ending with ``` (on a separate line).",
-                    "Please return markdown document without any additional information and without wrapping it in triple backticks.",
-                    "Make sure there are no unclosed Mermaid blocks — every diagram must end with a closing triple backtick on a separate line."
+                    "- User interaction sequence flows",
+                    "",
+                    "## FORMATTING REQUIREMENTS:",
+                    "- Keep requirements minimalistic and focused",
+                    "- **Each Mermaid diagram must be in complete markdown code blocks**",
+                    "- Start with ```mermaid and end with ``` on separate lines",
+                    "- Return markdown document without triple backtick wrapping",
+                    "- Min 1 entity is mandatory. Max 3 entities.",
+                    " - If there is an orchestration entity (like Job, Task, Workflow), it should be the first one defined.",
+                    "- Ensure all Mermaid blocks are properly closed"
                   ]
                 }
               ]
@@ -877,6 +942,40 @@
     },
     "generated_functional_requirements": {
       "transitions": {
+        "generate_functional_requirements": {
+          "next": "generated_original_requirements",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "memory_tags": [
+                "requirements_generation", "general_memory_tag"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Please return the original requirement specified by the user. It is very important to preserve all the business logic and technical details, like specific APIs and so on.",
+                    "Output format: respond with user stories. Add technical details section with all the APIs, business logic, necessary operations and so on."
+                  ]
+                }
+              ],
+              "input": {},
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/prototype/user_requirement.md"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "generated_original_requirements": {
+      "transitions": {
         "extract_entities_from_prototype": {
           "next": "entities_extracted",
           "action": {
@@ -912,7 +1011,10 @@
                 }
               ],
               "memory_tags": [
-                "generate_workflow_from_prototype", "general_memory_tag", "requirements_generation", "prototype_generation"
+                "generate_workflow_from_prototype",
+                "general_memory_tag",
+                "requirements_generation",
+                "prototype_generation"
               ],
               "messages": [
                 {
@@ -921,7 +1023,8 @@
                     "You are provided with the requirements document.",
                     "",
                     "You need to identify entities from the requirements document.",
-                    "Max 3 entities: orchestration entities like 'Job', 'Task' take precedence, then business domain entities.",
+                    "Min 1 entity, Max 3 entities: orchestration entities like 'Job', 'Task' take precedence, then business domain entities.",
+                    " There can be only one orchestration entity. But you should call add_application_resource at least once",
                     "For each entity, call add_application_resource with:",
                     "- resource_path: 'src/main/java/com/java_template/application/entity/{EntityName}.java'",
                     "- file_contents: entity java pojo with lombok @Data annotation",
@@ -966,6 +1069,7 @@
                     "Use String types for foreign key references when they represent serialized UUIDs\n4. ",
                     "Update validation logic to match the actual field types (use .isBlank() for String fields, not null checks for UUID fields)\n",
                     "5. Ensure @Data annotation from Lombok generates all necessary getters/setters",
+                    " CRITICAL: add_application_resource should be called at least once.",
                     "Requirement:"
                   ]
                 }
@@ -986,97 +1090,68 @@
     "entities_extracted": {
       "transitions": {
         "generate_prototype_sketch": {
-          "next": "prototype_sketch_generated",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "prompt",
-              "publish": true,
-              "allow_anonymous_users": true,
-              "model": {},
-              "input": {},
-              "memory_tags": [
-                "prototype_generation"
-              ],
-              "output": {
-                "local_fs": [
-                  "src/main/java/com/java_template/prototype/EntityControllerPrototype.java"
-                ]
-              },
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "Now that we’ve finalized the API design and entities, please provide the code for the EntityControllerPrototype.java file for a Spring Boot application.",
-                    "The implementation should be a working prototype rather than a production-ready solution.",
-                    "Incorporate any details I’ve already specified—such as entity model classes, external APIs, or specific logic—and use mocks or placeholders only where requirements are unclear or incomplete.",
-                    "Please use real API endpoints where possible. If you introduce mocks or placeholders, clearly mark them with a TODO comment indicating what should be replaced.",
-                    "The goal is to validate the UX and the overall structure of the API before proceeding with a full implementation.",
-                    "Use Spring Web RestController (`@RestController`, `@RequestMapping`, etc.) and annotate endpoints clearly with HTTP verbs like `@GetMapping`, `@PostMapping`, etc. import org.springframework.web.bind.annotation.*;",
-                    "Add prefix 'prototype' to the base path in @RequestMapping (e.g. @RequestMapping(path = \"/prototype/)",
-                    "IMPORTANT: Implement an event-driven approach where:",
-                    "1. Entities are stored in local cache using ConcurrentHashMap to simulate persistence",
-                    "2. After saving to cache, call processEntity method(s) to simulate event processing that Cyoda would trigger",
-                    "3. Use ConcurrentHashMap<String, List<EntityType>> for each entity type to imitate CRUD operations",
-                    "4. Implement basic CRUD operations: create, read, update, delete using the local cache",
-                    "",
-                    "Local Cache Implementation Requirements:",
-                    "- Use ConcurrentHashMap for thread-safe operations",
-                    "- Implement methods like: addEntity(), getEntity(), updateEntity(), deleteEntity()",
-                    "- Each entity type should have its own cache (e.g., Map<String, List<User>> userCache)",
-                    "- Generate unique IDs for entities (UUID or incremental)",
-                    "",
-                    "Event-Driven Flow Implementation:",
-                    "1. POST endpoint receives entity data",
-                    "2. Save entity to local cache (simulating persistence)",
-                    "3. Call processEntity method(s) to simulate Cyoda event processing",
-                    "4. Return response with entity ID and processing status",
-                    "",
-                    "Example Cache Structure:",
-                    "```java",
-                    "private final ConcurrentHashMap<String, List<EntityName>> entityNameCache = new ConcurrentHashMap<>();",
-                    "private final AtomicLong entityIdCounter = new AtomicLong(1);",
-                    "",
-                    "public String addEntityName(EntityName entity) {",
-                    "    String id = String.valueOf(entityIdCounter.getAndIncrement());",
-                    "    entity.setId(id);",
-                    "    entityNameCache.computeIfAbsent(\"entities\", k -> new ArrayList<>()).add(entity);",
-                    "    // Trigger event processing",
-                    "    processEntityName(entity);// CRITICAL: You need to implement this method and give at least some business logic.",
-                    "    return id;",
-                    "}",
-                    "```",
-                    "",
-
-                    "Include proper logging using SLF4J (e.g., `Logger logger = LoggerFactory.getLogger(EntityControllerPrototype.class);`) and use `logger.info(...)` or `logger.error(...)` appropriately.",
-                    "Use Lombok annotations like @Data, @Getter, etc. import lombok.Data etc.",
-                    "When handling org.springframework.web.server.ResponseStatusException, always use getStatusCode() instead of getStatus(). Do not use getReasonPhrase(); use getStatusCode().toString() instead for error field.",
-                    "Use `package com.java_template.prototype;` as the package declaration for this file",
-                    " Try to keep it minimalistic, without complex logic.",
-                    "Please double-check that you are using all the information provided earlier."
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      }
-    },
-    "prototype_sketch_generated": {
-      "transitions": {
-        "generate_prototype": {
           "next": "prototype_completed",
           "action": {
             "name": "process_event",
             "config": {
-              "type": "prompt",
+              "type": "agent",
               "publish": true,
               "allow_anonymous_users": true,
               "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "list_directory_files",
+                    "description": "List all files in 'src/main/java/com/java_template/application/entity' to get the list of entities created",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "directory_path": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "directory_path"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_file",
+                    "description": "Read the contents of a file.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "filename": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "filename"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30,
               "memory_tags": [
+                "requirements_generation",
                 "prototype_generation"
               ],
-              "input": {},
+              "input": {
+                "local_fs": [
+                  "src/main/java/com/java_template/prototype/functional_requirement.md",
+                  "src/main/java/com/java_template/prototype/user_requirement.md"
+                ]
+              },
               "output": {
                 "local_fs": [
                   "src/main/java/com/java_template/prototype/EntityControllerPrototype.java"
@@ -1086,48 +1161,93 @@
                 {
                   "role": "user",
                   "content": [
-                    "Use `package com.java_template.prototype;` as the package declaration for this file",
-                    "Please, add validation annotations for request bodies and query parameters using javax/jakarta validation annotations:",
-                    "import jakarta.validation.constraints.*;",
-                    "Use @Validated on the controller class if needed to enable validation.",
-                    "Use @Valid on method parameters that are request bodies.",
-                    "Use @NotNull, @Size, @Pattern, etc. inside DTO classes for validation. Please use only primitives or String, no nested objects.",
+                    "## Task: Generate EntityControllerPrototype.java",
                     "",
-                    "For POST and PUT requests:",
-                    "Use @PostMapping(\"/test\") or @PutMapping(\"/test\") at the top of the method.",
-                    "Use @RequestBody @Valid for input DTOs.",
-                    "Example:",
-                    "@PostMapping(\"/test\") // must be first",
-                    "public ResponseEntity<String> createTodo(@RequestBody @Valid Todo todo) { ... }",
+                    "Create a Spring Boot REST controller prototype that demonstrates the API design and validates functionality before full implementation.",
                     "",
-                    "For GET requests with query parameters:",
-                    "Use @GetMapping(\"/test\") at the top of the method.",
-                    "Use @RequestParam with constraint annotations directly on method parameters, or bind a DTO using @ModelAttribute + @Valid.",
-                    "DO NOT use @RequestBody in GET methods – it will throw an error.",
-                    "Correct example:",
-                    "@GetMapping(\"/test\") // must be first",
-                    "public ResponseEntity<String> getTodo(@RequestParam @NotBlank String task) { ... }",
+                    "### 1. DISCOVERY PHASE (MANDATORY)",
+                    "**You can use the following tools:**",
+                    "- Use `list_directory_files` to discover all entity classes in 'src/main/java/com/java_template/application/entity'",
+                    "- Use `read_file` to examine each entity class and understand their fields and structure",
                     "",
-                    "Alternative correct example with DTO:",
-                    "@Data",
-                    "public static class Example {",
-                    "    @NotBlank //optional",
-                    "    private String example;",
+                    "### 2. CONTROLLER STRUCTURE",
+                    "```java",
+                    "package com.java_template.prototype;",
+                    "",
+                    "@RestController",
+                    "@RequestMapping(path = \"/prototype\")",
+                    "@Slf4j",
+                    "public class EntityControllerPrototype {",
+                    "    // Implementation here",
                     "}",
+                    "```",
                     "",
-                    "@GetMapping(\"/test\") // must be first",
-                    "public ResponseEntity<String> getTodo(@Valid @ModelAttribute TodoQuery query) { ... }",
+                    "### 3. REQUIRED IMPORTS",
+                    "```java",
+                    "import org.springframework.web.bind.annotation.*;",
+                    "import org.springframework.http.ResponseEntity;",
+                    "import org.springframework.http.HttpStatus;",
+                    "import lombok.extern.slf4j.Slf4j;",
+                    "import java.util.concurrent.ConcurrentHashMap;",
+                    "import java.util.concurrent.atomic.AtomicLong;",
+                    "import java.util.*;",
+                    "```",
                     "",
-                    "Wrong example:",
-                    "public ResponseEntity<String> getTodo(@RequestBody Todo todo) // this will not work for GET requests",
+                    "### 4. EVENT-DRIVEN ARCHITECTURE IMPLEMENTATION",
                     "",
-                    "Please follow the rule:",
-                    "Always place @PostMapping/@GetMapping as the first annotation.",
-                    "Use @Valid with @RequestBody for POST/PUT, and with @ModelAttribute for GET.",
-                    "Add a comment explaining the workaround where needed, especially if using @ModelAttribute in GET.",
-                    "Include proper logging using SLF4J (e.g., `Logger logger = LoggerFactory.getLogger(EntityControllerPrototype.class);`) and use `logger.info(...)` or `logger.error(...)` appropriately.",
+                    "**IMPORTANT: EDA/NoSQL Architecture Principles**",
+                    "- This system follows **append-only, immutable data patterns**",
+                    "- **NO UPDATE - use versioning",
+                    "- Avoid deletes unless explicitly required",
+                    "- Focus on **event creation** rather than data modification",
                     "",
-                    "Response format: respond with only the code. No markdown formatting, no explanation. Java comments are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```."
+                    "**Cache Structure (for each discovered entity):**",
+                    "```java",
+                    "private final ConcurrentHashMap<String, EntityName> entityNameCache = new ConcurrentHashMap<>();",
+                    "private final AtomicLong entityNameIdCounter = new AtomicLong(1);",
+                    "```",
+                    "",
+                    "**Event-Driven Flow Pattern (EDA-Compliant):**",
+                    "1. **POST /prototype/entityName** → Create entity → Save to cache → Trigger `processEntityName(entity)` → Return response",
+                    "2. **GET /prototype/entityName/{id}** → Retrieve from cache → Return entity",
+                    "3. **POST /prototype/entityName/{id}/update** → Create new entity version → Save to cache → Trigger `processEntityName(entity)` → Return response (still avoid unless necessary)",
+                    "4. **POST /prototype/entityName/{id}/deactivate** → Create deactivation record → Save to cache → Return confirmation (still avoid unless necessary)",
+                    "",
+                    "**CRITICAL: No PUT/PATCH/DELETE endpoints** - use POST for all state changes to maintain event history",
+                    " Keep endpoints to the minimum, just POST to register event and get to retrieve information",
+                    " Concentrate on process entity methods - fully implement business logic there",
+                    "### 5. CRITICAL: processEntityName() METHODS",
+                    "**Each entity MUST have a corresponding process method with meaningful business logic:**",
+                    "",
+                    "```java",
+                    "private void processEntityName(EntityName entity) {",
+                    "    log.info(\"Processing EntityName with ID: {}\", entity.getId());",
+                    "    ",
+                    "     IMPLEMENT ACTUAL BUSINESS LOGIC HERE",
+                    "     Examples:",
+                    "     - Data validation and enrichment",
+                    "     - External API calls",
+                    "     - Triggering workflows",
+                    "     - Creating related entities",
+                    "     - Sending notifications",
+                    "    ",
+                    "    Replace with actual business logic from requirements. no todos. here should be real logic.",
+                    "}",
+                    "```",
+                    "",
+                    "### 8. IMPLEMENTATION GUIDELINES",
+                    "- **Minimalistic approach**: Focus on core functionality, avoid over-engineering",
+                    "- **Real implementations preferred**: Use actual logic where requirements are clear",
+                    "- **Logging**: Use `log.info()` for successful operations, `log.error()` for failures",
+                    "- **ID generation**: Use AtomicLong for simple incremental IDs",
+                    "",
+                    "### 9. VALIDATION REQUIREMENTS",
+                    "- Validate all input parameters",
+                    "- Check for required fields based on entity structure",
+                    "- Return appropriate HTTP status codes (200, 201, 400, 404, 500)",
+                    "- Include meaningful error messages",
+                    "",
+                    "**Remember**: This is a working prototype to validate API design and business logic flow. The processEntityName() methods are the core of the event-driven architecture and must contain substantial business logic relevant to your requirements."
                   ]
                 }
               ]
@@ -1184,7 +1304,7 @@
                   "type": "function",
                   "function": {
                     "name": "list_directory_files",
-                    "description": "List all files in 'src/main/java/com/java_template/entity' to get the list of entities created",
+                    "description": "List all files in 'src/main/java/com/java_template/application/entity' to get the list of entities created",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1221,6 +1341,26 @@
                         "resource_path",
                         "file_contents"
                       ]
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "read_file",
+                    "description": "Read the contents of a file.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "filename": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "filename"
+                      ],
+                      "additionalProperties": false
                     }
                   }
                 },
@@ -1319,26 +1459,6 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "read_file",
-                    "description": "Read the contents of a file.",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "filename": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "filename"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                {
-                  "type": "function",
-                  "function": {
                     "name": "finish_discussion",
                     "description": "Finish the iteration if the user is happy with the result and has no more questions.",
                     "strict": true,
@@ -1365,13 +1485,13 @@
                   "role": "user",
                   "content": [
                     " Hello! Please do your best to help the user with just generated EntityControllerPrototype.java code.",
-                    " If the user asks you to make any improvements or fix any issues please first read the file 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java' or 'src/main/java/com/java_template/entity/{EntityName}.java' to get the latest version.",
+                    " If the user asks you to make any improvements or fix any issues please first read the file 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java' or 'src/main/java/com/java_template/application/entity/{EntityName}.java' to get the latest version.",
                     " Then use your own judgement to introduce changes necessary for the user. Do not simply reuse the file content you read; always generate a new, modified version of the code that reflects the user's latest requests.",
                     " Finally, make sure to save the file only after you have applied the required changes. Carefully verify that the updated content reflects your modifications, and do not proceed with saving unless actual updates have been made. Finally apply the necessary changes to the src/main/java/com/java_template/prototype/EntityControllerPrototype.java file. And let the user know what changes you introduced and why.",
                     " If the user just asks any general question or a question about the code, read the EntityControllerPrototype.java file if necessary, answer the question, no save needed in this case.",
                     " Call add_application_resource tool to save changes with the full contents of the file after your changes and the full path to the file.",
                     " Path for the prototype: 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java'",
-                    " Path for the entity: 'src/main/java/com/java_template/entity/{EntityName}.java'",
+                    " Path for the entity: 'src/main/java/com/java_template/application/entity/{EntityName}.java'",
                     " Call finish_discussion only once the user is happy with the result or asks to proceed. "
                   ]
                 }
@@ -1625,13 +1745,13 @@
                   "role": "user",
                   "content": [
                     " Hello! Please do your best to help the user with just generated EntityControllerPrototype.java code.",
-                    " If the user asks you to make any improvements or fix any issues please first read the file 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java' or 'src/main/java/com/java_template/entity/{EntityName}.java' to get the latest version.",
+                    " If the user asks you to make any improvements or fix any issues please first read the file 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java' or 'src/main/java/com/java_template/application/entity/{EntityName}.java' to get the latest version.",
                     " Then use your own judgement to introduce changes necessary for the user. Do not simply reuse the file content you read; always generate a new, modified version of the code that reflects the user's latest requests.",
                     " Finally, make sure to save the file only after you have applied the required changes. Carefully verify that the updated content reflects your modifications, and do not proceed with saving unless actual updates have been made. Finally apply the necessary changes to the src/main/java/com/java_template/prototype/EntityControllerPrototype.java file. And let the user know what changes you introduced and why.",
                     " If the user just asks any general question or a question about the code, read the EntityControllerPrototype.java file if necessary, answer the question, no save needed in this case.",
                     " Call add_application_resource tool to save changes with the full contents of the file after your changes and the full path to the file.",
                     " Path for the prototype: 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java'",
-                    " Path for the entity: 'src/main/java/com/java_template/entity/{EntityName}.java'",
+                    " Path for the entity: 'src/main/java/com/java_template/application/entity/{EntityName}.java'",
                     " Call finish_discussion only once the user is happy with the result or asks to proceed. "
                   ]
                 }
@@ -1702,7 +1822,7 @@
               "publish": true,
               "model": {},
               "memory_tags": [
-                "generate_initial_cyoda_prototype"
+                "controller_generation"
               ],
               "messages": [
                 {
@@ -1710,7 +1830,7 @@
                   "content": [
                     "You are provided with a Java codebase that implements a REST API (using Spring Boot framework).",
                     "Currently, the code uses local in‑memory dictionaries (and counters) to store and manage data for one or more entity types.",
-                    "Your task is to refactor the code so that all interactions with the local cache are replaced by calls to an external service called com.java_template.common.service.EntityService. Note, that EntityService is a bean, so inject it with CyodaEntityControllerPrototype constructor.",
+                    "Your task is to refactor the code so that all interactions with the local cache are replaced by calls to an external service called com.java_template.common.service.EntityService. Note, that EntityService is a bean, so inject it with Controller constructor.",
                     "",
                     "IMPORTANT: Refactor ONLY the main entities (maximum 3 entities, orchestration entities like 'Job', 'Task' take precedence, then business domain entities) that have significant logic. Keep minor/utility entities in local cache.",
                     "",
@@ -1790,9 +1910,9 @@
                     ")",
                     "Note: entityService.deleteItems returns an array containing result information, for example: '[{\"entityModelClassId\": \"d16a966a-37e4-11f0-8bfa-00000ae966a9\",\"deleteResult\": {\"numberOfEntitites\": 18,\"numberOfEntititesRemoved\": 18,\"idToError\": {}}}]'",
                     "use 'import static com.java_template.common.config.Config.*;' to import ENTITY_VERSION",
-                    "Add this code:",
-                    "package com.java_template.prototype;",
-                    "use this class name 'CyodaEntityControllerPrototype'",
+                    "import com.java_template.common.service.EntityService",
+                    "use package com.java_template.prototype;",
+                    "use this class name 'Controller'",
                     "Lombok is already configured in the project via io.freefair.lombok plugin. Please use Lombok annotations like @Data, @Getter, @Setter, @AllArgsConstructor, @NoArgsConstructor, etc., instead of manually writing getters, setters, and constructors, and make sure to include the necessary Lombok imports in the generated code.",
                     "Make sure to assign a unique @RequestMapping path to each controller to avoid conflicts. Do not reuse the same base path across multiple controllers.\n",
                     "Preserve the endpoint routes and any other essential business logic.",
@@ -1801,8 +1921,11 @@
                     "Please take into account that entity ObjectNode has 'technicalId'",
                     "Please return only Java code without additional information. If you'd like to add any comments please use // comment",
                     "Please use correct logging, e.g.:",
-                    "org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CyodaEntityControllerPrototype.class);",
-                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```."
+                    "org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Controller.class);",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```.",
+                    "IMPORTANT ARCHITECTURE NOTE: This is an Event-Driven Architecture (EDA) with NoSQL principles. Updates and deletes are discouraged:",
+                    "- Instead of UPDATE operations: Create new entity versions with updated data",
+                    "** Keep all the endpoints in a single class Controller (like in the prototype) - do not add multiple controller classes - just a single one. **"
                   ]
                 }
               ],
@@ -1813,7 +1936,7 @@
               },
               "output": {
                 "local_fs": [
-                  "src/main/java/com/java_template/prototype/CyodaEntityControllerPrototype.java"
+                  "src/main/java/com/java_template/application/controller/Controller.java"
                 ]
               }
             }
@@ -1823,8 +1946,8 @@
     },
     "generated_initial_cyoda_prototype": {
       "transitions": {
-        "generate_workflows_from_prototype": {
-          "next": "workflows_generated",
+        "extract_processing_methods": {
+          "next": "processing_methods_extracted",
           "action": {
             "name": "process_event",
             "config": {
@@ -1836,7 +1959,7 @@
                   "type": "function",
                   "function": {
                     "name": "add_application_resource",
-                    "description": "Add application resource file with path and content",
+                    "description": "Save extracted processing methods and cleaned controller file",
                     "parameters": {
                       "type": "object",
                       "properties": {
@@ -1855,6 +1978,92 @@
                       ]
                     }
                   }
+                }
+              ],
+              "memory_tags": [
+                "processing_methods_extraction"
+              ],
+              "input": {
+                "local_fs": [
+                  "src/main/java/com/java_template/application/controller/Controller.java"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/application/controller/Controller.java"
+                ]
+              },
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "You need to extract processing methods from Controller.java and create workflow prototypes.",
+                    "",
+                    "Your tasks:",
+                    "1. Read the Controller.java file contents",
+                    "2. Identify all process methods (methods that start with 'process' followed by an entity name or some variation of this pattern. these methods are right after putting entity to cache/ 'saving')",
+                    "3. For each processEntityName method found:",
+                    "   - Extract the complete method including its body",
+                    "   - Extract any private helper methods that are directly called by this process method",
+                    "   - Save the extracted method(s) to 'src/main/java/com/java_template/application/workflow_prototypes/{EntityName}.txt' using add_application_resource",
+                    "4. Return a cleaned version of Controller.java that:",
+                    "   - Removes all processEntityName methods and their direct helper methods",
+                    "   - Keeps all other functionality intact (CRUD operations, endpoints, etc.)",
+                    "",
+                    "Important guidelines:",
+                    "- Only extract methods that follow the pattern processEntityName (e.g., processUser, processOrder, processTask)",
+                    "- Include any private methods that are called directly from the process methods",
+                    "- Preserve the original code structure and formatting",
+                    "- The cleaned controller should remain fully functional for CRUD operations",
+                    "- Use the entity name in PascalCase for the filename (e.g., User.txt, Order.txt, Task.txt)",
+                    "",
+                    "Start by reading the Controller.java file to analyze its structure.",
+                    "Response format: respond with only the java code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```"
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 10,
+              "approve": true
+            }
+          }
+        }
+      }
+    },
+    "processing_methods_extracted": {
+      "transitions": {
+        "update_routes_file": {
+          "next": "validated_controller",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "model": {},
+              "memory_tags": [
+                "controller_validation"
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_file_contents",
+                    "description": "Get file contents by path to review existing code structure",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "file_path": {
+                          "type": "string",
+                          "description": "Path to the file to read. Examples: 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java', 'src/main/java/com/java_template/application/entity/EntityName.java', 'src/main/java/com/java_template/application/processor/ProcessorName.java', 'src/main/java/com/java_template/application/criteria/CriteriaName.java'"
+                        }
+                      },
+                      "required": [
+                        "file_path"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
                 },
                 {
                   "type": "function",
@@ -1867,151 +2076,11 @@
                       "properties": {
                         "directory_path": {
                           "type": "string",
-                          "description": "Path to the directory to list. Examples: 'src/main/java/com/java_template/application/processor', 'src/main/java/com/java_template/application/criteria', 'src/main/java/com/java_template/entity', 'com/java_template/application/workflow'"
+                          "description": "Path to the directory to list. Examples: 'src/main/java/com/java_template/application/processor', 'src/main/java/com/java_template/application/criteria', 'src/main/java/com/java_template/application/entity', 'com/java_template/application/workflow'"
                         }
                       },
                       "required": [
                         "directory_path"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                }
-              ],
-              "input": {
-                "local_fs": [
-                  "src/main/java/com/java_template/prototype/CyodaEntityControllerPrototype.java"
-                ]
-              },
-              "memory_tags": [
-                "generate_workflow_from_prototype"
-              ],
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "Now that you've outlined the entities from the prototype code, please,",
-                    "for each main business entity generate workflow configuration json that represents",
-                    "the business workflow of the entity that can be executed on the entity persistence event and call add_application_resource",
-                    "If there is some logic in the CyodaEntityControllerPrototype that is applied to the entity right after saving it (entityService.additem) - it makes sense to move it to the workflow.",
-                    "",
-                    "IMPORTANT: Base workflows on the processEntityName function pattern from CyodaEntityControllerPrototype.java.",
-                    "- For simple entities with basic logic: create zero or ONE processor named 'EntityNameProcessor'",
-                    "- For complex entities: add additional processors ONLY if there's clear business justification (e.g., validation, transformation, integration steps)",
-                    "- Maximum 3 processors",
-                    "- Each processor must correspond to a distinct business operation, not just CRUD",
-                    "",
-                    "Focus on entities that have meaningful business operations beyond simple data manipulation.",
-                    "",
-                    "Workflow is a finite state machine (FSM) that consists of states and transitions.",
-                    "Each state has a list of transitions. Each transition has a next attribute, with the next state.",
-                    "Each transition may have an processor (a name of a processor java class that will implement the process code).",
-                    "Each transition may have a criterion (a name of a condition java class that will implement the validation code or a group condition).",
-                    "Always start from an initial state 'none'.",
-                    "Avoid loops.",
-                    " Use tool list_directory_files if you are not sure what entities we have",
-                    "",
-                    "Call add_application_resource for each entity with:",
-                    "- resource_path: 'src/main/java/com/java_template/application/workflow/{EntityName}.json'",
-                    "- file_contents: workflow json configuration",
-                    "",
-                    "CRITICAL: Processor name is unique per workflow, never reuse it.",
-                    " It is ok that 1-2 out of 3 workflows don't have any processor.",
-                    " At least one workflow should have a processors",
-                    " It is ok not to have any processors in the workflow for business entities.",
-                    " An orchestration entity like 'Job' or 'Task' should have more than one processors.",
-                    " If you add one processor to the workflow you should call it '{EntityName}Processor'",
-                    " If you have more than one processor in the workflow you should call one of them '{EntityName}Processor'",
-                    " It is ok to have more transitions than processors. Actually your workflow can be very interesting, but have only one processor. You do not need a processor for each transition - it is recommended to have zero to one processor per business entity workflow, and one to three processors per orchestration entity workflow.",
-                    " At least one business entity workflow should have one criteria.",
-                    "",
-                    "JSON Example of the Workflow:",
-                    "{",
-                    "  \"version\": \"1.0\",",
-                    "  \"description\": \"Template FSM with structured states, transitions, processors, and criterions\",",
-                    "  \"initial_state\": \"state_initial\",",
-                    "  \"workflow_name\": \"template_workflow\",",
-                    "  \"states\": {",
-                    "    \"state_initial\": {",
-                    "      \"transitions\": {",
-                    "        \"transition_to_01\": {",
-                    "          \"next\": \"state_01\"",
-                    "        }",
-                    "      }",
-                    "    },",
-                    "    \"state_01\": {",
-                    "      \"transitions\": [",
-                    "        \"transition_to_02\": {",
-                    "          \"next\": \"state_02\",",
-                    "          \"manual\": true,",
-                    "          \"processors\": [",
-                    "            {",
-                    "              \"name\": \"ExampleProcessorName1\" # remember this name - you'll need to implement this processor java class",
-                    "            }",
-                    "          ]",
-                    "        }",
-                    "      ]",
-                    "    },",
-                    "    \"state_02\": {",
-                    "      \"transitions\": [",
-                    "        \"transition_with_criterion_simple\": {",
-                    "          \"next\": \"state_criterion_check_01\",",
-                    "          \"processors\": [",
-                    "            {",
-                    "              \"name\": \"ExampleProcessorName2\" #remember this name -you'll need to implement this processor java class",
-                    "            }",
-                    "          ],",
-                    "          \"criteria\": [",
-                    "            {",
-                    "              \"type\": \"function\",",
-                    "              \"function\": {",
-                    "                \"name\": \"ExampleCriterionName1\" #remember this name -you'll need to implement this criterion java class",
-                    "              }",
-                    "            }",
-                    "          ]",
-                    "        }",
-                    "      ]",
-                    "    },",
-                    "  }",
-                    "}"
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      }
-    },
-    "workflows_generated": {
-      "transitions": {
-        "analyze_workflows_and_extract_operations": {
-          "next": "processors_generated",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "agent",
-              "publish": true,
-              "model": {},
-              "tools": [
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "get_file_contents",
-                    "description": "Read the CyodaEntityControllerPrototype.java file to extract business logic from processEntityName methods",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "file_path": {
-                          "type": "string",
-                          "enum": [
-                            "src/main/java/com/java_template/prototype/CyodaEntityControllerPrototype.java"
-                          ],
-                          "description": "Path to the prototype controller file"
-                        }
-                      },
-                      "required": [
-                        "file_path"
                       ],
                       "additionalProperties": false
                     }
@@ -2037,404 +2106,134 @@
                       "additionalProperties": false
                     }
                   }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "add_application_resource",
-                    "description": "Add application resource file with path and content",
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "resource_path": {
-                          "type": "string",
-                          "description": "Full relative path to the resource including filename"
-                        },
-                        "file_contents": {
-                          "type": "string",
-                          "description": "Content of the file to be written"
-                        }
-                      },
-                      "required": [
-                        "resource_path",
-                        "file_contents"
-                      ]
-                    }
-                  }
                 }
-              ],
-              "memory_tags": [
-                "generate_workflow_from_prototype"
               ],
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "Now for each processor name that you've outlined in the workflows configurations,",
-                    "please provide the code for it based on the prototype code and call add_application_resource tool with processor name and content - processor java code.",
+                    "You need to check and fix the Controller class.",
                     "",
-                    "BEFORE WRITING ANY PROCESSOR CODE:",
-                    "1. Use get_entity_pojo_contents tool to understand the entity data model and available properties",
-                    "2. Review the entity POJO structure to see what getters/setters are actually available",
-                    "3. Only use properties that exist in the entity POJO - do not invent or assume properties",
+                    "When writing Spring Boot REST controllers that interact with EntityService:",
+                    " Use get_pojo_contents tool to understand the entity data model and available properties",
                     "",
-                    "IMPORTANT: The processor class name and the name used in the supports() method MUST EXACTLY MATCH the function name from the workflow configuration (action.config.function.name). Do not modify or change these names in any way.",
+                    "CRITICAL RULES:",
+                    "- EntityService methods are: getItem(), addItem(), updateItem(), deleteItem() - NOT findItemById() or deleteItemById()",
+                    "- EntityService methods expect UUID technicalId parameters, not String - always use UUID.fromString(stringId)",
+                    "- EntityService.getItem() returns ObjectNode - use objectMapper.treeToValue(node, EntityClass.class) to convert to entity",
+                    "- EntityService.deleteItem() returns UUID (the deleted ID), not boolean",
+                    "- Add JsonProcessingException to method signatures when using objectMapper.treeToValue()",
+                    "- Entity technicalId fields are UUID type - use UUID.fromString() when setting from String DTOs",
+                    "- Map DTO fields correctly to entity fields (check entity class for actual field names)",
+                    "- Always import: UUID, JsonProcessingException, ObjectNode when using EntityService",
                     "",
-                    "CRITICAL: Only access existing POJO properties in your code. Do not use getters/setters for properties that don't exist in the entity class. If you're unsure about entity properties, use get_entity_pojo_contents to check the actual entity structure.",
+                    "VALIDATION CHECKLIST:",
+                    "□ Method names match com.java_template.common.service.EntityService interface exactly",
+                    "□ EntityService injected via constructor",
+                    "□ ObjectMapper injected via constructor",
+                    "□ UUID conversions applied where needed",
+                    "□ ObjectMapper used for ObjectNode → Entity conversion",
+                    "□ Exception handling includes JsonProcessingException",
+                    "□ DTO → Entity field mapping verified against actual entity classes",
+                    "□ All required imports present",
                     "",
-                    "Call add_application_resource with:",
-                    "- resource_path: 'src/main/java/com/java_template/application/processor/{ExampleProcessorName}.java'",
-                    "- file_contents: processor java code using CyodaProcessor interface",
+                    "When managing imports in Spring Boot controllers using EntityService:",
                     "",
-                    "Processor Interface Requirements",
+                    "REQUIRED IMPORTS CHECKLIST:",
+                    "□ com.fasterxml.jackson.core.JsonProcessingException (when using objectMapper.treeToValue)",
+                    "□ com.fasterxml.jackson.databind.ObjectMapper (for JSON operations)",
+                    "□ com.fasterxml.jackson.databind.node.ObjectNode (EntityService return type)",
+                    "□ java.util.UUID (for technicalId conversions)",
+                    "□ java.util.concurrent.ExecutionException (for CompletableFuture.get())",
+                    "□ jakarta.validation.Valid (for request validation)",
+                    "□ jakarta.validation.constraints.NotBlank (for field validation)",
+                    "□ org.springframework.http.ResponseEntity (for REST responses)",
+                    "□ org.springframework.web.bind.annotation.* (for REST mappings)",
                     "",
-                    "public interface CyodaProcessor {",
-                    "    EntityProcessorCalculationResponse process(CyodaEventContext<EntityProcessorCalculationRequest> context);",
-                    "    boolean supports(OperationSpecification modelKey);",
-                    "}",
+                    "COMMON MISSING IMPORTS:",
+                    "- JsonProcessingException when using objectMapper.treeToValue()",
+                    "- UUID when converting String IDs to UUID",
+                    "- ObjectNode when working with EntityService responses",
                     "",
-                    "Supports method implementation:",
+                    "ADDITIONAL CRITICAL RECOMMENDATIONS:",
                     "",
-                    "@Override",
-                    "public boolean supports(OperationSpecification modelSpec) {",
-                    "    return \"ExampleProcessorName\".equals(modelSpec.operationName()) &&",
-                    "           \"entityName\".equalsIgnoreCase(modelSpec.modelKey().getName()) &&",
-                    "           Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
-                    "}",
+                    "1. VALIDATION ANNOTATIONS:",
+                    "✅ Use @jakarta.validation.constraints.* (NOT @javax.validation.constraints.*)",
+                    "✅ Import: import jakarta.validation.constraints.Email;",
+                    "❌ Avoid: import javax.validation.constraints.Email;",
                     "",
+                    "2. ENTITY SERVICE METHOD SIGNATURES:",
+                    "✅ addItem(String entityModel, String entityVersion, Object entity) returns CompletableFuture<UUID>",
+                    "✅ updateItem(String entityModel, String entityVersion, UUID technicalId, Object entity) requires 4 parameters",
+                    "❌ Don't assume addItem() returns String - it returns UUID",
+                    "❌ Don't call updateItem() with only 3 parameters - it needs the technicalId",
                     "",
-                    "Processor Class Prototype (Use this pattern)",
+                    "3. ENTITY FIELD MAPPING:",
+                    "Before calling setter methods on entities, ALWAYS verify the actual field names in the entity class",
                     "",
-                    "package com.java_template.application.processor;",
-                    "import com.java_template.application.entity.EntityName;",
-                    "import com.java_template.common.serializer.ErrorInfo;",
-                    "import com.java_template.common.serializer.ProcessorSerializer;",
-                    "import com.java_template.common.serializer.SerializerFactory;",
-                    "import com.java_template.common.workflow.CyodaEventContext;",
-                    "import com.java_template.common.workflow.CyodaProcessor;",
-                    "import com.java_template.common.workflow.OperationSpecification;",
-                    "import com.java_template.common.config.Config;",
-                    "import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationRequest;",
-                    "import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationResponse;",
-                    "import org.slf4j.Logger;",
-                    "import org.slf4j.LoggerFactory;",
-                    "import org.springframework.stereotype.Component;",
-                    "import java.util.ArrayList;",
-                    "import java.util.List;",
-                    "import java.util.Set;",
-                    "import java.util.stream.Collectors",
+                    "4. LOMBOK @Data ANNOTATION:",
+                    "- Entities use @Data annotation which auto-generates getters/setters",
+                    "- Method names follow JavaBean convention: fieldName → getFieldName() / setFieldName()",
+                    "- Always check the actual field names in the entity class before calling methods",
                     "",
-                    "@Component",
-                    "public class ExampleProcessorName implements CyodaProcessor {",
+                    "5. UUID HANDLING:",
+                    "- Convert UUID to String when needed: uuid.toString()",
+                    "- Parse String to UUID when needed: UUID.fromString(string)",
+                    "- EntityService methods return CompletableFuture<UUID>, not CompletableFuture<String>",
                     "",
-                    "    private final Logger logger = LoggerFactory.getLogger(this.getClass());",
-                    "    private final ProcessorSerializer serializer;",
-                    "",
-                    "    public ExampleProcessorName(SerializerFactory serializerFactory) {",
-                    "        this.serializer = serializerFactory.getDefaultProcessorSerializer();",
-                    "        logger.info(\"ExampleProcessorName initialized with SerializerFactory\");",
-                    "    }",
-                    "",
-                    "    @Override",
-                    "    public EntityProcessorCalculationResponse process(CyodaEventContext<EntityProcessorCalculationRequest> context) {",
-                    "        EntityProcessorCalculationRequest request = context.getEvent();",
-                    "        logger.info(\"Processing EntityName for request: {}\", request.getId());",
-                    "",
-                    "        // Fluent entity processing with validation",
-                    "        return serializer.withRequest(request)",
-                    "            .toEntity(EntityName.class)",
-                    "            .validate(this::isValidEntity, \"Invalid entity state\")",
-                    "            .map(this::processEntityLogic)",
-                    "            .complete();",
-                    "    }",
-                    "",
-                    "    @Override",
-                    "    public boolean supports(OperationSpecification modelSpec) {",
-                    "        return \"ExampleProcessorName\".equals(modelSpec.operationName()) &&",
-                    "               \"entityName\".equalsIgnoreCase(modelSpec.modelKey().getName()) &&",
-                    "               Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
-                    "    }",
-                    "",
-                    "",
-                    "    // CRITICAL: This method MUST contain the actual business logic from CyodaEntityControllerPrototype",
-                    "    // Find the processEntityName method in CyodaEntityControllerPrototype.java and copy its logic here",
-                    "    private EntityName processEntityLogic(EntityName entity) {",
-                    "        // TODO: Replace this comment with ACTUAL business logic from processEntityName method",
-                    "        // Example of what should be here (from prototype):",
-                    "        // - Data validation and transformation",
-                    "        // - External API calls",
-                    "        // - Business rule calculations",
-                    "        // - Field modifications and enrichment",
-                    "        // - Any other processing logic from the prototype method",
-                    "        ",
-                    "        return entity;",
-                    "    }",
-                    "",
-                    "    // Add other helper methods as needed based on the prototype logic",
-                    "}",
-                    "",
-                    "CRITICAL REQUIREMENTS:",
-                    "1. **NO PLACEHOLDER CODE**: The processEntityLogic method MUST contain real business logic from CyodaEntityControllerPrototype",
-                    "WHAT TO LOOK FOR IN CyodaEntityControllerPrototype.java:",
-                    "- Methods that process entities (names may vary: `processUsers`, `processPets`, `handleOrders`, `transformData`, etc.)",
-                    "- Private methods that contain business logic for your entity type",
-                    "",
-                    "ONLY use existing entity properties - do not access non-existent getters/setters.",
-                    "",
-                    "    public interface ProcessorSerializer {",
-                    "        <T extends CyodaEntity> T extractEntity(EntityProcessorCalculationRequest request, Class<T> clazz);",
-                    "        JsonNode extractPayload(EntityProcessorCalculationRequest request);",
-                    "        <T extends CyodaEntity> JsonNode entityToJsonNode(T entity);",
-                    "        String getType();",
-                    "        ResponseBuilder.ProcessorResponseBuilder responseBuilder(EntityProcessorCalculationRequest request);",
-                    "        default ProcessingChain withRequest(EntityProcessorCalculationRequest request) {",
-                    "            return new ProcessingChainImpl(this, request);",
-                    "        }",
-                    "        interface ProcessingChain {",
-                    "            ProcessingChain map(Function<JsonNode, JsonNode> mapper);",
-                    "            <T extends CyodaEntity> EntityProcessingChain<T> toEntity(Class<T> clazz);",
-                    "            ProcessingChain withErrorHandler(BiFunction<Throwable, JsonNode, ErrorInfo> errorHandler);",
-                    "            EntityProcessorCalculationResponse complete();",
-                    "        }",
-                    "",
-                    "        interface EntityProcessingChain<T extends CyodaEntity> {",
-                    "            EntityProcessingChain<T> map(Function<T, T> mapper);",
-                    "            EntityProcessingChain<T> validate(Function<T, Boolean> validator);",
-                    "            EntityProcessingChain<T> validate(Function<T, Boolean> validator, String errorMessage);",
-                    "            ProcessingChain toJsonFlow(Function<T, JsonNode> converter);",
-                    "            EntityProcessingChain<T> withErrorHandler(BiFunction<Throwable, T, ErrorInfo> errorHandler);",
-                    "            EntityProcessorCalculationResponse complete();",
-                    "            EntityProcessorCalculationResponse complete(Function<T, JsonNode> converter);",
-                    "        }",
-                    "",
-                    "",
-                    "add_application_resource Tool Usage",
-                    "",
-                    "After each processor is generated, call the add_application_resource tool like:",
-                    "",
-                    "FINAL REMINDER - ABSOLUTELY CRITICAL:",
-                    "🚨 DO NOT CREATE PROCESSORS WITH PLACEHOLDER CODE OR COMMENTS LIKE 'TODO: Add business logic'",
-                    "🚨 YOU MUST FIND AND COPY THE ACTUAL BUSINESS LOGIC FROM CyodaEntityControllerPrototype.java",
-                    "🚨 SEARCH FOR ENTITY PROCESSING METHODS (names may vary - not always processEntityName)",
-                    "🚨 LOOK FOR METHODS REFERENCED IN entityService.addItem/s() CALLS",
-                    "🚨 THE PROCESSOR MUST DO THE SAME WORK AS THE PROTOTYPE METHOD - NO SHORTCUTS",
-                    "",
-                    "If you cannot find any business logic methods for an entity, create a simple processor that just returns the entity unchanged, but DO NOT create placeholder code that pretends to do business logic."
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```."
                   ]
                 }
-              ]
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 10,
+              "input": {
+                "local_fs": [
+                  "src/main/java/com/java_template/application/controller/Controller.java"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/application/controller/Controller.java"
+                ]
+              },
+              "approve": true
             }
           }
+        },
+        "rollback": {
+          "next": "finished_prototype_cyoda_workflow_json",
+          "manual": true
         }
       }
     },
-    "processors_generated": {
+    "validated_controller": {
       "transitions": {
-        "generate_criteria_from_workflows": {
-          "next": "criteria_generated",
+        "register_workflow_with_app": {
+          "next": "registered_workflow_with_app",
           "action": {
             "name": "process_event",
             "config": {
-              "type": "agent",
-              "publish": true,
-              "model": {},
-              "tools": [
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "get_entity_pojo_contents",
-                    "description": "Get entity POJO contents to understand the data model and available properties",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "entity_name": {
-                          "type": "string",
-                          "description": "Name of the entity to get POJO contents for (e.g., 'User', 'Order', 'Product')"
-                        }
-                      },
-                      "required": [
-                        "entity_name"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "add_application_resource",
-                    "description": "Add application resource file with path and content",
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "resource_path": {
-                          "type": "string",
-                          "description": "Full relative path to the resource including filename"
-                        },
-                        "file_contents": {
-                          "type": "string",
-                          "description": "Content of the file to be written"
-                        }
-                      },
-                      "required": [
-                        "resource_path",
-                        "file_contents"
-                      ]
-                    }
-                  }
+              "type": "function",
+              "function": {
+                "name": "launch_gen_app_workflows",
+                "description": "register_workflow_with_app",
+                "parameters": {
+                  "dir_name": "src/main/java/com/java_template/application/entity",
+                  "next_transition": "validate_workflow_implementation"
                 }
-              ],
-              "memory_tags": [
-                "generate_workflow_from_prototype"
-              ],
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "Now for each criterion (if the workflow json has any criteria of type function and only for them) that you've outlined in the workflows configurations,",
-                    "please provide the code for it based on the prototype code and call add_application_resource tool with criterion name and content - criterion java code.",
-                    "",
-                    "BEFORE WRITING ANY CRITERIA CODE:",
-                    "1. Use get_entity_pojo_contents tool to understand the entity data model and available properties",
-                    "2. Review the entity POJO structure to see what getters/setters are actually available",
-                    "3. Only use properties that exist in the entity POJO - do not invent or assume properties",
-                    "",
-                    "IMPORTANT: The criterion class name and the name used in the supports() method MUST EXACTLY MATCH the criteria name from the workflow configuration (condition.name). Do not modify or change these names in any way.",
-                    "",
-                    "CRITICAL: Only access existing POJO properties in your code. Do not use getters/setters for properties that don't exist in the entity class. If you're unsure about entity properties, use get_entity_pojo_contents to check the actual entity structure.",
-                    "",
-                    "Call add_application_resource with:",
-                    "- resource_path: 'src/main/java/com/java_template/application/criterion/{ExampleCriterionName}.java'",
-                    "- file_contents: criterion java code using CyodaCriterion interface",
-                    "",
-                    "Criterion Interface Requirements",
-                    "",
-                    "public interface CyodaCriterion {",
-                    "    EntityCriteriaCalculationResponse check(CyodaEventContext<EntityCriteriaCalculationRequest> request);",
-                    "    boolean supports(OperationSpecification opsSpec);",
-                    "}",
-                    "",
-                    "Supports method implementation:",
-                    "",
-                    "@Override",
-                    "public boolean supports(OperationSpecification modelSpec) {",
-                    "    return \"ExampleCriterionName\".equals(modelSpec.operationName()) &&",
-                    "           \"entityName\".equalsIgnoreCase(modelSpec.modelKey().getName()) &&",
-                    "           Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
-                    "}",
-                    "",
-                    "",
-                    "Processor Class Criterion (Use this pattern)",
-                    "",
-                    "import com.java_template.application.entity.EntityName;",
-                    "import com.java_template.common.serializer.CriterionSerializer;",
-                    "import com.java_template.common.serializer.ErrorInfo;",
-                    "import com.java_template.common.serializer.EvaluationOutcome;",
-                    "import com.java_template.common.serializer.ReasonAttachmentStrategy;",
-                    "import com.java_template.common.serializer.SerializerFactory;",
-                    "import com.java_template.common.serializer.StandardEvalReasonCategories",
-                    "import com.java_template.common.config.Config;",
-                    "import com.java_template.common.workflow.CyodaCriterion;",
-                    "import com.java_template.common.workflow.CyodaEventContext;",
-                    "import com.java_template.common.workflow.OperationSpecification;",
-                    "import org.cyoda.cloud.api.event.common.ModelSpec;",
-                    "import org.cyoda.cloud.api.event.processing.EntityCriteriaCalculationRequest;",
-                    "import org.cyoda.cloud.api.event.processing.EntityCriteriaCalculationResponse;",
-                    "import org.slf4j.Logger;",
-                    "import org.slf4j.LoggerFactory;",
-                    "import org.springframework.stereotype.Component;",
-                    "import java.util.Set;",
-                    "@Component",
-                    "public class ExampleCriterionName implements CyodaCriterion {",
-                    "",
-                    "    private final Logger logger = LoggerFactory.getLogger(this.getClass());",
-                    "    private final CriterionSerializer serializer;",
-                    "",
-                    "    public ExampleCriterionName(SerializerFactory serializerFactory) {",
-                    "        this.serializer = serializerFactory.getDefaultCriteriaSerializer();",
-                    "        logger.info(\"ExampleCriterionName initialized with SerializerFactory\");",
-                    "    }",
-                    "",
-                    "    @Override",
-                    "    public EntityCriteriaCalculationResponse check(CyodaEventContext<EntityCriteriaCalculationRequest> context) {",
-                    "        EntityCriteriaCalculationRequest request = context.getEvent();",
-                    "",
-                    "        return serializer.withRequest(request)",
-                    "            .evaluateEntity(EntityName.class, this::applyValidation1)",
-                    "            .withReasonAttachment(ReasonAttachmentStrategy.toWarnings())",
-                    "            .complete();",
-                    "    }",
-                    "",
-                    "    @Override",
-                    "    public boolean supports(OperationSpecification modelSpec) {",
-                    "        return \"ExampleCriterionName\".equals(modelSpec.operationName()) &&",
-                    "               \"entityName\".equalsIgnoreCase(modelSpec.modelKey().getName()) &&",
-                    "               Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
-                    "    }",
-                    "",
-                    "    // Helper methods like isValidEntity, applyValidation1, etc.",
-                    "}",
-                    "Replace:",
-                    "",
-                    "ExampleCriterionName with the EXACT criterion name from workflow configuration (condition.name) - use it exactly as written, no modifications",
-                    "EntityName with your actual entity class",
-                    "entityName with your actual entity name (camelCase)",
-                    "",
-                    "Logic placeholders (applyTransformation1, handleEntityNameError, etc.) with real implementations as needed.",
-                    "ONLY use existing entity properties - do not access non-existent getters/setters.",
-                    "",
-                    "Standard evaluation reason categories available:",
-                    "public enum StandardEvalReasonCategories {",
-                    "    VALIDATION_FAILURE(\"VALIDATION_FAILURE\"),",
-                    "    BUSINESS_RULE_FAILURE(\"BUSINESS_RULE_FAILURE\"),",
-                    "    DATA_QUALITY_FAILURE(\"DATA_QUALITY_FAILURE\"),",
-                    "    public String getCode() { return code; }",
-                    "}",
-                    "",
-                    "    public interface CriterionSerializer {",
-                    "        <T extends CyodaEntity> T extractEntity(EntityCriteriaCalculationRequest request, Class<T> clazz);",
-                    "        JsonNode extractPayload(EntityCriteriaCalculationRequest request);",
-                    "        <T extends CyodaEntity> JsonNode entityToJsonNode(T entity);",
-                    "        String getType();",
-                    "        ResponseBuilder.CriterionResponseBuilder responseBuilder(EntityCriteriaCalculationRequest request);",
-                    "        default EvaluationChain withRequest(EntityCriteriaCalculationRequest request) {",
-                    "            return new EvaluationChainImpl(this, request);",
-                    "        }",
-                    "        interface EvaluationChain {",
-                    "            EvaluationChain evaluate(Function<JsonNode, EvaluationOutcome> evaluator);",
-                    "            <T extends CyodaEntity> EvaluationChain evaluateEntity(Class<T> clazz, Function<T, EvaluationOutcome> evaluator);",
-                    "            EvaluationChain withErrorHandler(BiFunction<Throwable, JsonNode, ErrorInfo> errorHandler);",
-                    "            EvaluationChain withReasonAttachment(ReasonAttachmentStrategy strategy);",
-                    "            EntityCriteriaCalculationResponse complete();",
-                    "        }",
-                    "",
-                    "// EvaluationOutcome usage:",
-                    "// Success: EvaluationOutcome.success()",
-                    "// Failure: EvaluationOutcome.fail(\"reason\") or EvaluationOutcome.fail(\"reason\", category)",
-                    "// Categories: businessRuleFailure(), dataQualityFailure(), structuralFailure()",
-                    "// Check: outcome.isSuccess(), outcome.isFailure()",
-                    "",
-                    "@FunctionalInterface",
-                    "public interface ReasonAttachmentStrategy {",
-                    "    void attachReason(EntityCriteriaCalculationResponse response, EvaluationReason reason);",
-                    "",
-                    "",
-                    "add_application_resource Tool Usage",
-                    "",
-                    "After each criterion is generated, call the add_application_resource tool like:"
-                  ]
-                }
-              ]
+              },
+              "publish": false
             }
           }
         }
       }
     },
-    "criteria_generated": {
+    "registered_workflow_with_app": {
       "transitions": {
         "validate_workflow_implementation": {
           "next": "workflow_implementation_validated",
+          "manual": true,
           "action": {
             "name": "process_event",
             "config": {
@@ -2556,314 +2355,6 @@
     },
     "finished_app_generation_flow": {
       "transitions": {
-        "update_routes_file": {
-          "next": "updated_routes_file",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "agent",
-              "publish": true,
-              "model": {},
-              "memory_tags": [
-                "adding_controller"
-              ],
-              "tools": [
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "get_file_contents",
-                    "description": "Get file contents by path to review existing code structure",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "file_path": {
-                          "type": "string",
-                          "description": "Path to the file to read. Examples: 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java', 'src/main/java/com/java_template/entity/EntityName.java', 'src/main/java/com/java_template/application/processor/ProcessorName.java', 'src/main/java/com/java_template/application/criteria/CriteriaName.java'"
-                        }
-                      },
-                      "required": [
-                        "file_path"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "list_directory_files",
-                    "description": "List all files in a directory to see what processors, criteria, or entities were created",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "directory_path": {
-                          "type": "string",
-                          "description": "Path to the directory to list. Examples: 'src/main/java/com/java_template/application/processor', 'src/main/java/com/java_template/application/criteria', 'src/main/java/com/java_template/entity', 'com/java_template/application/workflow'"
-                        }
-                      },
-                      "required": [
-                        "directory_path"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                }
-              ],
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "You need to refactor the CyodaEntityControllerPrototype into a clean Controller class.",
-                    "",
-                    "CONTEXT: During previous steps, we:",
-                    "1. Analyzed CyodaEntityControllerPrototype code",
-                    "2. Identified business logic and moved it to workflow processors and criteria",
-                    "3. Created separate POJO entities based on the prototype",
-                    "4. Generated workflows with processors for business operations",
-                    "5. Validated that processor logic migration was completed successfully",
-                    "",
-                    "YOUR TASK:",
-                    "1. First, use get_file_contents to review the original CyodaEntityControllerPrototype.java",
-                    "2. Use list_directory_files to see what processors and criteria were created in their respective directories",
-                    "3. Review any specific entities, processors, and criteria files (if you need to understand what was moved)",
-                    "4. Create a new Controller class that:",
-                    "   - Keeps the REST API endpoints from CyodaEntityControllerPrototype",
-                    "   - PRESERVES ALL EntityService invocations, especially .addItem() calls - these MUST stay intact",
-                    "   - Removes business logic that was moved to processors/criteria",
-                    "   - Removes code that is no longer necessary",
-                    "   - Renames the class to 'Controller'",
-                    "   - Fixes imports appropriately",
-                    "   - Do not import anything from CyodaEntityControllerPrototype directly, as CyodaEntityControllerPrototype will be deleted. Use entities from the entity package instead. And then copy the rest of DTOs and necessary inner classes from CyodaEntityControllerPrototype to your code.",
-                    "   - Injects ObjectMapper via constructor instead of creating new instances",
-                    "   - Use private final RestTemplate restTemplate = new RestTemplate(); if necessary",
-                    "   - Includes proper SLF4J logging",
-                    "   - Follows Spring Boot best practices",
-                    "   - Use package com.java_template.controller;",
-                    "   - Make sure at least one entityService.addItem() call is present in the controller.",
-                    "",
-                    "CRITICAL: EntityService calls (especially .addItem()) must remain in the controller because:",
-                    "- Processors are triggered by Cyoda external orchestration AFTER entity persistence",
-                    "- The controller is responsible for persisting entities via EntityService",
-                    "- Business logic was moved to processors, but persistence logic stays in controller",
-                    "",
-                    "IMPORTANT: Focus on keeping only the API layer responsibilities - routing, request/response handling, and delegation to services.",
-                    "Remove any business logic, data processing, or validation that should be in processors/criteria, but keep all EntityService persistence calls.",
-                    "",
-                    "OUTPUT: Provide the complete refactored Controller.java code. The system will automatically save it to the correct location.",
-                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```.",
-                    "When creating Spring Boot REST controllers that use EntityService:",
-                    "1. Import all necessary classes: UUID, CompletableFuture, ExecutionException, InterruptedException, JsonProcessingException",
-                    "2. Define entity name constants at class level",
-                    "3. Use correct EntityService method signatures: addItem(entityModel, entityVersion, entity)",
-                    "4. Handle async operations properly with CompletableFuture.get() and declare throws ExecutionException, InterruptedException",
-                    "5. Wrap ObjectMapper.treeToValue() calls in try-catch blocks for JsonProcessingException",
-                    "6. Use proper UUID.toString() conversions for response objects",
-                    "7. Use entity search by conditions if necessary instead of non-existent convenience methods",
-                    "8. Import static ENTITY_VERSION from Config class"
-                  ]
-                }
-              ],
-              "tool_choice": "auto",
-              "max_iteration": 10,
-              "input": {
-                "local_fs": [
-                  "src/main/java/com/java_template/prototype/CyodaEntityControllerPrototype.java"
-                ]
-              },
-              "output": {
-                "local_fs": [
-                  "src/main/java/com/java_template/controller/Controller.java"
-                ]
-              },
-              "approve": true
-            }
-          }
-        },
-        "rollback": {
-          "next": "finished_prototype_cyoda_workflow_json",
-          "manual": true
-        }
-      }
-    },
-    "updated_routes_file": {
-      "transitions": {
-        "update_routes_file": {
-          "next": "validated_controller",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "agent",
-              "publish": true,
-              "model": {},
-              "memory_tags": [
-                "controller_validation"
-              ],
-              "tools": [
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "get_file_contents",
-                    "description": "Get file contents by path to review existing code structure",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "file_path": {
-                          "type": "string",
-                          "description": "Path to the file to read. Examples: 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java', 'src/main/java/com/java_template/entity/EntityName.java', 'src/main/java/com/java_template/application/processor/ProcessorName.java', 'src/main/java/com/java_template/application/criteria/CriteriaName.java'"
-                        }
-                      },
-                      "required": [
-                        "file_path"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "list_directory_files",
-                    "description": "List all files in a directory to see what processors, criteria, or entities were created",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "directory_path": {
-                          "type": "string",
-                          "description": "Path to the directory to list. Examples: 'src/main/java/com/java_template/application/processor', 'src/main/java/com/java_template/application/criteria', 'src/main/java/com/java_template/entity', 'com/java_template/application/workflow'"
-                        }
-                      },
-                      "required": [
-                        "directory_path"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "get_entity_pojo_contents",
-                    "description": "Get entity POJO contents to understand the data model and available properties",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "entity_name": {
-                          "type": "string",
-                          "description": "Name of the entity to get POJO contents"
-                        }
-                      },
-                      "required": [
-                        "entity_name"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                }
-              ],
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "You need to check and fix the Controller class.",
-                    "",
-                    "When writing Spring Boot REST controllers that interact with EntityService:",
-                    " Use get_pojo_contents tool to understand the entity data model and available properties",
-                    "",
-                    "CRITICAL RULES:",
-                    "- EntityService methods are: getItem(), addItem(), updateItem(), deleteItem() - NOT findItemById() or deleteItemById()",
-                    "- EntityService methods expect UUID technicalId parameters, not String - always use UUID.fromString(stringId)",
-                    "- EntityService.getItem() returns ObjectNode - use objectMapper.treeToValue(node, EntityClass.class) to convert to entity",
-                    "- EntityService.deleteItem() returns UUID (the deleted ID), not boolean",
-                    "- Add JsonProcessingException to method signatures when using objectMapper.treeToValue()",
-                    "- Entity technicalId fields are UUID type - use UUID.fromString() when setting from String DTOs",
-                    "- Map DTO fields correctly to entity fields (check entity class for actual field names)",
-                    "- Always import: UUID, JsonProcessingException, ObjectNode when using EntityService",
-                    "",
-                    "VALIDATION CHECKLIST:",
-                    "□ Method names match EntityService interface exactly",
-                    "□ UUID conversions applied where needed",
-                    "□ ObjectMapper used for ObjectNode → Entity conversion",
-                    "□ Exception handling includes JsonProcessingException",
-                    "□ DTO → Entity field mapping verified against actual entity classes",
-                    "□ All required imports present",
-                    "",
-                    "When managing imports in Spring Boot controllers using EntityService:",
-                    "",
-                    "REQUIRED IMPORTS CHECKLIST:",
-                    "□ com.fasterxml.jackson.core.JsonProcessingException (when using objectMapper.treeToValue)",
-                    "□ com.fasterxml.jackson.databind.ObjectMapper (for JSON operations)",
-                    "□ com.fasterxml.jackson.databind.node.ObjectNode (EntityService return type)",
-                    "□ java.util.UUID (for technicalId conversions)",
-                    "□ java.util.concurrent.ExecutionException (for CompletableFuture.get())",
-                    "□ jakarta.validation.Valid (for request validation)",
-                    "□ jakarta.validation.constraints.NotBlank (for field validation)",
-                    "□ org.springframework.http.ResponseEntity (for REST responses)",
-                    "□ org.springframework.web.bind.annotation.* (for REST mappings)",
-                    "",
-                    "COMMON MISSING IMPORTS:",
-                    "- JsonProcessingException when using objectMapper.treeToValue()",
-                    "- UUID when converting String IDs to UUID",
-                    "- ObjectNode when working with EntityService responses",
-                    "",
-                    "ADDITIONAL CRITICAL RECOMMENDATIONS:",
-                    "",
-                    "1. VALIDATION ANNOTATIONS:",
-                    "✅ Use @jakarta.validation.constraints.* (NOT @javax.validation.constraints.*)",
-                    "✅ Import: import jakarta.validation.constraints.Email;",
-                    "❌ Avoid: import javax.validation.constraints.Email;",
-                    "",
-                    "2. ENTITY SERVICE METHOD SIGNATURES:",
-                    "✅ addItem(String entityModel, String entityVersion, Object entity) returns CompletableFuture<UUID>",
-                    "✅ updateItem(String entityModel, String entityVersion, UUID technicalId, Object entity) requires 4 parameters",
-                    "❌ Don't assume addItem() returns String - it returns UUID",
-                    "❌ Don't call updateItem() with only 3 parameters - it needs the technicalId",
-                    "",
-                    "3. ENTITY FIELD MAPPING:",
-                    "Before calling setter methods on entities, ALWAYS verify the actual field names in the entity class",
-                    "",
-                    "4. LOMBOK @Data ANNOTATION:",
-                    "- Entities use @Data annotation which auto-generates getters/setters",
-                    "- Method names follow JavaBean convention: fieldName → getFieldName() / setFieldName()",
-                    "- Always check the actual field names in the entity class before calling methods",
-                    "",
-                    "5. UUID HANDLING:",
-                    "- Convert UUID to String when needed: uuid.toString()",
-                    "- Parse String to UUID when needed: UUID.fromString(string)",
-                    "- EntityService methods return CompletableFuture<UUID>, not CompletableFuture<String>",
-                    "",
-                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```."
-                  ]
-                }
-              ],
-              "tool_choice": "auto",
-              "max_iteration": 10,
-              "input": {
-                "local_fs": [
-                  "src/main/java/com/java_template/controller/Controller.java"
-                ]
-              },
-              "output": {
-                "local_fs": [
-                  "src/main/java/com/java_template/controller/Controller.java"
-                ]
-              },
-              "approve": true
-            }
-          }
-        },
-        "rollback": {
-          "next": "finished_prototype_cyoda_workflow_json",
-          "manual": true
-        }
-      }
-    },
-    "validated_controller": {
-      "transitions": {
         "validate_app_quality": {
           "next": "validated_app_quality",
           "action": {
@@ -2887,7 +2378,7 @@
                       "properties": {
                         "file_path": {
                           "type": "string",
-                          "description": "Path to the file to read. Examples: 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java', 'src/main/java/com/java_template/controller/Controller.java', 'src/main/java/com/java_template/entity/EntityName.java', 'src/main/java/com/java_template/application/processor/ProcessorName.java', 'src/main/java/com/java_template/application/criteria/CriteriaName.java'"
+                          "description": "Path to the file to read. Examples: 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java', 'src/main/java/com/java_template/application/controller/Controller.java', 'src/main/java/com/java_template/application/entity/EntityName.java', 'src/main/java/com/java_template/application/processor/ProcessorName.java', 'src/main/java/com/java_template/application/criteria/CriteriaName.java'"
                         }
                       },
                       "required": [
@@ -2908,7 +2399,7 @@
                       "properties": {
                         "directory_path": {
                           "type": "string",
-                          "description": "Path to the directory to list. Examples: 'src/main/java/com/java_template/application/processor', 'src/main/java/com/java_template/application/criteria', 'src/main/java/com/java_template/entity', 'src/main/java/com/java_template/application/workflow'"
+                          "description": "Path to the directory to list. Examples: 'src/main/java/com/java_template/application/processor', 'src/main/java/com/java_template/application/criteria', 'src/main/java/com/java_template/application/entity', 'src/main/java/com/java_template/application/workflow'"
                         }
                       },
                       "required": [
@@ -2929,7 +2420,7 @@
                       "properties": {
                         "resource_path": {
                           "type": "string",
-                          "description": "Path where to save the file. Use EXACT patterns: For processors: 'src/main/java/com/java_template/application/processor/{ProcessorName}.java' where {ProcessorName} is the EXACT name from workflow config. For criteria: 'src/main/java/com/java_template/application/criteria/{CriteriaName}.java' where {CriteriaName} is the EXACT name from workflow config. For controller: 'src/main/java/com/java_template/controller/Controller.java'."
+                          "description": "Path where to save the file. Use EXACT patterns: For processors: 'src/main/java/com/java_template/application/processor/{ProcessorName}.java' where {ProcessorName} is the EXACT name from workflow config. For criteria: 'src/main/java/com/java_template/application/criteria/{CriteriaName}.java' where {CriteriaName} is the EXACT name from workflow config. For controller: 'src/main/java/com/java_template/application/controller/Controller.java'."
                         },
                         "file_contents": {
                           "type": "string",
@@ -2963,7 +2454,7 @@
                     "",
                     "YOUR VALIDATION TASKS:",
                     "1. Read the prototype controller using get_file_contents: 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java'",
-                    "2. Read the current controller using get_file_contents: 'src/main/java/com/java_template/controller/Controller.java'",
+                    "2. Read the current controller using get_file_contents: 'src/main/java/com/java_template/application/controller/Controller.java'",
                     "Notice that process code has been removed from the controller.",
                     "3. Use list_directory_files to examine what workflows, processors, and criteria were created:",
                     "   - 'src/main/java/com/java_template/application/workflow'",
@@ -3022,7 +2513,6 @@
         }
       }
     },
-
     "validated_app_quality": {
       "transitions": {
         "save_env_file": {
@@ -3057,7 +2547,7 @@
                 "description": "delete_files",
                 "parameters": {
                   "files": [
-                    "src/main/java/com/java_template/prototype/CyodaEntityControllerPrototype.java"
+                    "src/main/java/com/java_template/prototype/EntityControllerPrototypeWithoutProcessing.java"
                   ]
                 }
               },
@@ -3113,3 +2603,9 @@
     }
   }
 }
+
+
+
+
+
+
