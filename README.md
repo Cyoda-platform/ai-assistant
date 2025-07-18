@@ -1,36 +1,33 @@
-<br>
-<div style="text-align: center;">
+<p align="center">
   <img src="assets/logo.png" alt="AI Assistant Logo" width="150" />
-</div>
+</p>
+<h1 align="center">AI Assistant</h1>
 
-<h1 style="text-align: center; margin-top: 0;">AI Assistant</h1>
-
-<div style="text-align: center;">
+<p align="center">
   <strong>
     Build, deploy and scale data-intensive operational services.
   </strong><br/>
-Cyoda’s AI Assistant creates complete prototype backend services for the <a href="https://www.cyoda.com/application-platform">Cyoda Application Platform</a>.<br/>  
-It automates entity design, workflows, processes, rules, and queries, enabling developers to build scalable services 20x faster.
-
-</div>
+  Cyoda’s AI Assistant creates complete prototype backend services for the <a href="https://www.cyoda.com/application-platform">Cyoda Application Platform</a>.<br/>
+  It automates entity design, workflows, processes, rules, and queries, enabling developers to build scalable services 20× faster.
+</p>
 
 ---
 
 ## 🔗 Quick Links
 
-- [🚀 Features](#-features)
-- [🛠️ Setup (for Local Use)](#-setup-for-local-use)
+- [Features](#-features)
+- [Setup (for Local Use)](#-setup-for-local-use)
   - [1. Clone the Repository](#1-clone-the-repository)
   - [2. Set Up the Python Environment](#2-set-up-the-python-environment)
   - [3. Configure Environment Variables](#3-configure-environment-variables)
-- [📄 Workflow Setup (One-Time)](#-workflow-setup-one-time)
+- [Workflow Setup (One-Time)](#-workflow-setup-one-time)
   - [4. Convert Workflows](#4-convert-workflows)
   - [5. Import Workflows to Cyoda](#5-import-workflows-to-cyoda)
-- [💻 Run the Backend Application](#-run-the-backend-application)
-- [🖥️ Run the UI](#-run-the-ui)
-- [📁 Project Structure](#-project-structure)
-- [📚 License](#-license)
-- [🙋‍♂️ Support](#-support)
+- [Run the Backend Application](#-run-the-backend-application)
+- [Run the UI](#-run-the-ui)
+- [Project Structure](#-project-structure)
+- [License](#-license)
+- [Support](#-support)
 
 ---
 
@@ -53,7 +50,7 @@ Ideal for generating reports, dashboards, and insights.
 
 ---
 
-## 🛠️ Setup (for Local Use)
+## 🔨 Setup (for Local Use)
 *Prefer using the assistant locally to keep your projects private.*
 
 ### 📦 Prerequisites
@@ -123,11 +120,11 @@ This generates output files in the `outputs/` folder.
 
 ### 5. Import Workflows to Cyoda
 
-Manually import all workflows from the `outputs/config` directory into your Cyoda environment.
+Manually import all workflows from the `outputs/` directory into your Cyoda environment.
 
 ---
 
-## 💻 Run the Backend Application
+## 💡 Run the Backend Application
 
 ```bash
 python app.py
@@ -137,7 +134,7 @@ python app.py
 
 ---
 
-## 🖥️ Run the UI
+## 💻 Run the UI
 
 Clone and run the [AI Assistant UI](https://github.com/Cyoda-platform/ai-assistant-ui) project:
 
@@ -174,7 +171,7 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](./LICEN
 
 ---
 
-## 🙋‍♂️ Support
+## 💬 Support
 
-For questions or contributions, open an issue or pull request in this repository.  
-If something goes wrong or you have questions, reach out on [Discord](https://discord.gg/95rdAyBZr2).
+For the fastest help and direct communication, join our [Discord community](https://discord.gg/95rdAyBZr2).  
+You can also open an issue or pull request here on GitHub for bugs or contributions.
