@@ -74,11 +74,6 @@
                     " Avoid loops. ",
                     " Avoid using the same class name more than once. ",
                     "If we have multiple transitions from one state, each transition should have a condition to decide which to use\n",
-                    " Use tool list_directory_files if you are not sure what entities we have",
-                    "",
-                    "Call add_application_resource for each entity with:",
-                    "- resource_path: 'src/main/java/com/java_template/application/workflow/{EntityName}.json'",
-                    "- file_contents: workflow json configuration",
                     "",
                     "CRITICAL: Processor name is unique per workflow, never reuse it.",
                     " Max 3 processors per workflow.",
@@ -130,7 +125,7 @@
                     "    }},",
                     "  }}",
                     "}}",
-                    "Return only valid JSON without any extra text. Return states ordered for the best human readability, like an ordered dictionary."
+                    "Return only valid JSON without any extra text or markdown. Return states ordered for the best human readability, like an ordered dictionary."
                   ]
                 }
               ]

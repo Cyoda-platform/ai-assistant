@@ -1247,7 +1247,8 @@
                     "- Return appropriate HTTP status codes (200, 201, 400, 404, 500)",
                     "- Include meaningful error messages",
                     "",
-                    "**Remember**: This is a working prototype to validate API design and business logic flow. The processEntityName() methods are the core of the event-driven architecture and must contain substantial business logic relevant to your requirements."
+                    "**Remember**: This is a working prototype to validate API design and business logic flow. The processEntityName() methods are the core of the event-driven architecture and must contain substantial business logic relevant to your requirements.",
+                    "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```"
                   ]
                 }
               ]
@@ -1911,7 +1912,7 @@
                     "Note: entityService.deleteItems returns an array containing result information, for example: '[{\"entityModelClassId\": \"d16a966a-37e4-11f0-8bfa-00000ae966a9\",\"deleteResult\": {\"numberOfEntitites\": 18,\"numberOfEntititesRemoved\": 18,\"idToError\": {}}}]'",
                     "use 'import static com.java_template.common.config.Config.*;' to import ENTITY_VERSION",
                     "import com.java_template.common.service.EntityService",
-                    "use package com.java_template.prototype;",
+                    "use package com.java_template.application.controller;",
                     "use this class name 'Controller'",
                     "Lombok is already configured in the project via io.freefair.lombok plugin. Please use Lombok annotations like @Data, @Getter, @Setter, @AllArgsConstructor, @NoArgsConstructor, etc., instead of manually writing getters, setters, and constructors, and make sure to include the necessary Lombok imports in the generated code.",
                     "Make sure to assign a unique @RequestMapping path to each controller to avoid conflicts. Do not reuse the same base path across multiple controllers.\n",
@@ -2055,7 +2056,7 @@
                       "properties": {
                         "file_path": {
                           "type": "string",
-                          "description": "Path to the file to read. Examples: 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java', 'src/main/java/com/java_template/application/entity/EntityName.java', 'src/main/java/com/java_template/application/processor/ProcessorName.java', 'src/main/java/com/java_template/application/criteria/CriteriaName.java'"
+                          "description": "Path to the file to read. Examples: 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java', 'src/main/java/com/java_template/application/entity/EntityName.java', 'src/main/java/com/java_template/application/processor/ProcessorName.java', 'src/main/java/com/java_template/application/criterion/CriteriaName.java'"
                         }
                       },
                       "required": [
@@ -2076,7 +2077,7 @@
                       "properties": {
                         "directory_path": {
                           "type": "string",
-                          "description": "Path to the directory to list. Examples: 'src/main/java/com/java_template/application/processor', 'src/main/java/com/java_template/application/criteria', 'src/main/java/com/java_template/application/entity', 'com/java_template/application/workflow'"
+                          "description": "Path to the directory to list. Examples: 'src/main/java/com/java_template/application/processor', 'src/main/java/com/java_template/application/criterion', 'src/main/java/com/java_template/application/entity', 'com/java_template/application/workflow'"
                         }
                       },
                       "required": [
@@ -2378,7 +2379,7 @@
                       "properties": {
                         "file_path": {
                           "type": "string",
-                          "description": "Path to the file to read. Examples: 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java', 'src/main/java/com/java_template/application/controller/Controller.java', 'src/main/java/com/java_template/application/entity/EntityName.java', 'src/main/java/com/java_template/application/processor/ProcessorName.java', 'src/main/java/com/java_template/application/criteria/CriteriaName.java'"
+                          "description": "Path to the file to read. Examples: 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java', 'src/main/java/com/java_template/application/controller/Controller.java', 'src/main/java/com/java_template/application/entity/EntityName.java', 'src/main/java/com/java_template/application/processor/ProcessorName.java', 'src/main/java/com/java_template/application/criterion/CriteriaName.java'"
                         }
                       },
                       "required": [
@@ -2399,7 +2400,7 @@
                       "properties": {
                         "directory_path": {
                           "type": "string",
-                          "description": "Path to the directory to list. Examples: 'src/main/java/com/java_template/application/processor', 'src/main/java/com/java_template/application/criteria', 'src/main/java/com/java_template/application/entity', 'src/main/java/com/java_template/application/workflow'"
+                          "description": "Path to the directory to list. Examples: 'src/main/java/com/java_template/application/processor', 'src/main/java/com/java_template/application/criterion', 'src/main/java/com/java_template/application/entity', 'src/main/java/com/java_template/application/workflow'"
                         }
                       },
                       "required": [
@@ -2420,7 +2421,7 @@
                       "properties": {
                         "resource_path": {
                           "type": "string",
-                          "description": "Path where to save the file. Use EXACT patterns: For processors: 'src/main/java/com/java_template/application/processor/{ProcessorName}.java' where {ProcessorName} is the EXACT name from workflow config. For criteria: 'src/main/java/com/java_template/application/criteria/{CriteriaName}.java' where {CriteriaName} is the EXACT name from workflow config. For controller: 'src/main/java/com/java_template/application/controller/Controller.java'."
+                          "description": "Path where to save the file. Use EXACT patterns: For processors: 'src/main/java/com/java_template/application/processor/{ProcessorName}.java' where {ProcessorName} is the EXACT name from workflow config. For criteria: 'src/main/java/com/java_template/application/criterion/{CriteriaName}.java' where {CriteriaName} is the EXACT name from workflow config. For controller: 'src/main/java/com/java_template/application/controller/Controller.java'."
                         },
                         "file_contents": {
                           "type": "string",
@@ -2459,7 +2460,7 @@
                     "3. Use list_directory_files to examine what workflows, processors, and criteria were created:",
                     "   - 'src/main/java/com/java_template/application/workflow'",
                     "   - 'src/main/java/com/java_template/application/processor'",
-                    "   - 'src/main/java/com/java_template/application/criteria'",
+                    "   - 'src/main/java/com/java_template/application/criterion'",
                     "5. Read each workflow, processor, and criteria files to understand what business logic was moved",
                     "",
                     "VALIDATION CHECKS:",
