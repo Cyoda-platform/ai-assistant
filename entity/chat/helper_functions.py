@@ -113,7 +113,7 @@ class WorkflowHelperService:
 
     async def order_states_in_fsm(self, fsm):
         states = fsm["states"]
-        initial_state = fsm["initial_state"]
+        initial_state = fsm["initialState"]
         ordered_state_names = []
         visited = set()
 
@@ -122,8 +122,8 @@ class WorkflowHelperService:
                 return
             visited.add(state_name)
             ordered_state_names.append(state_name)
-            transitions = states[state_name].get("transitions", {})
-            for transition in transitions.values():
+            transitions = states[state_name].get("transitions", [])
+            for transition in transitions:
                 next_state = transition.get("next")
                 if next_state:
                     dfs(next_state)

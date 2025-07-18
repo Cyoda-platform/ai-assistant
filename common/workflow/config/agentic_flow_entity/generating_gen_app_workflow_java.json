@@ -160,7 +160,7 @@
               "model": {
               },
               "memory_tags": [
-                "format_workflow_json"
+                "workflow_generation"
               ],
               "messages": [
                 {
@@ -334,6 +334,28 @@
       }
     },
     "formatted_workflow_json": {
+      "transitions": {
+        "convert_workflow_to_cyoda_dto": {
+          "next": "converted_workflow_to_cyoda_dto",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "publish": false,
+              "function": {
+                "name": "convert_workflow_to_dto",
+                "description": "convert_workflow_to_dto",
+                "parameters": {
+                  "workflow_file_name": "src/main/java/com/java_template/application/workflow/{EntityName}.json",
+                  "output_file_name": "src/main/java/com/java_template/application/workflow/{EntityName}.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "converted_workflow_to_cyoda_dto": {
       "transitions": {
         "analyze_workflows_and_extract_operations": {
           "next": "processors_generated",

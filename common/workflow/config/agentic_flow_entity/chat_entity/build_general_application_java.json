@@ -2362,7 +2362,7 @@
             "name": "process_event",
             "config": {
               "type": "agent",
-              "publish": false,
+              "publish": true,
               "model": {},
               "memory_tags": [
                 "entity_processing_logic_validation"

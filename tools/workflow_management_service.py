@@ -467,18 +467,18 @@ class WorkflowManagementService(BaseWorkflowService):
 
             ordered_fsm = await self.workflow_helper_service.order_states_in_fsm(workflow)
 
-            # Convert to DTO
-            dto = await self.workflow_converter_service.convert_workflow(
-                workflow_contents=workflow,
-                entity_name=entity_name,
-                entity_version=entity_version,
-                technical_id=git_branch_id,
-            )
+            # # Convert to DTO
+            # dto = await self.workflow_converter_service.convert_workflow(
+            #     workflow_contents=workflow,
+            #     entity_name=entity_name,
+            #     entity_version=entity_version,
+            #     technical_id=git_branch_id,
+            # )
 
             # Persist both JSON blobs
             to_save = [
                 (workflow_filename, ordered_fsm),
-                (output_filename, dto),
+                # (output_filename, dto),
             ]
             for path_or_item, data in to_save:
                 await self.workflow_helper_service.persist_json(
@@ -492,7 +492,7 @@ class WorkflowManagementService(BaseWorkflowService):
 
         except Exception as e:
             self.logger.exception(f"Failed to convert workflow for {technical_id}: {e}")
-            return error_msg
+            return f"{error_msg}: No action required."
 
     async def _get_entity_names_from_directory(self, dir_name: str, technical_id: str, entity: AgenticFlowEntity) -> list:
         """
