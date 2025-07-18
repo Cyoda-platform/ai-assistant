@@ -21,6 +21,64 @@ class WorkflowManagementService(BaseWorkflowService):
     workflow registration, validation, conversion, and diagram generation.
     """
 
+    async def launch_gen_app_workflows(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
+        try:
+            # Validate required parameters
+            is_valid, error_msg = await self._validate_required_params(
+                params, ["dir_name", "next_transition"]
+            )
+            if not is_valid:
+                return error_msg
+
+            dir_name = params.get("dir_name")
+            next_transition = params.get("next_transition")
+            awaited_entity_ids = []
+
+            # Get all entity names from dir_name where they are like Pet.java, Cat.java
+            entities = await self._get_entity_names_from_directory(
+                dir_name=dir_name,
+                technical_id=technical_id,
+                entity=entity
+            )
+
+            if not entities:
+                return f"No Java entity files found in directory: {dir_name}"
+
+            for entity_name in entities:
+                # Prepare workflow cache
+                workflow_cache = {
+                    'entity_name': entity_name,
+                    'EntityName': entity_name,
+                    const.GIT_BRANCH_PARAM: entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
+                }
+
+                # Launch agentic workflow
+                child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
+                    technical_id=technical_id,
+                    entity=entity,
+                    entity_model=const.ModelName.AGENTIC_FLOW_ENTITY.value,
+                    workflow_name=(
+                        const.ModelName.GENERATING_GEN_APP_WORKFLOW_JAVA.value
+                    ),
+                    workflow_cache=workflow_cache
+                )
+                awaited_entity_ids.append(child_technical_id)
+
+            if awaited_entity_ids:
+                # Schedule workflow completion
+                scheduled_entity_id = await self.workflow_helper_service.launch_scheduled_workflow(
+                    awaited_entity_ids=awaited_entity_ids,
+                    triggered_entity_id=technical_id,
+                    triggered_entity_next_transition=next_transition
+                )
+                entity.scheduled_entities.append(scheduled_entity_id)
+                return "Workflow registration completed successfully"
+            else:
+                raise Exception(f"No workflows generated for {technical_id}")
+
+        except Exception as e:
+            return self._handle_error(entity, e, f"Error registering workflow: {e}")
+
     async def register_workflow_with_app(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
         """
         Register workflow with application by processing entity models and launching workflows.
@@ -102,8 +160,8 @@ class WorkflowManagementService(BaseWorkflowService):
                     entity=entity,
                     entity_model=const.ModelName.AGENTIC_FLOW_ENTITY.value,
                     workflow_name=(
-                        const.ModelName.GENERATING_GEN_APP_WORKFLOW_JAVA.value 
-                        if entity.workflow_name.endswith("java") 
+                        const.ModelName.GENERATING_GEN_APP_WORKFLOW_JAVA.value
+                        if entity.workflow_name.endswith("java")
                         else const.ModelName.GENERATING_GEN_APP_WORKFLOW_PYTHON.value
                     ),
                     workflow_cache=workflow_cache,
@@ -165,7 +223,8 @@ class WorkflowManagementService(BaseWorkflowService):
             self.logger.exception(f"Error validating workflow design: {e}")
             return None
 
-    async def has_workflow_code_validation_succeeded(self, technical_id: str, entity: AgenticFlowEntity, **params: Any) -> bool:
+    async def has_workflow_code_validation_succeeded(self, technical_id: str, entity: AgenticFlowEntity,
+                                                     **params: Any) -> bool:
         """
         Check if workflow code validation succeeded.
         
@@ -195,7 +254,8 @@ class WorkflowManagementService(BaseWorkflowService):
             self.logger.exception(f"Error checking workflow validation: {e}")
             return False
 
-    async def has_workflow_code_validation_failed(self, technical_id: str, entity: AgenticFlowEntity, **params: Any) -> bool:
+    async def has_workflow_code_validation_failed(self, technical_id: str, entity: AgenticFlowEntity,
+                                                  **params: Any) -> bool:
         """
         Check if workflow code validation failed.
         
@@ -433,3 +493,52 @@ class WorkflowManagementService(BaseWorkflowService):
         except Exception as e:
             self.logger.exception(f"Failed to convert workflow for {technical_id}: {e}")
             return error_msg
+
+    async def _get_entity_names_from_directory(self, dir_name: str, technical_id: str, entity: AgenticFlowEntity) -> list:
+        """
+        Get all entity names from directory where they are like Pet.java, Cat.java.
+
+        Args:
+            dir_name: Directory name to scan for Java entity files
+            technical_id: Technical identifier
+            entity: Agentic flow entity
+
+        Returns:
+            List of entity names (without .java extension)
+        """
+        try:
+            import os
+
+            # Get repository name
+            repository_name = get_repository_name(entity)
+            git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
+
+            # Get full directory path
+            full_directory_path = await get_project_file_name(
+                file_name=dir_name,
+                git_branch_id=git_branch_id,
+                repository_name=repository_name
+            )
+
+            entity_names = []
+
+            # Check if directory exists
+            if os.path.exists(full_directory_path) and os.path.isdir(full_directory_path):
+                # List all files in directory
+                for file_name in os.listdir(full_directory_path):
+                    file_path = os.path.join(full_directory_path, file_name)
+
+                    # Check if it's a Java file and not a directory
+                    if (os.path.isfile(file_path) and
+                        file_name.endswith('.java') and
+                        not file_name.startswith('.')):
+
+                        # Extract entity name (remove .java extension)
+                        entity_name = file_name[:-5]  # Remove '.java'
+                        entity_names.append(entity_name)
+
+            return sorted(entity_names)  # Return sorted list for consistency
+
+        except Exception as e:
+            self.logger.exception(f"Error getting entity names from directory {dir_name}: {e}")
+            return []
