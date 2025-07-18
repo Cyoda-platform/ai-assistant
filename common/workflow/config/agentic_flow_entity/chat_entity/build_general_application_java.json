@@ -915,7 +915,7 @@
             "name": "process_event",
             "config": {
               "type": "prompt",
-              "publish": true,
+              "publish": false,
               "allow_anonymous_users": true,
               "model": {},
               "memory_tags": [
@@ -948,7 +948,7 @@
             "name": "process_event",
             "config": {
               "type": "prompt",
-              "publish": true,
+              "publish": false,
               "allow_anonymous_users": true,
               "model": {},
               "memory_tags": [
@@ -982,7 +982,7 @@
             "name": "process_event",
             "config": {
               "type": "agent",
-              "publish": true,
+              "publish": false,
               "model": {},
               "tools": [
                 {
@@ -1820,7 +1820,7 @@
             "name": "process_event",
             "config": {
               "type": "prompt",
-              "publish": true,
+              "publish": false,
               "model": {},
               "memory_tags": [
                 "controller_generation"
@@ -1953,7 +1953,7 @@
             "name": "process_event",
             "config": {
               "type": "agent",
-              "publish": true,
+              "publish": false,
               "model": {},
               "tools": [
                 {
@@ -2039,7 +2039,7 @@
             "name": "process_event",
             "config": {
               "type": "agent",
-              "publish": true,
+              "publish": false,
               "model": {},
               "memory_tags": [
                 "controller_validation"
@@ -2362,7 +2362,7 @@
             "name": "process_event",
             "config": {
               "type": "agent",
-              "publish": true,
+              "publish": false,
               "model": {},
               "memory_tags": [
                 "entity_processing_logic_validation"
@@ -2589,7 +2589,7 @@
                   "programming_language": "JAVA"
                 }
               },
-              "publish": true
+              "publish": false
             }
           }
         }
