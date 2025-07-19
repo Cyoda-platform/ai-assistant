@@ -2150,6 +2150,7 @@
                     "□ jakarta.validation.constraints.NotBlank (for field validation)",
                     "□ org.springframework.http.ResponseEntity (for REST responses)",
                     "□ org.springframework.web.bind.annotation.* (for REST mappings)",
+                    "□ import static com.java_template.common.config.Config.ENTITY_VERSION",
                     "",
                     "COMMON MISSING IMPORTS:",
                     "- JsonProcessingException when using objectMapper.treeToValue()",
