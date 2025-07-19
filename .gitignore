@@ -163,3 +163,4 @@ cython_debug/
 /static/config.js
 /common/workflow/outputs/
 /backup/
+/common/workflow/outputs_v2/

@@ -2341,7 +2341,7 @@
               ],
               "tool_choice": "auto",
               "max_iteration": 10,
-              "approve": true
+              "approve": false
             }
           }
         }
@@ -2508,7 +2508,7 @@
               ],
               "tool_choice": "auto",
               "max_iteration": 15,
-              "approve": true
+              "approve": false
             }
           }
         }
@@ -2552,7 +2552,7 @@
                   ]
                 }
               },
-              "publish": true
+              "publish": false
             }
           }
         }

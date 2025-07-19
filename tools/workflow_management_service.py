@@ -454,8 +454,8 @@ class WorkflowManagementService(BaseWorkflowService):
             repo_name = get_repository_name(entity)
 
             # Compute file names
-            workflow_filename = workflow_file_tmpl.format(entity_name=entity_name)
-            output_filename = output_file_tmpl.format(entity_name=entity_name)
+            workflow_filename = workflow_file_tmpl.format(EntityName=entity_name)
+            output_filename = output_file_tmpl.format(EntityName=entity_name)
 
             # Load, transform, persist original workflow
             project_path = await get_project_file_name(
@@ -468,17 +468,17 @@ class WorkflowManagementService(BaseWorkflowService):
             ordered_fsm = await self.workflow_helper_service.order_states_in_fsm(workflow)
 
             # # Convert to DTO
-            # dto = await self.workflow_converter_service.convert_workflow(
-            #     workflow_contents=workflow,
-            #     entity_name=entity_name,
-            #     entity_version=entity_version,
-            #     technical_id=git_branch_id,
-            # )
+            dto = await self.workflow_converter_service.convert_workflow(
+                workflow_contents=workflow,
+                entity_name=entity_name,
+                entity_version=entity_version,
+                technical_id=git_branch_id,
+            )
 
             # Persist both JSON blobs
             to_save = [
                 (workflow_filename, ordered_fsm),
-                # (output_filename, dto),
+                (output_filename, dto),
             ]
             for path_or_item, data in to_save:
                 await self.workflow_helper_service.persist_json(
