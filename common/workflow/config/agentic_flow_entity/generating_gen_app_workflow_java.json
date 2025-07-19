@@ -363,7 +363,7 @@
             "name": "process_event",
             "config": {
               "type": "agent",
-              "publish": true,
+              "publish": false,
               "model": {},
               "input": {
                 "local_fs": [
@@ -461,6 +461,9 @@
                     "import java.util.List;",
                     "import java.util.Set;",
                     "import java.util.stream.Collectors",
+                    "import com.java_template.common.service.EntityService;",
+                    "import com.java_template.common.util.SearchConditionRequest",
+                    "import com.java_template.common.util.Condition;",
                     "",
                     "@Component",
                     "public class ProcessorClassName implements CyodaProcessor {",
@@ -558,7 +561,7 @@
                     "🚨 LOOK FOR METHODS REFERENCED IN entityService.addItem/s() CALLS",
                     "🚨 THE PROCESSOR MUST DO THE SAME WORK AS THE PROTOTYPE METHOD - NO SHORTCUTS",
                     "🚨 IGNORE CRITERIA FROM THE WORKFLOW - PROCESSORS ONLY",
-                    "🚨 YOU CAN INJECT ONLY EntityService and SerializerFactory via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES.",
+                    "🚨 YOU CAN INJECT ONLY EntityService, SerializerFactory and ObjectMapper via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES.",
                     "",
                     "If you cannot find any business logic methods for an entity, create a simple processor that just returns the entity unchanged, but DO NOT create placeholder code that pretends to do business logic."
                   ]
@@ -577,7 +580,7 @@
             "name": "process_event",
             "config": {
               "type": "agent",
-              "publish": true,
+              "publish": false,
               "model": {},
               "tools": [
                 {
