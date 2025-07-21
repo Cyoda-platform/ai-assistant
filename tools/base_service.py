@@ -43,7 +43,7 @@ class BaseWorkflowService:
         self.mock = mock
         self.logger = logging.getLogger(self.__class__.__name__)
     
-    def _handle_error(self, entity: ChatEntity, error: Exception, message: str = None) -> str:
+    def _handle_error(self, entity: AgenticFlowEntity, error: Exception, message: str = None) -> str:
         """
         Common error handling for workflow operations.
         

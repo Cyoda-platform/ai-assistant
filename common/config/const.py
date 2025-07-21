@@ -105,7 +105,7 @@ class ModelName(str, Enum):
     AGENTIC_FLOW_ENTITY = "agentic_flow_entity"
     GEN_APP_ENTITY_PYTHON = "build_general_application_python"
     GEN_APP_ENTITY_JAVA = "build_general_application_java"
-    CYODA_ENV_DEPLOYMENT_CHAT = "cyoda_env_deploy_chat.json"
+    CYODA_ENV_DEPLOYMENT_CHAT = "cyoda_env_deploy_chat"
     GENERATING_GEN_APP_WORKFLOW_JAVA = "generating_gen_app_workflow_java"
     GENERATING_GEN_APP_WORKFLOW_PYTHON = "generating_gen_app_workflow_python"
     SCHEDULER_ENTITY = "scheduler_entity"

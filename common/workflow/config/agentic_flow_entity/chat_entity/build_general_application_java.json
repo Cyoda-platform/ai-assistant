@@ -1817,7 +1817,7 @@
     },
     "migration_confirmation_notified": {
       "transitions": {
-        "register_workflow_with_app": {
+        "start_deployment_chat": {
           "next": "started_deployment_chat",
           "action": {
             "name": "process_event",
