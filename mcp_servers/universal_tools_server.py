@@ -52,6 +52,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # MCP Request/Response models
@@ -731,8 +732,12 @@ async def sse_endpoint(credentials: HTTPAuthorizationCredentials = Depends(secur
 
 
 @app.post("/mcp")
-async def mcp_endpoint(request: MCPRequest, session_id: str = None, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Main MCP endpoint for IDE communication with OAuth session support"""
+async def mcp_endpoint(
+    request: MCPRequest,
+    session_id: str = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Main MCP endpoint for IDE communication with OAuth session support (Cursor compatible)"""
 
     user_id = None
     user_token = None
@@ -811,6 +816,12 @@ async def mcp_endpoint(request: MCPRequest, session_id: str = None, credentials:
             id=request.id,
             error={"code": -32603, "message": f"Internal error: {str(e)}"}
         )
+
+
+@app.options("/mcp")
+async def mcp_options():
+    """Handle CORS preflight for MCP endpoint"""
+    return {"status": "ok"}
 
 
 # WebSocket endpoint
