@@ -26,6 +26,7 @@
 - [Run the Backend Application](#-run-the-backend-application)
 - [Run the UI](#-run-the-ui)
 - [Project Structure](#-project-structure)
+- [AI Model Configuration (Optional)](#-ai-model-configuration-optional)
 - [License](#-license)
 - [Support](#-support)
 
@@ -162,6 +163,74 @@ ai-assistant/
 │       │   └── example_output.json     # Example converted output
 │       └── workflow_to_dto_converter.py # Converts workflows to DTO format
 ```
+
+---
+
+## 🧠 AI Model Configuration (Optional)
+
+You can configure which AI model is used to process AI-powered transitions in two ways:
+
+### 1. Set the Default Model and Parameters
+
+The default model configuration is defined in the `ModelConfig` class (`entity/model.py`).  
+You can customize:
+
+- The default model name (`model_name`)
+- Temperature, top-p, max tokens, penalties
+
+Example default configuration:
+
+```python
+# Define allowed model names
+ModelName = Literal[
+    "gpt-4o-mini",
+    "gpt-4.1-mini",
+    "gpt-4o",
+    "gpt-4.1-nano",
+    "o4-mini"
+]
+
+class ModelConfig(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    model_name: ModelName = Field(
+        default="gpt-4.1-mini",  # Change this line to set the default model
+        description="Name of the model to use"
+    )
+    temperature: float = 0.7
+    max_tokens: int = 10000
+    top_p: float = 1.0
+    frequency_penalty: float = 0.0
+    presence_penalty: float = 0.0
+```
+
+This configuration will be used for all transitions **unless overridden explicitly**.
+
+---
+
+### 2. Override the Model per Transition
+
+In each workflow `transition` that uses the `"prompt"` or `"agent"` action type, you can override the model by passing a custom `model` section in the config.
+
+Example:
+
+```json
+"action": {
+  "name": "process_event",
+  "config": {
+    "type": "agent",
+    "model": {
+      "model_name": "o4-mini",
+      "temperature": 0.3,
+      "max_tokens": 5000
+    },
+    "input": {},
+    "output": {}
+  }
+}
+```
+
+Only the fields you specify will override the defaults.  
+If `model` is omitted or left empty (`"model": {}`), the default `ModelConfig` is used.
 
 ---
 
