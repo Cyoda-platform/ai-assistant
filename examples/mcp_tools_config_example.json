@@ -1,0 +1,188 @@
+{
+  "initial_state": "none",
+  "workflow_name": "example_with_mcp_tools",
+  "states": {
+    "none": {
+      "transitions": {
+        "process_request": {
+          "next": "processed",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "model": {
+                "model_name": "gemini-2.0-flash",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_user_info",
+                    "description": "Get user information like user environment URL, user branch name etc",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["user_request"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "web_search",
+                    "description": "Search the web using Google Custom Search API",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["query"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "mcp",
+                  "mcp": {
+                    "server_name": "filesystem",
+                    "description": "Access file system operations - read, write, list files and directories",
+                    "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem"],
+                    "args": ["/app/data"],
+                    "env": {}
+                  }
+                },
+                {
+                  "type": "mcp",
+                  "mcp": {
+                    "server_name": "memory",
+                    "description": "Persistent memory storage for maintaining context between conversations",
+                    "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
+                    "args": [],
+                    "env": {}
+                  }
+                },
+                {
+                  "type": "mcp",
+                  "mcp": {
+                    "server_name": "sqlite",
+                    "description": "SQLite database operations - query and modify database",
+                    "command": ["npx", "-y", "@modelcontextprotocol/server-sqlite"],
+                    "args": ["/app/data/workflow.db"],
+                    "env": {}
+                  }
+                },
+                {
+                  "type": "mcp",
+                  "mcp": {
+                    "server_name": "brave_search",
+                    "description": "Web search using Brave Search API",
+                    "command": ["npx", "-y", "@modelcontextprotocol/server-brave-search"],
+                    "args": [],
+                    "env": {
+                      "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+                    }
+                  }
+                },
+                {
+                  "type": "mcp",
+                  "mcp": {
+                    "server_name": "github",
+                    "description": "GitHub integration - repository operations, issues, pull requests",
+                    "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+                    "args": [],
+                    "env": {
+                      "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+                    }
+                  }
+                },
+                {
+                  "type": "mcp",
+                  "mcp": {
+                    "server_name": "gdrive",
+                    "description": "Google Drive integration - access and manage Google Drive files",
+                    "command": ["npx", "-y", "@modelcontextprotocol/server-gdrive"],
+                    "args": [],
+                    "env": {
+                      "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}"
+                    }
+                  }
+                },
+                {
+                  "type": "mcp",
+                  "mcp": {
+                    "server_name": "slack",
+                    "description": "Slack integration - send messages, read channels",
+                    "command": ["npx", "-y", "@modelcontextprotocol/server-slack"],
+                    "args": [],
+                    "env": {
+                      "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
+                      "SLACK_APP_TOKEN": "${SLACK_APP_TOKEN}"
+                    }
+                  }
+                },
+                {
+                  "type": "mcp",
+                  "mcp": {
+                    "server_name": "postgres",
+                    "description": "PostgreSQL database operations",
+                    "command": ["npx", "-y", "@modelcontextprotocol/server-postgres"],
+                    "args": [],
+                    "env": {
+                      "DATABASE_URL": "${DATABASE_URL}"
+                    }
+                  }
+                },
+                {
+                  "type": "mcp",
+                  "mcp": {
+                    "server_name": "puppeteer",
+                    "description": "Web automation and scraping using Puppeteer",
+                    "command": ["npx", "-y", "@modelcontextprotocol/server-puppeteer"],
+                    "args": [],
+                    "env": {}
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "You are a helpful assistant with access to both custom workflow tools and MCP (Model Context Protocol) tools.",
+                    "You can:",
+                    "- Use custom function tools for workflow-specific operations",
+                    "- Use MCP filesystem tools to read and write files",
+                    "- Use MCP memory tools to store information between conversations",
+                    "- Use MCP database tools to query and modify data",
+                    "- Use MCP web search tools to find information online",
+                    "- Use MCP GitHub tools for repository operations",
+                    "- Use MCP Google Drive tools for file management",
+                    "- Use MCP Slack tools for communication",
+                    "- Use MCP web automation tools for scraping",
+                    "Choose the most appropriate tool for each task."
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30
+            }
+          }
+        }
+      }
+    },
+    "processed": {
+      "transitions": {}
+    }
+  }
+}

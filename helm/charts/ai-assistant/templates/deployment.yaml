@@ -80,6 +80,11 @@ spec:
             - name: {{ .Values.service.serverPort.name }}
               containerPort: {{ .Values.service.serverPort.target }}
               protocol: TCP
+            {{- if .Values.mcp.enabled }}
+            - name: {{ .Values.service.mcpPort.name }}
+              containerPort: {{ .Values.service.mcpPort.target }}
+              protocol: TCP
+            {{- end }}
           resources: {{- toYaml .Values.resources | nindent 12 }}
           {{- if .Values.actuatorEnabled }}
           livenessProbe:

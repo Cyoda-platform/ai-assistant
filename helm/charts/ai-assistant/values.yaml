@@ -10,7 +10,11 @@ imagePullSecrets:
   - name: regcred
 container:
   env:
-    vars: {}
+    vars:
+      PROJECT_ROOT: "/app"
+      PYTHONPATH: "/app"
+      MCP_SERVER_PORT: "8002"
+      APP_PORT: "5000"
     extraVars: []
     configMaps: []
     secrets: []
@@ -20,17 +24,17 @@ host:
 
 health:
   liveness:
-    path: /actuator/health/liveness
+    path: /
     initialDelaySeconds: 30
     timeoutSeconds: 5
     periodSeconds: 30
     failureThreshold: 10
   readiness:
-    path: /actuator/health/readiness
-    initialDelaySeconds: 30
+    path: /api/mcp/health
+    initialDelaySeconds: 15
     timeoutSeconds: 5
-    periodSeconds: 30
-    failureThreshold: 10
+    periodSeconds: 10
+    failureThreshold: 3
 service:
   name: ai-assistant-service
   type: NodePort
@@ -38,6 +42,10 @@ service:
     port: 5000
     target: 5000
     name: http
+  mcpPort:
+    port: 8002
+    target: 8002
+    name: mcp
 
 ingress:
   enabled: true
@@ -46,6 +54,19 @@ ingress:
   path: api
   pathType: Prefix
   tls: []
+
+# MCP (Model Context Protocol) Server Configuration
+mcp:
+  enabled: true
+  # Dedicated ingress for MCP-only access (optional)
+  dedicatedIngress:
+    enabled: true
+    host: mcp.yourdomain.com
+    annotations: {}
+    tls:
+      - hosts:
+          - mcp.yourdomain.com
+        secretName: ai-assistant-mcp-tls
 
 autoscaling:
   enabled: false

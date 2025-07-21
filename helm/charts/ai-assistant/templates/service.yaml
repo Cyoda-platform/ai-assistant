@@ -15,6 +15,15 @@ spec:
       nodePort:  {{ .Values.service.nodePort }}
       {{- end }}
       name: {{ .Values.service.serverPort.name }}
+    {{- if .Values.mcp.enabled }}
+    - port: {{ .Values.service.mcpPort.port }}
+      targetPort: {{ .Values.service.mcpPort.target }}
+      protocol: TCP
+      {{- if .Values.service.mcpNodePort }}
+      nodePort:  {{ .Values.service.mcpNodePort }}
+      {{- end }}
+      name: {{ .Values.service.mcpPort.name }}
+    {{- end }}
   selector:
     app.kubernetes.io/name: {{ .Values.name }}
 {{- end }}

@@ -4,6 +4,8 @@ FROM python:3.12@sha256:f78ea8a345769eb3aa1c86cf147dfd68f1a4508ed56f9d7574e4687b
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV PROJECT_ROOT=/app
+ENV PYTHONPATH=/app
 
 # Set the working directory in the container
 WORKDIR /app
@@ -13,9 +15,13 @@ COPY . /app/
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-# Install git and curl
+
+# Install system dependencies including Node.js for MCP servers
 RUN apt-get update && \
-    apt-get install -y git curl
+    apt-get install -y git curl && \
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set GitHub credentials as build arguments (to avoid hardcoding)
 ARG GITHUB_TOKEN
@@ -30,8 +36,8 @@ RUN git config --global credential.helper store && \
     git config --global user.email "app-builder@example.com" && \
     git config --global user.name "app-builder"
 
-# Expose the port the app runs on
-EXPOSE 5000
+# Expose the ports the app runs on
+EXPOSE 5000 8002
 
 # Run Django's development server
 CMD ["hypercorn", "app:app", "--bind", "0.0.0.0:5000", "--workers", "1"]

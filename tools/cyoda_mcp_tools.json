@@ -1,0 +1,1346 @@
+{
+  "info": {
+    "title": "Cyoda API MCP Tools",
+    "description": "MCP tools generated from Cyoda API OpenAPI specification",
+    "version": "1.0",
+    "source": {
+      "type": "openapi",
+      "title": "Cyoda API",
+      "version": "1.0",
+      "description": "API for Cyoda, providing access to entity management, search capabilities, SQL schema operations, and more.\n\n## Core Capabilities\n\n### Entity Management\nAPIs for managing entities including creation, updates, and statistics retrieval.\nAll changes are executed transactionally with collections processed in transactional batches.\n\n### Entity Model\nOperations for managing entity models, including import/export, versioning, and lifecycle management.\nSupports model locking/unlocking, change level control, and metadata conversion through various formats.\n\nModel Lifecycle Rules:\n- Entity models must be locked before any entities can be saved using that model\n- A locked model cannot be unlocked if there are existing entities in the database using that model\n- Models can only be deleted when unlocked and when no entities reference them\n\nChange Level Control:\nModels support hierarchical change levels (from least to most impactful):\n- ARRAY_LENGTH: Only allows UniTypeArray width increases\n- ARRAY_ELEMENTS: Permits MultiTypeArray changes without new types\n- TYPE: Allows type modifications\n- STRUCTURAL: Permits fundamental model changes\n\nWhen a change level is set, all less impactful changes are automatically allowed.\n\n### Search\nProvides endpoints for searching and retrieving entities using both synchronous and asynchronous approaches.\n\nKey Features:\n- Snapshot-based searches for large datasets\n- Real-time synchronous searches for immediate results\n- Point-in-time querying capabilities\n- Pagination support for large result sets\n\nSearch Methods:\n1. Snapshot Search (/snapshot/*):\n   - Creates a persistent snapshot of search results\n   - The query is distributed across the cluster of Cyoda processing nodes\n   - Horizontally scalable - query time decreases linearly with cluster size\n   - Supports asynchronous processing of large datasets\n   - Allows status monitoring and cancellation\n   - Results can be retrieved in pages\n   \n2. Direct Search (/{entityName}/{modelVersion}):\n   - Synchronous, in-memory search\n   - Designed for small to medium datasets\n   - Limited by maximum result set size (default: 1000, max: 10000)\n   - Non-distributed (executes on single node)\n   - Configurable timeout and result limits\n   - Returns immediate streaming results\n\nAll endpoints support:\n- Point-in-time queries using ISO 8601 datetime format\n- Complex search conditions using GroupConditionDto\n- Model-specific searches by entity name and version\n\n### SQL Schema\nOperations for managing SQL schemas and tables, including generation from entity models\nand configuration of database views.\n\n### Edge Messaging\nAPIs for handling edge message communication and processing.\n\n## Authentication\n\nThis API uses **OAuth 2.0 Client Credentials Grant** for machine-to-machine authentication.\n\n### Getting Started\n1. **Create a machine-to-machine (M2M) user** through the client management API (requires SUPER_USER role)\n2. **Obtain an access token** using the client credentials via the OAuth token endpoint\n3. **Authenticate requests** by including the access token in the Authorization header: `Bearer <access_token>`\n\n### Authentication Flow\n- **Technical User Management**: Create, list, reset credentials, and delete M2M clients for your organization\n- **Token Issuance**: Standard OAuth 2.0 client credentials flow - no prior authentication required\n- **Bearer Token Authentication**: All protected API endpoints require a valid JWT bearer token\n- **Role-Based Access Control**: Different endpoints require specific roles (USER, ADMIN, M2M, SUPER_USER)\n\n### User Account Management\n- **Account Information**: Retrieve current user account details, tenant information, and roles\n- **Subscription Management**: Access subscription information, limits, and feature toggles\n- **Multi-tenant Support**: All operations are scoped to the authenticated user's legal entity, a.k.a tenant\n\n### Security Features\n- **JWT Tokens**: Secure, stateless authentication with configurable expiration\n- **Role-based Authorization**: Access control based on user roles\n- **Tenant Isolation**: Data and operations are isolated by legal entity boundaries\n- **Credential Management**: Secure client secret generation and rotation capabilities"
+    }
+  },
+  "tools": [
+    {
+      "name": "accountget",
+      "description": "Retrieve information about the current user's account, including current subscription.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_accountget"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/account",
+        "method": "GET",
+        "operationId": "accountGet",
+        "tags": [
+          "User, Account"
+        ]
+      }
+    },
+    {
+      "name": "accountsubscriptionsget",
+      "description": "Retrieve all subscriptions available for the current user's legal entity.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_accountsubscriptionsget"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/account/subscriptions",
+        "method": "GET",
+        "operationId": "accountSubscriptionsGet",
+        "tags": [
+          "User, Account"
+        ]
+      }
+    },
+    {
+      "name": "listtechnicalusers",
+      "description": "List all M2M clients",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_listtechnicalusers"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/clients",
+        "method": "GET",
+        "operationId": "listTechnicalUsers",
+        "tags": [
+          "User, Machine"
+        ]
+      }
+    },
+    {
+      "name": "createtechnicaluser",
+      "description": "Create M2M client",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_createtechnicaluser"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/clients",
+        "method": "POST",
+        "operationId": "createTechnicalUser",
+        "tags": [
+          "User, Machine"
+        ]
+      }
+    },
+    {
+      "name": "deletetechnicaluser",
+      "description": "Delete a M2M client",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "description": "The client ID of the M2M client to delete"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_deletetechnicaluser"
+          }
+        },
+        "required": [
+          "clientId"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/clients/{clientId}",
+        "method": "DELETE",
+        "operationId": "deleteTechnicalUser",
+        "tags": [
+          "User, Machine"
+        ]
+      }
+    },
+    {
+      "name": "resettechnicalusersecret",
+      "description": "Reset M2M client secret",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "description": "The client ID of the M2M client whose secret should be reset"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_resettechnicalusersecret"
+          }
+        },
+        "required": [
+          "clientId"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/clients/{clientId}/secret",
+        "method": "PUT",
+        "operationId": "resetTechnicalUserSecret",
+        "tags": [
+          "User, Machine"
+        ]
+      }
+    },
+    {
+      "name": "getentitystatistics",
+      "description": "Retrieve entity statistics",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "pointInTime": {
+            "type": "string",
+            "description": "The point-in-time for statistics in ISO 8601 format (e.g., '2035-01-01T12:00:00Z'). Defaults to current consistency time if not provided"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_getentitystatistics"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/entity/stats",
+        "method": "GET",
+        "operationId": "getEntityStatistics",
+        "tags": [
+          "Entity Management"
+        ]
+      }
+    },
+    {
+      "name": "getentitystatisticsbystate",
+      "description": "Retrieve entity statistics by state",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "pointInTime": {
+            "type": "string",
+            "description": "The point-in-time for statistics in ISO 8601 format (e.g., '2035-01-01T12:00:00Z'). Defaults to current consistency time if not provided"
+          },
+          "states": {
+            "type": "array",
+            "description": "Optional list of states for which to calculate statistics. If not provided, statistics will be calculated for all current workflow states"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_getentitystatisticsbystate"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/entity/stats/states",
+        "method": "GET",
+        "operationId": "getEntityStatisticsByState",
+        "tags": [
+          "Entity Management"
+        ]
+      }
+    },
+    {
+      "name": "getoneentity",
+      "description": "Get a  single entity",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the entity to get"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_getoneentity"
+          }
+        },
+        "required": [
+          "entityId"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/entity/{entityId}",
+        "method": "GET",
+        "operationId": "getOneEntity",
+        "tags": [
+          "Entity Management"
+        ]
+      }
+    },
+    {
+      "name": "deletesingleentity",
+      "description": "Delete a single entity",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the entity to delete"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_deletesingleentity"
+          }
+        },
+        "required": [
+          "entityId"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/entity/{entityId}",
+        "method": "DELETE",
+        "operationId": "deleteSingleEntity",
+        "tags": [
+          "Entity Management"
+        ]
+      }
+    },
+    {
+      "name": "getallentities",
+      "description": "Get All Entities",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityName": {
+            "type": "string",
+            "description": "Name of the entity model to retrieve."
+          },
+          "modelVersion": {
+            "type": "integer",
+            "description": "Version number of the entity model"
+          },
+          "pageSize": {
+            "type": "integer",
+            "description": "Number of entities to return per page. Must be greater than 0."
+          },
+          "pageNumber": {
+            "type": "integer",
+            "description": "Page number to retrieve, starting from 1. Must be greater than 0."
+          },
+          "pointInTime": {
+            "type": "string",
+            "description": "The point-in-time for loading the entities, in ISO 8601 format (e.g., '2035-01-01T12:00:00Z'). Defaults to the current consistency time of the system if not provided."
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_getallentities"
+          }
+        },
+        "required": [
+          "entityName",
+          "modelVersion"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/entity/{entityName}/{modelVersion}",
+        "method": "GET",
+        "operationId": "getAllEntities",
+        "tags": [
+          "Entity Management"
+        ]
+      }
+    },
+    {
+      "name": "deleteallentities",
+      "description": "Delete all Entities of a model and version",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityName": {
+            "type": "string",
+            "description": "Name of the entity model to delete"
+          },
+          "modelVersion": {
+            "type": "integer",
+            "description": "Version number of the entity model"
+          },
+          "transactionSize": {
+            "type": "integer",
+            "description": "Maximum number of entities to delete in a single transaction. Higher values may improve performance but increase memory usage."
+          },
+          "pointInTime": {
+            "type": "string",
+            "description": "The point-in-time for selecting the entities for deletion, in ISO 8601 format (e.g., '2035-01-01T12:00:00Z'). Defaults to the consistency time of the system if not provided."
+          },
+          "verbose": {
+            "type": "boolean",
+            "description": "Include the list of deleted entity IDs in the response. When false, only returns statistics."
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_deleteallentities"
+          }
+        },
+        "required": [
+          "entityName",
+          "modelVersion"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/entity/{entityName}/{modelVersion}",
+        "method": "DELETE",
+        "operationId": "deleteAllEntities",
+        "tags": [
+          "Entity Management"
+        ]
+      }
+    },
+    {
+      "name": "updatecollection",
+      "description": "Update Collection",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "description": "Format of the input payload"
+          },
+          "transactionWindow": {
+            "type": "integer",
+            "description": "Maximum number of entities per transaction batch"
+          },
+          "transactionTimeoutMillis": {
+            "type": "integer",
+            "description": "Maximum time in milliseconds allowed for transaction completion"
+          },
+          "waitForConsistencyAfter": {
+            "type": "boolean",
+            "description": "If true, waits for consistency after operation completes"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_updatecollection"
+          }
+        },
+        "required": [
+          "format"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/entity/{format}",
+        "method": "PUT",
+        "operationId": "updateCollection",
+        "tags": [
+          "Entity Management"
+        ]
+      }
+    },
+    {
+      "name": "createcollection",
+      "description": "Create Collection",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "description": "Format of the input payload"
+          },
+          "transactionWindow": {
+            "type": "integer",
+            "description": "Maximum number of entities per transaction batch"
+          },
+          "transactionTimeoutMillis": {
+            "type": "integer",
+            "description": "Maximum time in milliseconds allowed for transaction completion"
+          },
+          "waitForConsistencyAfter": {
+            "type": "boolean",
+            "description": "If true, waits for consistency after operation completes"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_createcollection"
+          }
+        },
+        "required": [
+          "format"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/entity/{format}",
+        "method": "POST",
+        "operationId": "createCollection",
+        "tags": [
+          "Entity Management"
+        ]
+      }
+    },
+    {
+      "name": "updatesingle",
+      "description": "Update Single",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "description": "Format of the input payload"
+          },
+          "entityId": {
+            "type": "string",
+            "description": "The unique identifier (UUID) of the entity to update"
+          },
+          "transition": {
+            "type": "string",
+            "description": "The transition state to apply to the entity (e.g., 'UPDATE', 'PUBLISH')"
+          },
+          "transactionTimeoutMillis": {
+            "type": "integer",
+            "description": "Maximum time in milliseconds allowed for transaction completion. Operation will fail if it takes longer than this timeout."
+          },
+          "waitForConsistencyAfter": {
+            "type": "boolean",
+            "description": "If true, waits for the consistency time to pass before responding. May increase response time but guarantees data consistency when returning, so that subsequent calls will see the updated data."
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_updatesingle"
+          }
+        },
+        "required": [
+          "format",
+          "entityId",
+          "transition"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/entity/{format}/{entityId}/{transition}",
+        "method": "PUT",
+        "operationId": "updateSingle",
+        "tags": [
+          "Entity Management"
+        ]
+      }
+    },
+    {
+      "name": "create",
+      "description": "Create New",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "description": "Format of the input payload"
+          },
+          "entityName": {
+            "type": "string",
+            "description": "Name of the entity model"
+          },
+          "modelVersion": {
+            "type": "integer",
+            "description": "Version number of the entity model"
+          },
+          "transactionWindow": {
+            "type": "integer",
+            "description": "Maximum number of entities to process in a single transaction"
+          },
+          "transactionTimeoutMillis": {
+            "type": "integer",
+            "description": "Maximum time in milliseconds for transaction completion"
+          },
+          "waitForConsistencyAfter": {
+            "type": "boolean",
+            "description": "If true, waits for consistency after the operation completes"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_create"
+          }
+        },
+        "required": [
+          "format",
+          "entityName",
+          "modelVersion"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/entity/{format}/{entityName}/{modelVersion}",
+        "method": "POST",
+        "operationId": "create",
+        "tags": [
+          "Entity Management"
+        ]
+      }
+    },
+    {
+      "name": "getmessage",
+      "description": "Retrieve an edge message by ID",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "description": "Unique identifier of the message to retrieve"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_getmessage"
+          }
+        },
+        "required": [
+          "messageId"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/message/get/{messageId}",
+        "method": "GET",
+        "operationId": "getMessage",
+        "tags": [
+          "Edge message"
+        ]
+      }
+    },
+    {
+      "name": "newmessage",
+      "description": "Send a new edge message",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string",
+            "description": "Message subject identifier"
+          },
+          "transactionTimeoutMillis": {
+            "type": "integer",
+            "description": "Maximum time in milliseconds to wait for transaction completion"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_newmessage"
+          }
+        },
+        "required": [
+          "subject"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/message/new/{subject}",
+        "method": "POST",
+        "operationId": "newMessage",
+        "tags": [
+          "Edge message"
+        ]
+      }
+    },
+    {
+      "name": "getavailableentitymodels",
+      "description": "List Available Entity Models",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_getavailableentitymodels"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/model/",
+        "method": "GET",
+        "operationId": "getAvailableEntityModels",
+        "tags": [
+          "Entity model"
+        ]
+      }
+    },
+    {
+      "name": "exportmetadata",
+      "description": "Export Entity Model Metadata",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityName": {
+            "type": "string",
+            "description": "The model name of the entity"
+          },
+          "modelVersion": {
+            "type": "integer",
+            "description": "The model version"
+          },
+          "converter": {
+            "type": "string",
+            "description": "The type converter to use"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_exportmetadata"
+          }
+        },
+        "required": [
+          "entityName",
+          "modelVersion",
+          "converter"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/model/export/{converter}/{entityName}/{modelVersion}",
+        "method": "GET",
+        "operationId": "exportMetadata",
+        "tags": [
+          "Entity model"
+        ]
+      }
+    },
+    {
+      "name": "importentitymodel",
+      "description": "Import Entity Model",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityName": {
+            "type": "string",
+            "description": "The model name of the entity"
+          },
+          "modelVersion": {
+            "type": "integer",
+            "description": "The version number for the model"
+          },
+          "converter": {
+            "type": "string",
+            "description": "The type converter to use for processing the data"
+          },
+          "dataFormat": {
+            "type": "string",
+            "description": "The format of the input data"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_importentitymodel"
+          }
+        },
+        "required": [
+          "entityName",
+          "modelVersion",
+          "converter",
+          "dataFormat"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/model/import/{dataFormat}/{converter}/{entityName}/{modelVersion}",
+        "method": "POST",
+        "operationId": "importEntityModel",
+        "tags": [
+          "Entity model"
+        ]
+      }
+    },
+    {
+      "name": "deleteentitymodel",
+      "description": "Delete Entity Model",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityName": {
+            "type": "string",
+            "description": "The model name of the entity"
+          },
+          "modelVersion": {
+            "type": "integer",
+            "description": "The version number of the model"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_deleteentitymodel"
+          }
+        },
+        "required": [
+          "entityName",
+          "modelVersion"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/model/{entityName}/{modelVersion}",
+        "method": "DELETE",
+        "operationId": "deleteEntityModel",
+        "tags": [
+          "Entity model"
+        ]
+      }
+    },
+    {
+      "name": "setentitymodelchangelevel",
+      "description": "Set Entity Model Change Level",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityName": {
+            "type": "string",
+            "description": "The model name of the entity"
+          },
+          "modelVersion": {
+            "type": "integer",
+            "description": "The version number of the model"
+          },
+          "changeLevel": {
+            "type": "string",
+            "description": "\nThe allowed change level for the model.\nSet to null to disallow all changes.\nValid values: ARRAY_LENGTH, ARRAY_ELEMENTS, TYPE, STRUCTURAL\n            "
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_setentitymodelchangelevel"
+          }
+        },
+        "required": [
+          "entityName",
+          "modelVersion",
+          "changeLevel"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/model/{entityName}/{modelVersion}/changeLevel/{changeLevel}",
+        "method": "POST",
+        "operationId": "setEntityModelChangeLevel",
+        "tags": [
+          "Entity model"
+        ]
+      }
+    },
+    {
+      "name": "lockentitymodel",
+      "description": "Lock Entity Model",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityName": {
+            "type": "string",
+            "description": "The model name of the entity"
+          },
+          "modelVersion": {
+            "type": "integer",
+            "description": "The version number of the model"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_lockentitymodel"
+          }
+        },
+        "required": [
+          "entityName",
+          "modelVersion"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/model/{entityName}/{modelVersion}/lock",
+        "method": "PUT",
+        "operationId": "lockEntityModel",
+        "tags": [
+          "Entity model"
+        ]
+      }
+    },
+    {
+      "name": "unlockentitymodel",
+      "description": "Unlock Entity Model",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityName": {
+            "type": "string",
+            "description": "The model name of the entity"
+          },
+          "modelVersion": {
+            "type": "integer",
+            "description": "The version number of the model"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_unlockentitymodel"
+          }
+        },
+        "required": [
+          "entityName",
+          "modelVersion"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/model/{entityName}/{modelVersion}/unlock",
+        "method": "PUT",
+        "operationId": "unlockEntityModel",
+        "tags": [
+          "Entity model"
+        ]
+      }
+    },
+    {
+      "name": "gettechnicalusertoken",
+      "description": "Obtain access token for M2M client",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_gettechnicalusertoken"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/oauth/token",
+        "method": "POST",
+        "operationId": "getTechnicalUserToken",
+        "tags": [
+          "User, Machine"
+        ]
+      }
+    },
+    {
+      "name": "savesnapshotwithdata",
+      "description": "Create Search Snapshot",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "pointInTime": {
+            "type": "string",
+            "description": "The point-in-time for the report, in ISO 8601 format (e.g., '2035-01-01T12:00:00Z'). Defaults to the current consistency time of the system if not provided."
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_savesnapshotwithdata"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/search/snapshot/{entityName}/{modelVersion}",
+        "method": "POST",
+        "operationId": "saveSnapshotWithData",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    {
+      "name": "getsnapshotresults",
+      "description": "Retrieve paginated results from a search snapshot",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "snapshotId": {
+            "type": "string",
+            "description": "Path parameter snapshotId"
+          },
+          "pageSize": {
+            "type": "integer",
+            "description": "Query parameter pageSize"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "description": "Query parameter pageNumber"
+          },
+          "pointInTime": {
+            "type": "string",
+            "description": "The point-in-time for loading the entities, in ISO 8601 format (e.g., '2035-01-01T12:00:00Z'). Defaults to the point-in-time of the report if not provided."
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_getsnapshotresults"
+          }
+        },
+        "required": [
+          "snapshotId"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/search/snapshot/{snapshotId}",
+        "method": "GET",
+        "operationId": "getSnapshotResults",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    {
+      "name": "cancelofcreatingsnapshot",
+      "description": "Cancel a running snapshot creation",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "snapshotId": {
+            "type": "string",
+            "description": "Path parameter snapshotId"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_cancelofcreatingsnapshot"
+          }
+        },
+        "required": [
+          "snapshotId"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/search/snapshot/{snapshotId}/cancel",
+        "method": "PUT",
+        "operationId": "cancelOfCreatingSnapshot",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    {
+      "name": "getstatusforsavingsnapshot",
+      "description": "Get snapshot search status",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "snapshotId": {
+            "type": "string",
+            "description": "Path parameter snapshotId"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_getstatusforsavingsnapshot"
+          }
+        },
+        "required": [
+          "snapshotId"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/search/snapshot/{snapshotId}/status",
+        "method": "GET",
+        "operationId": "getStatusForSavingSnapshot",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    {
+      "name": "search",
+      "description": "Perform synchronous entity search",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityName": {
+            "type": "string",
+            "description": "Path parameter entityName"
+          },
+          "modelVersion": {
+            "type": "integer",
+            "description": "Path parameter modelVersion"
+          },
+          "clientPointTime": {
+            "type": "string",
+            "description": "The point-in-time for searching the entities, in ISO 8601 format. Defaults to the consistency time of the system if not provided."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "The maximum number of rows to return. You can specify a limit of up to 10000 and defaults to 1000 if not provided."
+          },
+          "timeoutMillis": {
+            "type": "integer",
+            "description": "The maximum time to wait for the query to complete, in milliseconds, and defaults to60000 if not provided."
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_search"
+          }
+        },
+        "required": [
+          "entityName",
+          "modelVersion"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/search/{entityName}/{modelVersion}",
+        "method": "POST",
+        "operationId": "search",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    {
+      "name": "getschemabyname",
+      "description": "Get schema by name",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "schemaName": {
+            "type": "string",
+            "description": "Name of the schema to retrieve"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_getschemabyname"
+          }
+        },
+        "required": [
+          "schemaName"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/sql/schema/",
+        "method": "GET",
+        "operationId": "getSchemaByName",
+        "tags": [
+          "SQL-Schema"
+        ]
+      }
+    },
+    {
+      "name": "saveschema",
+      "description": "Save schema",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_saveschema"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/sql/schema/",
+        "method": "POST",
+        "operationId": "saveSchema",
+        "tags": [
+          "SQL-Schema"
+        ]
+      }
+    },
+    {
+      "name": "deleteschemabyname",
+      "description": "Delete schema by name",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "schemaName": {
+            "type": "string",
+            "description": "Name of the schema to delete"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_deleteschemabyname"
+          }
+        },
+        "required": [
+          "schemaName"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/sql/schema/",
+        "method": "DELETE",
+        "operationId": "deleteSchemaByName",
+        "tags": [
+          "SQL-Schema"
+        ]
+      }
+    },
+    {
+      "name": "gentables",
+      "description": "Generate SQL tables from an entity model",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityModelId": {
+            "type": "string",
+            "description": "The entity model id to generate tables from"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_gentables"
+          }
+        },
+        "required": [
+          "entityModelId"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/sql/schema/genTables/{entityModelId}",
+        "method": "GET",
+        "operationId": "genTables",
+        "tags": [
+          "SQL-Schema"
+        ]
+      }
+    },
+    {
+      "name": "getschemas",
+      "description": "List all schemas",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_getschemas"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/sql/schema/listAll",
+        "method": "GET",
+        "operationId": "getSchemas",
+        "tags": [
+          "SQL-Schema"
+        ]
+      }
+    },
+    {
+      "name": "putschema",
+      "description": "Create default schema",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "schemaName": {
+            "type": "string",
+            "description": "Name for the new schema. The name can have a maximum of 1024 characters"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_putschema"
+          }
+        },
+        "required": [
+          "schemaName"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/sql/schema/putDefault/{schemaName}",
+        "method": "PUT",
+        "operationId": "putSchema",
+        "tags": [
+          "SQL-Schema"
+        ]
+      }
+    },
+    {
+      "name": "updatetables",
+      "description": "Synchronize given SQL table configurations with the current entity model",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entityModelId": {
+            "type": "string",
+            "description": "The entity model ID to update tables from"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_updatetables"
+          }
+        },
+        "required": [
+          "entityModelId"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/sql/schema/updateTables/{entityModelId}",
+        "method": "POST",
+        "operationId": "updateTables",
+        "tags": [
+          "SQL-Schema"
+        ]
+      }
+    },
+    {
+      "name": "getschema",
+      "description": "Get schema by ID",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "schemaId": {
+            "type": "string",
+            "description": "UUID of the schema to retrieve"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_getschema"
+          }
+        },
+        "required": [
+          "schemaId"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/sql/schema/{schemaId}",
+        "method": "GET",
+        "operationId": "getSchema",
+        "tags": [
+          "SQL-Schema"
+        ]
+      }
+    },
+    {
+      "name": "deleteschema",
+      "description": "Delete schema by ID",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "schemaId": {
+            "type": "string",
+            "description": "UUID of the schema to delete"
+          },
+          "technical_id": {
+            "type": "string",
+            "description": "Technical identifier for the operation",
+            "default": "cyoda_deleteschema"
+          }
+        },
+        "required": [
+          "schemaId"
+        ],
+        "additionalProperties": false
+      },
+      "openapi_info": {
+        "path": "/sql/schema/{schemaId}",
+        "method": "DELETE",
+        "operationId": "deleteSchema",
+        "tags": [
+          "SQL-Schema"
+        ]
+      }
+    }
+  ]
+}

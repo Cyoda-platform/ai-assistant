@@ -5,6 +5,8 @@ import os
 from common.config.config import config as env_config
 import common.config.const as const
 from common.ai.ai_agent import OpenAiAgent
+from common.ai.adk_agent import AdkAgent
+from common.ai.openai_sdk_agent import OpenAiSdkAgent
 from common.ai.clients.openai_client import AsyncOpenAIClient
 from common.auth.cyoda_auth import CyodaAuthService
 from common.grpc_client.grpc_client import GrpcClient
@@ -70,8 +72,33 @@ class ServicesFactory:
                 scheduler_service=self.scheduler,
                 data_service=self.data_service
             )
-            self.openai_client = AsyncOpenAIClient()
-            self.ai_agent = OpenAiAgent(client=self.openai_client)
+            # Choose AI Agent Implementation
+            import os
+            agent_type = os.getenv('AI_AGENT_TYPE', 'openai')  # Default to ADK
+
+            if agent_type.lower() == 'openai':
+                # Option 1: Use OpenAI Agent (original implementation)
+                self.openai_client = AsyncOpenAIClient()
+                self.ai_agent = OpenAiAgent(client=self.openai_client)
+                logger.info("Using OpenAI Agent (original implementation)")
+
+            elif agent_type.lower() == 'openai_sdk':
+                # Option 2: Use OpenAI SDK Agent (Assistants API)
+                self.ai_agent = OpenAiSdkAgent()
+                logger.info("Using OpenAI SDK Agent (Assistants API)")
+
+            else:
+                # Option 3: Use Google ADK Agent with MCP support (default)
+                # Configure MCP servers (optional)
+                mcp_servers_env = os.getenv('MCP_SERVERS', '')
+                if mcp_servers_env:
+                    mcp_servers = [s.strip() for s in mcp_servers_env.split(',') if s.strip()]
+                else:
+                    # Default MCP servers for workflow functionality
+                    mcp_servers = ['memory', 'filesystem']  # Add more as needed
+
+                self.ai_agent = AdkAgent(mcp_servers=mcp_servers)
+                logger.info("Using Google ADK Agent with MCP support")
 
             self.workflow_dispatcher = WorkflowDispatcher(
                 cls=ChatWorkflow,

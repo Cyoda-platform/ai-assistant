@@ -1,0 +1,52 @@
+{
+  "mcp_servers": {
+    "custom_tools": {
+      "command": [
+        "python",
+        "/app/mcp_servers/custom_tools_server.py"
+      ],
+      "description": "Custom business logic tools",
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}",
+        "API_KEY": "${CUSTOM_API_KEY}"
+      }
+    },
+    "filesystem": {
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem"
+      ],
+      "args": [
+        "/app/data"
+      ],
+      "description": "File system operations"
+    },
+    "database": {
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sqlite"
+      ],
+      "args": [
+        "/app/data/production.db"
+      ],
+      "description": "Production database access"
+    }
+  },
+  "agent_config": {
+    "default_mcp_servers": [
+      "custom_tools",
+      "filesystem"
+    ],
+    "production_mcp_servers": [
+      "custom_tools",
+      "database"
+    ],
+    "development_mcp_servers": [
+      "custom_tools",
+      "filesystem",
+      "database"
+    ]
+  }
+}

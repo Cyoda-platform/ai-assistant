@@ -1,0 +1,80 @@
+{
+  "initial_state": "none",
+  "workflow_name": "mcp_test_workflow",
+  "states": {
+    "none": {
+      "transitions": {
+        "process_request": {
+          "next": "processed",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "model": {
+                "model_name": "gemini-2.0-flash",
+                "temperature": 0.7,
+                "max_tokens": 10000
+              },
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_user_info",
+                    "description": "Get user information",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "mcp",
+                  "mcp": {
+                    "server_name": "test_server",
+                    "description": "Test MCP server with calculation, time, and text analysis functions",
+                    "command": [
+                      "python",
+                      "mcp_servers/test_server.py"
+                    ],
+                    "args": [],
+                    "env": {}
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "You are a helpful assistant with access to custom MCP tools.",
+                    "You can:",
+                    "- Calculate sums using the calculate_sum tool",
+                    "- Get current time using get_current_time tool",
+                    "- Create greetings using create_greeting tool",
+                    "- Analyze text using analyze_text tool",
+                    "- Check workflow status using workflow_status tool",
+                    "Use these tools to help users with their requests."
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30
+            }
+          }
+        }
+      }
+    },
+    "processed": {
+      "transitions": {}
+    }
+  }
+}
