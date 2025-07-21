@@ -32,7 +32,7 @@ def main():
 
         # Build the output path under outputs/ preserving subdirs
         relative_path = file_path.relative_to(CONFIG_DIR)
-        output_file = OUTPUT_ROOT / relative_path
+        output_file = OUTPUT_ROOT / "config" / relative_path
         output_dir = output_file.parent
         output_dir.mkdir(parents=True, exist_ok=True)
         workflow_name = file_path.relative_to(CONFIG_DIR).parts[-1].split(".")[0]

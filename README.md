@@ -115,13 +115,13 @@ Convert workflow JSONs to Cyoda DTO format:
 python -m common.workflow.workflow_to_dto_converter
 ```
 
-This generates output files in the `outputs/` folder.
+This generates output files in the `outputs/config` folder.
 
 **Note:** This manual step will be removed in future versions.
 
 ### 5. Import Workflows to Cyoda
 
-Manually import all workflows from the `outputs/` directory into your Cyoda environment.
+Manually import all workflows from the `outputs/config` directory into your Cyoda environment.
 
 ---
 
