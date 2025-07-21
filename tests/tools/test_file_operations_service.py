@@ -260,7 +260,7 @@ class TestFileOperationsService:
     @pytest.mark.asyncio
     async def test_delete_files_success(self, service, mock_agentic_entity):
         """Test successful file deletion."""
-        with patch('common.utils.utils.delete_file', new_callable=AsyncMock) as mock_delete, \
+        with patch('tools.file_operations_service.delete_file', new_callable=AsyncMock) as mock_delete, \
              patch('common.utils.utils.get_repository_name', return_value="test_repo"), \
              patch('common.utils.utils.git_pull', new_callable=AsyncMock), \
              patch('common.utils.utils._git_push', new_callable=AsyncMock), \
@@ -274,11 +274,48 @@ class TestFileOperationsService:
             assert result == ""
 
     @pytest.mark.asyncio
-    async def test_delete_files_no_files(self, service, mock_agentic_entity):
-        """Test file deletion with no files specified."""
-        result = await service.delete_files("tech_id", mock_agentic_entity, files=[])
-        
-        assert result == "No files specified for deletion"
+    async def test_delete_files_no_files_or_directories(self, service, mock_agentic_entity):
+        """Test file deletion with no files or directories specified."""
+        result = await service.delete_files("tech_id", mock_agentic_entity, files=[], directories=[])
+
+        assert result == "No files or directories specified for deletion"
+
+    @pytest.mark.asyncio
+    async def test_delete_directories_success(self, service, mock_agentic_entity):
+        """Test successful directory deletion."""
+        with patch('tools.file_operations_service.delete_directory', new_callable=AsyncMock) as mock_delete_dir, \
+             patch('common.utils.utils.get_repository_name', return_value="test_repo"), \
+             patch('common.utils.utils.git_pull', new_callable=AsyncMock), \
+             patch('common.utils.utils._git_push', new_callable=AsyncMock), \
+             patch('common.utils.utils.set_upstream_tracking', new_callable=AsyncMock):
+
+            result = await service.delete_files(
+                "tech_id", mock_agentic_entity,
+                directories=["dir1", "dir2"]
+            )
+
+            assert result == ""
+            assert mock_delete_dir.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_delete_files_and_directories_success(self, service, mock_agentic_entity):
+        """Test successful deletion of both files and directories."""
+        with patch('tools.file_operations_service.delete_file', new_callable=AsyncMock) as mock_delete_file, \
+             patch('tools.file_operations_service.delete_directory', new_callable=AsyncMock) as mock_delete_dir, \
+             patch('common.utils.utils.get_repository_name', return_value="test_repo"), \
+             patch('common.utils.utils.git_pull', new_callable=AsyncMock), \
+             patch('common.utils.utils._git_push', new_callable=AsyncMock), \
+             patch('common.utils.utils.set_upstream_tracking', new_callable=AsyncMock):
+
+            result = await service.delete_files(
+                "tech_id", mock_agentic_entity,
+                files=["file1.py", "file2.py"],
+                directories=["dir1", "dir2"]
+            )
+
+            assert result == ""
+            assert mock_delete_file.call_count == 2
+            assert mock_delete_dir.call_count == 2
 
     @pytest.mark.asyncio
     async def test_save_entity_templates_success(self, service, mock_chat_entity):

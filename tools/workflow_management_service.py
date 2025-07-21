@@ -51,7 +51,16 @@ class WorkflowManagementService(BaseWorkflowService):
                     'EntityName': entity_name,
                     const.GIT_BRANCH_PARAM: entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
                 }
-
+                # Launch preemptive deploy flow
+                deploy_child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
+                    technical_id=technical_id,
+                    entity=entity,
+                    entity_model=const.ModelName.AGENTIC_FLOW_ENTITY.value,
+                    workflow_name=(
+                        const.ModelName.PREEMPTIVE_CYODA_ENV_DEPLOYMENT.value
+                    ),
+                    workflow_cache=workflow_cache
+                )
                 # Launch agentic workflow
                 child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
                     technical_id=technical_id,

@@ -6,7 +6,7 @@ from typing import List
 import common.config.const as const
 from common.utils.utils import (
     get_project_file_name, _git_push, _save_file, clone_repo,
-    read_file_util, delete_file
+    read_file_util, delete_file, delete_directory
 )
 from tools.repository_resolver import resolve_repository_name_with_language_param
 from entity.chat.chat import ChatEntity
@@ -337,36 +337,50 @@ class FileOperationsService(BaseWorkflowService):
 
     async def delete_files(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
         """
-        Delete multiple files from the repository.
-        
+        Delete multiple files and directories from the repository.
+
         Args:
             technical_id: Technical identifier
             entity: Agentic flow entity
-            **params: Parameters including files list
-            
+            **params: Parameters including files list and directories list
+
         Returns:
             Empty string on success or error message
         """
         try:
             files: List[str] = params.get("files", [])
-            if not files:
-                return "No files specified for deletion"
+            directories: List[str] = params.get("directories", [])
+
+            if not files and not directories:
+                return "No files or directories specified for deletion"
 
             # Use repository resolver to determine repository name
             repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
 
+            # Delete files
             for file_name in files:
                 await delete_file(
                     _data=technical_id,
                     item=file_name,
-                    git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                    git_branch_id=git_branch_id,
                     repository_name=repository_name
                 )
+
+            # Delete directories
+            for directory_name in directories:
+                await delete_directory(
+                    _data=technical_id,
+                    item=directory_name,
+                    git_branch_id=git_branch_id,
+                    repository_name=repository_name
+                )
+
             return ""
-            
+
         except Exception as e:
-            self.logger.exception("Error deleting files: %s", str(e))
-            return self._handle_error(entity, e, "Error deleting files")
+            self.logger.exception("Error deleting files and directories: %s", str(e))
+            return self._handle_error(entity, e, "Error deleting files and directories")
 
     async def save_entity_templates(self, technical_id: str, entity: ChatEntity, **params) -> str:
         """

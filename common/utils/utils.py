@@ -3,6 +3,7 @@ import logging
 import os
 import queue
 import jwt
+import shutil
 import time
 import re
 from datetime import datetime, timedelta, timezone
@@ -867,6 +868,35 @@ async def delete_file(_data, item, git_branch_id, repository_name: str, folder_n
         logger.info("Pushed deletion to git")
 
     return str(file_path)
+
+
+async def delete_directory(_data, item, git_branch_id, repository_name: str, folder_name=None) -> str:
+    """
+    Delete a directory and all its contents inside a specific directory in a cloned repository.
+    If config.CLONE_REPO is true, pushes the deletion to the repository.
+    """
+    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
+    target_dir = os.path.join(f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}", folder_name or "")
+    directory_path = os.path.join(target_dir, item)
+
+    logger.info(f"Attempting to delete directory: {directory_path}")
+
+    # Delete directory and all its contents
+    if os.path.exists(directory_path) and os.path.isdir(directory_path):
+        await asyncio.to_thread(shutil.rmtree, directory_path)
+        logger.info(f"Deleted directory: {directory_path}")
+    else:
+        logger.warning(f"Directory not found for deletion: {directory_path}")
+
+    # Push changes to Git if cloning is enabled
+    if config.CLONE_REPO == "true":
+        await _git_push(git_branch_id=git_branch_id,
+                        file_paths=[item],
+                        commit_message=f"deleted directory {item}",
+                        repository_name=repository_name)
+        logger.info("Pushed directory deletion to git")
+
+    return str(directory_path)
 
 
 async def git_pull(git_branch_id, repository_name: str, merge_strategy="recursive"):
