@@ -1817,6 +1817,26 @@
     },
     "migration_confirmation_notified": {
       "transitions": {
+        "register_workflow_with_app": {
+          "next": "started_deployment_chat",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "launch_deployment_chat_workflow",
+                "description": "launch_deployment_chat_workflow",
+                "parameters": {
+                }
+              },
+              "publish": false
+            }
+          }
+        }
+      }
+    },
+    "started_deployment_chat": {
+      "transitions": {
         "generate_initial_cyoda_prototype": {
           "next": "generated_initial_cyoda_prototype",
           "action": {

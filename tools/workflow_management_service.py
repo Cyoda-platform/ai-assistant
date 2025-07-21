@@ -21,6 +21,27 @@ class WorkflowManagementService(BaseWorkflowService):
     workflow registration, validation, conversion, and diagram generation.
     """
 
+    async def launch_deployment_chat_workflow(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
+        try:
+            # Prepare workflow cache
+            workflow_cache = {
+                const.GIT_BRANCH_PARAM: entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
+            }
+
+            # Launch agentic workflow
+            child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
+                technical_id=technical_id,
+                entity=entity,
+                entity_model=const.ModelName.CHAT_ENTITY.value,
+                workflow_name=(
+                    const.ModelName.CYODA_ENV_DEPLOYMENT_CHAT.value
+                ),
+                workflow_cache=workflow_cache
+            )
+
+        except Exception as e:
+            return self._handle_error(entity, e, f"Error registering workflow: {e}")
+
     async def launch_gen_app_workflows(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
         try:
             # Validate required parameters
@@ -51,16 +72,7 @@ class WorkflowManagementService(BaseWorkflowService):
                     'EntityName': entity_name,
                     const.GIT_BRANCH_PARAM: entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
                 }
-                # Launch preemptive deploy flow
-                deploy_child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
-                    technical_id=technical_id,
-                    entity=entity,
-                    entity_model=const.ModelName.AGENTIC_FLOW_ENTITY.value,
-                    workflow_name=(
-                        const.ModelName.PREEMPTIVE_CYODA_ENV_DEPLOYMENT.value
-                    ),
-                    workflow_cache=workflow_cache
-                )
+
                 # Launch agentic workflow
                 child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
                     technical_id=technical_id,
