@@ -1,0 +1,74 @@
+{
+  "version": "1.0",
+  "description": "Template FSM with structured states, transitions, processors, and criterions",
+  "initial_state": "state_initial",
+  "workflow_name": "template_workflow",
+  "states": {
+    "state_initial": {
+      "transitions": {
+        "transition_to_01": {
+          "next": "state_01"
+        }
+      }
+    },
+    "state_01": {
+      "transitions": {
+        "transition_to_02": {
+          "next": "state_02",
+          "manual": true,
+          "processors": [
+            {
+              "name": "example_function_name",
+              "config": {
+                "attach_entity": "true",
+                "calculation_nodes_tags": "test_tag_01"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "state_02": {
+      "transitions": {
+        "transition_with_criterion_simple": {
+          "next": "state_criterion_check_01",
+          "processors": [
+            {
+              "name": "example_function_name"
+            }
+          ],
+          "criteria": [
+            {
+              "type": "function",
+              "function": {
+                "name": "example_function_name_returns_bool"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "state_criterion_check_01": {
+      "transitions": {
+        "transition_with_criterion_group": {
+          "next": "state_terminal",
+          "criteria": [
+            {
+              "type": "group",
+              "name": "criterion_group_gamma",
+              "operator": "AND",
+              "parameters": [
+                {
+                  "jsonPath": "sampleFieldA",
+                  "operatorType": "EQUALS",
+                  "value": "template_value_01",
+                  "type": "simple"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,81 @@
+Now that you've outlined the entities from the prototype code, please,
+for each entity workflow function generate workflow configuration json that represents
+best the workflow of the entity and call add_workflow tool with workflow name in camel case (like java class) and content - workflow json.
+Workflow is a finite state machine (FSM) that consists of states and transitions.
+Each state has a dictionary of transitions. Each transition has a next attribute, with the next state.
+Each transition may have an action (a name of a processor java class that will implement the process code).
+Each transition may have a condition (a name of a condition java class that will implement the validation code or a group condition).
+Always start from an initial state 'none'.
+Avoid loops.
+
+JSON Example of the Workflow:
+{
+  "version": "1.0",
+  "description": "Template FSM with structured states, transitions, processors, and criterions",
+  "initial_state": "state_initial",
+  "workflow_name": "template_workflow",
+  "states": {
+    "state_initial": {
+      "transitions": {
+        "transition_to_01": {
+          "next": "state_01"
+        }
+      }
+    },
+    "state_01": {
+      "transitions": {
+        "transition_to_02": {
+          "next": "state_02",
+          "manual": true,
+          "processors": [
+            {
+              "name": "ExampleProcessorName"
+            }
+          ]
+        }
+      }
+    },
+    "state_02": {
+      "transitions": {
+        "transition_with_criterion_simple": {
+          "next": "state_criterion_check_01",
+          "processors": [
+            {
+              "name": "ExampleProcessorName"
+            }
+          ],
+          "criteria": [
+            {
+              "type": "function",
+              "function": {
+                "name": "ExampleCriterionName"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "state_criterion_check_01": {
+      "transitions": {
+        "transition_with_criterion_group": {
+          "next": "state_terminal",
+          "criteria": [
+            {
+              "type": "group",
+              "name": "criterion_group_gamma",
+              "operator": "AND",
+              "parameters": [
+                {
+                  "jsonPath": "sampleFieldA",
+                  "operatorType": "EQUALS",
+                  "value": "template_value_01",
+                  "type": "simple"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

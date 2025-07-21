@@ -21,7 +21,7 @@ from services.chat_service import ChatService
 from services.labels_config_service import LabelsConfigService
 from services.scheduler import Scheduler
 from entity.workflow import Workflow
-from entity.workflow_dispatcher import WorkflowDispatcher
+from workflow.dispatcher.workflow_dispatcher import WorkflowDispatcher
 
 logger = logging.getLogger(__name__)
 
