@@ -155,6 +155,9 @@ ai-assistant/
 ├── requirements.txt                    # Python dependencies
 ├── .env.template                       # Example environment configuration
 
+├── entity/                             
+│   └── model.py                        # Configuration schema for model selection
+
 ├── common/                             # Core logic and modules
 │   └── workflow/                       # Workflows and workflow tools
 │       ├── config/                     # Workflow files (to be converted)
