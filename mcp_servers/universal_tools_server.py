@@ -731,6 +731,37 @@ async def sse_endpoint(credentials: HTTPAuthorizationCredentials = Depends(secur
     )
 
 
+@app.get("/mcp")
+async def mcp_info(user_info: tuple = Depends(get_current_user_optional)):
+    """MCP server information endpoint"""
+    user_id, user_token = user_info
+
+    return {
+        "name": "Universal Tools MCP Server",
+        "version": "1.0.0",
+        "protocol": "mcp",
+        "transport": "http",
+        "authentication": {
+            "required": config.ENABLE_AUTH,
+            "type": "oauth2",
+            "login_url": "/auth/login"
+        },
+        "capabilities": {
+            "tools": True,
+            "resources": False,
+            "prompts": False
+        },
+        "endpoints": {
+            "mcp": "/mcp (POST for requests, GET for info)",
+            "login": "/auth/login",
+            "callback": "/auth/callback",
+            "status": "/auth/status"
+        },
+        "tools_count": len(DISCOVERED_TOOLS),
+        "authenticated_user": user_id if user_id != "anonymous_user" else None
+    }
+
+
 @app.post("/mcp")
 async def mcp_endpoint(
     request: MCPRequest,
