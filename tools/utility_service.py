@@ -80,18 +80,18 @@ class UtilityService(BaseWorkflowService):
             else:
                 url = f"https://client-{user_id.lower()}.{config.CLIENT_HOST}"
                 try:
-                    await send_get_request(api_url=url, path='api/v1', token='')
+                    await send_get_request(api_url=url, path='api/v1', token='guest_token')
                 except InvalidTokenException:
                     deployed = True
                 except Exception as e:
                     self.logger.exception(f"Error checking Cyoda environment status: {e}")
-
+            cache['user_logged_in'] = not is_guest
             cache['cyoda_env_url'] = url
             cache['cyoda_environment_status'] = 'deployed' if deployed else 'is not yet deployed'
 
             # Prepare the final result
             cache_json = json.dumps(cache)
-            return f"Please use this information for your answer: {cache_json}"
+            return f"Please base your answer on this information: {cache_json}"
 
         except Exception as e:
             return self._handle_error(entity, e, f"Error getting user info: {e}")
