@@ -84,6 +84,8 @@ class UtilityService(BaseWorkflowService):
                         await send_get_request(api_url=url, path='api/v1', token='')
                     except InvalidTokenException:
                         deployed = True
+                    except Exception as e:
+                        self.logger.exception(f"Error checking Cyoda environment status: {e}")
 
                 cache['cyoda_env_url'] = url
                 cache['cyoda_environment_status'] = 'deployed' if deployed else 'is not yet deployed'

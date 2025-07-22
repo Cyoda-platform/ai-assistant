@@ -457,7 +457,7 @@
                     "get_user_info will return if the user env is deployed.",
                     "By this time the environment should be deployed. But if not you have 2 options:",
                     " If you have the build id check the deployment status with get_env_deploy_status.",
-                    " You should check for the build id in your context - in the earlier messages. The tools don't provide such information. Look for something like Successfully scheduled schedule cyoda env deploy with build ID ... Your environment will be available at: .... You will be notified once your environment is ready. You can check the status of the deployment by asking 'check deploy status for build ID ...'",
+                    " You should check for the build id in your context - in the earlier messages. The tools don't provide such information. Look for something like Successfully scheduled environment deployment with build ID ... Your environment will be available at: .... You will be notified once your environment is ready. You can check the status of the deployment by asking 'check deploy status for build ID ...'",
                     " If you don't have the build id - ask the user if they have the build id. If they do - call get_env_deploy_status. If they don't - call deploy_cyoda_env.",
                     "If the user env is deployed - ask the user if they want to redeploy their env. If they do - call deploy_cyoda_env.",
                     "If the user does not want to redeploy - call finish_discussion."
@@ -577,7 +577,7 @@
                     "get_user_info will return if the user env is deployed.",
                     "By this time the environment should be deployed. But if not you have 2 options:",
                     " If you have the build id check the deployment status with get_env_deploy_status.",
-                    " You should check for the build id in your context - in the earlier messages. The tools don't provide such information. Look for something like Successfully scheduled schedule cyoda env deploy with build ID ... Your environment will be available at: .... You will be notified once your environment is ready. You can check the status of the deployment by asking 'check deploy status for build ID ...'",
+                    " You should check for the build id in your context - in the earlier messages. The tools don't provide such information. Look for something like Successfully scheduled environment deployment with build ID ... Your environment will be available at: .... You will be notified once your environment is ready. You can check the status of the deployment by asking 'check deploy status for build ID ...'",
                     " If you don't have the build id - ask the user if they have the build id. If they do - call get_env_deploy_status. If they don't - call deploy_cyoda_env.",
                     "If the user env is deployed - ask the user if they want to redeploy their env. If they do - call deploy_cyoda_env.",
                     "If the user does not want to redeploy - call finish_discussion."

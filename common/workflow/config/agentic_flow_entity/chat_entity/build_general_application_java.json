@@ -1548,7 +1548,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "\"\uD83C\uDF89 **Congratulations on completing your application prototype!**\n\nYou've done an incredible job bringing your idea to life — it's exciting to see it in action. \uD83E\uDD73\n\n**\uD83E\uDDD0 This is a major milestone — well done!**\nThat said, while your prototype is impressive, it's not quite production-ready yet. A few key areas still need attention:\n\n- **Scalability & High Availability**\n- **Data Persistence & Integrity**\n- **Production-Ready Features**\n\nTo bridge these gaps, we recommend refactoring your solution using the **Cyoda Framework** and deploying to a **High Availability (HA)** cluster on **Cyoda Cloud**. This will give you:\n\n✅ Enterprise-grade reliability & failover  \n✅ Seamless data persistence  \n✅ Effortless deployment & scaling  \n✅ A full suite of production-ready tools  \n\n**Ready to take it to the next level?**  \nGive me a \uD83D\uDC4D and we’ll start refactoring to make your app robust, scalable, and fully deployable on Cyoda Cloud.\n\nIf you’d like to learn more about Cyoda, just ask!\"\n",
+              "question": "You’ve just built a working sketch of your Cyoda application. This marks the beginning of something powerful.\nNext, you’ll convert this prototype into a full application that connects directly to your Cyoda Cloud environment.\nBy doing so, you gain:\nA robust, event-driven backend on a single, coherent platform\nScalable, transactional architecture with far less complexity\nClear, maintainable data models and workflows\nEnterprise-grade reliability, built in\nAn ecosystem that accelerates delivery and adapts with your needs\n\uD83D\uDC4D Let’s bring your prototype to life in the Cyoda Cloud.",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -1732,7 +1732,7 @@
                         "transition": {
                           "type": "string",
                           "enum": [
-                            "discuss_prototype"
+                            "migration_confirmation"
                           ]
                         }
                       },
@@ -1808,18 +1808,6 @@
       }
     },
     "migration_confirmation_completed": {
-      "transitions": {
-        "submit_answer": {
-          "next": "app_requirements_step3_submitted_answer",
-          "manual": true
-        },
-        "manual_approve": {
-          "next": "deployed_cyoda_env",
-          "manual": true
-        }
-      }
-    },
-    "app_requirements_step3_submitted_answer": {
       "transitions": {
         "process_user_input": {
           "next": "app_requirements_step3_processing",
@@ -1909,8 +1897,10 @@
                 {
                   "role": "user",
                   "content": [
-                    "Call get_user_info to find out if the user is logged in. If not - ask the user to log in.",
+                    "Call get_user_info to find out if the user is logged in. If not - let the user know that for the best user experience it is recommended to log in. Once logged in please drop me a message to proceed.",
                     "get_user_info will return if the user env is deployed. If not - call deploy_cyoda_env to deploy it and immediately call the tool `finish_discussion`.",
+                    "If you call deploy_cyoda_env - please let the user know their build id and let them know they can check the status of the env deployment in a new chat. ",
+                    "This chat will be busy with building cyoda application. So by the moment they get the application migrated thwy can connect to their new Cyoda env and have fun exploring.",
                     "If the user env is deployed - ask the user if they want to redeploy their env. If they do - call deploy_cyoda_env.",
                     "If the user does not want to redeploy - call finish_discussion."
                   ]
