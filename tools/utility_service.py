@@ -70,25 +70,24 @@ class UtilityService(BaseWorkflowService):
             cache = entity.workflow_cache
 
             # Only construct and check the Cyoda environment URL if not already cached
-            if 'cyoda_env_url' not in cache:
-                user_id = entity.user_id
-                is_guest = user_id.startswith('guest.')
-                url: str
-                deployed: bool = False
+            user_id = entity.user_id
+            is_guest = user_id.startswith('guest.')
+            url: str
+            deployed: bool = False
 
-                if is_guest:
-                    url = "please, log in to deploy"
-                else:
-                    url = f"https://client-{user_id.lower()}.{config.CLIENT_HOST}"
-                    try:
-                        await send_get_request(api_url=url, path='api/v1', token='')
-                    except InvalidTokenException:
-                        deployed = True
-                    except Exception as e:
-                        self.logger.exception(f"Error checking Cyoda environment status: {e}")
+            if is_guest:
+                url = "please, log in to deploy"
+            else:
+                url = f"https://client-{user_id.lower()}.{config.CLIENT_HOST}"
+                try:
+                    await send_get_request(api_url=url, path='api/v1', token='')
+                except InvalidTokenException:
+                    deployed = True
+                except Exception as e:
+                    self.logger.exception(f"Error checking Cyoda environment status: {e}")
 
-                cache['cyoda_env_url'] = url
-                cache['cyoda_environment_status'] = 'deployed' if deployed else 'is not yet deployed'
+            cache['cyoda_env_url'] = url
+            cache['cyoda_environment_status'] = 'deployed' if deployed else 'is not yet deployed'
 
             # Prepare the final result
             cache_json = json.dumps(cache)

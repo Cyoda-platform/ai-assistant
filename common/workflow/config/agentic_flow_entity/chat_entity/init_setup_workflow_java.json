@@ -453,7 +453,7 @@
                   "role": "user",
                   "content": [
                     "Check the user information with get_user_info.",
-                    "Check if the user is logged in. If not - ask the user to log in.",
+                    "Check if the user is logged in. If not - ask the user to log in, once logged in please drop me a message to proceed. Explain that it is necessary to log in for the best user experience to deploy the environment.",
                     "get_user_info will return if the user env is deployed.",
                     "By this time the environment should be deployed. But if not you have 2 options:",
                     " If you have the build id check the deployment status with get_env_deploy_status.",
@@ -573,7 +573,7 @@
                   "role": "user",
                   "content": [
                     "Check the user information with get_user_info.",
-                    "Check if the user is logged in. If not - ask the user to log in.",
+                    "Check if the user is logged in. If not - ask the user to log in, once logged in please drop me a message to proceed. Explain that it is necessary to log in for the best user experience to deploy the environment.",
                     "get_user_info will return if the user env is deployed.",
                     "By this time the environment should be deployed. But if not you have 2 options:",
                     " If you have the build id check the deployment status with get_env_deploy_status.",
