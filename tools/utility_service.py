@@ -3,7 +3,9 @@ from typing import Any
 
 import common.config.const as const
 from common.config.config import config
+from common.exception.exceptions import InvalidTokenException
 from common.utils.chat_util_functions import _launch_transition
+from common.utils.utils import send_get_request
 from entity.chat.chat import ChatEntity
 from entity.model import AgenticFlowEntity, SchedulerEntity
 from tools.base_service import BaseWorkflowService
@@ -65,16 +67,29 @@ class UtilityService(BaseWorkflowService):
             JSON string with user information
         """
         try:
-            # Cache Cyoda environment URL if not already cached
-            if 'cyoda_env_url' not in entity.workflow_cache:
-                if entity.user_id.startswith('guest.'):
+            cache = entity.workflow_cache
+
+            # Only construct and check the Cyoda environment URL if not already cached
+            if 'cyoda_env_url' not in cache:
+                user_id = entity.user_id
+                is_guest = user_id.startswith('guest.')
+                url: str
+                deployed: bool = False
+
+                if is_guest:
                     url = "please, log in to deploy"
                 else:
-                    url = f"https://client-{entity.user_id}.{config.CLIENT_HOST}"
-                entity.workflow_cache['cyoda_env_url'] = url
+                    url = f"https://client-{user_id.lower()}.{config.CLIENT_HOST}"
+                    try:
+                        await send_get_request(api_url=url, path='api/v1', token='')
+                    except InvalidTokenException:
+                        deployed = True
 
-            # Return workflow cache as JSON
-            cache_json = json.dumps(entity.workflow_cache)
+                cache['cyoda_env_url'] = url
+                cache['cyoda_environment_status'] = 'deployed' if deployed else 'is not yet deployed'
+
+            # Prepare the final result
+            cache_json = json.dumps(cache)
             return f"Please use this information for your answer: {cache_json}"
 
         except Exception as e:

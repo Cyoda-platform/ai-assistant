@@ -425,6 +425,9 @@
                 }
               ],
               "model": {},
+              "memory_tags": [
+                "chat_deploy_env", "general_memory_tag"
+              ],
               "messages": [
                 {
                   "role": "user",
@@ -468,6 +471,9 @@
               "publish": true,
               "allow_anonymous_users": true,
               "model": {},
+              "memory_tags": [
+                "chat_deploy_env", "general_memory_tag"
+              ],
               "tools": [
                 {
                   "type": "function",

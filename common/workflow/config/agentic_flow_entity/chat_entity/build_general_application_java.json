@@ -1802,6 +1802,154 @@
     },
     "migration_confirmation_completed": {
       "transitions": {
+        "submit_answer": {
+          "next": "app_requirements_step3_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "deployed_cyoda_env",
+          "manual": true
+        }
+      }
+    },
+    "app_requirements_step3_submitted_answer": {
+      "transitions": {
+        "process_user_input": {
+          "next": "app_requirements_step3_processing",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_user_info",
+                    "description": "Use this tool to get user information like user environment URL, user branch name etc",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "deploy_cyoda_env",
+                    "description": "Launches workflow that is necessary to deploy Cyoda environment for the user. User needs to explicitly ask for deployment of Cyoda environment.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_app_setup_3"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "finish_discussion",
+                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "migration_confirmation_completed"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "memory_tags": [
+                "chat_deploy_env"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Call get_user_info to find out if the user is logged in. If not - ask the user to log in.",
+                    "get_user_info will return if the user env is deployed. If not - call deploy_cyoda_env to deploy it and finish_discussion. Do not give the user information about the deployment. Just tell that their cyoda env has been scheduled and they will be notified once it's ready.",
+                    "If the user env is deployed - ask the user if they want to redeploy their env. If they do - call deploy_cyoda_env.",
+                    "If the user does not want to redeploy - call finish_discussion."
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_step3_processing": {
+      "transitions": {
+        "process_app_setup_3_processing": {
+          "next": "migration_confirmation_completed",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "migration_confirmation_completed"
+                }
+              }
+            }
+          }
+        },
+        "process_app_setup_3_success": {
+          "next": "deployed_cyoda_env",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "parameters": {
+                  "transition": "migration_confirmation_completed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "deployed_cyoda_env": {
+      "transitions": {
         "migration_confirmation_notify": {
           "next": "migration_confirmation_notified",
           "action": {
@@ -1816,26 +1964,6 @@
       }
     },
     "migration_confirmation_notified": {
-      "transitions": {
-        "start_deployment_chat": {
-          "next": "started_deployment_chat",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "function",
-              "function": {
-                "name": "launch_deployment_chat_workflow",
-                "description": "launch_deployment_chat_workflow",
-                "parameters": {
-                }
-              },
-              "publish": false
-            }
-          }
-        }
-      }
-    },
-    "started_deployment_chat": {
       "transitions": {
         "generate_initial_cyoda_prototype": {
           "next": "generated_initial_cyoda_prototype",
