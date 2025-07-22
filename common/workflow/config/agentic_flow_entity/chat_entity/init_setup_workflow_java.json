@@ -422,6 +422,26 @@
                       "additionalProperties": false
                     }
                   }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_env_deploy_status",
+                    "description": "Use if the user wants to know the status of their environment build/deploy.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "build_id": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "build_id"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
                 }
               ],
               "model": {},
@@ -432,13 +452,15 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Step 3:** Let the user know: now let’s configure their Cyoda Cloud instance.",
-                    "- Let the user know: do they already have an environment?",
-                    "  • Let the user know: if they do, let them decide whether they want to redeploy it. If they choose to redeploy, call the deploy cyoda env tool; otherwise, call finish_discussion.",
-                    "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now (this may disrupt others!).",
-                    " Always ask for explicit confirmation to deploy the env (like, please say Yes if you're ready to deploy).",
-                    "",
-                    "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes."
+                    "Check the user information with get_user_info.",
+                    "Check if the user is logged in. If not - ask the user to log in.",
+                    "get_user_info will return if the user env is deployed.",
+                    "By this time the environment should be deployed. But if not you have 2 options:",
+                    " If you have the build id check the deployment status with get_env_deploy_status.",
+                    " You should check for the build id in your context - in the earlier messages. The tools don't provide such information. Look for something like Successfully scheduled schedule cyoda env deploy with build ID ... Your environment will be available at: .... You will be notified once your environment is ready. You can check the status of the deployment by asking 'check deploy status for build ID ...'",
+                    " If you don't have the build id - ask the user if they have the build id. If they do - call get_env_deploy_status. If they don't - call deploy_cyoda_env.",
+                    "If the user env is deployed - ask the user if they want to redeploy their env. If they do - call deploy_cyoda_env.",
+                    "If the user does not want to redeploy - call finish_discussion."
                   ]
                 }
               ],
@@ -550,15 +572,15 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Step 3:** Clarify if the user already has an environment",
-                    "  • Let the user know: if they do, let them decide whether they want to redeploy it (this may disrupt others!). If they choose to redeploy, call the deploy cyoda env tool; otherwise, call finish_discussion.",
-                    "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now .",
-                    "",
-                    "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes.",
-                    " Ask the user confirm that their environment is deployed and they are happy with the result. ",
-                    " Once the user tells you the env is ready/they are happy/done/ready to proceed finish_discussion immediately",
-                    " Always ask for explicit confirmation to deploy the env (like, please say Yes if you're ready to deploy).",
-                    "**Troubleshooting:** Let the user know: N/A (deployment errors will be surfaced by the deployment tool)."
+                    "Check the user information with get_user_info.",
+                    "Check if the user is logged in. If not - ask the user to log in.",
+                    "get_user_info will return if the user env is deployed.",
+                    "By this time the environment should be deployed. But if not you have 2 options:",
+                    " If you have the build id check the deployment status with get_env_deploy_status.",
+                    " You should check for the build id in your context - in the earlier messages. The tools don't provide such information. Look for something like Successfully scheduled schedule cyoda env deploy with build ID ... Your environment will be available at: .... You will be notified once your environment is ready. You can check the status of the deployment by asking 'check deploy status for build ID ...'",
+                    " If you don't have the build id - ask the user if they have the build id. If they do - call get_env_deploy_status. If they don't - call deploy_cyoda_env.",
+                    "If the user env is deployed - ask the user if they want to redeploy their env. If they do - call deploy_cyoda_env.",
+                    "If the user does not want to redeploy - call finish_discussion."
                   ]
                 }
               ],

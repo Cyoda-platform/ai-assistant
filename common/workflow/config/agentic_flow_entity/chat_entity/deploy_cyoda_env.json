@@ -8,12 +8,12 @@
           "next": "scheduled_deploy_env",
           "action": {
             "name": "process_event",
-            "memory_tags": [
-              "chat_deploy_env", "general_memory_tag"
-            ],
             "config": {
               "type": "function",
               "publish": true,
+              "memory_tags": [
+                "chat_deploy_env", "general_memory_tag"
+              ],
               "function": {
                 "name": "schedule_deploy_env",
                 "description": "",

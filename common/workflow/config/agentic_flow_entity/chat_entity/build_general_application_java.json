@@ -76,7 +76,7 @@
           }
         },
         "resume_migration": {
-          "next": "migration_confirmation_completed",
+          "next": "start_environment_setup",
           "condition": {
             "name": "resume_migration_criteria",
             "type": "group",
@@ -1785,7 +1785,7 @@
           }
         },
         "process_migration_confirmation_success": {
-          "next": "migration_confirmation_completed",
+          "next": "start_environment_setup",
           "condition": {
             "config": {
               "type": "function",
@@ -1797,6 +1797,13 @@
               }
             }
           }
+        }
+      }
+    },
+    "start_environment_setup": {
+      "transitions": {
+        "start_environment_setup_processing": {
+          "next": "migration_confirmation_completed"
         }
       }
     },
@@ -1903,7 +1910,7 @@
                   "role": "user",
                   "content": [
                     "Call get_user_info to find out if the user is logged in. If not - ask the user to log in.",
-                    "get_user_info will return if the user env is deployed. If not - call deploy_cyoda_env to deploy it and finish_discussion. Do not give the user information about the deployment. Just tell that their cyoda env has been scheduled and they will be notified once it's ready.",
+                    "get_user_info will return if the user env is deployed. If not - call deploy_cyoda_env to deploy it and immediately call the tool `finish_discussion`.",
                     "If the user env is deployed - ask the user if they want to redeploy their env. If they do - call deploy_cyoda_env.",
                     "If the user does not want to redeploy - call finish_discussion."
                   ]
