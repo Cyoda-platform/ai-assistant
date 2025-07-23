@@ -4,6 +4,7 @@ import aiofiles
 from typing import List
 
 import common.config.const as const
+from common.config.config import config
 from common.utils.utils import (
     get_project_file_name, _git_push, _save_file, clone_repo,
     read_file_util, delete_file, delete_directory
@@ -42,10 +43,13 @@ class FileOperationsService(BaseWorkflowService):
             )
             
             async with aiofiles.open(file_name, 'r') as template_file:
-                content = await template_file.read()
+                content: str = await template_file.read()
 
             # Replace CHAT_ID_VAR with technical_id
-            updated_content = content.replace('CHAT_ID_VAR', technical_id)
+            env_name = f"client-{entity.user_id.lower()}"
+
+            updated_content = (content.replace('CHAT_ID_VAR', technical_id)
+                               .replace('YOUR_ENV_NAME_VAR', env_name))
 
             # Save the updated content to the file
             async with aiofiles.open(file_name, 'w') as new_file:

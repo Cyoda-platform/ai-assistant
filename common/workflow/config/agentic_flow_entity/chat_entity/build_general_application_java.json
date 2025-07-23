@@ -1496,6 +1496,7 @@
                     " Call add_application_resource tool to save changes with the full contents of the file after your changes and the full path to the file.",
                     " Path for the prototype: 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java'",
                     " Path for the entity: 'src/main/java/com/java_template/application/entity/{EntityName}.java'",
+                    " Path for the functional requirements: 'src/main/java/com/java_template/prototype/functional_requirement.md' - need to update it with the latest changes from the user if necessary.",
                     " Call finish_discussion only once the user is happy with the result or asks to proceed. "
                   ]
                 }
@@ -1548,7 +1549,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "You’ve just built a working sketch of your Cyoda application. This marks the beginning of something powerful.\nNext, you’ll convert this prototype into a full application that connects directly to your Cyoda Cloud environment.\nBy doing so, you gain:\nA robust, event-driven backend on a single, coherent platform\nScalable, transactional architecture with far less complexity\nClear, maintainable data models and workflows\nEnterprise-grade reliability, built in\nAn ecosystem that accelerates delivery and adapts with your needs\n\uD83D\uDC4D Let’s bring your prototype to life in the Cyoda Cloud.",
+              "question": "You’ve just built a working sketch of your Cyoda application. This marks the beginning of something powerful.\n\nNext, you’ll convert this prototype into a full application that connects directly to your Cyoda Cloud environment.\n\nBy doing so, you gain:\n\n✅ A robust, event-driven backend on a single, coherent platform\n\n✅ Scalable, transactional architecture with far less complexity\n\n✅ Clear, maintainable data models and workflows\n\n✅ Enterprise-grade reliability, built in\n\n✅ An ecosystem that accelerates delivery and adapts with your needs\n\n👍 Let’s bring your prototype to life in the Cyoda Cloud.",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -1807,6 +1808,14 @@
         }
       }
     },
+    "waiting_for_user_deployment_input": {
+      "transitions": {
+        "submit_answer": {
+          "next": "migration_confirmation_completed",
+          "manual": true
+        }
+      }
+    },
     "migration_confirmation_completed": {
       "transitions": {
         "process_user_input": {
@@ -1878,7 +1887,7 @@
                         "transition": {
                           "type": "string",
                           "enum": [
-                            "migration_confirmation_completed"
+                            "process_app_setup_3_success"
                           ]
                         }
                       },
@@ -1898,11 +1907,13 @@
                   "role": "user",
                   "content": [
                     "Call get_user_info to find out if the user is logged in. If not - let the user know that for the best user experience it is recommended to log in. Once logged in please drop me a message to proceed.",
+                    " If the user is logged in - no need to tell them there login status. They already know it. Discuss the environment deployment:",
                     "get_user_info will return if the user env is deployed. If not - call deploy_cyoda_env to deploy it and immediately call the tool `finish_discussion`.",
                     "If you call deploy_cyoda_env - please let the user know their build id and let them know they can check the status of the env deployment in a new chat. ",
                     "This chat will be busy with building cyoda application. So by the moment they get the application migrated thwy can connect to their new Cyoda env and have fun exploring.",
                     "If the user env is deployed - ask the user if they want to redeploy their env. If they do - call deploy_cyoda_env.",
-                    "If the user does not want to redeploy - call finish_discussion."
+                    "If the user does not want to redeploy - call finish_discussion.",
+                    " You need to tell the user what cyoda env is: that this is a service they can use to integrate with Cyoda platform. "
                   ]
                 }
               ],
@@ -1916,14 +1927,14 @@
     "app_requirements_step3_processing": {
       "transitions": {
         "process_app_setup_3_processing": {
-          "next": "migration_confirmation_completed",
+          "next": "waiting_for_user_deployment_input",
           "condition": {
             "config": {
               "type": "function",
               "function": {
                 "name": "not_stage_completed",
                 "parameters": {
-                  "transition": "migration_confirmation_completed"
+                  "transition": "process_app_setup_3_success"
                 }
               }
             }
@@ -1937,7 +1948,7 @@
               "function": {
                 "name": "is_stage_completed",
                 "parameters": {
-                  "transition": "migration_confirmation_completed"
+                  "transition": "process_app_setup_3_success"
                 }
               }
             }
@@ -2009,8 +2020,10 @@
                     "CompletableFuture<ArrayNode> filteredItemsFuture = entityService.getItemsByCondition(",
                     "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,",
-                    "    condition=condition",
+                    "    condition=condition,",
+                    "    inMemory=true",
                     ")",
+                    " inMemory=true means that the search will be performed in memory, not in the database. It is useful for optimization purposes.",,
                     "Note: when retrieving or returning entities via entityService.getItem / getItems / getItemsByCondition, the unique identifier is stored in the field \"technicalId\" (not \"id\"). Use \"technicalId\" to extract or compare entity IDs.\n",
                     "Please use the following classes to construct search conditions for entity queries:",
                     "Condition (com.java_template.common.util.Condition) and SearchConditionRequest (com.java_template.common.util.SearchConditionRequest)",
@@ -2038,7 +2051,7 @@
                     "Supported operator values (for SearchConditionRequest): \"AND\", \"OR\"",
                     "",
                     "Pass the resulting SearchConditionRequest as the third argument (condition) to:",
-                    "entityService.getItemsByCondition(entityModel, entityVersion, condition)",
+                    "entityService.getItemsByCondition(entityModel, entityVersion, condition, inMemory)",
                     "3. CompletableFuture<UUID> updatedItemId = entityService.updateItem(",
                     "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,  # always use this constant",
