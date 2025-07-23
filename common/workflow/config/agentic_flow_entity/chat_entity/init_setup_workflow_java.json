@@ -206,6 +206,20 @@
                 {
                   "type": "function",
                   "function": {
+                    "name": "get_build_id_from_context",
+                    "description": "Use this tool to get the build ID from deployment workflow context. This tool automatically finds the build ID from the parent entity's deployment workflow without requiring any parameters.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {},
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
                     "name": "get_user_info",
                     "description": "Use this tool to get user information like user environment URL, user branch name etc",
                     "strict": true,
@@ -289,13 +303,17 @@
                 {
                   "role": "user",
                   "content": [
+                    "MANDATORY TOOL USAGE - YOU MUST USE TOOLS:",
+                    "You MUST use tools to check environment status. Do NOT respond without using tools first.",
+                    "",
                     "PRIORITY ORDER FOR CHECKING ENVIRONMENT STATUS:",
-                    "1. FIRST: Search your chat history for a build ID (UUID format like 3234b1f0-6650-11b2-a15d-724f23514e8c). Look for messages containing 'Successfully scheduled environment deployment with build ID' or similar deployment confirmation messages.",
-                    "2. SECOND: If no build ID found in context, use get_user_info tool as fallback.",
+                    "1. FIRST: Use get_build_id_from_context tool to automatically retrieve the build ID from deployment workflow context.",
+                    "2. SECOND: If get_build_id_from_context returns 'not found', search your chat history for a build ID (UUID format like 3234b1f0-6650-11b2-a15d-724f23514e8c).",
+                    "3. THIRD: If no build ID found in context or chat history, use get_user_info tool with user_request='check environment status and build ID'.",
                     "",
                     "ENVIRONMENT STATUS CHECK FLOW:",
-                    "• If you find a build ID in chat history: Use get_env_deploy_status to check the current deployment status.",
-                    "• If no build ID in context: Use get_user_info to check if environment is already deployed.",
+                    "• If you get a build ID from get_build_id_from_context or chat history: Use get_env_deploy_status to check the current deployment status.",
+                    "• If no build ID found anywhere: MANDATORY - Use get_user_info tool to check if environment is already deployed.",
                     "",
                     "RESPONSE BASED ON STATUS:",
                     "• If deployment is COMPLETE/SUCCESS: Tell user their environment is ready, provide environment details, and ASK if they want to get their M2M credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET) for OAuth2 flow. If user responds with 'yes', 'sure', 'okay', or any positive confirmation, immediately call ui_function_issue_technical_user.",
@@ -307,6 +325,7 @@
                   ]
                 }
               ],
+              "tool_choice": "auto",
               "publish": true,
               "approve": true
             }
@@ -347,6 +366,20 @@
                 "general_memory_tag"
               ],
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_build_id_from_context",
+                    "description": "Use this tool to get the build ID from deployment workflow context. This tool automatically finds the build ID from the parent entity's deployment workflow without requiring any parameters.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {},
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -429,13 +462,22 @@
                 {
                   "role": "user",
                   "content": [
+                    "MANDATORY TOOL USAGE - YOU MUST USE TOOLS:",
+                    "You MUST use tools to check environment status or respond to user requests. Do NOT respond without using tools first.",
+                    "",
                     "PRIORITY ORDER FOR CHECKING ENVIRONMENT STATUS:",
-                    "1. FIRST: Search your chat history for a build ID (UUID format like 3234b1f0-6650-11b2-a15d-724f23514e8c). Look for messages containing 'Successfully scheduled environment deployment with build ID' or similar deployment confirmation messages.",
-                    "2. SECOND: If no build ID found in context, use get_user_info tool as fallback.",
+                    "1. FIRST: Use get_build_id_from_context tool to automatically retrieve the build ID from deployment workflow context.",
+                    "2. SECOND: If get_build_id_from_context returns 'not found', search your chat history for a build ID (UUID format like 3234b1f0-6650-11b2-a15d-724f23514e8c).",
+                    "3. THIRD: If no build ID found in context or chat history, use get_user_info tool with user_request='check environment status and build ID'.",
                     "",
                     "ENVIRONMENT STATUS CHECK FLOW:",
-                    "• If you find a build ID in chat history: Use get_env_deploy_status to check the current deployment status.",
-                    "• If no build ID in context: Use get_user_info to check if environment is already deployed.",
+                    "• If you get a build ID from get_build_id_from_context or chat history: Use get_env_deploy_status to check the current deployment status.",
+                    "• If no build ID found anywhere: MANDATORY - Use get_user_info tool to check if environment is already deployed.",
+                    "",
+                    "USER REQUEST HANDLING:",
+                    "• If user asks for build ID specifically: MANDATORY - Use get_build_id_from_context tool first, then get_user_info tool if needed.",
+                    "• If user asks for credentials: Use ui_function_issue_technical_user tool.",
+                    "• If user asks about environment status: Follow the environment status check flow above.",
                     "",
                     "RESPONSE BASED ON STATUS:",
                     "• If deployment is COMPLETE/SUCCESS: Tell user their environment is ready, provide environment details, and ASK if they want to get their M2M credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET) for OAuth2 flow. If user responds with 'yes', 'sure', 'okay', or any positive confirmation, immediately call ui_function_issue_technical_user.",
@@ -448,8 +490,7 @@
                     "• When environment is ready: ASK user if they want M2M credentials. If they say yes/sure/okay, immediately call ui_function_issue_technical_user.",
                     "• Build ID has highest priority - only use get_user_info if no build ID found in chat history.",
                     "• Build ID is always in UUID format (8-4-4-4-12 characters).",
-                     "• If user gives positive response to M2M credentials question, call the function immediately - don't ask again.",
-                    "• Positive responses include: 'yes', 'sure', 'okay', 'ok', 'please', 'go ahead', or any affirmative answer.",
+                    "• If user gives positive response to M2M credentials question, call the function immediately - don't ask again.",
                     "• Positive responses include: 'yes', 'sure', 'okay', 'ok', 'please', 'go ahead', or any affirmative answer."
                   ]
                 }

@@ -10,6 +10,7 @@ from tools.application_editor_service import ApplicationEditorService
 from tools.workflow_management_service import WorkflowManagementService
 from tools.workflow_validation_service import WorkflowValidationService
 from tools.utility_service import UtilityService
+from tools.build_id_retrieval_service import BuildIdRetrievalService
 
 logger = logging.getLogger(__name__)
 
@@ -133,6 +134,17 @@ class ChatWorkflow(Workflow):
             mock=mock
         )
 
+        self.build_id_retrieval_service = BuildIdRetrievalService(
+            workflow_helper_service=workflow_helper_service,
+            entity_service=entity_service,
+            cyoda_auth_service=cyoda_auth_service,
+            workflow_converter_service=workflow_converter_service,
+            scheduler_service=scheduler_service,
+            data_service=data_service,
+            dataset=dataset,
+            mock=mock
+        )
+
         # Initialize function registry
         self._function_registry = self._build_function_registry()
 
@@ -218,6 +230,9 @@ class ChatWorkflow(Workflow):
             'fail_workflow': self.utility_service.fail_workflow,
             'check_scheduled_entity_status': self.utility_service.check_scheduled_entity_status,
             'trigger_parent_entity': self.utility_service.trigger_parent_entity,
+
+            # Build ID Retrieval
+            'get_build_id_from_context': self.build_id_retrieval_service.get_build_id_from_context,
 
         }
 
