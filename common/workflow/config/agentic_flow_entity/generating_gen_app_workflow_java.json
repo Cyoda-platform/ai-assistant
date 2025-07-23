@@ -89,15 +89,15 @@
                     "JSON Example of the Workflow:",
                     "{{",
                     "  \"version\": \"1.0\",",
-                    "  \"id\": \"customer_workflow\",",
-                    "  \"name\": \"Customer workflow\",",
+                    "  \"name\": \"Customer Workflow\",",
                     "  \"desc\": \"Description of the workflow\",",
                     "  \"initialState\": \"none\",",
+                    "  \"active\": true,",
                     "  \"states\": {{",
                     "    \"none\": {{",
                     "      \"transitions\": [",
                     "        {{",
-                    "          \"id\": \"transition_to_01\",",
+                    "          \"name\": \"transition_to_01\",",
                     "          \"next\": \"state_01\"",
                     "        }}",
                     "      ]",
@@ -105,14 +105,14 @@
                     "    \"state_01\": {{",
                     "      \"transitions\": [",
                     "        {{",
-                    "          \"id\": \"transition_to_02\",",
+                    "          \"name\": \"transition_to_02\",",
                     "          \"next\": \"state_02\",",
-                    "          \"manual\": true,",
                     "          \"processors\": [",
                     "            {{",
                     "              \"name\": \"ProcessorClassName\",",
+                    "              \"executionMode\": \"SYNC\",",
                     "              \"config\": {{",
-                    "                \"calculationNodesTags\": \"cyoda_application\"",
+                    "                \"calculationNodesTags\": \"cyoda_application\" <-- always use this tag",
                     "              }}",
                     "            }}",
                     "          ]",
@@ -122,17 +122,15 @@
                     "    \"state_02\": {{",
                     "      \"transitions\": [",
                     "        {{",
-                    "          \"id\": \"transition_with_criterion_simple\",",
+                    "          \"name\": \"transition_with_criterion_simple\",",
                     "          \"next\": \"state_criterion_check_01\",",
-                    "          \"processors\": [",
-                    "            {{",
-                    "              \"name\": \"example_function_name\"",
-                    "            }}",
-                    "          ],",
                     "          \"criterion\": {{",
                     "            \"type\": \"function\",",
                     "            \"function\": {{",
-                    "              \"name\": \"CriterionClassName\"",
+                    "              \"name\": \"CriterionClassName\",",
+                    "              \"config\": {{",
+                    "                \"calculationNodesTags\": \"cyoda_application\"<-- always use this tag",
+                    "              }}",
                     "            }}",
                     "          }}",
                     "        }}",
@@ -177,16 +175,12 @@
                   "type": "object",
                   "required": [
                     "version",
-                    "id",
                     "name",
                     "initialState",
                     "states"
                   ],
                   "properties": {
                     "version": {
-                      "type": "string"
-                    },
-                    "id": {
                       "type": "string"
                     },
                     "name": {
@@ -201,6 +195,9 @@
                         "none"
                       ]
                     },
+                    "active": {
+                      "type": "boolean"
+                    },
                     "states": {
                       "type": "object",
                       "additionalProperties": {
@@ -214,11 +211,11 @@
                             "items": {
                               "type": "object",
                               "required": [
-                                "id",
+                                "name",
                                 "next"
                               ],
                               "properties": {
-                                "id": {
+                                "name": {
                                   "type": "string"
                                 },
                                 "next": {
@@ -238,11 +235,25 @@
                                       "name": {
                                         "type": "string"
                                       },
+                                      "executionMode": {
+                                        "type": "string",
+                                        "enum": ["SYNC", "ASYNC_NEW_TX", "ASYNC_SAME_TX"]
+                                      },
                                       "config": {
                                         "type": "object",
                                         "properties": {
+                                          "attachEntity": {
+                                            "type": "boolean"
+                                          },
                                           "calculationNodesTags": {
                                             "type": "string"
+                                          },
+                                          "responseTimeoutMs": {
+                                            "type": "integer"
+                                          },
+                                          "retryPolicy": {
+                                            "type": "string",
+                                            "enum": ["FIXED", "EXPONENTIAL", "LINEAR"]
                                           }
                                         }
                                       }
@@ -271,37 +282,96 @@
                                       "properties": {
                                         "name": {
                                           "type": "string"
+                                        },
+                                        "config": {
+                                          "type": "object",
+                                          "properties": {
+                                            "attachEntity": {
+                                              "type": "boolean"
+                                            },
+                                            "calculationNodesTags": {
+                                              "type": "string"
+                                            },
+                                            "responseTimeoutMs": {
+                                              "type": "integer"
+                                            },
+                                            "retryPolicy": {
+                                              "type": "string",
+                                              "enum": ["FIXED", "EXPONENTIAL", "LINEAR"]
+                                            }
+                                          }
+                                        },
+                                        "criterion": {
+                                          "type": "object",
+                                          "properties": {
+                                            "type": {
+                                              "type": "string",
+                                              "enum": ["simple", "group"]
+                                            },
+                                            "jsonPath": {
+                                              "type": "string"
+                                            },
+                                            "operation": {
+                                              "type": "string",
+                                              "enum": ["EQUALS", "GREATER_THAN", "GREATER_OR_EQUAL", "LESS_THAN", "LESS_OR_EQUAL", "NOT_EQUALS"]
+                                            },
+                                            "value": {
+                                              "oneOf": [
+                                                {"type": "string"},
+                                                {"type": "number"},
+                                                {"type": "boolean"}
+                                              ]
+                                            }
+                                          }
                                         }
                                       }
                                     },
-                                    "name": {
+                                    "jsonPath": {
                                       "type": "string"
+                                    },
+                                    "operation": {
+                                      "type": "string",
+                                      "enum": ["EQUALS", "GREATER_THAN", "GREATER_OR_EQUAL", "LESS_THAN", "LESS_OR_EQUAL", "NOT_EQUALS"]
+                                    },
+                                    "value": {
+                                      "oneOf": [
+                                        {"type": "string"},
+                                        {"type": "number"},
+                                        {"type": "boolean"}
+                                      ]
                                     },
                                     "operator": {
-                                      "type": "string"
+                                      "type": "string",
+                                      "enum": ["AND", "OR"]
                                     },
-                                    "parameters": {
+                                    "conditions": {
                                       "type": "array",
                                       "items": {
                                         "type": "object",
                                         "required": [
+                                          "type",
                                           "jsonPath",
-                                          "operatorType",
-                                          "value",
-                                          "type"
+                                          "operation",
+                                          "value"
                                         ],
                                         "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": ["simple"]
+                                          },
                                           "jsonPath": {
                                             "type": "string"
                                           },
-                                          "operatorType": {
-                                            "type": "string"
+                                          "operation": {
+                                            "type": "string",
+                                            "enum": ["EQUALS", "GREATER_THAN", "GREATER_OR_EQUAL", "LESS_THAN", "LESS_OR_EQUAL", "NOT_EQUALS"]
                                           },
                                           "value": {
-                                            "type": "string"
-                                          },
-                                          "type": {
-                                            "type": "string"
+                                            "oneOf": [
+                                              {"type": "string"},
+                                              {"type": "number"},
+                                              {"type": "boolean"}
+                                            ]
                                           }
                                         }
                                       }
