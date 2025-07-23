@@ -1975,7 +1975,7 @@
                   "role": "user",
                   "content": [
                     "Step 1: Call `get_user_info` to check if the user is logged in.",
-                    "• If the user is not logged in, respond: '\uD83D\uDE0A To continue, please log in to your account. If you don’t have one yet, no worries — a new account will be created for you automatically.\n\n\uD83D\uDD10 Logging in is necessary so we can create and link your personal Cyoda environment to your account.\n\n✅ Once you're logged in, just drop a message here and I’ll get everything set up for you!' Do not proceed further until the user confirms they’re logged in.",
+                    "• If the user is not logged in, respond: '\uD83D\uDE0A To continue, please log in to your account. If you don’t have one yet, no worries — a new account will be added for you automatically.\n\n\uD83D\uDD10 Logging in is necessary so we can create and link your personal Cyoda environment to your account.\n\n✅ Once you're logged in, just drop a message here and I’ll get everything set up for you!' Do not proceed further until the user confirms they’re logged in.",
 
                     "Step 2: Once the user is confirmed to be logged in, call `get_user_info` again to check if their Cyoda environment is already deployed.",
 
