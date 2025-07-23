@@ -448,9 +448,9 @@
                     "• When environment is ready: ASK user if they want M2M credentials. If they say yes/sure/okay, immediately call ui_function_issue_technical_user.",
                     "• Build ID has highest priority - only use get_user_info if no build ID found in chat history.",
                     "• Build ID is always in UUID format (8-4-4-4-12 characters).",
-                    "                    "                    "• If user gives positive response to M2M credentials question, call the function immediately - don't ask again.",
-                    "• Positive responses include: 'yes', 'sure', 'okay', 'ok', 'please', 'go ahead', or any affirmative answer."",
-                    "• Positive responses include: 'yes', 'sure', 'okay', 'ok', 'please', 'go ahead', or any affirmative answer.""
+                     "• If user gives positive response to M2M credentials question, call the function immediately - don't ask again.",
+                    "• Positive responses include: 'yes', 'sure', 'okay', 'ok', 'please', 'go ahead', or any affirmative answer.",
+                    "• Positive responses include: 'yes', 'sure', 'okay', 'ok', 'please', 'go ahead', or any affirmative answer."
                   ]
                 }
               ],
