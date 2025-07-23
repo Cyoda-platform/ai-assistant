@@ -114,4 +114,5 @@ class OpenAiAgent:
                 # No schema: return string as before
                 adapted_messages.append({"role": "assistant", "content": content})
                 return content
-        raise Exception(f"error:Max validation retries reached last_response: {messages[-1]["content"]}")
+        logger.exception(f"error:Max validation retries reached last_response: {messages[-1]["content"]}")
+        return "Something fishy happening with the LLM..."

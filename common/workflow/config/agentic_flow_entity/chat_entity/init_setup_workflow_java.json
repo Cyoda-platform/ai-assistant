@@ -289,14 +289,21 @@
                 {
                   "role": "user",
                   "content": [
-                    " You need to do your best to find build id in your context (chat history). Look for something like Successfully scheduled environment deployment with build ID ... Your environment will be available at: .... You will be notified once your environment is ready. You can check the status of the deployment by asking 'check deploy status for build ID ...'",
-                    " Build id is of UUID format. ",
-                    " If you have a build id in your context - check the deployment status with get_env_deploy_status and let the user know the status.",
-                    " If you don't have build id use get_user_info tool to check if the environment is deployed. ",
-                    " If the user env is deployed - let the user know the env name and status and ask if they want to get their technical user. If they do - call ui_function_issue_technical_user immediately. ",
-                    " If you can't get the build id and the environment is not deployed, ask the user if they have the build id to check the status. ",
-                    "If they don't have the build id - tell the user they will need to deploy the environment in a new chat as this chat is for app setup. Tell them to deploy the environment in a new chat and go to the next step (finish discussion).",
-                    "If the user asks you to deploy the environment - ask them to start a new chat and say 'deploy my cyoda environment'."
+                    "PRIORITY ORDER FOR CHECKING ENVIRONMENT STATUS:",
+                    "1. FIRST: Search your chat history for a build ID (UUID format like 3234b1f0-6650-11b2-a15d-724f23514e8c). Look for messages containing 'Successfully scheduled environment deployment with build ID' or similar deployment confirmation messages.",
+                    "2. SECOND: If no build ID found in context, use get_user_info tool as fallback.",
+                    "",
+                    "ENVIRONMENT STATUS CHECK FLOW:",
+                    "• If you find a build ID in chat history: Use get_env_deploy_status to check the current deployment status.",
+                    "• If no build ID in context: Use get_user_info to check if environment is already deployed.",
+                    "",
+                    "RESPONSE BASED ON STATUS:",
+                    "• If deployment is COMPLETE/SUCCESS: Tell user their environment is ready, provide environment details, and ASK if they want to get their M2M credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET) for OAuth2 flow. Only call ui_function_issue_technical_user if user confirms they want the credentials.",
+                    "• If deployment is IN PROGRESS: Tell user deployment is still in progress and they can check status again in a few minutes in this same chat.",
+                    "• If deployment FAILED: Inform user of the failure and suggest they may need to redeploy in a separate chat with something like 'please, deploy my Cyoda environment'.",
+                    "• If no build ID found and no environment deployed: Ask user if they have a build ID to check status. If they don't have it, tell them they need to deploy environment first in a new chat by saying 'deploy my cyoda environment'.",
+                    "",
+                    "IMPORTANT: Users can check deployment status anytime in THIS chat - do not tell them to use a new chat for status checks."
                   ]
                 }
               ],
@@ -422,14 +429,25 @@
                 {
                   "role": "user",
                   "content": [
-                    " You need to do your best to find build id in your context (chat history). Look for something like Successfully scheduled environment deployment with build ID ... Your environment will be available at: .... You will be notified once your environment is ready. You can check the status of the deployment by asking 'check deploy status for build ID ...'",
-                    " Build id is of UUID format. ",
-                    " If you have a build id in your context - check the deployment status with get_env_deploy_status and let the user know the status.",
-                    " If you don't have build id use get_user_info tool to check if the environment is deployed. ",
-                    "If the user env is deployed - let the user know the env name, status and call ui_function_issue_technical_user immediately. Let the user know that they can now get their m2m user and client secret for oauth2 flow. ",
-                    " If you can't get the build id and the environment is not deployed, ask the user if they have the build id to check the status. ",
-                    "If they don't have the build id - tell the user they will need to deploy the environment in a new chat as this chat is for app setup. Tell them to deploy the environment in a new chat and go to the next step (finish discussion).",
-                    "If the user asks you to deploy the environment - ask them to start a new chat and say 'deploy my cyoda environment'."
+                    "PRIORITY ORDER FOR CHECKING ENVIRONMENT STATUS:",
+                    "1. FIRST: Search your chat history for a build ID (UUID format like 3234b1f0-6650-11b2-a15d-724f23514e8c). Look for messages containing 'Successfully scheduled environment deployment with build ID' or similar deployment confirmation messages.",
+                    "2. SECOND: If no build ID found in context, use get_user_info tool as fallback.",
+                    "",
+                    "ENVIRONMENT STATUS CHECK FLOW:",
+                    "• If you find a build ID in chat history: Use get_env_deploy_status to check the current deployment status.",
+                    "• If no build ID in context: Use get_user_info to check if environment is already deployed.",
+                    "",
+                    "RESPONSE BASED ON STATUS:",
+                    "• If deployment is COMPLETE/SUCCESS: Tell user their environment is ready, provide environment details, and ASK if they want to get their M2M credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET) for OAuth2 flow. Only call ui_function_issue_technical_user if user confirms they want the credentials.",
+                    "• If deployment is IN PROGRESS: Tell user deployment is still in progress and they can check status again in a few minutes in this same chat.",
+                    "• If deployment FAILED: Inform user of the failure and suggest they may need to redeploy.",
+                    "• If no build ID found and no environment deployed: Ask user if they have a build ID to check status. If they don't have it, tell them they need to deploy environment first in a new chat by saying 'deploy my cyoda environment'.",
+                    "",
+                    "IMPORTANT RULES:",
+                    "• Users can check deployment status anytime in THIS chat - do not tell them to use a new chat for status checks.",
+                    "• Always ASK before calling ui_function_issue_technical_user - never call it automatically.",
+                    "• Build ID has highest priority - only use get_user_info if no build ID found in chat history.",
+                    "• Build ID is always in UUID format (8-4-4-4-12 characters)."
                   ]
                 }
               ],

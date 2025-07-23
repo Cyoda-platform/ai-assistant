@@ -953,7 +953,23 @@
     },
     "generated_functional_requirements": {
       "transitions": {
-        "generate_functional_requirements": {
+        "notify_generated_functional_requirements": {
+          "next": "notified_generated_functional_requirements",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "✅  Saved functional requirements to src/main/java/com/java_template/prototype/functional_requirement.md. Continuing to generate the first prototype....",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "notified_generated_functional_requirements": {
+      "transitions": {
+        "generate_original_requirements": {
           "next": "generated_original_requirements",
           "action": {
             "name": "process_event",
@@ -986,6 +1002,22 @@
       }
     },
     "generated_original_requirements": {
+      "transitions": {
+        "notify_generated_original_requirements": {
+          "next": "notified_generated_original_requirements",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "✅  Saved original user requirements to src/main/java/com/java_template/prototype/user_requirement.md. Continuing to generate the first prototype....",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "notified_generated_original_requirements": {
       "transitions": {
         "extract_entities_from_prototype": {
           "next": "entities_extracted",
@@ -1099,6 +1131,22 @@
       }
     },
     "entities_extracted": {
+      "transitions": {
+        "notify_entities_extracted": {
+          "next": "notified_entities_extracted",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "✅  Saved entities to src/main/java/com/java_template/application/entity/*. Continuing to generate the first prototype....",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "notified_entities_extracted": {
       "transitions": {
         "generate_prototype_sketch": {
           "next": "prototype_completed",
@@ -1926,13 +1974,20 @@
                 {
                   "role": "user",
                   "content": [
-                    "Call get_user_info to find out if the user is logged in. If not - let the user know that for the best user experience it is recommended to log in.",
-                    " Once you know the user is logged in - call get_user_info will to check if the user env is deployed. If not - call deploy_cyoda_env to deploy it and immediately call the tool `finish_discussion`.",
-                    "If you call deploy_cyoda_env - please let the user know their build id and let them know they can check the status of the env deployment in a new chat. ",
-                    "This chat will be busy with building cyoda application. So by the moment they get the application migrated thwy can connect to their new Cyoda env and have fun exploring.",
-                    "If the user env is deployed - ask the user if they want to redeploy their env. If they do - call deploy_cyoda_env.",
-                    "If the user does not want to redeploy - call finish_discussion.",
-                    " You need to tell the user what cyoda env is: that this is a service they can use to integrate with Cyoda platform. "
+                    "Step 1: Call `get_user_info` to check if the user is logged in.",
+                    "• If the user is not logged in, respond: 'To continue, please log in to your account.  A new account will be created automatically if you don't have one yet. Once you're logged in, send a message here and I’ll help you set up your Cyoda environment.' Do not proceed further until the user confirms they’re logged in.",
+
+                    "Step 2: Once the user is confirmed to be logged in, call `get_user_info` again to check if their Cyoda environment is already deployed.",
+
+                    "• If the environment is not deployed, call `deploy_cyoda_env`, and immediately call the tool `finish_discussion`.",
+                    "• Inform the user: 'I'm now deploying your Cyoda environment. Your build ID is {{build_id}}. You can check the deployment status in a new chat while this one stays focused on setting up your Cyoda application.'",
+
+                    "• If the environment is already deployed, ask: 'Your Cyoda environment is already active. Would you like to redeploy it?'",
+                    "    - If the user agrees, call `deploy_cyoda_env`, and tell them the new build ID.",
+                    "    - If not, call `finish_discussion`.",
+
+                    "Important: Tell the user what the Cyoda environment is.",
+                    "• Say something like: 'The Cyoda environment is a personalized service that connects your application to the Cyoda platform. It enables features like data ingestion, rule execution, and runtime interactions—making it easier to build, test, and explore your Cyoda-based applications.'"
                   ]
                 }
               ],
@@ -2523,7 +2578,7 @@
           }
         },
         "rollback": {
-          "next": "workflow_implementation_validated",
+          "next": "registered_workflow_with_app",
           "manual": true
         }
       }

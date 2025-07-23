@@ -574,6 +574,7 @@ class ChatService:
         workflow_names = [
             const.ModelName.CHAT_ENTITY.value,
             const.ModelName.AGENTIC_FLOW_ENTITY.value,
+            const.ModelName.SCHEDULER_ENTITY.value,
         ]
 
         entities: List[AgenticFlowEntity] = []
@@ -616,15 +617,5 @@ class ChatService:
                     None,
                     const.TransitionKey.MANUAL_RETRY.value,
                 )
-                if entity.workflow_name == const.ModelName.CHAT_ENTITY.value:
-                    last_step = entity.chat_flow.finished_flow[-1] if entity.chat_flow.finished_flow else None
-                    if last_step and last_step.type == "answer" and not last_step.consumed:
-                        await _launch_transition(
-                            self.entity_service,
-                            entity.technical_id,
-                            self.cyoda_auth_service,
-                            None,
-                            const.TransitionKey.PROCESS_USER_INPUT.value,
-                        )
             except Exception as e:
                 logger.exception(f"Failed to rollback workflow for entity {entity.technical_id}: {e}")

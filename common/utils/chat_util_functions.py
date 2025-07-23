@@ -147,37 +147,87 @@ def _increment_iteration(chat, answer):
     # chat.transitions_memory.get("current_iteration")[transition] = MAX_ITERATION + 1
 
 
-async def _launch_transition(entity_service,
-                             technical_id,
-                             cyoda_auth_service,
-                             entity=None,
-                             transition=None):
-    next_transitions = await entity_service.get_transitions(token=cyoda_auth_service,
-                                                            meta={},
-                                                            technical_id=technical_id)
-    if not next_transitions:
-        logger.exception(f"No transitions found technical_id={technical_id}")
+async def _launch_transition(
+    entity_service,
+    technical_id: str,
+    cyoda_auth_service,
+    entity=None,
+    transition: str = None
+) -> bool:
+    """
+    Launch a workflow transition for a chat entity.
+
+    Args:
+        entity_service: Service for entity operations
+        technical_id: Unique identifier for the entity
+        cyoda_auth_service: Authentication service for Cyoda
+        entity: Optional entity data
+        transition: Optional specific transition to execute
+
+    Returns:
+        bool: True if transition was successful, False otherwise
+    """
+    try:
+        next_transitions = await entity_service.get_transitions(
+            token=cyoda_auth_service,
+            meta={},
+            technical_id=technical_id
+        )
+
+        if not next_transitions:
+            logger.error(f"No transitions found for technical_id={technical_id}")
+            return False
+
+        selected_transition = _select_transition(
+            requested_transition=transition,
+            available_transitions=next_transitions
+        )
+
+        if not selected_transition:
+            logger.error(f"No valid transition selected for technical_id={technical_id}")
+            return False
+
+        await entity_service.update_item(
+            token=cyoda_auth_service,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
+            entity_version=config.ENTITY_VERSION,
+            technical_id=technical_id,
+            entity=entity,
+            meta={"update_transition": selected_transition}
+        )
+
+        logger.info(f"Successfully launched transition '{selected_transition}' for technical_id={technical_id}")
+        return True
+
+    except Exception as e:
+        logger.exception(f"Failed to launch transition for technical_id={technical_id}: {e}")
         return False
 
-    if transition and transition not in next_transitions:
-        logger.exception(f"Sorry, no valid transitions found for transition {transition}")
-        return False
 
-    next_transition = transition if transition else next_transitions[0]
+def _select_transition(requested_transition: str, available_transitions: list) -> str:
+    """
+    Select the appropriate transition based on request and availability.
 
-    if next_transition == const.TransitionKey.MANUAL_RETRY.value and const.TransitionKey.ROLLBACK.value in next_transitions:
-        next_transition = const.TransitionKey.ROLLBACK.value
-    if not next_transition:
-        logger.exception('Sorry, no valid transitions found')
-        return False
+    Args:
+        requested_transition: The transition requested by the caller
+        available_transitions: List of available transitions
 
-    await entity_service.update_item(token=cyoda_auth_service,
-                                     entity_model=const.ModelName.CHAT_ENTITY.value,
-                                     entity_version=config.ENTITY_VERSION,
-                                     technical_id=technical_id,
-                                     entity=entity,
-                                     meta={"update_transition": next_transition})
-    return True
+    Returns:
+        str: The selected transition name, or empty string if none valid
+    """
+    if requested_transition and requested_transition not in available_transitions:
+        logger.error(f"Requested transition '{requested_transition}' not in available transitions: {available_transitions}")
+        return ""
+
+    selected_transition = requested_transition or available_transitions[0]
+
+    # Apply business rule: prefer rollback over manual retry
+    if (selected_transition == const.TransitionKey.MANUAL_RETRY.value and
+        const.TransitionKey.ROLLBACK.value in available_transitions):
+        selected_transition = const.TransitionKey.ROLLBACK.value
+        logger.info("Switching from manual_retry to rollback transition")
+
+    return selected_transition
 
 
 class _SafeDict(dict):
