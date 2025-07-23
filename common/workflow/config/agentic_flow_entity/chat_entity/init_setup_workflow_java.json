@@ -36,7 +36,8 @@
                     "You’ll guide them through the process one step at a time to ensure everything works smoothly. Let’s begin with the first step.",
                     "",
                     " Let the user know: they should pull changes from remote and locate the .env.template file in the project’s root directory. Once they’ve found it, rename it to .env and open it in a text editor.",
-                    "_Tip: Let the user know: they can confirm it’s in the root directory by using their code editor’s file tree or by running `ls` in the terminal._"
+                    "_Tip: Let the user know: they can confirm it’s in the root directory by using their code editor’s file tree or by running `ls` in the terminal._",
+                    " Once the environment is ready - you'll be able to get CYODA_CLIENT_ID and CYODA_CLIENT_SECRET. Let me check your environment status."
                   ]
                 }
               ],
@@ -246,7 +247,7 @@
                   "type": "function",
                   "function": {
                     "name": "ui_function_issue_technical_user",
-                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user or give me credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET). This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -289,9 +290,10 @@
                   "role": "user",
                   "content": [
                     " You need to do your best to find build id in your context (chat history). Look for something like Successfully scheduled environment deployment with build ID ... Your environment will be available at: .... You will be notified once your environment is ready. You can check the status of the deployment by asking 'check deploy status for build ID ...'",
+                    " Build id is of UUID format. ",
                     " If you have a build id in your context - check the deployment status with get_env_deploy_status and let the user know the status.",
                     " If you don't have build id use get_user_info tool to check if the environment is deployed. ",
-                    "If the user env is deployed - let the user know the env name, status and call ui_function_issue_technical_user immediately. Let the user know that they can now get their m2m user and client secret for oauth2 flow. ",
+                    " If the user env is deployed - let the user know the env name and status and ask if they want to get their technical user. If they do - call ui_function_issue_technical_user immediately. ",
                     " If you can't get the build id and the environment is not deployed, ask the user if they have the build id to check the status. ",
                     "If they don't have the build id - tell the user they will need to deploy the environment in a new chat as this chat is for app setup. Tell them to deploy the environment in a new chat and go to the next step (finish discussion).",
                     "If the user asks you to deploy the environment - ask them to start a new chat and say 'deploy my cyoda environment'."
@@ -382,7 +384,7 @@
                   "type": "function",
                   "function": {
                     "name": "ui_function_issue_technical_user",
-                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user or give me credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET). This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -421,6 +423,7 @@
                   "role": "user",
                   "content": [
                     " You need to do your best to find build id in your context (chat history). Look for something like Successfully scheduled environment deployment with build ID ... Your environment will be available at: .... You will be notified once your environment is ready. You can check the status of the deployment by asking 'check deploy status for build ID ...'",
+                    " Build id is of UUID format. ",
                     " If you have a build id in your context - check the deployment status with get_env_deploy_status and let the user know the status.",
                     " If you don't have build id use get_user_info tool to check if the environment is deployed. ",
                     "If the user env is deployed - let the user know the env name, status and call ui_function_issue_technical_user immediately. Let the user know that they can now get their m2m user and client secret for oauth2 flow. ",
@@ -626,7 +629,7 @@
                   "type": "function",
                   "function": {
                     "name": "ui_function_issue_technical_user",
-                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user or give me credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET). This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1131,7 +1134,7 @@
                   "type": "function",
                   "function": {
                     "name": "ui_function_issue_technical_user",
-                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user or give me credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET). This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1302,7 +1305,7 @@
                   "role": "user",
                   "content": [
                     "Let the user know: they should test their API by visiting `http://localhost:8000` (or their configured port) and ensure everything looks good.",
-                    "- Let the user know: when they save `{entity_name}`, an event will be sent and processed by their workflow code in `entity/{entity_name}/Workflow.java` and the corresponding JSON."
+                    "- Let the user know: when they save `{entity_name}`, an event will be sent and processed by their workflow code in `application/processor/* and application/criterion/*`"
                   ]
                 }
               ],
@@ -1629,7 +1632,7 @@
                   "type": "function",
                   "function": {
                     "name": "ui_function_issue_technical_user",
-                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user or give me credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET). This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1760,7 +1763,7 @@
                   "type": "function",
                   "function": {
                     "name": "ui_function_issue_technical_user",
-                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user or give me credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET). This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
                     "strict": true,
                     "parameters": {
                       "type": "object",

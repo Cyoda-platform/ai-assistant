@@ -46,7 +46,7 @@ class FileOperationsService(BaseWorkflowService):
                 content: str = await template_file.read()
 
             # Replace CHAT_ID_VAR with technical_id
-            env_name = f"client-{entity.user_id.lower()}"
+            env_name = f"client-{entity.user_id.lower()}.{config.CLIENT_HOST}"
 
             updated_content = (content.replace('CHAT_ID_VAR', technical_id)
                                .replace('YOUR_ENV_NAME_VAR', env_name))

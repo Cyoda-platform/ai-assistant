@@ -108,7 +108,7 @@
           }
         },
         "resume_gen_prototype_cyoda_workflow_json": {
-          "next": "finished_prototype_cyoda_workflow",
+          "next": "validated_controller",
           "condition": {
             "name": "resume_gen_prototype_cyoda_workflow_json_criteria",
             "type": "group",
@@ -124,7 +124,7 @@
           }
         },
         "resume_gen_entities": {
-          "next": "finished_prototype_cyoda_workflow_json",
+          "next": "validated_controller",
           "condition": {
             "name": "resume_gen_entities_criteria",
             "type": "group",
@@ -352,6 +352,10 @@
         },
         "manual_approve": {
           "next": "app_requirements_finalized",
+          "manual": true
+        },
+        "rollback": {
+          "next": "app_requirements_requested_submitted_answer",
           "manual": true
         }
       }
@@ -710,6 +714,10 @@
         },
         "manual_approve": {
           "next": "api_discussion_completed",
+          "manual": true
+        },
+        "rollback": {
+          "next": "api_inquired_submitted_answer",
           "manual": true
         }
       }
@@ -1286,6 +1294,10 @@
         "manual_approve": {
           "next": "prototype_discussion_completed",
           "manual": true
+        },
+        "rollback": {
+          "next": "prototype_discussion_requested_submitted_answer",
+          "manual": true
         }
       }
     },
@@ -1567,6 +1579,10 @@
         "manual_approve": {
           "next": "migration_confirmation_completed",
           "manual": true
+        },
+        "rollback": {
+          "next": "migration_confirmation_requested_submitted_answer",
+          "manual": true
         }
       }
     },
@@ -1813,6 +1829,10 @@
         "submit_answer": {
           "next": "migration_confirmation_completed",
           "manual": true
+        },
+        "rollback": {
+          "next": "migration_confirmation_completed",
+          "manual": true
         }
       }
     },
@@ -1906,9 +1926,8 @@
                 {
                   "role": "user",
                   "content": [
-                    "Call get_user_info to find out if the user is logged in. If not - let the user know that for the best user experience it is recommended to log in. Once logged in please drop me a message to proceed.",
-                    " If the user is logged in - no need to tell them there login status. They already know it. Discuss the environment deployment:",
-                    "get_user_info will return if the user env is deployed. If not - call deploy_cyoda_env to deploy it and immediately call the tool `finish_discussion`.",
+                    "Call get_user_info to find out if the user is logged in. If not - let the user know that for the best user experience it is recommended to log in.",
+                    " Once you know the user is logged in - call get_user_info will to check if the user env is deployed. If not - call deploy_cyoda_env to deploy it and immediately call the tool `finish_discussion`.",
                     "If you call deploy_cyoda_env - please let the user know their build id and let them know they can check the status of the env deployment in a new chat. ",
                     "This chat will be busy with building cyoda application. So by the moment they get the application migrated thwy can connect to their new Cyoda env and have fun exploring.",
                     "If the user env is deployed - ask the user if they want to redeploy their env. If they do - call deploy_cyoda_env.",
@@ -2023,7 +2042,7 @@
                     "    condition=condition,",
                     "    inMemory=true",
                     ")",
-                    " inMemory=true means that the search will be performed in memory, not in the database. It is useful for optimization purposes.",,
+                    " inMemory=true means that the search will be performed in memory, not in the database. It is useful for optimization purposes.",
                     "Note: when retrieving or returning entities via entityService.getItem / getItems / getItemsByCondition, the unique identifier is stored in the field \"technicalId\" (not \"id\"). Use \"technicalId\" to extract or compare entity IDs.\n",
                     "Please use the following classes to construct search conditions for entity queries:",
                     "Condition (com.java_template.common.util.Condition) and SearchConditionRequest (com.java_template.common.util.SearchConditionRequest)",
@@ -2363,10 +2382,6 @@
               "approve": true
             }
           }
-        },
-        "rollback": {
-          "next": "finished_prototype_cyoda_workflow_json",
-          "manual": true
         }
       }
     },
@@ -2506,6 +2521,10 @@
               "approve": false
             }
           }
+        },
+        "rollback": {
+          "next": "workflow_implementation_validated",
+          "manual": true
         }
       }
     },

@@ -70,6 +70,19 @@
               "allow_anonymous_users": true
             }
           }
+        },
+        "rollback": {
+          "next": "deployed_env",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "⚠️ Sorry, we encountered internal issues with checking the status of your Cyoda environment. Please, check the status manually.",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
         }
       }
     },
