@@ -181,8 +181,7 @@ class Notifications(str, Enum):
         "Sorry, you cannot skip this question. If you're unsure about anything, "
         "please refer to the example answers for guidance."
     )
-    APPROVE_INSTRUCTION_MESSAGE = "*✅ Approve to move to the next step. 🙈 This iteration will be locked — no going back *"
-
+    APPROVE_INSTRUCTION_MESSAGE = "✅ Click \"Approve\" to manually move to the next step.\\n🛑 Useful if the AI loops in discussion.\\n🙈 Approving will lock this iteration, so you won’t be able to go back."
 
 @unique
 class ApproveAnswer(str, Enum):

@@ -959,7 +959,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "✅  Saved functional requirements to src/main/java/com/java_template/prototype/functional_requirement.md. Continuing to generate the first prototype....",
+              "notification": "✅  Saved functional requirements to `src/main/java/com/java_template/prototype/functional_requirement.md`. Continuing to generate the first prototype....⏳\uD83D\uDE0C",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -1009,7 +1009,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "✅  Saved original user requirements to src/main/java/com/java_template/prototype/user_requirement.md. Continuing to generate the first prototype....",
+              "notification": "✅  Saved original user requirements to `src/main/java/com/java_template/prototype/user_requirement.md`. Continuing to generate the first prototype....⏳\uD83D\uDE0C",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -1138,7 +1138,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "✅  Saved entities to src/main/java/com/java_template/application/entity/*. Continuing to generate the first prototype....",
+              "notification": "✅  Saved entities to `src/main/java/com/java_template/application/entity/*`. Continuing to generate the first prototype....⏳\uD83D\uDE0C",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -1609,7 +1609,7 @@
             "name": "process_event",
             "config": {
               "type": "question",
-              "question": "You’ve just built a working sketch of your Cyoda application. This marks the beginning of something powerful.\n\nNext, you’ll convert this prototype into a full application that connects directly to your Cyoda Cloud environment.\n\nBy doing so, you gain:\n\n✅ A robust, event-driven backend on a single, coherent platform\n\n✅ Scalable, transactional architecture with far less complexity\n\n✅ Clear, maintainable data models and workflows\n\n✅ Enterprise-grade reliability, built in\n\n✅ An ecosystem that accelerates delivery and adapts with your needs\n\n👍 Let’s bring your prototype to life in the Cyoda Cloud.",
+              "question": "You’ve just built a working sketch of your Cyoda application. This marks the beginning of something powerful.\n\nNext, you’ll convert this prototype into a full application that connects directly to your Cyoda Cloud environment.\n\nBy doing so, you gain:\n\n✅ A robust, event-driven backend on a single, coherent platform\n\n✅ Scalable, transactional architecture with far less complexity\n\n✅ Clear, maintainable data models and workflows\n\n✅ Enterprise-grade reliability, built in\n\n✅ An ecosystem that accelerates delivery and adapts with your needs\n\n👍 Let’s bring your prototype to life in the Cyoda Cloud.\n\n",
               "publish": true,
               "approve": true,
               "allow_anonymous_users": true
@@ -1975,7 +1975,7 @@
                   "role": "user",
                   "content": [
                     "Step 1: Call `get_user_info` to check if the user is logged in.",
-                    "• If the user is not logged in, respond: 'To continue, please log in to your account.  A new account will be created automatically if you don't have one yet. Once you're logged in, send a message here and I’ll help you set up your Cyoda environment.' Do not proceed further until the user confirms they’re logged in.",
+                    "• If the user is not logged in, respond: '\uD83D\uDE0A To continue, please log in to your account. If you don’t have one yet, no worries — a new account will be created for you automatically.\n\n\uD83D\uDD10 Logging in is necessary so we can create and link your personal Cyoda environment to your account.\n\n✅ Once you're logged in, just drop a message here and I’ll get everything set up for you!' Do not proceed further until the user confirms they’re logged in.",
 
                     "Step 2: Once the user is confirmed to be logged in, call `get_user_info` again to check if their Cyoda environment is already deployed.",
 
