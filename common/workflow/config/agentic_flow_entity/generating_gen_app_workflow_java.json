@@ -229,7 +229,8 @@
                                   "items": {
                                     "type": "object",
                                     "required": [
-                                      "name"
+                                      "name",
+                                      "config"
                                     ],
                                     "properties": {
                                       "name": {
@@ -241,12 +242,14 @@
                                       },
                                       "config": {
                                         "type": "object",
+                                        "required": ["calculationNodesTags"],
                                         "properties": {
                                           "attachEntity": {
                                             "type": "boolean"
                                           },
                                           "calculationNodesTags": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": ["cyoda_application"]
                                           },
                                           "responseTimeoutMs": {
                                             "type": "integer"
@@ -277,7 +280,8 @@
                                     "function": {
                                       "type": "object",
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "config"
                                       ],
                                       "properties": {
                                         "name": {
@@ -285,12 +289,14 @@
                                         },
                                         "config": {
                                           "type": "object",
+                                          "required": ["calculationNodesTags"],
                                           "properties": {
                                             "attachEntity": {
                                               "type": "boolean"
                                             },
                                             "calculationNodesTags": {
-                                              "type": "string"
+                                              "type": "string",
+                                              "enum": ["cyoda_application"]
                                             },
                                             "responseTimeoutMs": {
                                               "type": "integer"
