@@ -319,6 +319,7 @@
                     "• If deployment is COMPLETE/SUCCESS: Tell user their environment is ready, provide environment details, and ASK if they want to get their M2M credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET) for OAuth2 flow. If user responds with 'yes', 'sure', 'okay', or any positive confirmation, immediately call ui_function_issue_technical_user.",
                     "• If deployment is IN PROGRESS: Tell user deployment is still in progress and they can check status again in a few minutes in this same chat.",
                     "• If deployment FAILED: Inform user of the failure and suggest they may need to redeploy in a separate chat with something like 'please, deploy my Cyoda environment'.",
+                    "CRITICAL: the user can redeploy the environment only in a separate chat. You do not have a tool to redeploy the environment.",
                     "• If no build ID found and no environment deployed: Ask user if they have a build ID to check status. If they don't have it, tell them they need to deploy environment first in a new chat by saying 'deploy my cyoda environment'.",
                     "",
                     "IMPORTANT: Users can check deployment status anytime in THIS chat - do not tell them to use a new chat for status checks."
@@ -476,6 +477,7 @@
                     "• Do NOT ask about credentials again if user already gave a clear answer.",
                     "• If user says yes to credentials, call ui_function_issue_technical_user immediately - don't ask for confirmation again.",
                     "• Process the user's actual response, don't repeat previous questions.",
+                    "CRITICAL: the user can redeploy the environment only in a separate chat. You do not have a tool to redeploy the environment.",
                     "• Positive responses include: 'yes', 'sure', 'okay', 'ok', 'please', 'go ahead', 'give me', 'I want', or any affirmative answer."
                   ]
                 }
