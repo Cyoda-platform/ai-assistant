@@ -646,7 +646,7 @@
                     "- **Requirement**: At least one entity is mandatory",
                     "",
                     "### 2. API Endpoints Design Rules",
-                    "- **POST endpoints**: Entity creation (triggers events) + business logic",
+                    "- **POST endpoints**: Entity creation (triggers events) + business logic. POST endpoint that adds an entity should return only entity id. Nothing else.",
                     "- **GET endpoints**: ONLY for retrieving stored application results",
                     "- **Business logic rule**: External data sources, calculations, processing → POST endpoints",
                     "- **EDA Principle**: Favor immutable entity creation over updates/deletes to maintain event history. Avoid update/delete endpoints unless user wants it explicitly.",
@@ -984,7 +984,8 @@
               "allow_anonymous_users": true,
               "model": {},
               "memory_tags": [
-                "requirements_generation", "general_memory_tag"
+                "requirements_generation",
+                "general_memory_tag"
               ],
               "messages": [
                 {
@@ -1115,6 +1116,7 @@
                     "",
                     "It should be a single class, no nested classes or enum. If there is necessity to use enum - use string instead.",
                     "When creating entity classes that implement CyodaEntity:\n1. Always include both `id` (business ID) and `technicalId` (database ID, private UUID technicalId;) fields\n",
+                    "POST endpoints that add entities should return only technical id. Nothing else.",
                     "Use String types for foreign key references when they represent serialized UUIDs\n4. ",
                     "Update validation logic to match the actual field types (use .isBlank() for String fields, not null checks for UUID fields)\n",
                     "5. Ensure @Data annotation from Lombok generates all necessary getters/setters",
@@ -1282,7 +1284,6 @@
                     " Keep endpoints to the minimum, just POST to register event and get to retrieve information",
                     " Concentrate on process entity methods - fully implement business logic there",
                     "### 5. CRITICAL: processEntityName() METHODS (variation: process{EntityName}{ProcessorName}() - if stated in the functional requirement). There might be multiple processors and criteria (check{EntityName}{CriteriaName}() methods. You should call them one by one after save. If criteria returns true then processor etc) .",
-
                     "**Each entity MUST have a corresponding process method with meaningful business logic:**",
                     "",
                     "```java",
@@ -2080,7 +2081,7 @@
                     "    entityVersion=ENTITY_VERSION,  # always use this constant",
                     "    entity=data  # the validated data object",
                     ")",
-                    "Note: entityService.addItem returns technicalId of the created entity.",
+                    "Note: entityService.addItem returns technicalId of the created entity. You should return only technicalId in the response. As get item by technicalId will be used to retrieve the entity.",
                     "CompletableFuture<List<UUID>> addItems idsFuture = entityService.addItems(",
                     "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,  # always use this constant",
@@ -2091,7 +2092,7 @@
                     "CompletableFuture<ObjectNode> itemFuture = entityService.getItem(",
                     "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,",
-                    "    technicalId=<id>",
+                    "    technicalId=<technicalId>",
                     ")",
                     "CompletableFuture<ArrayNode> itemsFuture = entityService.getItems(",
                     "    entityModel=\"{entityName}\",",
@@ -2132,19 +2133,7 @@
                     "",
                     "Pass the resulting SearchConditionRequest as the third argument (condition) to:",
                     "entityService.getItemsByCondition(entityModel, entityVersion, condition, inMemory)",
-                    "3. CompletableFuture<UUID> updatedItemId = entityService.updateItem(",
-                    "    entityModel=\"{entityName}\",",
-                    "    entityVersion=ENTITY_VERSION,  # always use this constant",
-                    "    technicalId=id, #technicalId is required",
-                    "    entity=data,",
-                    ")",
-                    "Note: entityService.updateItem returns technicalId of the updated entity.",
-                    "Use @JsonIgnore on fields like 'technicalId' and pass the original Java object directly to addItem or updateItem without converting to ObjectNode.",
-                    "4. CompletableFuture<UUID> deletedItemId = entityService.deleteItem(",
-                    "    entityModel=\"{entityName}\",",
-                    "    entityVersion=ENTITY_VERSION,  # always use this constant",
-                    "    technicalId=id,",
-                    ")",
+                    "Instead of updating item - create new entity with updated data. You cannot just update entity - you need to know the transition and you don't know it. So just add a new entity with a reference to the previous entity.",
                     "Note: entityService.deleteItem returns technicalId of the deleted entity.",
                     "5. CompletableFuture<ArrayNode> deletedItemsInfo = entityService.deleteItems(",
                     "    entityModel=\"{entityName}\",",
@@ -2167,7 +2156,8 @@
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```.",
                     "IMPORTANT ARCHITECTURE NOTE: This is an Event-Driven Architecture (EDA) with NoSQL principles. Updates and deletes are discouraged:",
                     "- Instead of UPDATE operations: Create new entity versions with updated data",
-                    "** Keep all the endpoints in a single class Controller (like in the prototype) - do not add multiple controller classes - just a single one. **"
+                    "** Keep all the endpoints in a single class Controller (like in the prototype) - do not add multiple controller classes - just a single one. **",
+                    "Wrap endpoints with try-catch and handle exceptions. Return HTTP 400 for IllegalArgumentException, 500 for all others."
                   ]
                 }
               ],
