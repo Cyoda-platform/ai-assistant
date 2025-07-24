@@ -636,7 +636,7 @@
                     "🚨 THE PROCESSOR MUST DO THE SAME WORK AS THE PROTOTYPE METHOD - NO SHORTCUTS",
                     "🚨 IGNORE CRITERIA FROM THE WORKFLOW - PROCESSORS ONLY",
                     "🚨 YOU CAN INJECT ONLY EntityService, SerializerFactory and ObjectMapper via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES.",
-                    "",
+                    "🚨 THE CHANGES TO THE CURRENT ENTITY MUST BE DONE BY MODIFYING THE ENTITY OBJECT PASSED TO THE PROCESSOR METHOD. DO NOT USE entityService.addItem/updateItem/deleteItem ON THE CURRENT ENTITY.",
                     "If you cannot find any business logic methods for an entity, create a simple processor that just returns the entity unchanged, but DO NOT create placeholder code that pretends to do business logic."
                   ]
                 }

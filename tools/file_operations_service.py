@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import aiofiles
@@ -20,6 +21,11 @@ class FileOperationsService(BaseWorkflowService):
     Service responsible for all file-related operations including
     saving, reading, cloning repositories, and file management.
     """
+
+    def __init__(self):
+        super().__init__()
+        self._file_write_lock = asyncio.Lock()
+        self._file_delete_lock = asyncio.Lock()
 
     async def save_env_file(self, technical_id: str, entity: ChatEntity, **params) -> str:
         """
@@ -51,11 +57,12 @@ class FileOperationsService(BaseWorkflowService):
             updated_content = (content.replace('CHAT_ID_VAR', technical_id)
                                .replace('YOUR_ENV_NAME_VAR', env_name))
 
-            # Save the updated content to the file
-            async with aiofiles.open(file_name, 'w') as new_file:
-                await new_file.write(updated_content)
-                
-            await _git_push(technical_id, [file_name], "Added env file template", repository_name=repository_name)
+            # Save the updated content to the file with lock protection
+            async with self._file_write_lock:
+                async with aiofiles.open(file_name, 'w') as new_file:
+                    await new_file.write(updated_content)
+
+                await _git_push(technical_id, [file_name], "Added env file template", repository_name=repository_name)
             return "Environment file saved successfully"
             
         except Exception as e:
@@ -87,13 +94,14 @@ class FileOperationsService(BaseWorkflowService):
                 new_content = params.get("new_content")
             else:
                 new_content = self.parse_from_string(escaped_code=params.get("new_content"))
-                
-            await _save_file(
-                _data=new_content,
-                item=params.get("filename"),
-                git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
-                repository_name=repository_name
-            )
+
+            async with self._file_write_lock:
+                await _save_file(
+                    _data=new_content,
+                    item=params.get("filename"),
+                    git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                    repository_name=repository_name
+                )
             return "File saved successfully"
             
         except Exception as e:
@@ -318,15 +326,16 @@ class FileOperationsService(BaseWorkflowService):
             # Use repository resolver to determine repository name
             repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
 
-            await clone_repo(git_branch_id=technical_id, repository_name=repository_name)
+            async with self._file_write_lock:
+                await clone_repo(git_branch_id=technical_id, repository_name=repository_name)
 
-            # Call the async _save_file function
-            await _save_file(
-                _data=technical_id,
-                item='README.txt',
-                git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
-                repository_name=repository_name
-            )
+                # Call the async _save_file function
+                await _save_file(
+                    _data=technical_id,
+                    item='README.txt',
+                    git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                    repository_name=repository_name
+                )
             
             # Update workflow cache
             entity.workflow_cache[const.GIT_BRANCH_PARAM] = technical_id
@@ -362,23 +371,24 @@ class FileOperationsService(BaseWorkflowService):
             repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
             git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
 
-            # Delete files
-            for file_name in files:
-                await delete_file(
-                    _data=technical_id,
-                    item=file_name,
-                    git_branch_id=git_branch_id,
-                    repository_name=repository_name
-                )
+            async with self._file_delete_lock:
+                # Delete files
+                for file_name in files:
+                    await delete_file(
+                        _data=technical_id,
+                        item=file_name,
+                        git_branch_id=git_branch_id,
+                        repository_name=repository_name
+                    )
 
-            # Delete directories
-            for directory_name in directories:
-                await delete_directory(
-                    _data=technical_id,
-                    item=directory_name,
-                    git_branch_id=git_branch_id,
-                    repository_name=repository_name
-                )
+                # Delete directories
+                for directory_name in directories:
+                    await delete_directory(
+                        _data=technical_id,
+                        item=directory_name,
+                        git_branch_id=git_branch_id,
+                        repository_name=repository_name
+                    )
 
             return ""
 
@@ -414,25 +424,26 @@ class FileOperationsService(BaseWorkflowService):
 
             entities = entity_design_data.get("entities", [])
 
-            for entity_data in entities:
-                entity_name = entity_data.get('entity_name')
-                entity_data_example = entity_data.get('entity_data_example')
+            async with self._file_write_lock:
+                for entity_data in entities:
+                    entity_name = entity_data.get('entity_name')
+                    entity_data_example = entity_data.get('entity_data_example')
 
-                if not entity_name:
-                    self.logger.warning("Missing 'entity_name' in entity data: %s", entity_data)
-                    continue
+                    if not entity_name:
+                        self.logger.warning("Missing 'entity_name' in entity data: %s", entity_data)
+                        continue
 
-                target_item = f"entity/{entity_name}/{entity_name}.json"
-                data_str = json.dumps(
-                    entity_data_example, indent=4, sort_keys=True
-                ) if entity_data_example is not None else "{}"
+                    target_item = f"entity/{entity_name}/{entity_name}.json"
+                    data_str = json.dumps(
+                        entity_data_example, indent=4, sort_keys=True
+                    ) if entity_data_example is not None else "{}"
 
-                await _save_file(
-                    _data=data_str,
-                    item=target_item,
-                    git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
-                    repository_name=repository_name
-                )
+                    await _save_file(
+                        _data=data_str,
+                        item=target_item,
+                        git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                        repository_name=repository_name
+                    )
                 
             return "Entity templates saved successfully"
 
@@ -465,13 +476,14 @@ class FileOperationsService(BaseWorkflowService):
             # Log the operation
             self._log_resource_operation(resource_path, entity, repository_name)
 
-            # Save the resource file
-            await _save_file(
-                _data=file_contents,
-                item=resource_path,
-                git_branch_id=git_branch_id,
-                repository_name=repository_name
-            )
+            # Save the resource file with lock protection
+            async with self._file_write_lock:
+                await _save_file(
+                    _data=file_contents,
+                    item=resource_path,
+                    git_branch_id=git_branch_id,
+                    repository_name=repository_name
+                )
 
             # Return success message
             character_count = len(file_contents)

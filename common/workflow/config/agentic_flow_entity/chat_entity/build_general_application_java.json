@@ -2131,16 +2131,13 @@
                     "You are provided with a Java codebase that implements a REST API (using Spring Boot framework).",
                     "Currently, the code uses local in‑memory dictionaries (and counters) to store and manage data for one or more entity types.",
                     "Your task is to refactor the code so that all interactions with the local cache are replaced by calls to an external service called com.java_template.common.service.EntityService. Note, that EntityService is a bean, so inject it with Controller constructor.",
-                    "",
-                    "IMPORTANT: Refactor ONLY the main entities (maximum 3 entities, orchestration entities like 'Job', 'Task' take precedence, then business domain entities) that have significant logic. Keep minor/utility entities in local cache.",
-                    "",
                     "You can use only these functions for replacement - if this is not enough just skip and leave as is",
                     "1. CompletableFuture<UUID> idFuture = entityService.addItem(",
                     "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,  # always use this constant",
                     "    entity=data  # the validated data object",
                     ")",
-                    "Note: entityService.addItem returns technicalId of the created entity. You should return only technicalId in the response. And expect this technicalId in GET by id endpoints.",
+                    "Note: entityService.addItem returns technicalId of the created entity.",
                     "CompletableFuture<List<UUID>> addItems idsFuture = entityService.addItems(",
                     "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,  # always use this constant",
@@ -2148,17 +2145,17 @@
                     ")",
                     "Note: entityService.addItems returns a list of technicalIds of the created entities.",
                     "2. Data retrieval. You can use the following methods:",
-                    " Use getItem to retrieve a single entity by technicalId that was received in the response from addItem.",
+                    " Use getItem to retrieve a single entity by technicalId.",
                     "CompletableFuture<ObjectNode> itemFuture = entityService.getItem(",
                     "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,",
                     "    technicalId=<technicalId>",
-                    ")",
+                    ")-- ObjectNode node will have entity data and technicalId field",
                     "Get all: ",
                     "CompletableFuture<ArrayNode> itemsFuture = entityService.getItems(",
                     "    entityModel=\"{entityName}\",",
                     "    entityVersion=ENTITY_VERSION,",
-                    ")",
+                    ") -- each node will have technicalId field added automatically",
                     "Get items by field that is not technicalId: ",
                     "CompletableFuture<ArrayNode> filteredItemsFuture = entityService.getItemsByCondition(",
                     "    entityModel=\"{entityName}\",",
@@ -2167,7 +2164,6 @@
                     "    inMemory=true",
                     ")",
                     " inMemory=true means that the search will be performed in memory, not in the database. It is useful for optimization purposes.",
-                    "Note: when retrieving or returning entities via entityService.getItem / getItems / getItemsByCondition, the unique identifier is stored in the field \"technicalId\" (not \"id\"). Use \"technicalId\" to extract or compare entity IDs.\n",
                     "Please use the following classes to construct search conditions for entity queries:",
                     "Condition (com.java_template.common.util.Condition) and SearchConditionRequest (com.java_template.common.util.SearchConditionRequest)",
                     "",
@@ -2175,13 +2171,11 @@
                     "com.java_template.common.util.SearchConditionRequest.group(\"AND\",",
                     "    com.java_template.common.util.Condition.of(\"$.field\", \"EQUALS\", \"value\")",
                     ")",
-                    "",
                     "To create a group of multiple conditions with logical operator AND or OR, use:",
                     "com.java_template.common.util.SearchConditionRequest.group(\"OR\",",
                     "    com.java_template.common.util.Condition.of(\"$.field1\", \"EQUALS\", \"value1\"),",
                     "    com.java_template.common.util.Condition.of(\"$.field2\", \"GREATER_THAN\", 10)",
                     ")",
-                    "",
                     "Supported operatorType values (for Condition):",
                     "\"EQUALS\", \"NOT_EQUAL\", \"IEQUALS\", \"INOT_EQUAL\", \"IS_NULL\", \"NOT_NULL\",",
                     "\"GREATER_THAN\", \"GREATER_OR_EQUAL\", \"LESS_THAN\", \"LESS_OR_EQUAL\",",
@@ -2190,36 +2184,28 @@
                     "\"BETWEEN\", \"BETWEEN_INCLUSIVE\"",
                     "",
                     "Note: If the operatorType starts with the letter 'I', it means the comparison should ignore case (e.g., \"IEQUALS\" = equals ignoring case).",
-                    "",
                     "Supported operator values (for SearchConditionRequest): \"AND\", \"OR\"",
-                    "",
                     "Pass the resulting SearchConditionRequest as the third argument (condition) to:",
                     "entityService.getItemsByCondition(entityModel, entityVersion, condition, inMemory)",
-                    "Instead of updating item - create new entity with updated data. You cannot just update entity - you need to know the transition and you don't know it. So just add a new entity with a reference to the previous entity.",
-                    "Note: entityService.deleteItem returns technicalId of the deleted entity.",
-                    "5. CompletableFuture<ArrayNode> deletedItemsInfo = entityService.deleteItems(",
-                    "    entityModel=\"{entityName}\",",
-                    "    entityVersion=ENTITY_VERSION,  # always use this constant",
-                    ")",
-                    "Note: entityService.deleteItems returns an array containing result information, for example: '[{\"entityModelClassId\": \"d16a966a-37e4-11f0-8bfa-00000ae966a9\",\"deleteResult\": {\"numberOfEntitites\": 18,\"numberOfEntititesRemoved\": 18,\"idToError\": {}}}]'",
+                    "Avoid any update operations. You can add todo instead of actual update.",
                     "use 'import static com.java_template.common.config.Config.*;' to import ENTITY_VERSION",
                     "import com.java_template.common.service.EntityService",
-                    "use package com.java_template.application.controller;",
-                    "use this class name 'Controller'",
+                    "use package com.java_template.application.controller; and class name 'Controller'",
                     "Lombok is already configured in the project via io.freefair.lombok plugin. Please use Lombok annotations like @Data, @Getter, @Setter, @AllArgsConstructor, @NoArgsConstructor, etc., instead of manually writing getters, setters, and constructors, and make sure to include the necessary Lombok imports in the generated code.",
-                    "Make sure to assign a unique @RequestMapping path to each controller to avoid conflicts. Do not reuse the same base path across multiple controllers.\n",
-                    "Preserve the endpoint routes and any other essential business logic.",
-                    "Generate a controller that calls service methods directly and lets exceptions propagate. Do not use try-catch. Let the service throw ResponseStatusException when needed. Avoid using getReasonPhrase(); use getStatusCode().toString() instead for error field.",
-                    "Please make sure you keep all the necessary business logic, like data ingestion, calling any external apis, mocks, calculations etc.",
-                    "Please take into account that entity ObjectNode has 'technicalId'",
-                    "Please return only Java code without additional information. If you'd like to add any comments please use // comment",
-                    "Please use correct logging, e.g.:",
-                    "org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Controller.class);",
+                    "Assign a unique @RequestMapping path to each controller to avoid conflicts.\n",
+                    "Preserve the endpoint routes and any other essential business logic like data ingestion, calling any external apis, mocks, calculations etc.",
+                    "Please use correct logging, e.g. org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Controller.class);",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```.",
-                    "IMPORTANT ARCHITECTURE NOTE: This is an Event-Driven Architecture (EDA) with NoSQL principles. Updates and deletes are discouraged:",
-                    "- Instead of UPDATE operations: Create new entity versions with updated data",
                     "** Keep all the endpoints in a single class Controller (like in the prototype) - do not add multiple controller classes - just a single one. **",
-                    "Wrap endpoints with try-catch and handle exceptions. Return HTTP 400 for IllegalArgumentException, 500 for all others."
+                    "Wrap endpoints with try-catch and handle exceptions. Return HTTP 400 for IllegalArgumentException, 500 for all others.",
+                    "Exhaustive list of EntityService methods:",
+                    "CompletableFuture<UUID> addItem(String entityModel, String entityVersion, Object entity);",
+                    "CompletableFuture<List<UUID>> addItems(String entityModel, String entityVersion, Object entities);",
+                    "CompletableFuture<ObjectNode> getItem(String entityModel, String entityVersion, UUID technicalId);",
+                    "CompletableFuture<ArrayNode> getItems(String entityModel, String entityVersion);",
+                    "CompletableFuture<ArrayNode> getItemsByCondition(String entityModel, String entityVersion, Object condition, boolean inMemory);",
+                    "CompletableFuture<UUID> deleteItem(String entityModel, String entityVersion, UUID technicalId);",
+                    "EntityService doesn't have any other methods, please do not reinvent anything else."
                   ]
                 }
               ],
@@ -2501,7 +2487,7 @@
     "validated_controller": {
       "transitions": {
         "register_workflow_with_app": {
-          "next": "registered_workflow_with_app",
+          "next": "finished_app_generation_flow",
           "action": {
             "name": "process_event",
             "config": {
@@ -2511,7 +2497,7 @@
                 "description": "register_workflow_with_app",
                 "parameters": {
                   "dir_name": "src/main/java/com/java_template/application/entity",
-                  "next_transition": "validate_workflow_implementation"
+                  "next_transition": "validate_app_quality"
                 }
               },
               "publish": false
@@ -2520,138 +2506,11 @@
         }
       }
     },
-    "registered_workflow_with_app": {
-      "transitions": {
-        "validate_workflow_implementation": {
-          "next": "workflow_implementation_validated",
-          "manual": true,
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "agent",
-              "publish": true,
-              "allow_anonymous_users": true,
-              "model": {},
-              "memory_tags": [
-                "generate_workflow_from_prototype"
-              ],
-              "tools": [
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "validate_workflow_implementation",
-                    "description": "Validate that all processors and criteria from workflow configuration have been implemented correctly. Returns validation results showing missing or extra components.",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "workflow_file_path": {
-                          "type": "string",
-                          "enum": [
-                            "src/main/java/com/java_template/application/workflow"
-                          ],
-                          "description": "Path to the workflow directory containing workflow JSON files"
-                        },
-                        "processors_path": {
-                          "type": "string",
-                          "enum": [
-                            "src/main/java/com/java_template/application/processor"
-                          ],
-                          "description": "Path to the processors directory containing Java processor classes"
-                        },
-                        "criteria_path": {
-                          "type": "string",
-                          "enum": [
-                            "src/main/java/com/java_template/application/criterion"
-                          ],
-                          "description": "Path to the criteria directory containing Java criteria classes"
-                        }
-                      },
-                      "required": [
-                        "workflow_file_path",
-                        "processors_path",
-                        "criteria_path"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "add_application_resource",
-                    "description": "Add a missing processor or criteria implementation file. Use this to create missing components identified by validation.",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "resource_path": {
-                          "type": "string",
-                          "description": "Path where to save the file. Use EXACT patterns: For processors: 'src/main/java/com/java_template/application/processor/{ProcessorName}.java' where {ProcessorName} is the EXACT name from workflow config. For criteria: 'src/main/java/com/java_template/application/criterion/{CriteriaName}.java' where {CriteriaName} is the EXACT name from workflow config. Examples: 'src/main/java/com/java_template/application/processor/clone_repo.java', 'src/main/java/com/java_template/application/criterion/build_new_app_criteria.java'"
-                        },
-                        "file_contents": {
-                          "type": "string",
-                          "description": "Complete Java code content for the processor or criteria class"
-                        }
-                      },
-                      "required": [
-                        "resource_path",
-                        "file_contents"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                }
-              ],
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "Please validate that all processors and criteria from the workflow configuration have been properly implemented.",
-                    "",
-                    "1. First, call validate_workflow_implementation to check the current state",
-                    "2. If validation shows missing processors or criteria, create them using add_application_resource",
-                    "3. For missing processors: use the processor template with the EXACT name from workflow config",
-                    "   - Path pattern: 'src/main/java/com/java_template/application/processor/{ProcessorName}.java'",
-                    "   - Class name: {ProcessorName} (exact match from workflow)",
-                    "4. For missing criteria: use the criteria template with the EXACT name from workflow config",
-                    "   - Path pattern: 'src/main/java/com/java_template/application/criterion/{CriteriaName}.java'",
-                    "   - Class name: {CriteriaName} (exact match from workflow)",
-                    "5. Do NOT create or modify extra components that are not in the workflow configuration",
-                    "",
-                    "IMPORTANT: When creating missing components, the class name and supports() method MUST use the EXACT name from the workflow configuration.",
-                    "",
-                    "Examples:",
-                    "- Processor '{ProcessorName}' → 'src/main/java/com/java_template/application/processor/{ProcessorName}.java'",
-                    "- Criteria '{CriteriaName}' → 'src/main/java/com/java_template/application/criterion/{CriteriaName}.java'",
-                    "",
-                    "After creating any missing components, call validate_workflow_implementation again to confirm everything is correct."
-                  ]
-                }
-              ],
-              "tool_choice": "auto",
-              "max_iteration": 10,
-              "approve": false
-            }
-          }
-        },
-        "rollback": {
-          "next": "registered_workflow_with_app",
-          "manual": true
-        }
-      }
-    },
-    "workflow_implementation_validated": {
-      "transitions": {
-        "finish_app_generation_flow": {
-          "next": "finished_app_generation_flow"
-        }
-      }
-    },
     "finished_app_generation_flow": {
       "transitions": {
         "validate_app_quality": {
           "next": "validated_app_quality",
+          "manual": true,
           "action": {
             "name": "process_event",
             "config": {
