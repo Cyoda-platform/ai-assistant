@@ -22,8 +22,25 @@ class FileOperationsService(BaseWorkflowService):
     saving, reading, cloning repositories, and file management.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self,
+                 workflow_helper_service,
+                 entity_service,
+                 cyoda_auth_service,
+                 workflow_converter_service,
+                 scheduler_service,
+                 data_service,
+                 dataset=None,
+                 mock=False):
+        super().__init__(
+            workflow_helper_service=workflow_helper_service,
+            entity_service=entity_service,
+            cyoda_auth_service=cyoda_auth_service,
+            workflow_converter_service=workflow_converter_service,
+            scheduler_service=scheduler_service,
+            data_service=data_service,
+            dataset=dataset,
+            mock=mock
+        )
         self._file_write_lock = asyncio.Lock()
         self._file_delete_lock = asyncio.Lock()
 

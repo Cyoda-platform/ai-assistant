@@ -672,7 +672,7 @@
                     "EntityName:",
                     "- field1: DataType (description/purpose)",
                     "- field2: DataType (description/purpose)",
-                    "- status: StatusEnum (entity lifecycle state)",
+                    " Do not use enum - not supported temporarily.",
                     "```",
                     "",
                     "### 2. Process Method Flows",
