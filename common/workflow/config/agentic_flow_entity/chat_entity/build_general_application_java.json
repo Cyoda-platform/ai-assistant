@@ -1975,21 +1975,15 @@
                   "role": "user",
                   "content": [
                     "Step 1: Call `get_user_info` to check if the user is logged in.",
-                    "• If the user is not logged in, respond: '\uD83D\uDE0A To continue, please log in to your account. If you don’t have one yet, no worries — a new account will be added for you automatically.\n\n\uD83D\uDD10 Logging in is necessary so we can create and link your personal Cyoda environment to your account.\n\n✅ Once you're logged in, just drop a message here and I’ll get everything set up for you!' Do not proceed further until the user confirms they’re logged in.",
-
+                    "• If the user is not logged in, respond: '😊 To continue, please log in to your account. If you don't have one yet, no worries — a new account will be added for you automatically.\n\n🔐 Logging in is necessary so we can create and link your personal Cyoda environment to your account.\n\n✅ Once you're logged in, just drop a message here and I'll get everything set up for you!' Do not proceed further until the user confirms they're logged in.",
+                    "",
                     "Step 2: Once the user is confirmed to be logged in, call `get_user_info` again to check if their Cyoda environment is already deployed.",
-
-                    "• If the environment is not deployed, call `deploy_cyoda_env`, and immediately call the tool `finish_discussion`.",
-                    "• Inform the user: 'I'm now deploying your Cyoda environment. Your build ID is {{build_id}}. You can check the deployment status in a new chat while this one stays focused on setting up your Cyoda application.'",
-
-                    "• If the environment is already deployed, first explain what the Cyoda environment is, then ask for confirmation:",
-                    "    - Say: 'The Cyoda environment is a personalized service that connects your application to the Cyoda platform. It enables features like data ingestion, rule execution, and runtime interactions—making it easier to build, test, and explore your Cyoda-based applications.'",
-                    "    - Then ask: 'Your Cyoda environment is already active. Would you like to redeploy it?'",
-                    "    - IMPORTANT: Recognize ANY positive response as agreement to redeploy. This includes: 'yes', 'y', 'yeah', 'yep', 'sure', 'ok', 'okay', 'redeploy', 'yes redeploy', 'yes, redeploy', or any message containing affirmative words.",
-                    "    - If the user gives ANY positive/affirmative response, immediately call `deploy_cyoda_env` and tell them the new build ID.",
-                    "    - Only call `finish_discussion` if the user explicitly says 'no', 'don't', 'skip', 'cancel', or clearly declines.",
-
-                    "CRITICAL: Do not repeat the same question multiple times. If you've asked about redeployment and the user responds positively, take action immediately by calling `deploy_cyoda_env`."
+                    "",
+                    "• If the environment is already deployed, call `finish_discussion` immediately to proceed to the next step.",
+                    "• Inform the user: 'Great! Your Cyoda environment is already active and ready to use. Let's proceed with setting up your application.'",
+                    "",
+                    "• If the environment is not deployed, call `deploy_cyoda_env` and immediately call `finish_discussion`.",
+                    "• Inform the user: 'I'm now deploying your Cyoda environment. Your build ID is {{build_id}}. You can check the deployment status in a new chat while this one stays focused on setting up your Cyoda application.'"
                   ]
                 }
               ],
@@ -2029,6 +2023,10 @@
               }
             }
           }
+        },
+        "rollback": {
+          "next": "start_environment_setup",
+          "manual": true
         }
       }
     },
