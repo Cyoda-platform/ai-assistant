@@ -327,8 +327,7 @@
                 }
               ],
               "tool_choice": "auto",
-              "publish": true,
-              "approve": true
+              "publish": true
             }
           }
         }

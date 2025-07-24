@@ -212,6 +212,57 @@
     },
     "chats_initialized": {
       "transitions": {
+        "generate_original_requirements": {
+          "next": "generated_original_requirements",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "prompt",
+              "publish": false,
+              "allow_anonymous_users": true,
+              "model": {},
+              "memory_tags": [
+                "requirements_generation",
+                "general_memory_tag"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Please return the requirement specified by the user. It is very important to preserve all the business logic and technical details, like specific APIs and so on.",
+                    "Output format: respond in a markdown format. Do not miss any details."
+                  ]
+                }
+              ],
+              "input": {},
+              "output": {
+                "local_fs": [
+                  "src/main/java/com/java_template/prototype/user_requirement.md"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "generated_original_requirements": {
+      "transitions": {
+        "notify_generated_original_requirements": {
+          "next": "notified_generated_original_requirements",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "✅  Saved original user requirements to `src/main/java/com/java_template/prototype/user_requirement.md`. Continuing to generate the first prototype....⏳\uD83D\uDE0C",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    },
+    "notified_generated_original_requirements": {
+      "transitions": {
         "process_initial_question": {
           "next": "app_requirements_requested",
           "action": {
@@ -651,6 +702,7 @@
                     "- **GET by technicalId**: ONLY for retrieving stored application results by technicalId - should be present for all entities that are created via POST endpoints.",
                     "- **GET by condition**: ONLY for retrieving stored application results by non-technicalId fields - should be present only if explicitly asked by the user.",
                     "- **GET all: optional.",
+                    "- If you have an orchestration entity (like Job, Task, Workflow), it should have a POST endpoint to create it, and a GET by technicalId to retrieve it. You will most likely not need any other POST endpoints for business entities as saving business entity is done via the process method.",
                     "- **Business logic rule**: External data sources, calculations, processing → POST endpoints",
                     "- **EDA Principle**: Favor immutable entity creation over updates/deletes to maintain event history. Avoid update/delete endpoints unless user wants it explicitly.",
                     "- **Data Modification**: Instead of PUT/PATCH/DELETE, use POST to create new entity states or status changes. Apply only if the user explicitly asks updates/deletes.",
@@ -977,57 +1029,6 @@
     },
     "notified_generated_functional_requirements": {
       "transitions": {
-        "generate_original_requirements": {
-          "next": "generated_original_requirements",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "prompt",
-              "publish": false,
-              "allow_anonymous_users": true,
-              "model": {},
-              "memory_tags": [
-                "requirements_generation",
-                "general_memory_tag"
-              ],
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "Please return the original requirement specified by the user. It is very important to preserve all the business logic and technical details, like specific APIs and so on.",
-                    "Output format: respond with user stories. Add technical details section with all the APIs, business logic, necessary operations and so on."
-                  ]
-                }
-              ],
-              "input": {},
-              "output": {
-                "local_fs": [
-                  "src/main/java/com/java_template/prototype/user_requirement.md"
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "generated_original_requirements": {
-      "transitions": {
-        "notify_generated_original_requirements": {
-          "next": "notified_generated_original_requirements",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "notification",
-              "notification": "✅  Saved original user requirements to `src/main/java/com/java_template/prototype/user_requirement.md`. Continuing to generate the first prototype....⏳\uD83D\uDE0C",
-              "publish": true,
-              "allow_anonymous_users": true
-            }
-          }
-        }
-      }
-    },
-    "notified_generated_original_requirements": {
-      "transitions": {
         "extract_entities_from_prototype": {
           "next": "entities_extracted",
           "action": {
@@ -1279,13 +1280,14 @@
                     "",
                     "**Event-Driven Flow Pattern (EDA-Compliant):**",
                     "1. **POST /prototype/entityName** → Create entity → Save to cache → Trigger `processEntityName(entity)` → Return response",
-                    "2. **GET /prototype/entityName/{id}** → Retrieve from cache → Return entity",
+                    "- If you have an orchestration entity (like Job, Task, Workflow), it should have a POST endpoint to create it, and a GET by technicalId to retrieve it. You will most likely not need any other POST endpoints for business entities as saving business entity is done via the process method.",
+                    "2. **GET /prototype/entityName/{id}** → Retrieve from cache → Return entity. Each entity should have a GET by technicalId.",
                     "3. Only if the user explicitly asked for update: **POST /prototype/entityName/{id}/update** → Create new entity version → Save to cache → Trigger `processEntityName(entity)` → Return response (still avoid unless necessary)",
                     "4. Only if the user explicitly asked for delete/deactivate: **POST /prototype/entityName/{id}/deactivate** → Create deactivation record → Save to cache → Return confirmation (still avoid unless necessary)",
                     "",
                     "**CRITICAL: No PUT/PATCH/DELETE endpoints** - use POST for all state changes to maintain event history",
                     " Keep endpoints to the minimum, just POST to register event and get to retrieve information",
-                    " Concentrate on process entity methods - fully implement business logic there",
+                    " Concentrate on process entity methods - fully implement business logic there, including API calls, calculations, etc.",
                     "### 5. CRITICAL: processEntityName() METHODS (variation: process{EntityName}{ProcessorName}() - if stated in the functional requirement). There might be multiple processors and criteria (check{EntityName}{CriteriaName}() methods. You should call them one by one after save. If criteria returns true then processor etc) .",
                     "**Each entity MUST have a corresponding process method with meaningful business logic:**",
                     "",
@@ -1303,6 +1305,7 @@
                     "    ",
                     "    Replace with actual business logic from requirements. no todos. here should be real logic.",
                     "}",
+                    "CRITICAL: If the user provides any external API calls, make sure to implement them.",
                     "```",
                     "",
                     "### 8. IMPLEMENTATION GUIDELINES",
@@ -2042,6 +2045,59 @@
     },
     "deployed_cyoda_env": {
       "transitions": {
+        "notify_user_env_deployed": {
+          "next": "notified_user_env_deployed",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_user_info",
+                    "description": "Use this tool to get user information like user environment URL, user branch name etc",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "memory_tags": [
+                "chat_deploy_env"
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "Call `get_user_info` to get user environment URL and its status (deployed/not deployed).`",
+                    " If the environment is deployed: tell the user that their environment (tell the env url) is deployed and there is no need to deploy it again. So you proceed to building the application.",
+                    " If the environment is not deployed: tell the user that you've scheduled the deployment and it will be available soon at {env url}. You will proceed to building the application in parallel."
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30
+            }
+          }
+        }
+      }
+    },
+    "notified_user_env_deployed": {
+      "transitions": {
         "migration_confirmation_notify": {
           "next": "migration_confirmation_notified",
           "action": {
@@ -2647,32 +2703,6 @@
                       "additionalProperties": false
                     }
                   }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "add_application_resource",
-                    "description": "Add or rewrite a processor, criteria, or controller implementation file. Use this to create missing components or rewrite existing ones when validation shows they need to be fixed.",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "resource_path": {
-                          "type": "string",
-                          "description": "Path where to save the file. Use EXACT patterns: For processors: 'src/main/java/com/java_template/application/processor/{ProcessorName}.java' where {ProcessorName} is the EXACT name from workflow config. For criteria: 'src/main/java/com/java_template/application/criterion/{CriteriaName}.java' where {CriteriaName} is the EXACT name from workflow config. For controller: 'src/main/java/com/java_template/application/controller/Controller.java'."
-                        },
-                        "file_contents": {
-                          "type": "string",
-                          "description": "Complete Java code content for the processor, criteria, or controller class"
-                        }
-                      },
-                      "required": [
-                        "resource_path",
-                        "file_contents"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
                 }
               ],
               "messages": [
@@ -2727,7 +2757,7 @@
                     "   - Validate that workflows properly orchestrate entity processing flow",
                     "",
                     "CORRECTIVE ACTIONS (if validation fails):",
-                    "Use add_application_resource to rewrite files that don't meet validation criteria:",
+                    "List files that don't meet validation criteria:",
                     "- **Processors**: Rewrite if they don't properly implement entity processing logic from prototype",
                     "- **Criteria**: Rewrite if they don't properly implement validation logic from prototype",
                     "- **Controller**: Rewrite if it still contains business logic that should be in processors",
@@ -2740,7 +2770,7 @@
                     "- All processors and criteria are properly implemented and follow naming conventions",
                     "- Controller is thin and only handles API routing + EntityService persistence calls",
                     "",
-                    "OUTPUT: Provide a detailed validation report. If issues are found, fix them using add_application_resource. If everything is correct, confirm that the entity processing logic migration was successful and workflows make sense."
+                    "OUTPUT: Provide a detailed validation report with formal smileys. If issues are found, outline them. If everything is correct, confirm that the entity processing logic migration was successful and workflows make sense."
                   ]
                 }
               ],
