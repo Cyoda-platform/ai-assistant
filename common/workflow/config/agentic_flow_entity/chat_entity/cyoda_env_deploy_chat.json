@@ -1,0 +1,255 @@
+{
+  "initial_state": "none",
+  "workflow_name": "preemptive_cyoda_env_deploy",
+  "states": {
+    "none": {
+      "transitions": {
+        "start_chat": {
+          "next": "prompt_app_requirements_step3"
+        }
+      }
+    },
+    "prompt_app_requirements_step3": {
+      "transitions": {
+        "prompt_sent": {
+          "next": "app_requirements_step3",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_user_info",
+                    "description": "Use this tool to get user information like user environment URL, user branch name etc",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "deploy_cyoda_env",
+                    "description": "Launches workflow that is necessary to deploy Cyoda environment for the user. User needs to explicitly ask for deployment of Cyoda environment.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_app_setup_3"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "model": {},
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Step 3:** Let the user know: while they are waiting for their application to be migrated to Cyoda framework, they can get their environment deployed. This will enhance their setup for the future.",
+                    "- Let the user know: do they already have an environment?",
+                    "  • Let the user know: if they do, let them decide whether they want to redeploy it. If they choose to redeploy, call the deploy cyoda env tool; otherwise, call finish_discussion.",
+                    "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now (this may disrupt others!).",
+                    ""
+                  ]
+                }
+              ],
+              "publish": true
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_step3": {
+      "transitions": {
+        "submit_answer": {
+          "next": "app_requirements_step3_submitted_answer",
+          "manual": true
+        },
+        "manual_approve": {
+          "next": "prompt_app_requirements_step4",
+          "manual": true
+        }
+      }
+    },
+    "app_requirements_step3_submitted_answer": {
+      "transitions": {
+        "process_user_input": {
+          "next": "app_requirements_step3_processing",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "agent",
+              "publish": true,
+              "allow_anonymous_users": true,
+              "model": {},
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_user_info",
+                    "description": "Use this tool to get user information like user environment URL, user branch name etc",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user_request"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "deploy_cyoda_env",
+                    "description": "Launches workflow that is necessary to deploy Cyoda environment for the user. User needs to explicitly ask for deployment of Cyoda environment.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "user_request": {
+                          "type": "string"
+                        },
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_app_setup_3"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "user_request",
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "finish_discussion",
+                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "transition": {
+                          "type": "string",
+                          "enum": [
+                            "process_app_setup_3"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "transition"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    "**Step 3:** Clarify if the user already has an environment",
+                    "  • Let the user know: if they do, let them decide whether they want to redeploy it (this may disrupt others!). If they choose to redeploy, call the deploy cyoda env tool; otherwise, call finish_discussion.",
+                    "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now .",
+                    "",
+                    "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes.",
+                    " Ask the user confirm that their environment is deployed and they are happy with the result. ",
+                    " Once the user tells you the env is ready/they are happy/done/ready to proceed finish_discussion immediately",
+                    " Always ask for explicit confirmation to deploy the env (like, please say Yes if you're ready to deploy).",
+                    "**Troubleshooting:** Let the user know: N/A (deployment errors will be surfaced by the deployment tool)."
+                  ]
+                }
+              ],
+              "tool_choice": "auto",
+              "max_iteration": 30
+            }
+          }
+        }
+      }
+    },
+    "app_requirements_step3_processing": {
+      "transitions": {
+        "process_app_setup_3_processing": {
+          "next": "app_requirements_step3",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "not_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_3"
+                }
+              }
+            }
+          }
+        },
+        "process_app_setup_3_success": {
+          "next": "ready_to_lock_chat",
+          "condition": {
+            "config": {
+              "type": "function",
+              "function": {
+                "name": "is_stage_completed",
+                "parameters": {
+                  "transition": "process_app_setup_3"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ready_to_lock_chat": {
+      "transitions": {
+        "lock_chat": {
+          "next": "locked_chat",
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "🎉 Congrats on launching your first app! Your hard work paid off—this is just the beginning. Keep iterating, stay creative, and aim high! 🚀 Join our [Discord](https://discord.gg/95rdAyBZr2) to share feedback and stay updated. 🙌",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

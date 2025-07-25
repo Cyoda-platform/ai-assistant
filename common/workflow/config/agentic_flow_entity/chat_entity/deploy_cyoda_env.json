@@ -11,6 +11,9 @@
             "config": {
               "type": "function",
               "publish": true,
+              "memory_tags": [
+                "chat_deploy_env", "general_memory_tag"
+              ],
               "function": {
                 "name": "schedule_deploy_env",
                 "description": "",
@@ -63,6 +66,19 @@
             "config": {
               "type": "notification",
               "notification": "⚠️ Sorry, we encountered internal issues while deploying your Cyoda environment.\n\nOur team has been notified and is looking into it. Please try again shortly, or reach out if the issue persists. You can proceed with the current chat.",
+              "publish": true,
+              "allow_anonymous_users": true
+            }
+          }
+        },
+        "rollback": {
+          "next": "deployed_env",
+          "manual": true,
+          "action": {
+            "name": "process_event",
+            "config": {
+              "type": "notification",
+              "notification": "\uD83D\uDE48  We encountered internal issues with checking the status of your Cyoda environment. You can check the the deployment status for {build_id} in a separate chat or it will be checked at a later step for you automatically. Don't worry!",
               "publish": true,
               "allow_anonymous_users": true
             }

@@ -35,8 +35,9 @@
                     "Let the user know: the code they’ll be working with is in the branch {git_branch}. Make sure they use only this branch for the next steps.",
                     "You’ll guide them through the process one step at a time to ensure everything works smoothly. Let’s begin with the first step.",
                     "",
-                    "**Step 1:** Let the user know: they should pull changes from remote and locate the .env.template file in the project’s root directory. Once they’ve found it, rename it to .env and open it in a text editor.",
-                    "_Tip: Let the user know: they can confirm it’s in the root directory by using their code editor’s file tree or by running `ls` in the terminal._"
+                    " Let the user know: they should pull changes from remote and locate the .env.template file in the project’s root directory. Once they’ve found it, rename it to .env and open it in a text editor.",
+                    "_Tip: Let the user know: they can confirm it’s in the root directory by using their code editor’s file tree or by running `ls` in the terminal._",
+                    " Once the environment is ready - you'll be able to get CYODA_CLIENT_ID and CYODA_CLIENT_SECRET. Let me check your environment status."
                   ]
                 }
               ],
@@ -53,7 +54,11 @@
           "manual": true
         },
         "manual_approve": {
-          "next": "prompt_app_requirements_step2",
+          "next": "prompt_app_requirements_step3",
+          "manual": true
+        },
+        "rollback": {
+          "next": "app_requirements_step1_submitted_answer",
           "manual": true
         }
       }
@@ -174,7 +179,7 @@
           }
         },
         "process_app_setup_1_success": {
-          "next": "prompt_app_requirements_step2",
+          "next": "prompt_app_requirements_step3",
           "condition": {
             "config": {
               "type": "function",
@@ -182,184 +187,6 @@
                 "name": "is_stage_completed",
                 "parameters": {
                   "transition": "process_app_setup_1"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "prompt_app_requirements_step2": {
-      "transitions": {
-        "prompt_sent": {
-          "next": "app_requirements_step2",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "prompt",
-              "approve": true,
-              "model": {},
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "**Step 2:** Let the user know: they can run the application in two ways — either directly from Gradle or by building and running the JAR manually.",
-                    "Let the user know: to run the app using Gradle, they should execute `./gradlew runApp`.",
-                    "Let the user know: to run the app manually, they should first build it using `./gradlew build` and then run `java -jar build/libs/java-client-template-1.0-SNAPSHOT.jar`.",
-                    "Let the user know: the app will be available at `http://localhost:8080/swagger-ui/index.html` once it starts.",
-                    "Let the user know: they must have Java 21 installed and set as the active version.",
-                    "Let the user know: they should be in the root directory of the project (`java-client-template`) before running any commands.",
-                    "Let the user know: it’s normal to see a `Login failed (404)` message in the logs — this happens when Cyoda is not yet configured.",
-                    "Let the user know: if they encounter a `ClassNotFoundException`, they should ensure all dependencies are declared in `build.gradle`.",
-                    "Let the user know: if dependencies are missing, they can run `./gradlew --refresh-dependencies` to resolve them."
-                  ]
-                }
-              ],
-              "publish": true
-            }
-          }
-        }
-      }
-    },
-    "app_requirements_step2": {
-      "transitions": {
-        "submit_answer": {
-          "next": "app_requirements_step2_submitted_answer",
-          "manual": true
-        },
-        "manual_approve": {
-          "next": "prompt_app_requirements_step3",
-          "manual": true
-        }
-      }
-    },
-    "app_requirements_step2_submitted_answer": {
-      "transitions": {
-        "process_user_input": {
-          "next": "app_requirements_step2_processing",
-          "action": {
-            "name": "process_event",
-            "config": {
-              "type": "agent",
-              "publish": true,
-              "allow_anonymous_users": true,
-              "model": {},
-              "tools": [
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "read_link",
-                    "description": "Read content from a URL. Use this tool when you need to fetch content from a web resource. For example, if the user wants to add data sources for an API and provides an exact link, you should first read the link contents before proceeding with analysis.",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "url": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "url"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "get_cyoda_guidelines",
-                    "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "workflow_name": {
-                          "type": "string",
-                          "enum": [
-                            "generate_workflow",
-                            "generate_processors",
-                            "configure_trino",
-                            "generate_entity",
-                            "cyoda_best_practice"
-                          ]
-                        }
-                      },
-                      "required": [
-                        "workflow_name"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "finish_discussion",
-                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "transition": {
-                          "type": "string",
-                          "enum": [
-                            "process_app_setup_2"
-                          ]
-                        }
-                      },
-                      "required": [
-                        "transition"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                }
-              ],
-              "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    "**Troubleshooting:**",
-                    " _Let the user know: they should expect to see a `Login failed (404)` error in logs initially, as Cyoda isn’t configured yet._",
-                    "- Let the user know: if they encounter `ClassNotFoundException`, they should ensure all dependencies are properly defined in `build.gradle`.",
-                    "- Let the user know: if they encounter missing dependencies, they should run `./gradlew --refresh-dependencies` to resolve them."
-                  ]
-                }
-              ],
-              "tool_choice": "auto",
-              "max_iteration": 30,
-              "approve": true
-            }
-          }
-        }
-      }
-    },
-    "app_requirements_step2_processing": {
-      "transitions": {
-        "process_app_setup_2_processing": {
-          "next": "app_requirements_step2",
-          "condition": {
-            "config": {
-              "type": "function",
-              "function": {
-                "name": "not_stage_completed",
-                "parameters": {
-                  "transition": "process_app_setup_2"
-                }
-              }
-            }
-          }
-        },
-        "process_app_setup_2_success": {
-          "next": "prompt_app_requirements_step3",
-          "condition": {
-            "config": {
-              "type": "function",
-              "function": {
-                "name": "is_stage_completed",
-                "parameters": {
-                  "transition": "process_app_setup_2"
                 }
               }
             }
@@ -379,6 +206,20 @@
                 {
                   "type": "function",
                   "function": {
+                    "name": "get_build_id_from_context",
+                    "description": "Use this tool to get the build ID from deployment workflow context. This tool automatically finds the build ID from the parent entity's deployment workflow without requiring any parameters.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {},
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
                     "name": "get_user_info",
                     "description": "Use this tool to get user information like user environment URL, user branch name etc",
                     "strict": true,
@@ -399,25 +240,55 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "deploy_cyoda_env",
-                    "description": "Launches workflow that is necessary to deploy Cyoda environment for the user. User needs to explicitly ask for deployment of Cyoda environment.",
+                    "name": "get_env_deploy_status",
+                    "description": "Use if the user wants to know the status of their environment build/deploy.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
                       "properties": {
-                        "user_request": {
+                        "build_id": {
                           "type": "string"
-                        },
-                        "transition": {
+                        }
+                      },
+                      "required": [
+                        "build_id"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "ui_function_issue_technical_user",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user or give me credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET). This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "method": {
                           "type": "string",
                           "enum": [
-                            "process_app_setup_3"
+                            "POST"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "file"
                           ]
                         }
                       },
                       "required": [
-                        "user_request",
-                        "transition"
+                        "method",
+                        "path",
+                        "response_format"
                       ],
                       "additionalProperties": false
                     }
@@ -425,20 +296,37 @@
                 }
               ],
               "model": {},
+              "memory_tags": [
+                "chat_deploy_env"
+              ],
               "messages": [
                 {
                   "role": "user",
                   "content": [
-                    "**Step 3:** Let the user know: now let’s configure their Cyoda Cloud instance.",
-                    "- Let the user know: do they already have an environment?",
-                    "  • Let the user know: if they do, let them decide whether they want to redeploy it. If they choose to redeploy, call the deploy cyoda env tool; otherwise, call finish_discussion.",
-                    "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now (this may disrupt others!).",
-                    " Always ask for explicit confirmation to deploy the env (like, please say Yes if you're ready to deploy).",
+                    "MANDATORY TOOL USAGE - YOU MUST USE TOOLS:",
+                    "You MUST use tools to check environment status. Do NOT respond without using tools first.",
                     "",
-                    "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes."
+                    "PRIORITY ORDER FOR CHECKING ENVIRONMENT STATUS:",
+                    "1. FIRST: Use get_build_id_from_context tool to automatically retrieve the build ID from deployment workflow context.",
+                    "2. SECOND: If get_build_id_from_context returns 'not found', search your chat history for a build ID (UUID format like 3234b1f0-6650-11b2-a15d-724f23514e8c).",
+                    "3. THIRD: If no build ID found in context or chat history, use get_user_info tool with user_request='check environment status and build ID'.",
+                    "",
+                    "ENVIRONMENT STATUS CHECK FLOW:",
+                    "• If you get a build ID from get_build_id_from_context or chat history: Use get_env_deploy_status to check the current deployment status.",
+                    "• If no build ID found anywhere: MANDATORY - Use get_user_info tool to check if environment is already deployed.",
+                    "",
+                    "RESPONSE BASED ON STATUS:",
+                    "• If deployment is COMPLETE/SUCCESS: Tell user their environment is ready, provide environment details, and ASK if they want to get their M2M credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET) for OAuth2 flow. If user responds with 'yes', 'sure', 'okay', or any positive confirmation, immediately call ui_function_issue_technical_user.",
+                    "• If deployment is IN PROGRESS: Tell user deployment is still in progress and they can check status again in a few minutes in this same chat.",
+                    "• If deployment FAILED: Inform user of the failure and suggest they may need to redeploy in a separate chat with something like 'please, deploy my Cyoda environment'.",
+                    "CRITICAL: the user can redeploy the environment only in a separate chat. You do not have a tool to redeploy the environment.",
+                    "• If no build ID found and no environment deployed: Ask user if they have a build ID to check status. If they don't have it, tell them they need to deploy environment first in a new chat by saying 'deploy my cyoda environment'.",
+                    "",
+                    "IMPORTANT: Users can check deployment status anytime in THIS chat - do not tell them to use a new chat for status checks."
                   ]
                 }
               ],
+              "tool_choice": "auto",
               "publish": true
             }
           }
@@ -454,6 +342,10 @@
         "manual_approve": {
           "next": "prompt_app_requirements_step4",
           "manual": true
+        },
+        "rollback": {
+          "next": "app_requirements_step3_submitted_answer",
+          "manual": true
         }
       }
     },
@@ -466,9 +358,28 @@
             "config": {
               "type": "agent",
               "publish": true,
+              "approve": true,
               "allow_anonymous_users": true,
               "model": {},
+              "memory_tags": [
+                "chat_deploy_env",
+                "general_memory_tag"
+              ],
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_build_id_from_context",
+                    "description": "Use this tool to get the build ID from deployment workflow context. This tool automatically finds the build ID from the parent entity's deployment workflow without requiring any parameters.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {},
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -492,25 +403,18 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "deploy_cyoda_env",
-                    "description": "Launches workflow that is necessary to deploy Cyoda environment for the user. User needs to explicitly ask for deployment of Cyoda environment.",
+                    "name": "get_env_deploy_status",
+                    "description": "Use if the user wants to know the status of their environment build/deploy.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
                       "properties": {
-                        "user_request": {
+                        "build_id": {
                           "type": "string"
-                        },
-                        "transition": {
-                          "type": "string",
-                          "enum": [
-                            "process_app_setup_3"
-                          ]
                         }
                       },
                       "required": [
-                        "user_request",
-                        "transition"
+                        "build_id"
                       ],
                       "additionalProperties": false
                     }
@@ -519,21 +423,35 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "finish_discussion",
-                    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
+                    "name": "ui_function_issue_technical_user",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user or give me credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET). This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
                       "properties": {
-                        "transition": {
+                        "method": {
                           "type": "string",
                           "enum": [
-                            "process_app_setup_3"
+                            "POST"
+                          ]
+                        },
+                        "path": {
+                          "type": "string",
+                          "enum": [
+                            "/api/clients"
+                          ]
+                        },
+                        "response_format": {
+                          "type": "string",
+                          "enum": [
+                            "file"
                           ]
                         }
                       },
                       "required": [
-                        "transition"
+                        "method",
+                        "path",
+                        "response_format"
                       ],
                       "additionalProperties": false
                     }
@@ -544,15 +462,22 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Step 3:** Clarify if the user already has an environment",
-                    "  • Let the user know: if they do, let them decide whether they want to redeploy it (this may disrupt others!). If they choose to redeploy, call the deploy cyoda env tool; otherwise, call finish_discussion.",
-                    "  • Let the user know: if they don’t have a Cyoda environment yet, deploy a new Cyoda environment now .",
+                    "PROCESS USER RESPONSE TO CREDENTIALS QUESTION:",
+                    "The user was previously asked if they want to get their M2M credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET) for OAuth2 flow.",
+                    "You need to process their response to this question.",
                     "",
-                    "Let the user know: they should let you know when they’ve checked their Cyoda environment and are ready to proceed with their app setup. Let the user know: the deployment will take several minutes, so check back in a couple of minutes.",
-                    " Ask the user confirm that their environment is deployed and they are happy with the result. ",
-                    " Once the user tells you the env is ready/they are happy/done/ready to proceed finish_discussion immediately",
-                    " Always ask for explicit confirmation to deploy the env (like, please say Yes if you're ready to deploy).",
-                    "**Troubleshooting:** Let the user know: N/A (deployment errors will be surfaced by the deployment tool)."
+                    "RESPONSE PROCESSING:",
+                    "• If user gives POSITIVE response (yes, sure, okay, ok, please, go ahead, or any affirmative answer): IMMEDIATELY call ui_function_issue_technical_user tool with the required parameters.",
+                    "• If user gives NEGATIVE response (no, not now, later, etc.): Acknowledge their choice and let them know they can ask for credentials anytime by saying 'get my credentials' or 'give me technical user'.",
+                    "• If user asks about environment status instead: Use appropriate tools to check status (get_build_id_from_context, then get_env_deploy_status if build ID found, or get_user_info if no build ID).",
+                    "• If user asks for build ID specifically: Use get_build_id_from_context tool first, then get_user_info tool if needed.",
+                    "",
+                    "IMPORTANT:",
+                    "• Do NOT ask about credentials again if user already gave a clear answer.",
+                    "• If user says yes to credentials, call ui_function_issue_technical_user immediately - don't ask for confirmation again.",
+                    "• Process the user's actual response, don't repeat previous questions.",
+                    "CRITICAL: the user can redeploy the environment only in a separate chat. You do not have a tool to redeploy the environment.",
+                    "• Positive responses include: 'yes', 'sure', 'okay', 'ok', 'please', 'go ahead', 'give me', 'I want', or any affirmative answer."
                   ]
                 }
               ],
@@ -609,11 +534,17 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Step 4:** Let the user know: they should edit their `.env` file with the required environment-specific value for `CYODA_HOST`. They will get the value once their env has been deployed - they will get notification if they have asked for deployment/redeployment. If their environment is not ready yet - they need to wait - they can work in a different chat while waiting.",
-                    "- Let the user know: all other properties can stay at their defaults apart from CYODA_HOST.",
-                    "- Let the user know: their branch name is used for `GRPC_PROCESSOR_TAG` (they can change it if they like).",
-                    "- Let the user know: if they are using shared environment they need to make sure they specify unique ENTITY_VERSION.",
-                    " Tell the users if they want to add a machine user once their environment is deployed they can ask for it. They will get CYODA_CLIENT_ID and CYODA_CLIENT_SECRET. "
+                    " Let the user know: they can run the application in two ways — either directly from Gradle or by building and running the JAR manually.",
+                    "Let the user know: to run the app using Gradle, they should execute `./gradlew runApp`.",
+                    "Let the user know: to run the app manually, they should first build it using `./gradlew build` and then run `java -jar build/libs/java-client-template-1.0-SNAPSHOT.jar`.",
+                    "Let the user know: the app will be available at `http://localhost:8080/swagger-ui/index.html` once it starts.",
+                    "Let the user know: they must have Java 21 installed and set as the active version.",
+                    "Let the user know: they should be in the root directory of the project (`java-client-template`) before running any commands.",
+                    "Let the user know: if they encounter a `ClassNotFoundException`, they should ensure all dependencies are declared in `build.gradle`.",
+                    "Let the user know: if dependencies are missing, they can run `./gradlew --refresh-dependencies` to resolve them.",
+                    " Setting values at .env file: ",
+                    "- Let the user know: a default value is used for `GRPC_PROCESSOR_TAG` (they can change it if they like).",
+                    "- Let the user know: if they are using shared environment they need to make sure they specify unique ENTITY_VERSION."
                   ]
                 }
               ],
@@ -631,6 +562,10 @@
         },
         "manual_approve": {
           "next": "prompt_app_requirements_step5",
+          "manual": true
+        },
+        "rollback": {
+          "next": "app_requirements_step4_submitted_answer",
           "manual": true
         }
       }
@@ -741,7 +676,7 @@
                   "type": "function",
                   "function": {
                     "name": "ui_function_issue_technical_user",
-                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user or give me credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET). This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -911,7 +846,7 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Step 5:** Let the user know: with their env configured, they should import the workflows using one of the following options:",
+                    "Let the user know: with their env configured, they should import the workflows using one of the following options:",
                     "",
                     "**Option 1: Run via Gradle (recommended for local development)**",
                     "```bash",
@@ -923,7 +858,8 @@
                     "./gradlew bootJarWorkflowImport",
                     "java -jar build/libs/java-client-template-1.0-SNAPSHOT-workflow-import.jar",
                     "```",
-                    "Let the user know: the workflows should appear in their Cyoda UI once the import completes."
+                    "Let the user know: the workflows should appear in their Cyoda UI once the import completes.",
+                    "Let the user know: they can view and edit their workflow configurations here in canvas. They need to open canvas in upper right corner and chooose workflow tab. There they can view the workflow and also use AI for editing if necessary."
                   ]
                 }
               ],
@@ -941,6 +877,10 @@
         },
         "manual_approve": {
           "next": "prompt_app_requirements_step6",
+          "manual": true
+        },
+        "rollback": {
+          "next": "app_requirements_step5_submitted_answer",
           "manual": true
         }
       }
@@ -1242,7 +1182,7 @@
                   "type": "function",
                   "function": {
                     "name": "ui_function_issue_technical_user",
-                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user or give me credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET). This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1412,8 +1352,8 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Step 6:** Let the user know: they should test their API by visiting `http://localhost:8000` (or their configured port) and ensure everything looks good.",
-                    "- Let the user know: when they save `{entity_name}`, an event will be sent and processed by their workflow code in `entity/{entity_name}/Workflow.java` and the corresponding JSON."
+                    "Let the user know: they should test their API by visiting `http://localhost:8000` (or their configured port) and ensure everything looks good.",
+                    "- Let the user know: when they save `{entity_name}`, an event will be sent and processed by their workflow code in `application/processor/* and application/criterion/*`"
                   ]
                 }
               ],
@@ -1431,6 +1371,10 @@
         },
         "manual_approve": {
           "next": "ready_to_lock_chat",
+          "manual": true
+        },
+        "rollback": {
+          "next": "app_requirements_step6_submitted_answer",
           "manual": true
         }
       }
@@ -1736,7 +1680,7 @@
                   "type": "function",
                   "function": {
                     "name": "ui_function_issue_technical_user",
-                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user or give me credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET). This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1867,7 +1811,7 @@
                   "type": "function",
                   "function": {
                     "name": "ui_function_issue_technical_user",
-                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+                    "description": "Please use ui_function_issue_technical_user for requests like give me a technical user or give me credentials (CYODA_CLIENT_ID and CYODA_CLIENT_SECRET). This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
                     "strict": true,
                     "parameters": {
                       "type": "object",
@@ -1981,7 +1925,8 @@
                   "content": [
                     "**Troubleshooting:**",
                     "- Let the user know: if they can’t access the server, they should check that it’s still running and that their firewall allows local traffic.",
-                    "- Let the user know: if no GRPC event occurs, they should verify their endpoint triggers GRPC and inspect the logs to trace payload delivery."]
+                    "- Let the user know: if no GRPC event occurs, they should verify their endpoint triggers GRPC and inspect the logs to trace payload delivery."
+                  ]
                 }
               ],
               "tool_choice": "auto",

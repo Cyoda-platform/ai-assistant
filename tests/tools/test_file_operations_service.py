@@ -133,8 +133,110 @@ class TestFileOperationsService:
     async def test_read_file_missing_filename(self, service, mock_chat_entity):
         """Test file reading with missing filename."""
         result = await service.read_file("tech_id", mock_chat_entity)
-        
+
         assert "Missing required parameters" in result
+
+    @pytest.mark.asyncio
+    async def test_get_file_contents_success(self, service, mock_agentic_entity):
+        """Test successful file contents retrieval."""
+        with patch('common.utils.utils.read_file_util', new_callable=AsyncMock, return_value="file content"), \
+             patch('common.utils.utils.get_repository_name', return_value="test_repo"), \
+             patch('common.utils.utils.git_pull', new_callable=AsyncMock):
+
+            result = await service.get_file_contents("test_id", mock_agentic_entity, file_path="test.txt")
+
+            assert isinstance(result, str)
+
+    @pytest.mark.asyncio
+    async def test_get_file_contents_missing_params(self, service, mock_agentic_entity):
+        """Test get_file_contents with missing parameters."""
+        result = await service.get_file_contents("test_id", mock_agentic_entity)
+        assert "Missing required parameter" in result
+
+    @pytest.mark.asyncio
+    async def test_list_directory_files_success(self, service, mock_agentic_entity):
+        """Test successful directory listing."""
+        import json
+        with patch('common.utils.utils.get_project_file_name', return_value="/fake/dir"), \
+             patch('os.path.exists', return_value=True), \
+             patch('os.path.isdir', return_value=True), \
+             patch('os.listdir', return_value=['file1.java', 'file2.java', 'README.md']), \
+             patch('os.path.isfile', side_effect=lambda x: x.endswith('.java') or x.endswith('.md')):
+
+            result = await service.list_directory_files("test_id", mock_agentic_entity, directory_path="test/dir")
+
+            result_data = json.loads(result)
+            assert result_data["directory"] == "test/dir"
+            assert result_data["count"] == 3
+            assert "file1.java" in result_data["files"]
+            assert "file2.java" in result_data["files"]
+
+    @pytest.mark.asyncio
+    async def test_list_directory_files_nonexistent(self, service, mock_agentic_entity):
+        """Test directory listing for non-existent directory."""
+        import json
+        with patch('common.utils.utils.get_project_file_name', return_value="/fake/nonexistent"), \
+             patch('os.path.exists', return_value=False):
+
+            result = await service.list_directory_files("test_id", mock_agentic_entity, directory_path="nonexistent/dir")
+
+            result_data = json.loads(result)
+            assert result_data["directory"] == "nonexistent/dir"
+            assert result_data["count"] == 0
+            assert result_data["files"] == []
+            assert "does not exist" in result_data["message"]
+
+    @pytest.mark.asyncio
+    async def test_list_directory_files_missing_params(self, service, mock_agentic_entity):
+        """Test list_directory_files with missing parameters."""
+        result = await service.list_directory_files("test_id", mock_agentic_entity)
+        assert "Missing required parameter" in result
+
+    @pytest.mark.asyncio
+    async def test_get_entity_pojo_contents_success(self, service, mock_agentic_entity):
+        """Test successful entity POJO contents retrieval."""
+        with patch('tools.file_operations_service.read_file_util', new_callable=AsyncMock) as mock_read:
+            mock_read.side_effect = [
+                "",  # First path fails
+                "public class User { private String name; public String getName() { return name; } }"  # Second path succeeds
+            ]
+
+            result = await service.get_entity_pojo_contents("test_id", mock_agentic_entity, entity_name="User")
+
+            assert "Entity POJO found at" in result
+            assert "public class User" in result
+            assert "getName()" in result
+
+    @pytest.mark.asyncio
+    async def test_get_entity_pojo_contents_not_found(self, service, mock_agentic_entity):
+        """Test entity POJO contents when entity not found."""
+        with patch('tools.file_operations_service.read_file_util', new_callable=AsyncMock, side_effect=Exception("File not found")):
+
+            result = await service.get_entity_pojo_contents("test_id", mock_agentic_entity, entity_name="NonExistent")
+
+            assert "Entity POJO not found for 'NonExistent'" in result
+            assert "Tried paths:" in result
+
+    @pytest.mark.asyncio
+    async def test_get_entity_pojo_contents_missing_params(self, service, mock_agentic_entity):
+        """Test get_entity_pojo_contents with missing parameters."""
+        result = await service.get_entity_pojo_contents("test_id", mock_agentic_entity)
+        assert "Missing required parameter" in result
+
+    @pytest.mark.asyncio
+    async def test_exception_logging(self, service, mock_agentic_entity, caplog):
+        """Test that exceptions are properly logged."""
+        import logging
+
+        with patch('tools.file_operations_service.read_file_util', new_callable=AsyncMock, side_effect=Exception("Test error")):
+            with caplog.at_level(logging.ERROR):
+                result = await service.get_file_contents("test_id", mock_agentic_entity, file_path="test.txt")
+
+                # Should return error message
+                assert "Error reading file" in result
+
+                # Should log the exception
+                assert "Error reading file: Test error" in caplog.text
 
     @pytest.mark.asyncio
     async def test_clone_repo_success(self, service, mock_chat_entity):
@@ -158,7 +260,7 @@ class TestFileOperationsService:
     @pytest.mark.asyncio
     async def test_delete_files_success(self, service, mock_agentic_entity):
         """Test successful file deletion."""
-        with patch('common.utils.utils.delete_file', new_callable=AsyncMock) as mock_delete, \
+        with patch('tools.file_operations_service.delete_file', new_callable=AsyncMock) as mock_delete, \
              patch('common.utils.utils.get_repository_name', return_value="test_repo"), \
              patch('common.utils.utils.git_pull', new_callable=AsyncMock), \
              patch('common.utils.utils._git_push', new_callable=AsyncMock), \
@@ -172,11 +274,48 @@ class TestFileOperationsService:
             assert result == ""
 
     @pytest.mark.asyncio
-    async def test_delete_files_no_files(self, service, mock_agentic_entity):
-        """Test file deletion with no files specified."""
-        result = await service.delete_files("tech_id", mock_agentic_entity, files=[])
-        
-        assert result == "No files specified for deletion"
+    async def test_delete_files_no_files_or_directories(self, service, mock_agentic_entity):
+        """Test file deletion with no files or directories specified."""
+        result = await service.delete_files("tech_id", mock_agentic_entity, files=[], directories=[])
+
+        assert result == "No files or directories specified for deletion"
+
+    @pytest.mark.asyncio
+    async def test_delete_directories_success(self, service, mock_agentic_entity):
+        """Test successful directory deletion."""
+        with patch('tools.file_operations_service.delete_directory', new_callable=AsyncMock) as mock_delete_dir, \
+             patch('common.utils.utils.get_repository_name', return_value="test_repo"), \
+             patch('common.utils.utils.git_pull', new_callable=AsyncMock), \
+             patch('common.utils.utils._git_push', new_callable=AsyncMock), \
+             patch('common.utils.utils.set_upstream_tracking', new_callable=AsyncMock):
+
+            result = await service.delete_files(
+                "tech_id", mock_agentic_entity,
+                directories=["dir1", "dir2"]
+            )
+
+            assert result == ""
+            assert mock_delete_dir.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_delete_files_and_directories_success(self, service, mock_agentic_entity):
+        """Test successful deletion of both files and directories."""
+        with patch('tools.file_operations_service.delete_file', new_callable=AsyncMock) as mock_delete_file, \
+             patch('tools.file_operations_service.delete_directory', new_callable=AsyncMock) as mock_delete_dir, \
+             patch('common.utils.utils.get_repository_name', return_value="test_repo"), \
+             patch('common.utils.utils.git_pull', new_callable=AsyncMock), \
+             patch('common.utils.utils._git_push', new_callable=AsyncMock), \
+             patch('common.utils.utils.set_upstream_tracking', new_callable=AsyncMock):
+
+            result = await service.delete_files(
+                "tech_id", mock_agentic_entity,
+                files=["file1.py", "file2.py"],
+                directories=["dir1", "dir2"]
+            )
+
+            assert result == ""
+            assert mock_delete_file.call_count == 2
+            assert mock_delete_dir.call_count == 2
 
     @pytest.mark.asyncio
     async def test_save_entity_templates_success(self, service, mock_chat_entity):

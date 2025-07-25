@@ -458,6 +458,142 @@ class TestWorkflowManagementService:
             assert "stateDiagram-v2" in diagram_result
             assert dto_result == "Successfully converted workflow config to cyoda dto"
 
+    @pytest.mark.asyncio
+    async def test_launch_gen_app_workflows_success(self, service, mock_agentic_entity):
+        """Test successful launch of gen app workflows."""
+        # Mock directory listing to return Java entity files
+        with patch('os.path.exists', return_value=True), \
+             patch('os.path.isdir', return_value=True), \
+             patch('os.listdir', return_value=['Pet.java', 'Cat.java', 'Dog.java', '.hidden', 'NotJava.txt']), \
+             patch('os.path.isfile', return_value=True), \
+             patch('common.utils.utils.get_project_file_name', new_callable=AsyncMock, return_value="/path/to/entities"), \
+             patch('common.utils.utils.get_repository_name', return_value="test_repo"):
+
+            service.workflow_helper_service.launch_agentic_workflow = AsyncMock(return_value="child_tech_id")
+            service.workflow_helper_service.launch_scheduled_workflow = AsyncMock(return_value="scheduled_id")
+
+            result = await service.launch_gen_app_workflows(
+                "tech_id", mock_agentic_entity,
+                dir_name="src/main/java/com/java_template/application/entity",
+                next_transition="update_routes_file"
+            )
+
+            assert result == "Workflow registration completed successfully"
+            # Verify that 3 workflows were launched (Pet, Cat, Dog - excluding .hidden and NotJava.txt)
+            assert service.workflow_helper_service.launch_agentic_workflow.call_count == 3
+            assert len(mock_agentic_entity.scheduled_entities) == 1
+
+    @pytest.mark.asyncio
+    async def test_launch_gen_app_workflows_no_entities(self, service, mock_agentic_entity):
+        """Test launch gen app workflows when no Java entities found."""
+        # Mock directory listing to return no Java files
+        with patch('os.path.exists', return_value=True), \
+             patch('os.path.isdir', return_value=True), \
+             patch('os.listdir', return_value=['NotJava.txt', '.hidden']), \
+             patch('os.path.isfile', return_value=True), \
+             patch('common.utils.utils.get_project_file_name', new_callable=AsyncMock, return_value="/path/to/entities"), \
+             patch('common.utils.utils.get_repository_name', return_value="test_repo"):
+
+            result = await service.launch_gen_app_workflows(
+                "tech_id", mock_agentic_entity,
+                dir_name="src/main/java/com/java_template/application/entity",
+                next_transition="update_routes_file"
+            )
+
+            assert "No Java entity files found in directory" in result
+
+    @pytest.mark.asyncio
+    async def test_launch_gen_app_workflows_directory_not_exists(self, service, mock_agentic_entity):
+        """Test launch gen app workflows when directory doesn't exist."""
+        # Mock directory to not exist
+        with patch('os.path.exists', return_value=False), \
+             patch('common.utils.utils.get_project_file_name', new_callable=AsyncMock, return_value="/path/to/entities"), \
+             patch('common.utils.utils.get_repository_name', return_value="test_repo"):
+
+            result = await service.launch_gen_app_workflows(
+                "tech_id", mock_agentic_entity,
+                dir_name="src/main/java/com/java_template/application/entity",
+                next_transition="update_routes_file"
+            )
+
+            assert "No Java entity files found in directory" in result
+
+    @pytest.mark.asyncio
+    async def test_launch_gen_app_workflows_missing_params(self, service, mock_agentic_entity):
+        """Test launch gen app workflows with missing required parameters."""
+        # Test missing dir_name
+        result = await service.launch_gen_app_workflows(
+            "tech_id", mock_agentic_entity,
+            next_transition="update_routes_file"
+        )
+        assert "Missing required parameter" in result
+
+        # Test missing next_transition
+        result = await service.launch_gen_app_workflows(
+            "tech_id", mock_agentic_entity,
+            dir_name="src/main/java/com/java_template/application/entity"
+        )
+        assert "Missing required parameter" in result
+
+    @pytest.mark.asyncio
+    async def test_launch_gen_app_workflows_error(self, service, mock_agentic_entity):
+        """Test launch gen app workflows with error during workflow launch."""
+        # Mock directory operations to succeed but workflow launch to fail
+        with patch('os.path.exists', return_value=True), \
+             patch('os.path.isdir', return_value=True), \
+             patch('os.listdir', return_value=['Pet.java']), \
+             patch('os.path.isfile', return_value=True), \
+             patch('common.utils.utils.get_project_file_name', new_callable=AsyncMock, return_value="/path/to/entities"), \
+             patch('common.utils.utils.get_repository_name', return_value="test_repo"):
+
+            service.workflow_helper_service.launch_agentic_workflow = AsyncMock(side_effect=Exception("Workflow launch error"))
+
+            result = await service.launch_gen_app_workflows(
+                "tech_id", mock_agentic_entity,
+                dir_name="src/main/java/com/java_template/application/entity",
+                next_transition="update_routes_file"
+            )
+
+            assert "Error registering workflow" in result
+            assert mock_agentic_entity.failed is True
+
+    @pytest.mark.asyncio
+    async def test_get_entity_names_from_directory_success(self, service, mock_agentic_entity):
+        """Test successful entity name extraction from directory."""
+        # Mock directory listing with various file types
+        with patch('os.path.exists', return_value=True), \
+             patch('os.path.isdir', return_value=True), \
+             patch('os.listdir', return_value=['Pet.java', 'Cat.java', 'Dog.java', '.hidden.java', 'NotJava.txt', 'subdirectory']), \
+             patch('os.path.isfile', side_effect=lambda path: not path.endswith('subdirectory')), \
+             patch('common.utils.utils.get_project_file_name', new_callable=AsyncMock, return_value="/path/to/entities"), \
+             patch('common.utils.utils.get_repository_name', return_value="test_repo"):
+
+            entities = await service._get_entity_names_from_directory(
+                dir_name="src/main/java/com/java_template/application/entity",
+                technical_id="tech_id",
+                entity=mock_agentic_entity
+            )
+
+            # Should return sorted list of Java entity names (excluding hidden files and non-Java files)
+            assert entities == ['Cat', 'Dog', 'Pet']
+
+    @pytest.mark.asyncio
+    async def test_get_entity_names_from_directory_empty(self, service, mock_agentic_entity):
+        """Test entity name extraction from empty directory."""
+        with patch('os.path.exists', return_value=True), \
+             patch('os.path.isdir', return_value=True), \
+             patch('os.listdir', return_value=[]), \
+             patch('common.utils.utils.get_project_file_name', new_callable=AsyncMock, return_value="/path/to/entities"), \
+             patch('common.utils.utils.get_repository_name', return_value="test_repo"):
+
+            entities = await service._get_entity_names_from_directory(
+                dir_name="src/main/java/com/java_template/application/entity",
+                technical_id="tech_id",
+                entity=mock_agentic_entity
+            )
+
+            assert entities == []
+
     def test_service_inheritance(self, service):
         """Test that service properly inherits from BaseWorkflowService."""
         from tools.base_service import BaseWorkflowService

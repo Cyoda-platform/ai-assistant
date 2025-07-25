@@ -220,6 +220,7 @@ class DeploymentService(BaseWorkflowService):
         build_id = build_info['build_id']
         build_namespace = build_info['build_namespace']
         entity.workflow_cache['build_namespace'] = build_namespace
+        entity.workflow_cache['build_id'] = build_id
         
         if not build_id or not build_namespace:
             raise ValueError("Build information missing from the response")

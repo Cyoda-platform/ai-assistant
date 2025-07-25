@@ -13,7 +13,7 @@ from common.repository.in_memory_db import InMemoryRepository
 from common.service.data_retrieval_service import DataRetrievalService
 from common.service.service import EntityServiceImpl
 from common.service.user_service import UserService
-from common.workflow.converter.workflow_converter_service import CyodaWorkflowConverterService
+from common.workflow.converter_v2.workflow_converter_service import CyodaWorkflowConverterService
 from entity.model_registry import model_registry
 from entity.chat.helper_functions import WorkflowHelperService
 from entity.chat.workflow import ChatWorkflow

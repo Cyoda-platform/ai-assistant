@@ -94,9 +94,10 @@ class OpenAiAgent:
                         "content": str(result)
                     })
                     if call.function.name == const.Notifications.EXIT_LOOP_FUNCTION_NAME.value:
+                        content =  f'{resp.content} \n {const.Notifications.PROCEED_TO_THE_NEXT_STEP.value}' if resp.content else const.Notifications.PROCEED_TO_THE_NEXT_STEP.value
                         adapted_messages.append(
-                            {"role": "assistant", "content": const.Notifications.PROCEED_TO_THE_NEXT_STEP.value})
-                        return const.Notifications.PROCEED_TO_THE_NEXT_STEP.value
+                            {"role": "assistant", "content": content})
+                        return content
                 continue
 
             content = resp.content
@@ -114,4 +115,5 @@ class OpenAiAgent:
                 # No schema: return string as before
                 adapted_messages.append({"role": "assistant", "content": content})
                 return content
-        raise Exception(f"error:Max validation retries reached last_response: {messages[-1]["content"]}")
+        logger.exception(f"error:Max validation retries reached last_response: {messages[-1]["content"]}")
+        return "Something fishy happening with the LLM..."

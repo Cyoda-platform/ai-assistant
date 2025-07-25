@@ -1,5 +1,6 @@
 import logging
 import random
+from datetime import datetime
 
 import jwt
 from typing import List, Tuple
@@ -97,7 +98,13 @@ class ChatService:
                     guest_user_ids.add(guest_id)
         if transfer_chats:
             chats += transfer_chats
-            chats = sorted(chats, key=lambda chat: chat.last_modified, reverse=True)
+            def parse_chat_date(chat):
+                try:
+                    return datetime.strptime(chat.date, "%Y-%m-%dT%H:%M:%S.%fZ")
+                except (TypeError, ValueError):
+                    return datetime.min  # fallback if date is missing or malformed
+
+            chats = sorted(chats, key=parse_chat_date, reverse=True)
         return [{
             "technical_id": c.technical_id,
             "name": c.name,
@@ -574,9 +581,10 @@ class ChatService:
         workflow_names = [
             const.ModelName.CHAT_ENTITY.value,
             const.ModelName.AGENTIC_FLOW_ENTITY.value,
+            const.ModelName.SCHEDULER_ENTITY.value,
         ]
 
-        entities: List[AgenticFlowEntity] = []
+        entities: List[WorkflowEntity] = []
         condition = {
             "cyoda": {
                 "type": "group",

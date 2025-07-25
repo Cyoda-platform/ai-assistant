@@ -8,7 +8,9 @@ from tools.deployment_service import DeploymentService
 from tools.application_builder_service import ApplicationBuilderService
 from tools.application_editor_service import ApplicationEditorService
 from tools.workflow_management_service import WorkflowManagementService
+from tools.workflow_validation_service import WorkflowValidationService
 from tools.utility_service import UtilityService
+from tools.build_id_retrieval_service import BuildIdRetrievalService
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +112,29 @@ class ChatWorkflow(Workflow):
             mock=mock
         )
 
+        self.workflow_validation_service = WorkflowValidationService(
+            workflow_helper_service=workflow_helper_service,
+            entity_service=entity_service,
+            cyoda_auth_service=cyoda_auth_service,
+            workflow_converter_service=workflow_converter_service,
+            scheduler_service=scheduler_service,
+            data_service=data_service,
+            dataset=dataset,
+            mock=mock
+        )
+
         self.utility_service = UtilityService(
+            workflow_helper_service=workflow_helper_service,
+            entity_service=entity_service,
+            cyoda_auth_service=cyoda_auth_service,
+            workflow_converter_service=workflow_converter_service,
+            scheduler_service=scheduler_service,
+            data_service=data_service,
+            dataset=dataset,
+            mock=mock
+        )
+
+        self.build_id_retrieval_service = BuildIdRetrievalService(
             workflow_helper_service=workflow_helper_service,
             entity_service=entity_service,
             cyoda_auth_service=cyoda_auth_service,
@@ -137,9 +161,13 @@ class ChatWorkflow(Workflow):
             'save_env_file': self.file_operations_service.save_env_file,
             'save_file': self.file_operations_service.save_file,
             'read_file': self.file_operations_service.read_file,
+            'get_file_contents': self.file_operations_service.get_file_contents,
+            'get_entity_pojo_contents': self.file_operations_service.get_entity_pojo_contents,
+            'list_directory_files': self.file_operations_service.list_directory_files,
             'clone_repo': self.file_operations_service.clone_repo,
             'delete_files': self.file_operations_service.delete_files,
             'save_entity_templates': self.file_operations_service.save_entity_templates,
+            'add_application_resource': self.file_operations_service.add_application_resource,
 
             # Web Operations
             'web_search': self.web_operations_service.web_search,
@@ -179,6 +207,8 @@ class ChatWorkflow(Workflow):
             'add_new_workflow': self.application_editor_service.add_new_workflow,
 
             # Workflow Management
+            'launch_gen_app_workflows': self.workflow_management_service.launch_gen_app_workflows,
+            'launch_deployment_chat_workflow': self.workflow_management_service.launch_deployment_chat_workflow,
             'register_workflow_with_app': self.workflow_management_service.register_workflow_with_app,
             'validate_workflow_design': self.workflow_management_service.validate_workflow_design,
             'has_workflow_code_validation_succeeded': self.workflow_management_service.has_workflow_code_validation_succeeded,
@@ -189,6 +219,9 @@ class ChatWorkflow(Workflow):
             'convert_workflow_json_to_state_diagram': self.workflow_management_service.convert_workflow_json_to_state_diagram,
             'convert_workflow_to_dto': self.workflow_management_service.convert_workflow_to_dto,
 
+            # Workflow Validation
+            'validate_workflow_implementation': self.workflow_validation_service.validate_workflow_implementation,
+
             # Utility Functions
             'get_weather': self.utility_service.get_weather,
             'get_humidity': self.utility_service.get_humidity,
@@ -197,6 +230,9 @@ class ChatWorkflow(Workflow):
             'fail_workflow': self.utility_service.fail_workflow,
             'check_scheduled_entity_status': self.utility_service.check_scheduled_entity_status,
             'trigger_parent_entity': self.utility_service.trigger_parent_entity,
+
+            # Build ID Retrieval
+            'get_build_id_from_context': self.build_id_retrieval_service.get_build_id_from_context,
 
         }
 
