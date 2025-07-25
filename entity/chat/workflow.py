@@ -190,6 +190,7 @@ class ChatWorkflow(Workflow):
             'schedule_build_user_application': self.deployment_service.schedule_build_user_application,
             'schedule_deploy_user_application': self.deployment_service.schedule_deploy_user_application,
             'deploy_cyoda_env': self.deployment_service.deploy_cyoda_env,
+            'deploy_cyoda_env_background': self.deployment_service.deploy_cyoda_env_background,
             'deploy_user_application': self.deployment_service.deploy_user_application,
             'get_env_deploy_status': self.deployment_service.get_env_deploy_status,
 

@@ -1934,7 +1934,7 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "deploy_cyoda_env",
+                    "name": "deploy_cyoda_env_background",
                     "description": "Launches workflow that is necessary to deploy Cyoda environment for the user. User needs to explicitly ask for deployment of Cyoda environment.",
                     "strict": true,
                     "parameters": {
@@ -2630,7 +2630,7 @@
                     "- All processors and criteria are properly implemented and follow naming conventions",
                     "- Controller is thin and only handles API routing + EntityService persistence calls",
                     "",
-                    "OUTPUT: Provide a detailed validation report with formal smileys. If issues are found, outline them. If everything is correct, confirm that the entity processing logic migration was successful and workflows make sense."
+                    "OUTPUT: Provide a detailed validation report with formal smileys. If everything is correct, confirm that the entity processing logic migration was successful and workflows make sense. If issues are found, outline them and formulate a prompt the user can give to their IDE AI assistant to fix the issues as. You cannot fix them yourself, return a prompt a user can use in their own IDE assistant."
                   ]
                 }
               ],

@@ -1,6 +1,6 @@
 {
   "initial_state": "none",
-  "workflow_name": "deploy_cyoda_env",
+  "workflow_name": "deploy_cyoda_env_background",
   "states": {
     "none": {
       "transitions": {
@@ -53,7 +53,7 @@
             "config": {
               "type": "notification",
               "notification": "✅ Your [Cyoda environment](https://{build_namespace}.{client_host}) has been successfully deployed!\n\nYou can now proceed to setting up the application locally. Please let me know if you would like to add a new machine user to get oauth2 credentials.",
-              "publish": true,
+              "publish": false,
               "allow_anonymous_users": true
             }
           }
@@ -66,7 +66,7 @@
             "config": {
               "type": "notification",
               "notification": "⚠️ Sorry, we encountered internal issues while deploying your Cyoda environment.\n\nOur team has been notified and is looking into it. Please try again shortly, or reach out if the issue persists. You can proceed with the current chat.",
-              "publish": true,
+              "publish": false,
               "allow_anonymous_users": true
             }
           }
@@ -79,7 +79,7 @@
             "config": {
               "type": "notification",
               "notification": "\uD83D\uDE48  We encountered internal issues with checking the status of your Cyoda environment. You can check the the deployment status for {build_id} in a separate chat or it will be checked at a later step for you automatically. Don't worry!",
-              "publish": true,
+              "publish": false,
               "allow_anonymous_users": true
             }
           }
@@ -94,7 +94,7 @@
             "name": "process_event",
             "config": {
               "type": "function",
-              "publish": true,
+              "publish": false,
               "function": {
                 "name": "lock_chat",
                 "description": "",

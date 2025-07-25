@@ -37,6 +37,7 @@
                     "",
                     " Let the user know: they should pull changes from remote and locate the .env.template file in the project’s root directory. Once they’ve found it, rename it to .env and open it in a text editor.",
                     "_Tip: Let the user know: they can confirm it’s in the root directory by using their code editor’s file tree or by running `ls` in the terminal._",
+                    "We should encourage users to switch to their favourite AI assisted IDE. It will help them understand the application code better. And they should start by exploring the app in a debugger.",
                     " Once the environment is ready - you'll be able to get CYODA_CLIENT_ID and CYODA_CLIENT_SECRET. Let me check your environment status."
                   ]
                 }
@@ -150,7 +151,8 @@
                 {
                   "role": "user",
                   "content": [
-                    "**Troubleshooting:** Let the user know: if they can’t find the .env.template file, make sure they’re on the correct branch. If it’s still missing, check their .gitignore or ensure the repo was cloned fully, including any submodules."
+                    "**Troubleshooting:** Let the user know: if they can’t find the .env.template file, make sure they’re on the correct branch. If it’s still missing, check their .gitignore or ensure the repo was cloned fully, including any submodules.",
+                    "We should encourage users to switch to their favourite AI assisted IDE. It will help them understand the application code better. And they should start by exploring the app in a debugger."
                   ]
                 }
               ],
@@ -858,6 +860,7 @@
                     "./gradlew bootJarWorkflowImport",
                     "java -jar build/libs/java-client-template-1.0-SNAPSHOT-workflow-import.jar",
                     "```",
+                    "Let the user know: the workflows are available in `src/main/java/com/java_template/application/workflow`",
                     "Let the user know: the workflows should appear in their Cyoda UI once the import completes.",
                     "Let the user know: they can view and edit their workflow configurations here in canvas. They need to open canvas in upper right corner and chooose workflow tab. There they can view the workflow and also use AI for editing if necessary."
                   ]
@@ -1925,7 +1928,8 @@
                   "content": [
                     "**Troubleshooting:**",
                     "- Let the user know: if they can’t access the server, they should check that it’s still running and that their firewall allows local traffic.",
-                    "- Let the user know: if no GRPC event occurs, they should verify their endpoint triggers GRPC and inspect the logs to trace payload delivery."
+                    "- Let the user know: if no GRPC event occurs, they should verify their endpoint triggers GRPC and inspect the logs to trace payload delivery.",
+                    "We should encourage users to switch to their favourite AI assisted IDE. It will help them understand the application code better. And they should start by exploring the app in a debugger."
                   ]
                 }
               ],

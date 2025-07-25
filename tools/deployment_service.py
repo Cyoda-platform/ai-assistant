@@ -88,32 +88,39 @@ class DeploymentService(BaseWorkflowService):
     async def deploy_cyoda_env(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
         """
         Deploy Cyoda environment.
-        
+
         Args:
             technical_id: Technical identifier
             entity: Agentic flow entity
             **params: Parameters including transition
-            
+
         Returns:
             Success message or error for guest users
         """
-        if entity.user_id.startswith('guest'):
-            return "Sorry, deploying Cyoda env is available only to logged in users. Please sign up or login!"
-        
-        # Set client host parameter
-        params['client_host'] = f"{config.CLIENT_HOST}"
-        
-        if params.get("transition"):
-            # Note: This would need to be handled by the main workflow
-            # or we need to inject the state management service
-            pass
-        
-        return await self._schedule_workflow(
+        return await self._deploy_cyoda_env_common(
             technical_id=technical_id,
             entity=entity,
-            entity_model=const.ModelName.CHAT_ENTITY.value,
             workflow_name=const.DeploymentFlow.DEPLOY_CYODA_ENV.value,
-            params=params,
+            **params
+        )
+
+    async def deploy_cyoda_env_background(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
+        """
+        Deploy Cyoda environment in background.
+
+        Args:
+            technical_id: Technical identifier
+            entity: Agentic flow entity
+            **params: Parameters including transition
+
+        Returns:
+            Success message or error for guest users
+        """
+        return await self._deploy_cyoda_env_common(
+            technical_id=technical_id,
+            entity=entity,
+            workflow_name=const.DeploymentFlow.DEPLOY_CYODA_ENV_BACKGROUND.value,
+            **params
         )
 
     async def deploy_user_application(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
@@ -239,7 +246,40 @@ class DeploymentService(BaseWorkflowService):
                 f"You will be notified once your environment is ready. You can check the status of the "
                 f"deployment by asking 'check deploy status for build ID {build_id}'.")
 
-    async def _schedule_workflow(self, technical_id: str, entity: AgenticFlowEntity, 
+    async def _deploy_cyoda_env_common(self, technical_id: str, entity: AgenticFlowEntity,
+                                      workflow_name: str, **params) -> str:
+        """
+        Common logic for deploying Cyoda environment.
+
+        Args:
+            technical_id: Technical identifier
+            entity: Agentic flow entity
+            workflow_name: Name of the workflow to execute
+            **params: Parameters including transition
+
+        Returns:
+            Success message or error for guest users
+        """
+        if entity.user_id.startswith('guest'):
+            return "Sorry, deploying Cyoda env is available only to logged in users. Please sign up or login!"
+
+        # Set client host parameter
+        params['client_host'] = f"{config.CLIENT_HOST}"
+
+        if params.get("transition"):
+            # Note: This would need to be handled by the main workflow
+            # or we need to inject the state management service
+            pass
+
+        return await self._schedule_workflow(
+            technical_id=technical_id,
+            entity=entity,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
+            workflow_name=workflow_name,
+            params=params,
+        )
+
+    async def _schedule_workflow(self, technical_id: str, entity: AgenticFlowEntity,
                                 entity_model: str, workflow_name: str, params: dict) -> str:
         """
         Internal method to schedule workflow operations.
