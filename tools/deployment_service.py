@@ -244,7 +244,9 @@ class DeploymentService(BaseWorkflowService):
         return (f"Successfully scheduled {scheduled_action.value.replace('_', ' ')} with build ID {build_id}. "
                 f"Your environment will be available at: https://{build_namespace}.{config.CLIENT_HOST}. "
                 f"You will be notified once your environment is ready. You can check the status of the "
-                f"deployment by asking 'check deploy status for build ID {build_id}'.")
+                f"deployment by asking 'check deploy status for build ID {build_id}'."
+                f"Currently redeploying the environment will reset all the data. You'll need to re-upload "
+                f"your workflows and add a new M2M user to access it (prompt: `add new machine user`). Sorry for the inconvenience. We are working on it.")
 
     async def _deploy_cyoda_env_common(self, technical_id: str, entity: AgenticFlowEntity,
                                       workflow_name: str, **params) -> str:

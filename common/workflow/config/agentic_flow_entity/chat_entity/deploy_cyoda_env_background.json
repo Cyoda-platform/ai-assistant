@@ -10,7 +10,7 @@
             "name": "process_event",
             "config": {
               "type": "function",
-              "publish": true,
+              "publish": false,
               "memory_tags": [
                 "chat_deploy_env", "general_memory_tag"
               ],
