@@ -11,9 +11,9 @@ from routes.chat import chat_bp
 from routes.labels_config import labels_config_bp
 from routes.token import token_bp
 from routes.workflow import workflow_bp
-from api.mcp_status import mcp_status_bp
+
 from services.factory import grpc_client
-from services.mcp_server_manager import startup_mcp_servers, shutdown_mcp_servers
+
 
 logger = logging.getLogger(__name__)
 
@@ -47,14 +47,7 @@ def create_app():
         grpc_client_loop.run_coroutine(grpc_client.grpc_stream())
         logger.info("Started gRPC background stream.")
 
-        # start MCP servers
-        try:
-            await startup_mcp_servers()
-            logger.info("Started MCP servers.")
-        except Exception as e:
-            logger.error(f"Failed to start MCP servers: {e}")
-            # Don't fail the app startup if MCP servers fail
-            pass
+        # MCP servers are now standalone - no longer managed by main app
 
 
     @app.after_serving
@@ -64,12 +57,7 @@ def create_app():
             await app.background_task
         logger.info("Stopped gRPC background stream.")
 
-        # shutdown MCP servers
-        try:
-            await shutdown_mcp_servers()
-            logger.info("Stopped MCP servers.")
-        except Exception as e:
-            logger.error(f"Error stopping MCP servers: {e}")
+        # MCP servers are now standalone - no longer managed by main app
 
     # --- Static index route ---
     @app.route('/')
@@ -82,6 +70,6 @@ def create_app():
     app.register_blueprint(chat_bp)
     app.register_blueprint(labels_config_bp)
     app.register_blueprint(workflow_bp)
-    app.register_blueprint(mcp_status_bp)
+
 
     return app
