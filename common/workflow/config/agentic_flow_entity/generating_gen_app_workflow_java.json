@@ -97,6 +97,7 @@
                     "        {{",
                     "          \"name\": \"transition_to_01\",",
                     "          \"next\": \"state_01\"",
+                    "          \"manual\": false -- always false",
                     "        }}",
                     "      ]",
                     "    }},",
@@ -105,9 +106,10 @@
                     "        {{",
                     "          \"name\": \"transition_to_02\",",
                     "          \"next\": \"state_02\",",
+                    "          \"manual\": false -- always false",
                     "          \"processors\": [",
                     "            {{",
-                    "              \"name\": \"ProcessorClassName\",",
+                    "              \"name\": \"ProcessorClassName\", -- use camel case like a class name. Single word, no special characters.",
                     "              \"executionMode\": \"SYNC\",",
                     "              \"config\": {{",
                     "                \"calculationNodesTags\": \"cyoda_application\" <-- always use this tag",
@@ -122,10 +124,11 @@
                     "        {{",
                     "          \"name\": \"transition_with_criterion_simple\",",
                     "          \"next\": \"state_criterion_check_01\",",
+                    "          \"manual\": false -- always false",
                     "          \"criterion\": {{",
                     "            \"type\": \"function\",",
                     "            \"function\": {{",
-                    "              \"name\": \"CriterionClassName\",",
+                    "              \"name\": \"CriterionClassName\",  -- use camel case like a class name. Single word, no special characters.",
                     "              \"config\": {{",
                     "                \"calculationNodesTags\": \"cyoda_application\"<-- always use this tag",
                     "              }}",
@@ -210,7 +213,8 @@
                               "type": "object",
                               "required": [
                                 "name",
-                                "next"
+                                "next",
+                                "manual"
                               ],
                               "properties": {
                                 "name": {
@@ -220,7 +224,10 @@
                                   "type": "string"
                                 },
                                 "manual": {
-                                  "type": "boolean"
+                                  "type": "boolean",
+                                  "enum": [
+                                    false
+                                  ]
                                 },
                                 "processors": {
                                   "type": "array",
@@ -577,7 +584,7 @@
                     "",
                     "@Override",
                     "public boolean supports(OperationSpecification modelSpec) {",
-                    "    return className.equals(modelSpec.operationName());",
+                    "    return className.equalsIgnoreCase(modelSpec.operationName());",
                     "}",
                     "",
                     "",
@@ -610,12 +617,12 @@
                     "",
                     "    private final Logger logger = LoggerFactory.getLogger(this.getClass());",
                     "    private final ProcessorSerializer serializer;",
-                    "   // private final ObjectMapper objectMapper;  if needed for business logic",
+                    "    private final ObjectMapper objectMapper; only if needed for business logic",
                     "    private final String className = this.getClass().getSimpleName();",
                     "",
-                    "    public ProcessorClassName(SerializerFactory serializerFactory) {",
+                    "    public ProcessorClassName(SerializerFactory serializerFactory, ObjectMapper objectMapper (if needed)) {",
                     "        this.serializer = serializerFactory.getDefaultProcessorSerializer(); //always follow this pattern",
-                    "        logger.info(\"ProcessorClassName initialized with SerializerFactory\");",
+                    "        this.objectMapper = objectMapper;  (if needed)",
                     "    }",
                     "",
                     "    @Override",
@@ -633,7 +640,7 @@
                     "",
                     "    @Override",
                     "    public boolean supports(OperationSpecification modelSpec) {",
-                    "        return className.equals(modelSpec.operationName());",
+                    "        return className.equalsIgnoreCase(modelSpec.operationName());",
                     "    }",
                     "    private boolean isValidEntity(HNItem entity) {",
                     "       return entity != null && entity.isValid();",
@@ -810,7 +817,7 @@
                     "",
                     "    @Override",
                     "    public boolean supports(OperationSpecification modelSpec) {",
-                    "        return className.equals(modelSpec.operationName());",
+                    "        return className.equalsIgnoreCase(modelSpec.operationName());",
                     "    }",
                     "",
                     "    private EvaluationOutcome validateEntity(CriterionSerializer.CriterionEntityEvaluationContext<EntityName> context) {",
