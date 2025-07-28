@@ -165,7 +165,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "\uD83D\uDC4B Welcome to Cyoda Application Builder!\nWe’re excited to help you build your app — and just so you know, I’m a Cyoda app too, built with the same tools you’re about to use!\n\n\uD83D\uDD27 Process:\n\nDefine requirements & APIs\n\nBuild core logic prototype\n\nMigrate to Cyoda backend (event-driven & production-ready)\n👉 Learn more: https://cyoda.com\n\n🚀 After that, you’ll get guidance on launching your app—and we can continue editing it as needed.\n\n🌱 We're in alpha!\nIf something goes wrong or you have questions, reach out on [Discord](https://discord.gg/95rdAyBZr2) or click Restart workflows in the entities progress window.\n\nLet’s build something great together!\n\n```mermaid\ngraph TD\n    A([Define & Confirm Functional Requirements]):::bar e1@== build_general_application.functional_requirements_specified\n    ==> B([Build Sketch Prototype]):::bar\n    B e2@== functional_requirements_generated ==> C([Validate Functionality & API Endpoints]):::bar\n    C e3@== prototype_discussion_requested ==> D{Are You Happy With the Prototype?}:::bar\n    D e4@== migration_confirmation_requested ==> E([Migrate to Cyoda Backend]):::bar\n    E e5@== finished_app_generation_flow ==> F([Event-Driven Architecture + Non-Functional Requirements]):::bar\n    F e6@== init_setup_workflow ==> G([Launch Your App]):::bar\n    G e7@== edit_existing_workflow ==> H([Iterate & Edit as Needed]):::bar\n\n    D e1@== No ==> B\n\n    H e8@== locked_chat ==> I([Need Help? Click Retry or Ask on Discord]):::bar\n    e1@{ animate: true }\n    e2@{ animate: true }\n    e3@{ animate: true }\n    e4@{ animate: true }\n    e5@{ animate: true }\n    e6@{ animate: true }\n    e7@{ animate: true }\n    e8@{ animate: true }\n    classDef bar stroke:#0f0\n```",
+              "notification": "\uD83D\uDC4B Welcome to Cyoda Application Builder!\nWe’re excited to help you build your app — and just so you know, I’m a Cyoda app too, built with the same tools you’re about to use!\n\n\uD83D\uDD27 Process:\n\nDefine requirements & APIs\n\nBuild core logic prototype\n\nMigrate to Cyoda backend (event-driven & production-ready)\n\n\n👉 Learn more: https://cyoda.com\n\n🚀 After that, you’ll get guidance on launching your app—and we can continue editing it as needed.\n\n🌱 We're in alpha!\nIf something goes wrong or you have questions, reach out on [Discord](https://discord.gg/95rdAyBZr2) or click Restart workflows in the entities progress window.\n\nLet’s build something great together!\n\n```mermaid\ngraph TD\n    A([Define & Confirm Functional Requirements]):::bar e1@== build_general_application.functional_requirements_specified\n    ==> B([Build Sketch Prototype]):::bar\n    B e2@== functional_requirements_generated ==> C([Validate Functionality & API Endpoints]):::bar\n    C e3@== prototype_discussion_requested ==> D{Are You Happy With the Prototype?}:::bar\n    D e4@== migration_confirmation_requested ==> E([Migrate to Cyoda Backend]):::bar\n    E e5@== finished_app_generation_flow ==> F([Event-Driven Architecture + Non-Functional Requirements]):::bar\n    F e6@== init_setup_workflow ==> G([Launch Your App]):::bar\n    G e7@== edit_existing_workflow ==> H([Iterate & Edit as Needed]):::bar\n\n    D e1@== No ==> B\n\n    H e8@== locked_chat ==> I([Need Help? Click Retry or Ask on Discord]):::bar\n    e1@{ animate: true }\n    e2@{ animate: true }\n    e3@{ animate: true }\n    e4@{ animate: true }\n    e5@{ animate: true }\n    e6@{ animate: true }\n    e7@{ animate: true }\n    e8@{ animate: true }\n    classDef bar stroke:#0f0\n```",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -2255,6 +2255,30 @@
                       ]
                     }
                   }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "list_directory_files",
+                    "description": "List all files in a directory to see what processors, criteria, or entities were created",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "directory_path": {
+                          "type": "string",
+                          "description": "Path to the directory to list.",
+                          "enum": [
+                            "src/main/java/com/java_template/application/entity"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "directory_path"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
                 }
               ],
               "memory_tags": [
@@ -2274,21 +2298,25 @@
                 {
                   "role": "user",
                   "content": [
-                    "You need to extract processing methods from Controller.java and create workflow prototypes.",
+                    "You need to extract processing methods from Controller.java and create workflow prototypes for each entity.",
+                    "- Use `list_directory_files` to discover all entity names",
                     "",
                     "Your tasks:",
+                    "1. Get all entity names.",
                     "1. Read the Controller.java file contents",
                     "2. Identify all process methods (methods that start with 'process' followed by an entity name or some variation of this pattern. these methods are right after putting entity to cache/ 'saving')",
                     "3. For each processEntityName method found:",
                     "   - Extract the complete method including its body",
                     "   - Extract any private helper methods that are directly called by this process method",
                     "   - Save the extracted method(s) to 'src/main/java/com/java_template/application/workflow_prototypes/{EntityName}.txt' using add_application_resource",
+                    "   - If there is no process{EntityName} method found, create a file with a todo to implement business logic later.",
                     "4. Return a cleaned version of Controller.java that:",
                     "   - Removes all processEntityName methods and their direct helper methods",
                     "   - Keeps all other functionality intact (CRUD operations, endpoints, etc.)",
                     "",
                     "Important guidelines:",
                     "- Only extract methods that follow the pattern process{EntityName}/process}EntityName}{Something} (e.g., processUser, processUserScheduler)",
+                    "- Save the extracted methods to 'src/main/java/com/java_template/application/workflow_prototypes/{EntityName}.txt' using add_application_resource for the respective entity name",
                     "- Include any private methods that are called directly from the process methods",
                     "- Preserve the original code structure and formatting",
                     "- The cleaned controller should remain fully functional for CRUD operations",
