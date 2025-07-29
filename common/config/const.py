@@ -128,6 +128,7 @@ class ModelName(str, Enum):
 @unique
 class DeploymentFlow(str, Enum):
     DEPLOY_CYODA_ENV = "deploy_cyoda_env"
+    DEPLOY_CYODA_ENV_BACKGROUND = "deploy_cyoda_env_background"
     BUILD_USER_APP = "build_user_application"
     DEPLOY_USER_APPLICATION = "deploy_user_application"
 

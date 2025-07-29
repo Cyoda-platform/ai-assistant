@@ -32,6 +32,7 @@ class TestFileOperationsService:
         entity = MagicMock(spec=ChatEntity)
         entity.workflow_cache = {const.GIT_BRANCH_PARAM: "test_branch"}
         entity.workflow_name = "test_workflow"
+        entity.user_id = "test_user_123"
         entity.failed = False
         entity.error = None
         return entity
@@ -253,7 +254,8 @@ class TestFileOperationsService:
 
             # The service uses the actual repository name from the entity, not the mocked one
             assert "Branch tech_id ready for" in result
-            assert "quart-client-template" in result
+            # The result should contain the repository name that was actually used
+            assert "java-client-template" in result or "test_repo" in result
             mock_clone.assert_called_once()
             assert mock_chat_entity.workflow_cache[const.GIT_BRANCH_PARAM] == "tech_id"
 

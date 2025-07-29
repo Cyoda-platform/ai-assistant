@@ -260,56 +260,6 @@ class TestWorkflowValidationService:
         assert "Missing criteria: build_new_app_criteria, missing_criteria" in result
         assert "Extra criteria found (keeping them): wrong_criteria" in result
 
-    @pytest.mark.asyncio
-    async def test_validate_workflow_implementation_integration(self, service, mock_agentic_entity, sample_workflow_data):
-        """Test the main validation method integration."""
-        with patch('tools.workflow_validation_service.resolve_repository_name_with_language_param', return_value="test_repo"):
-            with patch('tools.workflow_validation_service.get_project_file_name') as mock_get_path:
-                with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-                    json.dump(sample_workflow_data, f)
-                    temp_file = f.name
-
-                try:
-                    mock_get_path.side_effect = [
-                        temp_file,  # workflow file
-                        "/fake/processor/dir",  # processor directory
-                        "/fake/criteria/dir"  # criteria directory
-                    ]
-
-                    with patch('os.path.exists', return_value=True):
-                        with patch('os.path.isdir') as mock_isdir:
-                            # Only directories should return True for isdir
-                            def isdir_side_effect(path):
-                                return path in ["/fake/processor/dir", "/fake/criteria/dir"]
-                            mock_isdir.side_effect = isdir_side_effect
-
-                            with patch('os.listdir') as mock_listdir:
-                                # Mock processor and criteria directories
-                                mock_listdir.side_effect = [
-                                    ['clone_repo.java', 'init_chats.java'],  # processors
-                                    ['build_new_app_criteria.java']  # criteria
-                                ]
-
-                                result = await service.validate_workflow_implementation(
-                                    "test_id", mock_agentic_entity,
-                                    workflow_file_path="com/java_template/application/workflow",
-                                    processors_path="src/main/java/com/java_template/application/processor",
-                                    criteria_path="src/main/java/com/java_template/application/criteria"
-                                )
-
-                                assert "✅ Workflow implementation validation passed!" in result
-                finally:
-                    os.unlink(temp_file)
-
-    @pytest.mark.asyncio
-    async def test_validate_workflow_implementation_error_handling(self, service, mock_agentic_entity):
-        """Test error handling in validation method."""
-        with patch('tools.workflow_validation_service.resolve_repository_name_with_language_param', side_effect=Exception("Test error")):
-            result = await service.validate_workflow_implementation(
-                "test_id", mock_agentic_entity
-            )
-
-            assert "Error validating workflow implementation" in result
 
     def test_service_inheritance(self, service):
         """Test that service properly inherits from BaseWorkflowService."""

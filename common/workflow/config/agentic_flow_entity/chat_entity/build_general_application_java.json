@@ -165,7 +165,7 @@
             "name": "process_event",
             "config": {
               "type": "notification",
-              "notification": "👋 Welcome to Cyoda Application Builder!\nWe’re excited to work with you on building your app.\n\n🔧 Here's how the process works:\n\n**Define & confirm functional requirements**\nWe'll discuss what your app needs to do and confirm the necessary API endpoints.\n\n**Prototype phase**\nWe’ll create a controller-based sketch prototype focused on core logic only.\n\n**Backend migration**\nOnce you're happy with the prototype, we'll migrate it to the Cyoda backend, introducing our event-driven architecture and non-functional requirements.\n👉 Learn more: https://cyoda.com\n\n🚀 After that, you’ll get guidance on launching your app—and we can continue editing it as needed.\n\n🌱 We're in alpha!\nIf something goes wrong or you have questions, reach out on [Discord](https://discord.gg/95rdAyBZr2) or click Restart workflows in the entities progress window.\n\nLet’s build something great together!\n\n```mermaid\ngraph TD\n    A([Define & Confirm Functional Requirements]):::bar e1@== build_general_application.functional_requirements_specified\n    ==> B([Build Sketch Prototype]):::bar\n    B e2@== functional_requirements_generated ==> C([Validate Functionality & API Endpoints]):::bar\n    C e3@== prototype_discussion_requested ==> D{Are You Happy With the Prototype?}:::bar\n    D e4@== migration_confirmation_requested ==> E([Migrate to Cyoda Backend]):::bar\n    E e5@== finished_app_generation_flow ==> F([Event-Driven Architecture + Non-Functional Requirements]):::bar\n    F e6@== init_setup_workflow ==> G([Launch Your App]):::bar\n    G e7@== edit_existing_workflow ==> H([Iterate & Edit as Needed]):::bar\n\n    D e1@== No ==> B\n\n    H e8@== locked_chat ==> I([Need Help? Click Retry or Ask on Discord]):::bar\n    e1@{ animate: true }\n    e2@{ animate: true }\n    e3@{ animate: true }\n    e4@{ animate: true }\n    e5@{ animate: true }\n    e6@{ animate: true }\n    e7@{ animate: true }\n    e8@{ animate: true }\n    classDef bar stroke:#0f0\n```",
+              "notification": "\uD83D\uDC4B Welcome to Cyoda Application Builder!\nWe’re excited to help you build your app — and just so you know, I’m a Cyoda app too, built with the same tools you’re about to use!\n\n\uD83D\uDD27 Process:\n\nDefine requirements & APIs\n\nBuild core logic prototype\n\nMigrate to Cyoda backend (event-driven & production-ready)\n\n\n👉 Learn more: https://cyoda.com\n\n🚀 After that, you’ll get guidance on launching your app—and we can continue editing it as needed.\n\n🌱 We're in alpha!\nIf something goes wrong or you have questions, reach out on [Discord](https://discord.gg/95rdAyBZr2) or click Restart workflows in the entities progress window.\n\nLet’s build something great together!\n\n```mermaid\ngraph TD\n    A([Define & Confirm Functional Requirements]):::bar e1@== build_general_application.functional_requirements_specified\n    ==> B([Build Sketch Prototype]):::bar\n    B e2@== functional_requirements_generated ==> C([Validate Functionality & API Endpoints]):::bar\n    C e3@== prototype_discussion_requested ==> D{Are You Happy With the Prototype?}:::bar\n    D e4@== migration_confirmation_requested ==> E([Migrate to Cyoda Backend]):::bar\n    E e5@== finished_app_generation_flow ==> F([Event-Driven Architecture + Non-Functional Requirements]):::bar\n    F e6@== init_setup_workflow ==> G([Launch Your App]):::bar\n    G e7@== edit_existing_workflow ==> H([Iterate & Edit as Needed]):::bar\n\n    D e1@== No ==> B\n\n    H e8@== locked_chat ==> I([Need Help? Click Retry or Ask on Discord]):::bar\n    e1@{ animate: true }\n    e2@{ animate: true }\n    e3@{ animate: true }\n    e4@{ animate: true }\n    e5@{ animate: true }\n    e6@{ animate: true }\n    e7@{ animate: true }\n    e8@{ animate: true }\n    classDef bar stroke:#0f0\n```",
               "publish": true,
               "allow_anonymous_users": true
             }
@@ -273,6 +273,27 @@
               "allow_anonymous_users": true,
               "model": {},
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_collaborator_to_default_repos",
+                    "description": "Adds a user as collaborator to the default Cyoda repositories (quart-client-template, java-client-template). Use when user requests repository access, push rights, or to be added to repositories. The AI must extract the GitHub username from the user's request - cannot invent usernames.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "username": {
+                          "type": "string",
+                          "description": "GitHub username extracted from user's request. Must be provided by the user - AI cannot invent this."
+                        }
+                      },
+                      "required": [
+                        "username"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -426,6 +447,27 @@
                 "requirements_generation"
               ],
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_collaborator_to_default_repos",
+                    "description": "Adds a user as collaborator to the default Cyoda repositories (quart-client-template, java-client-template). Use when user requests repository access, push rights, or to be added to repositories. The AI must extract the GitHub username from the user's request - cannot invent usernames.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "username": {
+                          "type": "string",
+                          "description": "GitHub username extracted from user's request. Must be provided by the user - AI cannot invent this."
+                        }
+                      },
+                      "required": [
+                        "username"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -800,6 +842,27 @@
                 {
                   "type": "function",
                   "function": {
+                    "name": "add_collaborator_to_default_repos",
+                    "description": "Adds a user as collaborator to the default Cyoda repositories (quart-client-template, java-client-template). Use when user requests repository access, push rights, or to be added to repositories. The AI must extract the GitHub username from the user's request - cannot invent usernames.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "username": {
+                          "type": "string",
+                          "description": "GitHub username extracted from user's request. Must be provided by the user - AI cannot invent this."
+                        }
+                      },
+                      "required": [
+                        "username"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
                     "name": "get_cyoda_guidelines",
                     "description": "Use this tool to generate configurations (workflows, entities, Cyoda settings) for informational purposes only, without modifying the application or saving data. If your goal is to change the application, this tool is not suitable. If it's unclear whether you need to modify the application or just need information, please clarify. The retrieved information can then be used to generate the required data without altering the application.",
                     "strict": true,
@@ -1041,6 +1104,27 @@
                 {
                   "type": "function",
                   "function": {
+                    "name": "add_collaborator_to_default_repos",
+                    "description": "Adds a user as collaborator to the default Cyoda repositories (quart-client-template, java-client-template). Use when user requests repository access, push rights, or to be added to repositories. The AI must extract the GitHub username from the user's request - cannot invent usernames.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "username": {
+                          "type": "string",
+                          "description": "GitHub username extracted from user's request. Must be provided by the user - AI cannot invent this."
+                        }
+                      },
+                      "required": [
+                        "username"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
                     "name": "add_application_resource",
                     "description": "Add application resource file with path and content",
                     "parameters": {
@@ -1094,6 +1178,7 @@
                     "",
                     "@Data",
                     "public class EntityName implements CyodaEntity {",
+                    "    public static final String ENTITY_NAME = \"EntityName\";",
                     "    // Add your entity fields here",
                     "",
                     "    public EntityName() {}",
@@ -1101,9 +1186,9 @@
                     "    @Override",
                     "    public OperationSpecification getModelKey() {",
                     "        ModelSpec modelSpec = new ModelSpec();",
-                    "        modelSpec.setName(\"entityName\");",
+                    "        modelSpec.setName(ENTITY_NAME);",
                     "        modelSpec.setVersion(Integer.parseInt(ENTITY_VERSION));",
-                    "        return new OperationSpecification.Entity(modelSpec, \"entityName\");",
+                    "        return new OperationSpecification.Entity(modelSpec, ENTITY_NAME);",
                     "    }",
                     "",
                     "    @Override",
@@ -1114,7 +1199,6 @@
                     "",
                     "Replace:",
                     "- EntityName with your actual entity class name (PascalCase)",
-                    "- entityName with your actual entity name (camelCase)",
                     "- Add appropriate fields based on the prototype code",
                     "- Implement proper validation logic in isValid() method",
                     "",
@@ -1170,6 +1254,27 @@
               "allow_anonymous_users": true,
               "model": {},
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_collaborator_to_default_repos",
+                    "description": "Adds a user as collaborator to the default Cyoda repositories (quart-client-template, java-client-template). Use when user requests repository access, push rights, or to be added to repositories. The AI must extract the GitHub username from the user's request - cannot invent usernames.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "username": {
+                          "type": "string",
+                          "description": "GitHub username extracted from user's request. Must be provided by the user - AI cannot invent this."
+                        }
+                      },
+                      "required": [
+                        "username"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -1292,10 +1397,7 @@
                     "**Each entity MUST have a corresponding process method with meaningful business logic:**",
                     "",
                     "```java",
-                    "CRITICAL: process{EntityName} method should take the entity as the only argument.",
-                    "private void process{EntityName}(EntityName entity) {",
-                    "    log.info(\"Processing EntityName with ID: {}\", entity.getId());",
-                    "    ",
+                    "private void process{EntityName}(String technicalId, EntityName entity) {",
                     "     IMPLEMENT ACTUAL BUSINESS LOGIC HERE",
                     "     Examples:",
                     "     - Data validation and enrichment",
@@ -1310,16 +1412,10 @@
                     "```",
                     "",
                     "### 8. IMPLEMENTATION GUIDELINES",
-                    "- **Minimalistic approach**: Focus on core functionality, avoid over-engineering",
                     "- **Real implementations preferred**: Use actual logic where requirements are clear",
                     "- **Logging**: Use `log.info()` for successful operations, `log.error()` for failures",
                     "- **ID generation**: Use AtomicLong for simple incremental IDs",
-                    "",
-                    "### 9. VALIDATION REQUIREMENTS",
-                    "- Validate all input parameters",
-                    "- Check for required fields based on entity structure",
                     "- Return appropriate HTTP status codes (200, 201, 400, 404, 500)",
-                    "- Include meaningful error messages",
                     "",
                     "**Remember**: This is a working prototype to validate API design and business logic flow. The processEntityName() methods are the core of the event-driven architecture and must contain substantial business logic relevant to your requirements.",
                     "Response format: respond with only the code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```"
@@ -1379,6 +1475,27 @@
                 "prototype_generation"
               ],
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_collaborator_to_default_repos",
+                    "description": "Adds a user as collaborator to the default Cyoda repositories (quart-client-template, java-client-template). Use when user requests repository access, push rights, or to be added to repositories. The AI must extract the GitHub username from the user's request - cannot invent usernames.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "username": {
+                          "type": "string",
+                          "description": "GitHub username extracted from user's request. Must be provided by the user - AI cannot invent this."
+                        }
+                      },
+                      "required": [
+                        "username"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -1667,6 +1784,27 @@
                 {
                   "type": "function",
                   "function": {
+                    "name": "add_collaborator_to_default_repos",
+                    "description": "Adds a user as collaborator to the default Cyoda repositories (quart-client-template, java-client-template). Use when user requests repository access, push rights, or to be added to repositories. The AI must extract the GitHub username from the user's request - cannot invent usernames.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "username": {
+                          "type": "string",
+                          "description": "GitHub username extracted from user's request. Must be provided by the user - AI cannot invent this."
+                        }
+                      },
+                      "required": [
+                        "username"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
                     "name": "add_application_resource",
                     "description": "Add application resource file with path and content",
                     "parameters": {
@@ -1934,7 +2072,7 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "deploy_cyoda_env",
+                    "name": "deploy_cyoda_env_background",
                     "description": "Launches workflow that is necessary to deploy Cyoda environment for the user. User needs to explicitly ask for deployment of Cyoda environment.",
                     "strict": true,
                     "parameters": {
@@ -2133,14 +2271,15 @@
                     "Currently, the code uses local in‑memory dictionaries (and counters) to store and manage data for one or more entity types.",
                     "Your task is to refactor the code so that all interactions with the local cache are replaced by calls to an external service called com.java_template.common.service.EntityService. Note, that EntityService is a bean, so inject it with Controller constructor.",
                     "You can use only these functions for replacement - if this is not enough just skip and leave as is",
+                    "You can use a constant for EntityName: each EntityName class has a public constant ENTITY_NAME",
                     "1. CompletableFuture<UUID> idFuture = entityService.addItem(",
-                    "    entityModel=\"{entityName}\",",
+                    "    entityModel={EntityName}.ENTITY_NAME,",
                     "    entityVersion=ENTITY_VERSION,  # always use this constant",
                     "    entity=data  # the validated data object",
                     ")",
                     "Note: entityService.addItem returns technicalId of the created entity.",
                     "CompletableFuture<List<UUID>> addItems idsFuture = entityService.addItems(",
-                    "    entityModel=\"{entityName}\",",
+                    "    entityModel={EntityName}.ENTITY_NAME,",
                     "    entityVersion=ENTITY_VERSION,  # always use this constant",
                     "    entities=data",
                     ")",
@@ -2148,18 +2287,18 @@
                     "2. Data retrieval. You can use the following methods:",
                     " Use getItem to retrieve a single entity by technicalId.",
                     "CompletableFuture<ObjectNode> itemFuture = entityService.getItem(",
-                    "    entityModel=\"{entityName}\",",
+                    "    entityModel={EntityName}.ENTITY_NAME,",
                     "    entityVersion=ENTITY_VERSION,",
                     "    technicalId=<technicalId>",
                     ")-- ObjectNode node will have entity data and technicalId field",
                     "Get all: ",
                     "CompletableFuture<ArrayNode> itemsFuture = entityService.getItems(",
-                    "    entityModel=\"{entityName}\",",
+                    "    entityModel={EntityName}.ENTITY_NAME,",
                     "    entityVersion=ENTITY_VERSION,",
                     ") -- each node will have technicalId field added automatically",
                     "Get items by field that is not technicalId: ",
                     "CompletableFuture<ArrayNode> filteredItemsFuture = entityService.getItemsByCondition(",
-                    "    entityModel=\"{entityName}\",",
+                    "    entityModel={EntityName}.ENTITY_NAME,",
                     "    entityVersion=ENTITY_VERSION,",
                     "    condition=condition,",
                     "    inMemory=true",
@@ -2239,6 +2378,27 @@
                 {
                   "type": "function",
                   "function": {
+                    "name": "add_collaborator_to_default_repos",
+                    "description": "Adds a user as collaborator to the default Cyoda repositories (quart-client-template, java-client-template). Use when user requests repository access, push rights, or to be added to repositories. The AI must extract the GitHub username from the user's request - cannot invent usernames.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "username": {
+                          "type": "string",
+                          "description": "GitHub username extracted from user's request. Must be provided by the user - AI cannot invent this."
+                        }
+                      },
+                      "required": [
+                        "username"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
                     "name": "add_application_resource",
                     "description": "Save extracted processing methods and cleaned controller file",
                     "parameters": {
@@ -2257,6 +2417,30 @@
                         "resource_path",
                         "file_contents"
                       ]
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "list_directory_files",
+                    "description": "List all files in a directory to see what processors, criteria, or entities were created",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "directory_path": {
+                          "type": "string",
+                          "description": "Path to the directory to list.",
+                          "enum": [
+                            "src/main/java/com/java_template/application/entity"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "directory_path"
+                      ],
+                      "additionalProperties": false
                     }
                   }
                 }
@@ -2278,25 +2462,29 @@
                 {
                   "role": "user",
                   "content": [
-                    "You need to extract processing methods from Controller.java and create workflow prototypes.",
+                    "You need to extract processing methods from Controller.java and create workflow prototypes for each entity.",
+                    "- Use `list_directory_files` to discover all entity names",
                     "",
                     "Your tasks:",
+                    "1. Get all entity names.",
                     "1. Read the Controller.java file contents",
                     "2. Identify all process methods (methods that start with 'process' followed by an entity name or some variation of this pattern. these methods are right after putting entity to cache/ 'saving')",
                     "3. For each processEntityName method found:",
                     "   - Extract the complete method including its body",
                     "   - Extract any private helper methods that are directly called by this process method",
                     "   - Save the extracted method(s) to 'src/main/java/com/java_template/application/workflow_prototypes/{EntityName}.txt' using add_application_resource",
+                    "   - If there is no process{EntityName} method found, create a file with a todo to implement business logic later.",
                     "4. Return a cleaned version of Controller.java that:",
                     "   - Removes all processEntityName methods and their direct helper methods",
                     "   - Keeps all other functionality intact (CRUD operations, endpoints, etc.)",
                     "",
                     "Important guidelines:",
-                    "- Only extract methods that follow the pattern processEntityName (e.g., processUser, processOrder, processTask)",
+                    "- Only extract methods that follow the pattern process{EntityName}/process}EntityName}{Something} (e.g., processUser, processUserScheduler)",
+                    "- Save the extracted methods to 'src/main/java/com/java_template/application/workflow_prototypes/{EntityName}.txt' using add_application_resource for the respective entity name",
                     "- Include any private methods that are called directly from the process methods",
                     "- Preserve the original code structure and formatting",
                     "- The cleaned controller should remain fully functional for CRUD operations",
-                    "- Use the entity name in PascalCase for the filename (e.g., User.txt, Order.txt, Task.txt)",
+                    "- Use the entity name in PascalCase for the filename (e.g., User.txt)",
                     "",
                     "Start by reading the Controller.java file to analyze its structure.",
                     "Response format: respond with only the java code. No markdown formatting, no explanation. Regular Java comments (// like this) are allowed, but avoid extra narrative or markdown-style formatting. Do not include code block markers like ```"
@@ -2325,6 +2513,27 @@
                 "controller_validation"
               ],
               "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "add_collaborator_to_default_repos",
+                    "description": "Adds a user as collaborator to the default Cyoda repositories (quart-client-template, java-client-template). Use when user requests repository access, push rights, or to be added to repositories. The AI must extract the GitHub username from the user's request - cannot invent usernames.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "username": {
+                          "type": "string",
+                          "description": "GitHub username extracted from user's request. Must be provided by the user - AI cannot invent this."
+                        }
+                      },
+                      "required": [
+                        "username"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
                 {
                   "type": "function",
                   "function": {
@@ -2525,6 +2734,27 @@
                 {
                   "type": "function",
                   "function": {
+                    "name": "add_collaborator_to_default_repos",
+                    "description": "Adds a user as collaborator to the default Cyoda repositories (quart-client-template, java-client-template). Use when user requests repository access, push rights, or to be added to repositories. The AI must extract the GitHub username from the user's request - cannot invent usernames.",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "username": {
+                          "type": "string",
+                          "description": "GitHub username extracted from user's request. Must be provided by the user - AI cannot invent this."
+                        }
+                      },
+                      "required": [
+                        "username"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
                     "name": "get_file_contents",
                     "description": "Get file contents by path to review existing code structure",
                     "strict": true,
@@ -2630,7 +2860,7 @@
                     "- All processors and criteria are properly implemented and follow naming conventions",
                     "- Controller is thin and only handles API routing + EntityService persistence calls",
                     "",
-                    "OUTPUT: Provide a detailed validation report with formal smileys. If issues are found, outline them. If everything is correct, confirm that the entity processing logic migration was successful and workflows make sense."
+                    "OUTPUT: Provide a detailed validation report with formal smileys. If everything is correct, confirm that the entity processing logic migration was successful and workflows make sense. If issues are found, outline them and formulate a prompt the user can give to their IDE AI assistant to fix the issues as. You cannot fix them yourself, return a prompt a user can use in their own IDE assistant."
                   ]
                 }
               ],
