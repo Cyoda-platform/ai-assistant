@@ -76,6 +76,13 @@ class Config:
         self.CHAT_ID = _get_env("CHAT_ID", default=None)
         self.GRPC_PROCESSOR_TAG = _get_env("GRPC_PROCESSOR_TAG", default="ai_assistant")
         self.CHAT_REPOSITORY = _get_env("CHAT_REPOSITORY", default="local")
+        self.GH_TOKEN = _get_env("GH_TOKEN")
+
+        # GitHub repository defaults
+        self.GH_DEFAULT_OWNER = _get_env("GH_DEFAULT_OWNER", default="Cyoda-platform")
+        self.GH_DEFAULT_REPOS = _get_env("GH_DEFAULT_REPOS", default="quart-client-template,java-client-template").split(",")
+        self.GH_DEFAULT_USERNAME = _get_env("GH_DEFAULT_USERNAME", default="target-username")
+        self.GH_DEFAULT_PERMISSION = _get_env("GH_DEFAULT_PERMISSION", default="push")
 
         # — optional ints with defaults —
         self.MAX_ITERATION = _get_int_env("MAX_ITERATION", default=30)

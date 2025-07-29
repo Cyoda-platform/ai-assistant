@@ -11,6 +11,7 @@ from tools.workflow_management_service import WorkflowManagementService
 from tools.workflow_validation_service import WorkflowValidationService
 from tools.utility_service import UtilityService
 from tools.build_id_retrieval_service import BuildIdRetrievalService
+from tools.github_operations_service import GitHubOperationsService
 
 logger = logging.getLogger(__name__)
 
@@ -145,6 +146,17 @@ class ChatWorkflow(Workflow):
             mock=mock
         )
 
+        self.github_operations_service = GitHubOperationsService(
+            workflow_helper_service=workflow_helper_service,
+            entity_service=entity_service,
+            cyoda_auth_service=cyoda_auth_service,
+            workflow_converter_service=workflow_converter_service,
+            scheduler_service=scheduler_service,
+            data_service=data_service,
+            dataset=dataset,
+            mock=mock
+        )
+
         # Initialize function registry
         self._function_registry = self._build_function_registry()
 
@@ -234,6 +246,9 @@ class ChatWorkflow(Workflow):
 
             # Build ID Retrieval
             'get_build_id_from_context': self.build_id_retrieval_service.get_build_id_from_context,
+
+            # GitHub Operations
+            'add_collaborator': self.github_operations_service.add_collaborator
 
         }
 

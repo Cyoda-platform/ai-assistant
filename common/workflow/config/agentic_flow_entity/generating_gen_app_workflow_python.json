@@ -518,10 +518,12 @@
                     "You cannot apply entity_service.add/update/delete on the current entity (passed as argument)! if you need to change this entity state - modify directly  e.g. entity['attribute'].  The new state will be persisted. Do not add any test/extra code.",
                     "please use correct logging, e.g.:\nimport logging\nlogger = logging.getLogger(__name__)\nlogger.setLevel(logging.INFO)\nlogger.exception(e)",
                     "use 'from common.config.config import ENTITY_VERSION' to import ENTITY_VERSION",
-                    "from app_init.app_init import BeanFactory",
-                    "factory = BeanFactory(config={{'CHAT_REPOSITORY': 'cyoda'}})",
-                    "entity_service: EntityService = factory.get_services()['entity_service'] (can be used for different entities, not the current one)",
-                    "cyoda_auth_service = factory.get_services()[\"cyoda_auth_service\"]",
+                    "def get_services():",
+                    " \"\"\"Lazy import services to avoid circular import issues.\"\"\"",
+                    "   from app_init.app_init import entity_service, cyoda_auth_service",
+                    "   return entity_service, cyoda_auth_service",
+                    "then use: ",
+                    "entity_service, cyoda_auth_service = get_services()",
                     "Use to log error stack trace logger.exception(e)",
                     " Response format: respond with only the full complete code. No markdown, no comments, no explanation. "
                   ]
