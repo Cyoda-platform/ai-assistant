@@ -117,7 +117,7 @@ class TestUtilityService:
 
         result = await service.get_user_info("tech_id", mock_agentic_entity)
 
-        assert "Please use this information for your answer:" in result
+        assert "Please base your answer on this information:" in result
         assert "John Doe" in result
         assert "john@example.com" in result
         assert "123" in result
@@ -131,7 +131,7 @@ class TestUtilityService:
 
         result = await service.get_user_info("tech_id", mock_agentic_entity)
 
-        assert "Please use this information for your answer:" in result
+        assert "Please base your answer on this information:" in result
         assert "John Doe" in result
 
     @pytest.mark.asyncio
@@ -270,7 +270,7 @@ class TestUtilityService:
 
         result = await service.get_user_info("tech_id", mock_agentic_entity)
 
-        assert "Please use this information for your answer:" in result
+        assert "Please base your answer on this information:" in result
         assert "Jane Smith" in result
         assert "jane@example.com" in result
         assert "456" in result

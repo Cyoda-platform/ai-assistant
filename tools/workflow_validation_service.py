@@ -31,44 +31,43 @@ class WorkflowValidationService(BaseWorkflowService):
         Returns:
             Validation result message
         """
-        pass
-        # try:
-        #     # Get repository information using repository resolver
-        #     repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
-        #     git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
-        #
-        #     # Get paths from parameters with defaults
-        #     workflow_file_path = params.get("workflow_file_path",
-        #         "com/java_template/application/workflow")
-        #     processors_path = params.get("processors_path",
-        #         "src/main/java/com/java_template/application/processor")
-        #     criteria_path = params.get("criteria_path",
-        #         "src/main/java/com/java_template/application/criteria")
-        #
-        #     # Get full file paths
-        #     workflow_file = await get_project_file_name(
-        #         file_name=workflow_file_path,
-        #         git_branch_id=git_branch_id,
-        #         repository_name=repository_name
-        #     )
-        #
-        #     # Extract expected processors and criteria from workflow
-        #     expected_processors, expected_criteria = await self._extract_workflow_components(workflow_file)
-        #
-        #     # Get implemented processors and criteria
-        #     implemented_processors = await self._get_implemented_processors(git_branch_id, repository_name, processors_path)
-        #     implemented_criteria = await self._get_implemented_criteria(git_branch_id, repository_name, criteria_path)
-        #
-        #     # Perform validation
-        #     validation_result = self._validate_implementation(
-        #         expected_processors, expected_criteria,
-        #         implemented_processors, implemented_criteria
-        #     )
-        #
-        #     return validation_result
-        #
-        # except Exception as e:
-        #     return self._handle_error(entity, e, "Error validating workflow implementation")
+        try:
+            # Get repository information using repository resolver
+            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
+
+            # Get paths from parameters with defaults
+            workflow_file_path = params.get("workflow_file_path",
+                "com/java_template/application/workflow")
+            processors_path = params.get("processors_path",
+                "src/main/java/com/java_template/application/processor")
+            criteria_path = params.get("criteria_path",
+                "src/main/java/com/java_template/application/criteria")
+
+            # Get full file paths
+            workflow_file = await get_project_file_name(
+                file_name=workflow_file_path,
+                git_branch_id=git_branch_id,
+                repository_name=repository_name
+            )
+
+            # Extract expected processors and criteria from workflow
+            expected_processors, expected_criteria = await self._extract_workflow_components(workflow_file)
+
+            # Get implemented processors and criteria
+            implemented_processors = await self._get_implemented_processors(git_branch_id, repository_name, processors_path)
+            implemented_criteria = await self._get_implemented_criteria(git_branch_id, repository_name, criteria_path)
+
+            # Perform validation
+            validation_result = self._validate_implementation(
+                expected_processors, expected_criteria,
+                implemented_processors, implemented_criteria
+            )
+
+            return validation_result
+
+        except Exception as e:
+            return self._handle_error(entity, e, "Error validating workflow implementation")
 
     async def _extract_workflow_components(self, workflow_file_path: str) -> Tuple[Set[str], Set[str]]:
         """

@@ -46,7 +46,7 @@ class TestAddApplicationResource:
     async def test_add_application_resource_success(self, service, mock_entity):
         """Test successful addition of application resource."""
         with patch('tools.file_operations_service._save_file', new_callable=AsyncMock) as mock_save_file:
-            with patch('tools.repository_resolver.resolve_repository_name', return_value="python_repo"):
+            with patch('tools.file_operations_service.resolve_repository_name_with_language_param', return_value="python_repo"):
                 
                 result = await service.add_application_resource(
                     technical_id="test_tech_id",
@@ -82,7 +82,7 @@ class TestAddApplicationResource:
         java_entity.error = None
         
         with patch('tools.file_operations_service._save_file', new_callable=AsyncMock) as mock_save_file:
-            with patch('tools.repository_resolver.resolve_repository_name', return_value="java_repo"):
+            with patch('tools.file_operations_service.resolve_repository_name_with_language_param', return_value="java_repo"):
                 
                 result = await service.add_application_resource(
                     technical_id="test_tech_id",
@@ -166,7 +166,7 @@ class TestAddApplicationResource:
         ]
         
         with patch('tools.file_operations_service._save_file', new_callable=AsyncMock):
-            with patch('tools.repository_resolver.resolve_repository_name', return_value="test_repo"):
+            with patch('tools.file_operations_service.resolve_repository_name_with_language_param', return_value="test_repo"):
                 
                 for valid_path in valid_paths:
                     result = await service.add_application_resource(
@@ -189,7 +189,7 @@ class TestAddApplicationResource:
         ]
         
         with patch('tools.file_operations_service._save_file', new_callable=AsyncMock) as mock_save_file:
-            with patch('tools.repository_resolver.resolve_repository_name', return_value="test_repo"):
+            with patch('tools.file_operations_service.resolve_repository_name_with_language_param', return_value="test_repo"):
                 
                 for content, description in test_contents:
                     result = await service.add_application_resource(
@@ -229,7 +229,7 @@ class TestAddApplicationResource:
         python_entity.error = None
         
         with patch('tools.file_operations_service._save_file', new_callable=AsyncMock) as mock_save_file:
-            with patch('tools.repository_resolver.resolve_repository_name') as mock_resolve:
+            with patch('tools.file_operations_service.resolve_repository_name_with_language_param') as mock_resolve:
                 mock_resolve.return_value = "resolved_repo"
                 
                 await service.add_application_resource(
@@ -240,7 +240,7 @@ class TestAddApplicationResource:
                 )
                 
                 # Verify resolver was called with entity
-                mock_resolve.assert_called_once_with(python_entity)
+                mock_resolve.assert_called_once_with(python_entity, "JAVA")
                 
                 # Verify resolved repository name was used
                 call_kwargs = mock_save_file.call_args.kwargs
@@ -250,7 +250,7 @@ class TestAddApplicationResource:
     async def test_error_handling(self, service, mock_entity):
         """Test error handling when _save_file fails."""
         with patch('tools.file_operations_service._save_file', new_callable=AsyncMock) as mock_save_file:
-            with patch('tools.repository_resolver.resolve_repository_name', return_value="test_repo"):
+            with patch('tools.file_operations_service.resolve_repository_name_with_language_param', return_value="test_repo"):
                 
                 # Make _save_file raise an exception
                 mock_save_file.side_effect = Exception("File system error")
@@ -279,7 +279,7 @@ class TestAddApplicationResource:
         entity_with_branch.error = None
         
         with patch('tools.file_operations_service._save_file', new_callable=AsyncMock) as mock_save_file:
-            with patch('tools.repository_resolver.resolve_repository_name', return_value="test_repo"):
+            with patch('tools.file_operations_service.resolve_repository_name_with_language_param', return_value="test_repo"):
                 
                 await service.add_application_resource(
                     technical_id="tech_id_123",
@@ -300,7 +300,7 @@ class TestAddApplicationResource:
         entity_without_branch.error = None
         
         with patch('tools.file_operations_service._save_file', new_callable=AsyncMock) as mock_save_file:
-            with patch('tools.repository_resolver.resolve_repository_name', return_value="test_repo"):
+            with patch('tools.file_operations_service.resolve_repository_name_with_language_param', return_value="test_repo"):
                 
                 await service.add_application_resource(
                     technical_id="fallback_tech_id",

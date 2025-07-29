@@ -297,7 +297,7 @@ class TestWorkflowValidationService:
                                     criteria_path="src/main/java/com/java_template/application/criteria"
                                 )
 
-                                assert "✅ Workflow implementation validation passed!" in result
+                                assert result is not None and "✅ Workflow implementation validation passed!" in result
                 finally:
                     os.unlink(temp_file)
 
@@ -309,7 +309,7 @@ class TestWorkflowValidationService:
                 "test_id", mock_agentic_entity
             )
 
-            assert "Error validating workflow implementation" in result
+            assert result is not None and "Error validating workflow implementation" in result
 
     def test_service_inheritance(self, service):
         """Test that service properly inherits from BaseWorkflowService."""
