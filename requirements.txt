@@ -1,27 +1,42 @@
+# Core Web Framework
 Quart==0.19.9
 quart-cors==0.7.0
 quart-openapi==1.7.2
 Hypercorn==0.17.3
-pyjwt
+quart-rate-limiter==0.11.0
+
+# Authentication & Security
+pyjwt==2.10.1
+
+# Data Validation
 jsonschema==4.23.0
-#grpc
+
+# Networking & API Clients
+requests==2.32.4
+httpx==0.28.1
+python-dotenv==1.1.1
+
+# AI & LLM Integrations
+openai>=1.68.2
+openai-agents==0.2.4
+litellm==1.74.3
+fastmcp==2.10.6
+
+# gRPC (optional)
 grpcio==1.64.1
 grpcio-tools==1.64.1
 protobuf==5.27.3
 
-requests==2.32.4
-python-dotenv==1.0.1
-
-black==24.10.0
+# File Handling & Utilities
 aiofiles==24.1.0
-httpx==0.28.1
-quart-rate-limiter==0.11.0
-openai>=1.68.2
-google-adk
-litellm==1.74.3
 PyMuPDF==1.25.3
 beautifulsoup4==4.13.3
 inflect==7.5.0
 nltk==3.9.1
 libcst==1.6.0
-fastmcp
+
+# Google API
+google-adk==1.8.0
+
+# Development Tools
+black==24.10.0
