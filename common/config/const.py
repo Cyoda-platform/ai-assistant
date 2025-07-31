@@ -105,6 +105,7 @@ class ModelName(str, Enum):
     AGENTIC_FLOW_ENTITY = "agentic_flow_entity"
     GEN_APP_ENTITY_PYTHON = "build_general_application_python"
     GEN_APP_ENTITY_JAVA = "build_general_application_java"
+    CYODA_ENV_DEPLOYMENT_CHAT = "cyoda_env_deploy_chat"
     GENERATING_GEN_APP_WORKFLOW_JAVA = "generating_gen_app_workflow_java"
     GENERATING_GEN_APP_WORKFLOW_PYTHON = "generating_gen_app_workflow_python"
     SCHEDULER_ENTITY = "scheduler_entity"
@@ -127,6 +128,7 @@ class ModelName(str, Enum):
 @unique
 class DeploymentFlow(str, Enum):
     DEPLOY_CYODA_ENV = "deploy_cyoda_env"
+    DEPLOY_CYODA_ENV_BACKGROUND = "deploy_cyoda_env_background"
     BUILD_USER_APP = "build_user_application"
     DEPLOY_USER_APPLICATION = "deploy_user_application"
 
@@ -180,8 +182,7 @@ class Notifications(str, Enum):
         "Sorry, you cannot skip this question. If you're unsure about anything, "
         "please refer to the example answers for guidance."
     )
-    APPROVE_INSTRUCTION_MESSAGE = "*Hit ✅ to approve or escape the 🔁 loop. 🙈 No turning back!*"
-
+    APPROVE_INSTRUCTION_MESSAGE = "✅ Click \"Approve\" to manually move to the next step. 🌀 Useful if the AI loops in discussion. 🙈 Approving will lock this iteration, so you won’t be able to go back."
 
 @unique
 class ApproveAnswer(str, Enum):

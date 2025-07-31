@@ -72,7 +72,6 @@
                     "Each transition may have a criterion (it represents a criterion java class name which will have processing logic).",
                     "Always start from an initial state 'none'.",
                     " Avoid loops. ",
-                    " Avoid using the same class name more than once. ",
                     "If we have multiple transitions from one state, each transition should have a condition to decide which to use\n",
                     "",
                     "CRITICAL: Processor name is unique per workflow, never reuse it.",
@@ -80,7 +79,6 @@
                     " It is ok not to have any processors in the workflow for business entities.",
                     " An orchestration entity like 'Job' or 'Task' should have more than one processors.",
                     " If you add one processor to the workflow you should call it '{EntityName}Processor'",
-                    " If you have more than one processor in the workflow you should call one of them '{EntityName}Processor'",
                     " It is ok to have more transitions than processors. Actually your workflow can be very interesting, but have only one processor. You do not need a processor for each transition - it is recommended to have zero to one processor per business entity workflow, and one to three processors per orchestration entity workflow.",
                     " At least one business entity workflow should have one criteria.",
                     "",
@@ -89,30 +87,32 @@
                     "JSON Example of the Workflow:",
                     "{{",
                     "  \"version\": \"1.0\",",
-                    "  \"id\": \"customer_workflow\",",
-                    "  \"name\": \"Customer workflow\",",
+                    "  \"name\": \"Customer Workflow\",",
                     "  \"desc\": \"Description of the workflow\",",
                     "  \"initialState\": \"none\",",
+                    "  \"active\": true,",
                     "  \"states\": {{",
                     "    \"none\": {{",
                     "      \"transitions\": [",
                     "        {{",
-                    "          \"id\": \"transition_to_01\",",
+                    "          \"name\": \"transition_to_01\",",
                     "          \"next\": \"state_01\"",
+                    "          \"manual\": false -- always false",
                     "        }}",
                     "      ]",
                     "    }},",
                     "    \"state_01\": {{",
                     "      \"transitions\": [",
                     "        {{",
-                    "          \"id\": \"transition_to_02\",",
+                    "          \"name\": \"transition_to_02\",",
                     "          \"next\": \"state_02\",",
-                    "          \"manual\": true,",
+                    "          \"manual\": false -- always false",
                     "          \"processors\": [",
                     "            {{",
-                    "              \"name\": \"ProcessorClassName\",",
+                    "              \"name\": \"ProcessorClassName\", -- use camel case like a class name. Single word, no special characters.",
+                    "              \"executionMode\": \"SYNC\",",
                     "              \"config\": {{",
-                    "                \"calculationNodesTags\": \"cyoda_application\"",
+                    "                \"calculationNodesTags\": \"cyoda_application\" <-- always use this tag",
                     "              }}",
                     "            }}",
                     "          ]",
@@ -122,17 +122,16 @@
                     "    \"state_02\": {{",
                     "      \"transitions\": [",
                     "        {{",
-                    "          \"id\": \"transition_with_criterion_simple\",",
+                    "          \"name\": \"transition_with_criterion_simple\",",
                     "          \"next\": \"state_criterion_check_01\",",
-                    "          \"processors\": [",
-                    "            {{",
-                    "              \"name\": \"example_function_name\"",
-                    "            }}",
-                    "          ],",
+                    "          \"manual\": false -- always false",
                     "          \"criterion\": {{",
                     "            \"type\": \"function\",",
                     "            \"function\": {{",
-                    "              \"name\": \"CriterionClassName\"",
+                    "              \"name\": \"CriterionClassName\",  -- use camel case like a class name. Single word, no special characters.",
+                    "              \"config\": {{",
+                    "                \"calculationNodesTags\": \"cyoda_application\"<-- always use this tag",
+                    "              }}",
                     "            }}",
                     "          }}",
                     "        }}",
@@ -177,16 +176,12 @@
                   "type": "object",
                   "required": [
                     "version",
-                    "id",
                     "name",
                     "initialState",
                     "states"
                   ],
                   "properties": {
                     "version": {
-                      "type": "string"
-                    },
-                    "id": {
                       "type": "string"
                     },
                     "name": {
@@ -201,6 +196,9 @@
                         "none"
                       ]
                     },
+                    "active": {
+                      "type": "boolean"
+                    },
                     "states": {
                       "type": "object",
                       "additionalProperties": {
@@ -214,35 +212,68 @@
                             "items": {
                               "type": "object",
                               "required": [
-                                "id",
-                                "next"
+                                "name",
+                                "next",
+                                "manual"
                               ],
                               "properties": {
-                                "id": {
+                                "name": {
                                   "type": "string"
                                 },
                                 "next": {
                                   "type": "string"
                                 },
                                 "manual": {
-                                  "type": "boolean"
+                                  "type": "boolean",
+                                  "enum": [
+                                    false
+                                  ]
                                 },
                                 "processors": {
                                   "type": "array",
                                   "items": {
                                     "type": "object",
                                     "required": [
-                                      "name"
+                                      "name",
+                                      "config"
                                     ],
                                     "properties": {
                                       "name": {
                                         "type": "string"
                                       },
+                                      "executionMode": {
+                                        "type": "string",
+                                        "enum": [
+                                          "SYNC",
+                                          "ASYNC_NEW_TX",
+                                          "ASYNC_SAME_TX"
+                                        ]
+                                      },
                                       "config": {
                                         "type": "object",
+                                        "required": [
+                                          "calculationNodesTags"
+                                        ],
                                         "properties": {
+                                          "attachEntity": {
+                                            "type": "boolean"
+                                          },
                                           "calculationNodesTags": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                              "cyoda_application"
+                                            ]
+                                          },
+                                          "responseTimeoutMs": {
+                                            "type": "integer"
+                                          },
+                                          "retryPolicy": {
+                                            "type": "string",
+                                            "enum": [
+                                              "FIXED",
+                                              "EXPONENTIAL",
+                                              "LINEAR"
+                                            ]
                                           }
                                         }
                                       }
@@ -266,42 +297,159 @@
                                     "function": {
                                       "type": "object",
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "config"
                                       ],
                                       "properties": {
                                         "name": {
                                           "type": "string"
+                                        },
+                                        "config": {
+                                          "type": "object",
+                                          "required": [
+                                            "calculationNodesTags"
+                                          ],
+                                          "properties": {
+                                            "attachEntity": {
+                                              "type": "boolean"
+                                            },
+                                            "calculationNodesTags": {
+                                              "type": "string",
+                                              "enum": [
+                                                "cyoda_application"
+                                              ]
+                                            },
+                                            "responseTimeoutMs": {
+                                              "type": "integer"
+                                            },
+                                            "retryPolicy": {
+                                              "type": "string",
+                                              "enum": [
+                                                "FIXED",
+                                                "EXPONENTIAL",
+                                                "LINEAR"
+                                              ]
+                                            }
+                                          }
+                                        },
+                                        "criterion": {
+                                          "type": "object",
+                                          "properties": {
+                                            "type": {
+                                              "type": "string",
+                                              "enum": [
+                                                "simple",
+                                                "group"
+                                              ]
+                                            },
+                                            "jsonPath": {
+                                              "type": "string"
+                                            },
+                                            "operation": {
+                                              "type": "string",
+                                              "enum": [
+                                                "EQUALS",
+                                                "GREATER_THAN",
+                                                "GREATER_OR_EQUAL",
+                                                "LESS_THAN",
+                                                "LESS_OR_EQUAL",
+                                                "NOT_EQUALS"
+                                              ]
+                                            },
+                                            "value": {
+                                              "oneOf": [
+                                                {
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "type": "number"
+                                                },
+                                                {
+                                                  "type": "boolean"
+                                                }
+                                              ]
+                                            }
+                                          }
                                         }
                                       }
                                     },
-                                    "name": {
+                                    "jsonPath": {
                                       "type": "string"
+                                    },
+                                    "operation": {
+                                      "type": "string",
+                                      "enum": [
+                                        "EQUALS",
+                                        "GREATER_THAN",
+                                        "GREATER_OR_EQUAL",
+                                        "LESS_THAN",
+                                        "LESS_OR_EQUAL",
+                                        "NOT_EQUALS"
+                                      ]
+                                    },
+                                    "value": {
+                                      "oneOf": [
+                                        {
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "number"
+                                        },
+                                        {
+                                          "type": "boolean"
+                                        }
+                                      ]
                                     },
                                     "operator": {
-                                      "type": "string"
+                                      "type": "string",
+                                      "enum": [
+                                        "AND",
+                                        "OR"
+                                      ]
                                     },
-                                    "parameters": {
+                                    "conditions": {
                                       "type": "array",
                                       "items": {
                                         "type": "object",
                                         "required": [
+                                          "type",
                                           "jsonPath",
-                                          "operatorType",
-                                          "value",
-                                          "type"
+                                          "operation",
+                                          "value"
                                         ],
                                         "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "simple"
+                                            ]
+                                          },
                                           "jsonPath": {
                                             "type": "string"
                                           },
-                                          "operatorType": {
-                                            "type": "string"
+                                          "operation": {
+                                            "type": "string",
+                                            "enum": [
+                                              "EQUALS",
+                                              "GREATER_THAN",
+                                              "GREATER_OR_EQUAL",
+                                              "LESS_THAN",
+                                              "LESS_OR_EQUAL",
+                                              "NOT_EQUALS"
+                                            ]
                                           },
                                           "value": {
-                                            "type": "string"
-                                          },
-                                          "type": {
-                                            "type": "string"
+                                            "oneOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "number"
+                                              },
+                                              {
+                                                "type": "boolean"
+                                              }
+                                            ]
                                           }
                                         }
                                       }
@@ -410,10 +558,11 @@
                     "        \"processors\": [ {",
                     "     from here --->       \"name\": \"ProcessorClassName\" ",
                     "          } ]",
-                    "Now for each ProcessorClassName that you've outlined in the workflow configurations,",
                     " Ignore any criteria/criterion ",
+                    "Now for each ProcessorClassName that you've outlined in the workflow configurations,",
                     "please provide the code for it based on the prototype code and the entity pojo and call add_application_resource tool with processor name and content - processor java code.",
-                    "",
+                    "Add processor classes exactly for each ProcessorClassName from the workflow json. No more, no less.",
+                    "First check workflow json and extract all unique ProcessorClassNames. Then check the code for it.",
                     "BEFORE WRITING ANY PROCESSOR CODE:",
                     "1. Review the entity POJO structure to see what getters/setters are actually available",
                     "2. Only use properties that exist in the entity POJO - do not invent or assume properties",
@@ -435,9 +584,7 @@
                     "",
                     "@Override",
                     "public boolean supports(OperationSpecification modelSpec) {",
-                    "    return \"ProcessorClassName\".equals(modelSpec.operationName()) &&",
-                    "           \"entityName\".equalsIgnoreCase(modelSpec.modelKey().getName()) &&",
-                    "           Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
+                    "    return className.equalsIgnoreCase(modelSpec.operationName());",
                     "}",
                     "",
                     "",
@@ -470,10 +617,12 @@
                     "",
                     "    private final Logger logger = LoggerFactory.getLogger(this.getClass());",
                     "    private final ProcessorSerializer serializer;",
+                    "    private final ObjectMapper objectMapper; only if needed for business logic",
+                    "    private final String className = this.getClass().getSimpleName();",
                     "",
-                    "    public ProcessorClassName(SerializerFactory serializerFactory) {",
+                    "    public ProcessorClassName(SerializerFactory serializerFactory, ObjectMapper objectMapper (if needed)) {",
                     "        this.serializer = serializerFactory.getDefaultProcessorSerializer(); //always follow this pattern",
-                    "        logger.info(\"ProcessorClassName initialized with SerializerFactory\");",
+                    "        this.objectMapper = objectMapper;  (if needed)",
                     "    }",
                     "",
                     "    @Override",
@@ -481,7 +630,7 @@
                     "        EntityProcessorCalculationRequest request = context.getEvent();",
                     "        logger.info(\"Processing EntityName for request: {}\", request.getId());",
                     "",
-                    "        // Fluent entity processing with validation",
+                    "        //This is a predefined chain. Just write the business logic in processEntityLogic method.",
                     "        return serializer.withRequest(request)",
                     "            .toEntity(EntityName.class)",
                     "            .validate(this::isValidEntity, \"Invalid entity state\")",
@@ -491,24 +640,25 @@
                     "",
                     "    @Override",
                     "    public boolean supports(OperationSpecification modelSpec) {",
-                    "        return \"ProcessorClassName\".equals(modelSpec.operationName()) &&",
-                    "               \"entityName\".equalsIgnoreCase(modelSpec.modelKey().getName()) &&",
-                    "               Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
+                    "        return className.equalsIgnoreCase(modelSpec.operationName());",
                     "    }",
-                    "",
-                    "",
+                    "    private boolean isValidEntity(HNItem entity) {",
+                    "       return entity != null && entity.isValid();",
+                    "    }",
                     "    // CRITICAL: This method MUST contain the actual business logic from CyodaEntityControllerPrototype",
                     "    // Find the processEntityName method in CyodaEntityControllerPrototype.java and copy its logic here",
-                    "    private EntityName processEntityLogic(EntityName entity) {",
-                    "        // TODO: Replace this comment with ACTUAL business logic from processEntityName method",
-                    "        // Example of what should be here (from prototype):",
-                    "        // - Data validation and transformation",
-                    "        // - External API calls",
-                    "        // - Business rule calculations",
-                    "        // - Field modifications and enrichment",
-                    "        // - Any other processing logic from the prototype method",
-                    "        // - You can use EntityService to fetch, add or update related entities if needed. But you cannot use com.java_template.common.service.EntityService to update the current entity. The current entity is passed as a method argument and you can modify it directly. It will be persisted automatically.",
-                    "        //- EntityService is a bean, so inject it via constructor if needed.",
+                    "    private EntityName processEntityLogic(ProcessorSerializer.ProcessorEntityExecutionContext<EntityName> context) {",
+                    "           EntityName entity = context.entity();",
+                    "           //String technicalId = context.request().getEntityId(); --get entity technical id if necessary",
+                    "           Replace this comment with ACTUAL business logic from processEntityName method",
+                    "           Example of what should be here (from prototype):",
+                    "           - Data validation and transformation",
+                    "           - External API calls",
+                    "           - Business rule calculations",
+                    "           - Field modifications and enrichment",
+                    "           - Any other processing logic from the prototype method",
+                    "          - You can use EntityService to fetch, add or update related entities if needed. But you cannot use com.java_template.common.service.EntityService to update the current entity. The current entity is passed as a method argument and you can modify it directly. It will be persisted automatically.",
+                    "          - EntityService is a bean, so inject it via constructor if needed.",
                     "        return entity;",
                     "    }",
                     "",
@@ -522,38 +672,21 @@
                     "- Private methods that contain business logic for your entity type",
                     "",
                     "ONLY use existing entity properties - do not access non-existent getters/setters.",
-                    "",
-                    "    public interface ProcessorSerializer {",
-                    "        <T extends CyodaEntity> T extractEntity(EntityProcessorCalculationRequest request, Class<T> clazz);",
-                    "        JsonNode extractPayload(EntityProcessorCalculationRequest request);",
-                    "        <T extends CyodaEntity> JsonNode entityToJsonNode(T entity);",
-                    "        String getType();",
-                    "        ResponseBuilder.ProcessorResponseBuilder responseBuilder(EntityProcessorCalculationRequest request);",
-                    "        default ProcessingChain withRequest(EntityProcessorCalculationRequest request) {",
-                    "            return new ProcessingChainImpl(this, request);",
-                    "        }",
-                    "        interface ProcessingChain {",
-                    "            ProcessingChain map(Function<JsonNode, JsonNode> mapper);",
-                    "            <T extends CyodaEntity> EntityProcessingChain<T> toEntity(Class<T> clazz);",
-                    "            ProcessingChain withErrorHandler(BiFunction<Throwable, JsonNode, ErrorInfo> errorHandler);",
-                    "            EntityProcessorCalculationResponse complete();",
-                    "        }",
-                    "",
-                    "        interface EntityProcessingChain<T extends CyodaEntity> {",
-                    "            EntityProcessingChain<T> map(Function<T, T> mapper);",
-                    "            EntityProcessingChain<T> validate(Function<T, Boolean> validator);",
-                    "            EntityProcessingChain<T> validate(Function<T, Boolean> validator, String errorMessage);",
-                    "            ProcessingChain toJsonFlow(Function<T, JsonNode> converter);",
-                    "            EntityProcessingChain<T> withErrorHandler(BiFunction<Throwable, T, ErrorInfo> errorHandler);",
-                    "            EntityProcessorCalculationResponse complete();",
-                    "            EntityProcessorCalculationResponse complete(Function<T, JsonNode> converter);",
-                    "        }",
+
                     "",
                     "",
                     "add_application_resource Tool Usage",
                     "",
                     "After each processor is generated, call the add_application_resource tool like:",
                     "",
+                    "Exhaustive list of EntityService methods:",
+                    "CompletableFuture<UUID> addItem(String entityModel, String entityVersion, Object entity);",
+                    "CompletableFuture<List<UUID>> addItems(String entityModel, String entityVersion, Object entities);",
+                    "CompletableFuture<ObjectNode> getItem(String entityModel, String entityVersion, UUID technicalId);",
+                    "CompletableFuture<ArrayNode> getItems(String entityModel, String entityVersion);",
+                    "CompletableFuture<ArrayNode> getItemsByCondition(String entityModel, String entityVersion, Object condition, boolean inMemory);",
+                    "CompletableFuture<UUID> deleteItem(String entityModel, String entityVersion, UUID technicalId);",
+                    "EntityService doesn't have any other methods, please do not reinvent anything else.",
                     "FINAL REMINDER - ABSOLUTELY CRITICAL:",
                     "🚨 DO NOT CREATE PROCESSORS WITH PLACEHOLDER CODE OR COMMENTS LIKE 'TODO: Add business logic'",
                     "🚨 YOU MUST FIND AND COPY THE ACTUAL BUSINESS LOGIC FROM CyodaEntityControllerPrototype.java",
@@ -561,8 +694,8 @@
                     "🚨 LOOK FOR METHODS REFERENCED IN entityService.addItem/s() CALLS",
                     "🚨 THE PROCESSOR MUST DO THE SAME WORK AS THE PROTOTYPE METHOD - NO SHORTCUTS",
                     "🚨 IGNORE CRITERIA FROM THE WORKFLOW - PROCESSORS ONLY",
-                    "🚨 YOU CAN INJECT ONLY EntityService, SerializerFactory and ObjectMapper via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES.",
-                    "",
+                    "🚨 YOU CAN INJECT ONLY EntityService, SerializerFactory and ObjectMapper (if needed) via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES.",
+                    "🚨 THE CHANGES TO THE CURRENT ENTITY MUST BE DONE BY MODIFYING THE ENTITY OBJECT PASSED TO THE PROCESSOR METHOD. DO NOT USE entityService.addItem/updateItem/deleteItem ON THE CURRENT ENTITY.",
                     "If you cannot find any business logic methods for an entity, create a simple processor that just returns the entity unchanged, but DO NOT create placeholder code that pretends to do business logic."
                   ]
                 }
@@ -666,16 +799,16 @@
                     "",
                     "    private final Logger logger = LoggerFactory.getLogger(this.getClass());",
                     "    private final CriterionSerializer serializer;",
+                    "    private final String className = this.getClass().getSimpleName();",
                     "",
                     "    public CriterionClassName(SerializerFactory serializerFactory) {",
                     "        this.serializer = serializerFactory.getDefaultCriteriaSerializer();",
-                    "        logger.info(\"CriterionClassName initialized with SerializerFactory\");",
                     "    }",
                     "",
                     "    @Override",
                     "    public EntityCriteriaCalculationResponse check(CyodaEventContext<EntityCriteriaCalculationRequest> context) {",
                     "        EntityCriteriaCalculationRequest request = context.getEvent();",
-                    "",
+                    "        // This is a predefined chain. Just write the business logic in processEntityLogic method.",
                     "        return serializer.withRequest(request)",
                     "            .evaluateEntity(EntityName.class, this::validateEntity)",
                     "            .withReasonAttachment(ReasonAttachmentStrategy.toWarnings())",
@@ -684,20 +817,19 @@
                     "",
                     "    @Override",
                     "    public boolean supports(OperationSpecification modelSpec) {",
-                    "        return \"CriterionClassName\".equals(modelSpec.operationName()) &&",
-                    "               \"entityName\".equalsIgnoreCase(modelSpec.modelKey().getName()) &&",
-                    "               Integer.parseInt(Config.ENTITY_VERSION) == modelSpec.modelKey().getVersion();",
+                    "        return className.equalsIgnoreCase(modelSpec.operationName());",
                     "    }",
                     "",
-                    "    private EvaluationOutcome validateEntity(EntityName entity) {",
-                    "        // Implement validation logic based on business requirements",
-                    "        // Example patterns:",
-                    "        // if (entity.getSomeField() == null) {",
-                    "        //     return EvaluationOutcome.fail(\"Field is required\", StandardEvalReasonCategories.VALIDATION_FAILURE);",
-                    "        // }",
-                    "        // if (!businessRuleCheck(entity)) {",
-                    "        //     return EvaluationOutcome.fail(\"Business rule violated\", StandardEvalReasonCategories.BUSINESS_RULE_FAILURE);",
-                    "        // }",
+                    "    private EvaluationOutcome validateEntity(CriterionSerializer.CriterionEntityEvaluationContext<EntityName> context) {",
+                    "         EntityName entity = context.entity();",
+                    "         Implement validation logic based on business requirements",
+                    "         Example patterns:",
+                    "         if (entity.getSomeField() == null) {",
+                    "            return EvaluationOutcome.fail(\"Field is required\", StandardEvalReasonCategories.VALIDATION_FAILURE);",
+                    "         }",
+                    "         if (!businessRuleCheck(entity)) {",
+                    "             return EvaluationOutcome.fail(\"Business rule violated\", StandardEvalReasonCategories.BUSINESS_RULE_FAILURE);",
+                    "        }",
                     "        return EvaluationOutcome.success();",
                     "    }",
                     "}",

@@ -21,6 +21,27 @@ class WorkflowManagementService(BaseWorkflowService):
     workflow registration, validation, conversion, and diagram generation.
     """
 
+    async def launch_deployment_chat_workflow(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
+        try:
+            # Prepare workflow cache
+            workflow_cache = {
+                const.GIT_BRANCH_PARAM: entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
+            }
+
+            # Launch agentic workflow
+            child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
+                technical_id=technical_id,
+                entity=entity,
+                entity_model=const.ModelName.CHAT_ENTITY.value,
+                workflow_name=(
+                    const.ModelName.CYODA_ENV_DEPLOYMENT_CHAT.value
+                ),
+                workflow_cache=workflow_cache
+            )
+
+        except Exception as e:
+            return self._handle_error(entity, e, f"Error registering workflow: {e}")
+
     async def launch_gen_app_workflows(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
         try:
             # Validate required parameters
@@ -455,7 +476,7 @@ class WorkflowManagementService(BaseWorkflowService):
 
             # Compute file names
             workflow_filename = workflow_file_tmpl.format(EntityName=entity_name)
-            output_filename = output_file_tmpl.format(EntityName=entity_name)
+            #output_filename = output_file_tmpl.format(EntityName=entity_name)
 
             # Load, transform, persist original workflow
             project_path = await get_project_file_name(
@@ -468,17 +489,17 @@ class WorkflowManagementService(BaseWorkflowService):
             ordered_fsm = await self.workflow_helper_service.order_states_in_fsm(workflow)
 
             # # Convert to DTO
-            dto = await self.workflow_converter_service.convert_workflow(
-                workflow_contents=workflow,
-                entity_name=entity_name,
-                entity_version=entity_version,
-                technical_id=git_branch_id,
-            )
+            # dto = await self.workflow_converter_service.convert_workflow(
+            #     workflow_contents=workflow,
+            #     entity_name=entity_name,
+            #     entity_version=entity_version,
+            #     technical_id=git_branch_id,
+            # )
 
             # Persist both JSON blobs
             to_save = [
                 (workflow_filename, ordered_fsm),
-                (output_filename, dto),
+                #(output_filename, dto),
             ]
             for path_or_item, data in to_save:
                 await self.workflow_helper_service.persist_json(

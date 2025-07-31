@@ -10,6 +10,8 @@ from tools.application_editor_service import ApplicationEditorService
 from tools.workflow_management_service import WorkflowManagementService
 from tools.workflow_validation_service import WorkflowValidationService
 from tools.utility_service import UtilityService
+from tools.build_id_retrieval_service import BuildIdRetrievalService
+from tools.github_operations_service import GitHubOperationsService
 
 logger = logging.getLogger(__name__)
 
@@ -133,6 +135,28 @@ class ChatWorkflow(Workflow):
             mock=mock
         )
 
+        self.build_id_retrieval_service = BuildIdRetrievalService(
+            workflow_helper_service=workflow_helper_service,
+            entity_service=entity_service,
+            cyoda_auth_service=cyoda_auth_service,
+            workflow_converter_service=workflow_converter_service,
+            scheduler_service=scheduler_service,
+            data_service=data_service,
+            dataset=dataset,
+            mock=mock
+        )
+
+        self.github_operations_service = GitHubOperationsService(
+            workflow_helper_service=workflow_helper_service,
+            entity_service=entity_service,
+            cyoda_auth_service=cyoda_auth_service,
+            workflow_converter_service=workflow_converter_service,
+            scheduler_service=scheduler_service,
+            data_service=data_service,
+            dataset=dataset,
+            mock=mock
+        )
+
         # Initialize function registry
         self._function_registry = self._build_function_registry()
 
@@ -178,6 +202,7 @@ class ChatWorkflow(Workflow):
             'schedule_build_user_application': self.deployment_service.schedule_build_user_application,
             'schedule_deploy_user_application': self.deployment_service.schedule_deploy_user_application,
             'deploy_cyoda_env': self.deployment_service.deploy_cyoda_env,
+            'deploy_cyoda_env_background': self.deployment_service.deploy_cyoda_env_background,
             'deploy_user_application': self.deployment_service.deploy_user_application,
             'get_env_deploy_status': self.deployment_service.get_env_deploy_status,
 
@@ -196,6 +221,7 @@ class ChatWorkflow(Workflow):
 
             # Workflow Management
             'launch_gen_app_workflows': self.workflow_management_service.launch_gen_app_workflows,
+            'launch_deployment_chat_workflow': self.workflow_management_service.launch_deployment_chat_workflow,
             'register_workflow_with_app': self.workflow_management_service.register_workflow_with_app,
             'validate_workflow_design': self.workflow_management_service.validate_workflow_design,
             'has_workflow_code_validation_succeeded': self.workflow_management_service.has_workflow_code_validation_succeeded,
@@ -217,6 +243,12 @@ class ChatWorkflow(Workflow):
             'fail_workflow': self.utility_service.fail_workflow,
             'check_scheduled_entity_status': self.utility_service.check_scheduled_entity_status,
             'trigger_parent_entity': self.utility_service.trigger_parent_entity,
+
+            # Build ID Retrieval
+            'get_build_id_from_context': self.build_id_retrieval_service.get_build_id_from_context,
+
+            # GitHub Operations
+            'add_collaborator': self.github_operations_service.add_collaborator
 
         }
 

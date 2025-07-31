@@ -95,7 +95,7 @@ class AIAgentHandler:
             
         except Exception as e:
             logger.exception(f"Error running AI agent: {e}")
-            return f"Error running AI agent: {e}"
+            return f"Error running AI agent: please send a message 'retry' to retry or go to the next step ('proceed' or click approve)."
 
     async def _get_ai_memory(self, entity: AgenticFlowEntity, config: Dict[str, Any],
                             memory: ChatMemory, technical_id: str) -> List[AIMessage]:

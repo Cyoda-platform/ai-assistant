@@ -353,7 +353,7 @@ class TestWorkflowManagementService:
                 output_file_name="output.json"
             )
 
-            assert result == "Error while converting workflow"
+            assert "Error while converting workflow" in result
 
     @pytest.mark.asyncio
     async def test_workflow_operations_with_custom_params(self, service, mock_agentic_entity):

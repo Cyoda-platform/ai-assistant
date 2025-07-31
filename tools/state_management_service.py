@@ -49,7 +49,7 @@ class StateManagementService(BaseWorkflowService):
             True if stage is completed, False otherwise
         """
         if params.get('params'):
-            self.logger.exception("Wrong value for params")
+            self.logger.warning("Wrong value for params")
             params = params.get('params')
             
         transition = params.get("transition")

@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from typing import Dict, Any, Tuple, List
@@ -40,6 +41,7 @@ class EventProcessor:
         self.user_service = user_service
         self.entity_service = entity_service
         self.cyoda_auth_service = cyoda_auth_service
+        self._write_output_lock = asyncio.Lock()
     
     async def process_event(self, entity: WorkflowEntity, action: Dict[str, Any], 
                            technical_id: str) -> Tuple[WorkflowEntity, str]:
@@ -352,11 +354,12 @@ class EventProcessor:
                                             flow=finished_flow,
                                             user_id=entity.user_id)
 
-            # Handle output writing
-            await self._write_to_output(entity=entity,
-                                        config=config,
-                                        response=response,
-                                        technical_id=technical_id)
+            # Handle output writing with lock protection
+            async with self._write_output_lock:
+                await self._write_to_output(entity=entity,
+                                            config=config,
+                                            response=response,
+                                            technical_id=technical_id)
 
         # Handle new entities
         if new_entities:

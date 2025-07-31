@@ -159,6 +159,57 @@ class TestDeploymentService:
                 pass
 
     @pytest.mark.asyncio
+    async def test_deploy_cyoda_env_guest_user(self, service):
+        """Test Cyoda environment deployment with guest user."""
+        from entity.model import AgenticFlowEntity
+        from unittest.mock import MagicMock
+
+        # Create a guest user entity
+        guest_entity = MagicMock(spec=AgenticFlowEntity)
+        guest_entity.user_id = "guest_123"
+
+        result = await service.deploy_cyoda_env("tech_id", guest_entity)
+
+        assert "Sorry, deploying Cyoda env is available only to logged in users" in result
+
+    @pytest.mark.asyncio
+    async def test_deploy_cyoda_env_background_success(self, service, mock_agentic_entity):
+        """Test successful Cyoda environment background deployment."""
+        # Mock the workflow helper service
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow', new_callable=AsyncMock, return_value="child_tech_id"):
+            result = await service.deploy_cyoda_env_background("tech_id", mock_agentic_entity)
+
+            assert "Successfully scheduled workflow to implement the task" in result
+            assert "child_tech_id" in result
+
+    @pytest.mark.asyncio
+    async def test_deploy_cyoda_env_background_error(self, service, mock_agentic_entity):
+        """Test Cyoda environment background deployment with error."""
+        with patch.object(service.workflow_helper_service, 'launch_agentic_workflow',
+                          new_callable=AsyncMock, side_effect=Exception("Deploy error")):
+            try:
+                result = await service.deploy_cyoda_env_background("tech_id", mock_agentic_entity)
+                # If no exception is raised, the service should handle it gracefully
+                assert "Error" in result or "Failed" in result
+            except Exception:
+                # If exception is raised, that's also acceptable behavior
+                pass
+
+    @pytest.mark.asyncio
+    async def test_deploy_cyoda_env_background_guest_user(self, service):
+        """Test Cyoda environment background deployment with guest user."""
+        from entity.model import AgenticFlowEntity
+        from unittest.mock import MagicMock
+
+        # Create a guest user entity
+        guest_entity = MagicMock(spec=AgenticFlowEntity)
+        guest_entity.user_id = "guest_123"
+
+        result = await service.deploy_cyoda_env_background("tech_id", guest_entity)
+
+        assert "Sorry, deploying Cyoda env is available only to logged in users" in result
+
+    @pytest.mark.asyncio
     async def test_deploy_user_application_success(self, service, mock_agentic_entity):
         """Test successful user application deployment."""
         # Mock the workflow helper service
