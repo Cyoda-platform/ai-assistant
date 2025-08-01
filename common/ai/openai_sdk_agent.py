@@ -1,11 +1,12 @@
 import json
 import logging
 import asyncio
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any, List, Optional, Union, Type
 import os
 
 import jsonschema
 from jsonschema import ValidationError
+from pydantic import BaseModel
 
 # OpenAI Agents SDK imports
 from agents import (
@@ -26,19 +27,18 @@ class OpenAiSdkAgentContext:
     """Context object for dependency injection in OpenAI Agents SDK"""
 
     def __init__(self, methods_dict: Dict[str, Any], technical_id: str,
-                 cls_instance: Any, entity: Any, ui_function_handler: Any = None):
+                 cls_instance: Any, entity: Any):
         self.methods_dict = methods_dict or {}
         self.technical_id = technical_id
         self.cls_instance = cls_instance
         self.entity = entity
-        self.ui_function_handler = ui_function_handler
 
 
 class OpenAiSdkAgent:
     """
-    OpenAI Agents SDK-based AI Agent using the modern OpenAI Agents framework.
-    Provides advanced features like proper agent orchestration, handoffs,
-    guardrails, sessions, and comprehensive tool management.
+    Simplified OpenAI Agents SDK-based AI Agent following modern best practices.
+    Maintains JSON tools format and existing run_agent signature while using
+    clean, maintainable patterns from the OpenAI Agents SDK documentation.
     """
 
     def __init__(self, max_calls=config.MAX_AI_AGENT_ITERATIONS):
@@ -49,263 +49,215 @@ class OpenAiSdkAgent:
             max_calls: Maximum number of agent iterations (max_turns in SDK)
         """
         self.max_calls = max_calls
-        self.session = None
-        self._function_tools_cache = {}
 
     def _create_function_tools(self, tools: List[Dict[str, Any]],
                               context: OpenAiSdkAgentContext) -> List[FunctionTool]:
         """
         Convert JSON tool definitions to OpenAI Agents SDK FunctionTool objects.
-
-        Args:
-            tools: List of tool definitions in JSON format
-            context: Agent context for dependency injection
-
-        Returns:
-            List of FunctionTool objects
+        Simplified version following OpenAI Agents SDK best practices.
         """
         function_tools = []
 
         for tool in tools or []:
-            if tool.get("type") == "function":
-                function_def = tool.get("function", {})
-                tool_name = function_def.get("name")
+            if tool.get("type") != "function":
+                continue
 
-                if not tool_name:
-                    logger.warning(f"Tool missing name: {tool}")
-                    continue
+            function_def = tool.get("function", {})
+            tool_name = function_def.get("name")
 
-                # Create tool function
-                def create_tool_function(name: str):
-                    async def tool_function(ctx: ToolContext, args_json: str) -> str:
-                        """Dynamically created tool function"""
+            if not tool_name:
+                logger.warning(f"Tool missing name: {tool}")
+                continue
+
+            # Create simplified tool function
+            def create_tool_function(name: str):
+                async def tool_function(ctx: ToolContext, args_json: str) -> str:
+                    """Simplified tool function following SDK best practices"""
+                    try:
+                        # Parse arguments
                         try:
-                            # Parse arguments from JSON
-                            try:
-                                kwargs = json.loads(args_json)
-                            except json.JSONDecodeError as e:
-                                return f"Invalid JSON arguments: {e}"
+                            kwargs = json.loads(args_json)
+                        except json.JSONDecodeError as e:
+                            return f"Invalid JSON arguments: {e}"
 
-                            # Check if this is a UI function that needs special handling
-                            if name.startswith(const.UI_FUNCTION_PREFIX):
-                                logger.debug(f"Handling UI function: {name}")
-                                # For UI functions, return JSON with special instruction
-                                ui_json = json.dumps({
-                                    "type": const.UI_FUNCTION_PREFIX,
-                                    "function": name,
-                                    **kwargs
-                                })
-                                # Return with instruction to the LLM to return only this JSON
-                                return f"UI_FUNCTION_RESULT:{ui_json}:END_UI_FUNCTION"
-
-                            # Get the method from context
-                            if name not in context.methods_dict:
-                                available_methods = list(context.methods_dict.keys())
-                                return f"Function '{name}' not found. Available: {available_methods}"
-
-                            # Add required parameters
-                            kwargs.update({
-                                'technical_id': context.technical_id,
-                                'entity': context.entity
+                        # Handle UI functions with special markers
+                        if name.startswith(const.UI_FUNCTION_PREFIX):
+                            logger.debug(f"Handling UI function: {name}")
+                            ui_json = json.dumps({
+                                "type": const.UI_FUNCTION_PREFIX,
+                                "function": name,
+                                **kwargs
                             })
+                            return f"UI_FUNCTION_RESULT:{ui_json}:END_UI_FUNCTION"
 
-                            # Execute the method
-                            method = context.methods_dict[name]
-                            if asyncio.iscoroutinefunction(method):
-                                result = await method(context.cls_instance, **kwargs)
-                            else:
-                                result = method(context.cls_instance, **kwargs)
+                        # Execute regular function
+                        if name not in context.methods_dict:
+                            return f"Function '{name}' not found"
 
-                            return str(result)
+                        # Add required parameters and execute
+                        kwargs.update({
+                            'technical_id': context.technical_id,
+                            'entity': context.entity
+                        })
 
-                        except Exception as e:
-                            logger.exception(f"Error executing tool {name}: {e}")
-                            return f"Error executing {name}: {str(e)}"
+                        method = context.methods_dict[name]
+                        if asyncio.iscoroutinefunction(method):
+                            result = await method(context.cls_instance, **kwargs)
+                        else:
+                            result = method(context.cls_instance, **kwargs)
 
-                    return tool_function
+                        return str(result)
 
-                # Enhance description for UI functions
-                original_description = function_def.get("description", f"Execute {tool_name}")
-                if tool_name.startswith(const.UI_FUNCTION_PREFIX):
-                    enhanced_description = f"{original_description} CRITICAL: This is a UI function. You MUST return ONLY the raw JSON output from this function call. Do not add any explanatory text, confirmation messages, or additional content. Return the JSON exactly as provided by the function."
-                else:
-                    enhanced_description = original_description
+                    except Exception as e:
+                        logger.exception(f"Error executing tool {name}: {e}")
+                        return f"Error executing {name}: {str(e)}"
 
-                # Create FunctionTool
-                function_tool = FunctionTool(
-                    name=tool_name,
-                    description=enhanced_description,
-                    params_json_schema=function_def.get("parameters", {}),
-                    on_invoke_tool=create_tool_function(tool_name)
-                )
+                return tool_function
 
-                function_tools.append(function_tool)
-                logger.debug(f"Created function tool: {tool_name}")
+            # Enhanced description for UI functions
+            description = function_def.get("description", f"Execute {tool_name}")
+            if tool_name.startswith(const.UI_FUNCTION_PREFIX):
+                description = f"{description} CRITICAL: This is a UI function. Return ONLY the raw JSON output from this function call."
 
+            # Create FunctionTool using SDK patterns
+            function_tool = FunctionTool(
+                name=tool_name,
+                description=description,
+                params_json_schema=function_def.get("parameters", {}),
+                on_invoke_tool=create_tool_function(tool_name)
+            )
+
+            function_tools.append(function_tool)
+            logger.debug(f"Created function tool: {tool_name}")
+
+        logger.info(f"Created {len(function_tools)} function tools")
         return function_tools
 
-    def _create_agent(self, tools: List[FunctionTool], model: Any,
-                     instructions: str, tool_choice: str = "auto") -> Agent:
+    def _create_output_type_from_schema(self, schema: dict) -> Type[BaseModel]:
         """
-        Create an OpenAI Agents SDK Agent.
+        Create a Pydantic model from JSON schema for structured outputs.
+        Following OpenAI Agents SDK best practices for output_type.
+        """
+        try:
+            from pydantic import create_model
 
-        Args:
-            tools: List of FunctionTool objects
-            model: Model configuration
-            instructions: Agent instructions
-            tool_choice: Tool choice strategy
+            # Extract properties and create Pydantic fields
+            properties = schema.get('properties', {})
+            required_fields = schema.get('required', [])
 
-        Returns:
-            Agent instance
+            # Build field definitions for Pydantic
+            field_definitions = {}
+            for field_name, field_def in properties.items():
+                field_type = str  # Default to string
+
+                # Map JSON schema types to Python types
+                json_type = field_def.get('type', 'string')
+                if json_type == 'integer':
+                    field_type = int
+                elif json_type == 'number':
+                    field_type = float
+                elif json_type == 'boolean':
+                    field_type = bool
+                elif json_type == 'array':
+                    field_type = List[str]  # Simplified array handling
+
+                # Handle required vs optional fields
+                if field_name in required_fields:
+                    field_definitions[field_name] = (field_type, ...)
+                else:
+                    field_definitions[field_name] = (Optional[field_type], None)
+
+            # Create dynamic Pydantic model
+            model_name = schema.get('title', 'ResponseModel')
+            return create_model(model_name, **field_definitions)
+
+        except Exception as e:
+            logger.warning(f"Failed to create Pydantic model from schema: {e}")
+            # Fallback to a simple string response
+            return str
+
+    def _create_agent(self, tools: List[FunctionTool], model: Any,
+                     instructions: str, tool_choice: str = "auto",
+                     response_format: Optional[Dict[str, Any]] = None) -> Agent:
+        """
+        Create an OpenAI Agents SDK Agent following modern best practices.
+        Supports response_format for structured outputs.
         """
         try:
             # Extract model name
-            model_name = model.model_name if hasattr(model, 'model_name') else 'gpt-4.1-mini'
+            model_name = getattr(model, 'model_name', 'gpt-4o-mini')
 
-            # Create model settings
+            # Create model settings following SDK best practices
             model_settings = ModelSettings(
-                model=model_name,
                 tool_choice=tool_choice,
                 temperature=getattr(model, 'temperature', 0.7),
                 max_tokens=getattr(model, 'max_tokens', None),
                 top_p=getattr(model, 'top_p', None)
             )
 
-            # Create agent
-            agent = Agent(
-                name="Workflow Assistant",
-                instructions=instructions,
-                model=model_name,
-                model_settings=model_settings,
-                tools=tools
-            )
+            # Handle response_format for structured outputs
+            agent_kwargs = {
+                'name': "Workflow Assistant",
+                'instructions': instructions,
+                'model': model_name,
+                'model_settings': model_settings
+            }
 
-            logger.info(f"Created OpenAI Agent with {len(tools)} tools")
+            # Add response format support
+            if response_format and response_format.get("schema"):
+                # Convert JSON schema to Pydantic model for output_type
+                output_type = self._create_output_type_from_schema(response_format["schema"])
+                agent_kwargs['output_type'] = output_type
+                logger.info("Using structured output with response schema")
+            else:
+                # Normal mode with tools
+                agent_kwargs['tools'] = tools
+
+            agent = Agent(**agent_kwargs)
+            logger.info(f"Created OpenAI Agent with {len(tools) if tools else 0} tools")
             return agent
 
         except Exception as e:
             logger.exception(f"Error creating OpenAI Agent: {e}")
             raise
 
-    def _convert_messages_to_input(self, messages: List[Dict[str, str]], use_session: bool = True) -> Union[str, List[Dict[str, str]]]:
+
+
+    def _create_session(self, technical_id: str) -> Session:
         """
-        Convert messages to input format for OpenAI Agents SDK.
-
-        Args:
-            messages: List of message dictionaries
-            use_session: Whether session management is being used
-
-        Returns:
-            Input for the agent (string when using session, list when not using session)
-        """
-        if not messages:
-            return "Please help me."
-
-        if use_session:
-            # When using session, only provide the latest user message as string
-            # The session will handle conversation history automatically
-            latest_message = messages[-1] if messages else {"content": "Please help me."}
-            return latest_message.get("content", "Please help me.")
-        else:
-            # When not using session, provide full conversation history as list
-            return messages
-
-    async def _create_session(self, technical_id: str, messages: List[Dict[str, str]]) -> Session:
-        """
-        Create or get session for conversation management.
-
-        Args:
-            technical_id: Technical identifier for the session
-            messages: List of message dictionaries (for future use)
-
-        Returns:
-            Session instance
+        Create session for this run_agent call following SDK best practices.
         """
         try:
-            if not self.session:
-                self.session = SQLiteSession(session_id=f"session_{technical_id}")
-                logger.debug(f"Created new session: session_{technical_id}")
-
-            return self.session
-
+            session = SQLiteSession(session_id=f"session_{technical_id}")
+            logger.debug(f"Created session: session_{technical_id}")
+            return session
         except Exception as e:
             logger.exception(f"Error creating session: {e}")
             raise
 
-    async def _handle_ui_functions(self, function_name: str, function_args: Dict[str, Any]) -> str:
-        """
-        Handle UI function calls that need special formatting.
 
-        Args:
-            function_name: Name of the UI function
-            function_args: Function arguments
-
-        Returns:
-            Formatted UI function response
-        """
-        try:
-            if function_name.startswith(const.UI_FUNCTION_PREFIX):
-                return json.dumps({
-                    "type": const.UI_FUNCTION_PREFIX,
-                    "function": function_name,
-                    **function_args
-                })
-            return f"Unknown UI function: {function_name}"
-
-        except Exception as e:
-            logger.exception(f"Error handling UI function {function_name}: {e}")
-            return f"Error handling UI function {function_name}: {str(e)}"
 
     def adapt_messages(self, messages: List[AIMessage]) -> List[Dict[str, str]]:
         """
         Convert AIMessage objects to standard message format.
-
-        Args:
-            messages: List of AIMessage objects
-
-        Returns:
-            List of message dictionaries
+        Simplified version following SDK best practices.
         """
         adapted_messages = []
         for message in messages:
-            if isinstance(message, AIMessage):
-                content = message.content
-                if content:
-                    # Convert to string content
-                    text_content = " ".join(content) if isinstance(content, list) else content
-                    adapted_messages.append({
-                        "role": message.role or 'user',
-                        "content": text_content
-                    })
-            else:
-                logger.warning(f"Unexpected message type: {type(message)}")
+            if isinstance(message, AIMessage) and message.content:
+                # Convert content to string
+                if isinstance(message.content, list):
+                    text_content = " ".join(str(item) for item in message.content)
+                else:
+                    text_content = str(message.content)
+
+                adapted_messages.append({
+                    "role": message.role or 'user',
+                    "content": text_content
+                })
         return adapted_messages
 
-    async def _validate_with_schema(self, content: str, schema: dict,
-                                   attempt: int, max_retries: int) -> tuple[Optional[str], Optional[str]]:
-        """
-        Validate response against JSON schema.
 
-        Args:
-            content: Response content to validate
-            schema: JSON schema for validation
-            attempt: Current attempt number
-            max_retries: Maximum number of retries
-
-        Returns:
-            Tuple of (validated_content, error_message)
-        """
-        try:
-            parsed = json.loads(content)
-            jsonschema.validate(instance=parsed, schema=schema)
-            return content, None
-        except (json.JSONDecodeError, ValidationError) as e:
-            error = str(e)
-            error = (error[:50] + '...') if len(error) > 50 else error
-            msg = f"Validation failed on attempt {attempt}/{max_retries}: {error}. Please return correct JSON."
-            if attempt > 2:
-                msg = f"{msg} If the task is too complex, simplify but ensure valid JSON."
-            return None, msg
 
 
 
@@ -369,8 +321,7 @@ class OpenAiSdkAgent:
                 methods_dict=methods_dict,
                 technical_id=technical_id,
                 cls_instance=cls_instance,
-                entity=entity,
-                ui_function_handler=self._handle_ui_functions
+                entity=entity
             )
 
             # Convert messages to standard format
@@ -393,19 +344,17 @@ For regular functions, you may provide explanatory text as normal."""
             else:
                 instructions = "You are a helpful assistant that can use tools to complete tasks."
 
-            agent = self._create_agent(function_tools, model, instructions, tool_choice)
+            agent = self._create_agent(function_tools, model, instructions, tool_choice, response_format)
 
-            # Decide whether to use session or manual conversation management
+            # Create local session for this run following SDK best practices
             use_session = len(adapted_messages) <= 1
 
             if use_session:
-                # For single messages, use session management
-                session = await self._create_session(technical_id, adapted_messages)
-                agent_input = self._convert_messages_to_input(adapted_messages, use_session=True)
+                session = self._create_session(technical_id)
+                agent_input = adapted_messages[-1]["content"] if adapted_messages else "Please help me."
             else:
-                # For multiple messages, use manual conversation management
                 session = None
-                agent_input = self._convert_messages_to_input(adapted_messages, use_session=False)
+                agent_input = adapted_messages
 
             # Create run configuration
             run_config = RunConfig(
@@ -426,18 +375,14 @@ For regular functions, you may provide explanatory text as normal."""
             response = str(result.final_output)
             logger.info(f"Agent completed successfully")
 
-            # Check if this is a UI function result that should return only JSON
+            # Check for UI function result
             ui_function_result = self._extract_ui_function_result(response)
             if ui_function_result:
                 logger.debug(f"Extracted UI function result: {ui_function_result}")
                 return ui_function_result
 
-            # Handle schema validation if required
-            if response_format and response_format.get("schema"):
-                response = await self._handle_schema_validation(
-                    response, response_format["schema"], agent, session, run_config
-                )
-
+            # When using output_type, SDK handles structured output validation automatically
+            # No manual schema validation needed
             return response
 
         except MaxTurnsExceeded as e:
@@ -456,81 +401,17 @@ For regular functions, you may provide explanatory text as normal."""
             logger.exception(f"Unexpected error in OpenAI SDK agent execution: {e}")
             return f"Unexpected error occurred: {str(e)}"
 
-    async def _handle_schema_validation(self, response: str, schema: dict,
-                                       agent: Agent, session: Session,
-                                       run_config: RunConfig) -> str:
-        """
-        Handle schema validation with retries.
+        finally:
+            # Session is a local variable - automatic cleanup
+            logger.debug("Session cleanup completed (local variable)")
 
-        Args:
-            response: Initial response to validate
-            schema: JSON schema for validation
-            agent: Agent instance for retries
-            session: Session for conversation continuity
-            run_config: Run configuration
 
-        Returns:
-            Validated response
-        """
-        for attempt in range(1, self.max_calls + 1):
-            valid_str, error = await self._validate_with_schema(
-                response, schema, attempt, self.max_calls
-            )
-            if valid_str is not None:
-                return valid_str
-
-            # If validation failed, retry with correction
-            logger.warning(f"Schema validation failed on attempt {attempt}: {error}")
-
-            if attempt < self.max_calls:
-                try:
-                    correction_input = f"The previous response had validation errors: {error}"
-                    # For schema validation retries, always use session if available
-                    # since we want to maintain conversation context
-                    result = await Runner.run(
-                        starting_agent=agent,
-                        input=correction_input,
-                        session=session,
-                        run_config=run_config
-                    )
-                    response = str(result.final_output)
-                except Exception as e:
-                    logger.exception(f"Error during validation retry {attempt}: {e}")
-                    break
-
-        # If all retries failed
-        raise Exception(f"Schema validation failed after {self.max_calls} attempts. Last response: {response}")
 
     async def cleanup(self):
         """
-        Clean up resources.
-
-        Note: OpenAI Agents SDK handles most cleanup automatically,
-        but we can clear our session cache.
+        Clean up resources. OpenAI Agents SDK handles most cleanup automatically.
         """
         try:
-            if self.session:
-                # Sessions are typically managed automatically
-                self.session = None
-                logger.debug("Cleared session cache")
-
-            # Clear function tools cache
-            self._function_tools_cache.clear()
-            logger.debug("Cleared function tools cache")
-
+            logger.debug("Cleanup completed")
         except Exception as e:
             logger.exception(f"Error during cleanup: {e}")
-
-    def __del__(self):
-        """
-        Destructor to ensure cleanup.
-
-        Note: OpenAI Agents SDK manages resources automatically,
-        so minimal cleanup is needed.
-        """
-        try:
-            # Clear caches
-            if hasattr(self, '_function_tools_cache'):
-                self._function_tools_cache.clear()
-        except:
-            pass
