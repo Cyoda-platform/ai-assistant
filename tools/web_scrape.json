@@ -1,0 +1,24 @@
+{
+  "type": "function",
+  "function": {
+    "name": "web_scrape",
+    "description": "Scrape content from a webpage using a CSS selector. Use this function when you need to scrape online content. For example, if the user wants to add data sources for an API and provides an exact link for web scraping, you should scrape the resource before analyzing the question.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "selector": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "url",
+        "selector"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

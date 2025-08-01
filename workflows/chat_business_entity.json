@@ -1,0 +1,104 @@
+{
+  "version": "1.0",
+  "name": "chat_business_entity",
+  "desc": "Migrated from chat_business_entity",
+  "initialState": "none",
+  "active": true,
+  "criterion": {
+    "type": "simple",
+    "jsonPath": "$.workflow_name",
+    "operation": "EQUALS",
+    "value": "chat_business_entity"
+  },
+  "states": {
+    "none": {
+      "transitions": [
+        {
+          "name": "initialize_chat",
+          "next": "initialized_chat",
+          "manual": false
+        },
+        {
+          "name": "retry",
+          "next": "none",
+          "manual": true
+        },
+        {
+          "name": "fail_none",
+          "next": "locked_none",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "initialized_chat": {
+      "transitions": [
+        {
+          "name": "update_transition",
+          "next": "initialized_chat",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "initialized_chat",
+          "manual": true
+        },
+        {
+          "name": "fail_initialized_chat",
+          "next": "locked_initialized_chat",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "delete",
+          "next": "deleted",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "initialized_chat",
+          "manual": true
+        },
+        {
+          "name": "fail_initialized_chat",
+          "next": "locked_initialized_chat",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

@@ -60,30 +60,30 @@ class WorkflowMigrator:
             # Load workflow
             with open(workflow_file, 'r') as f:
                 old_workflow = json.load(f)
-            
+
             logger.info(f"Migrating workflow: {old_workflow.get('workflow_name', 'unknown')}")
-            
+
             # Create output directories
             self._create_directories()
-            
+
             # Storage for extracted components
             agents = {}
             tools = {}
             messages = {}
-            
+
             # Convert workflow
             new_workflow = self._convert_workflow_schema(old_workflow, agents, tools, messages)
-            
+
             # Save workflow
             workflow_name = old_workflow.get('workflow_name', 'migrated_workflow')
             workflow_path = self.output_dir / "workflows" / f"{workflow_name}.json"
             self._save_json(workflow_path, new_workflow)
-            
+
             # Save extracted components
             self._save_agents(agents)
             self._save_tools(tools)
             self._save_messages(messages)
-            
+
             return {
                 "success": True,
                 "workflow_name": workflow_name,
@@ -92,7 +92,7 @@ class WorkflowMigrator:
                 "tools_created": len(tools),
                 "messages_created": len(messages)
             }
-            
+
         except Exception as e:
             logger.exception(f"Migration failed: {e}")
             return {
@@ -108,10 +108,10 @@ class WorkflowMigrator:
             dir_path = self.output_dir / dir_name
             dir_path.mkdir(parents=True, exist_ok=True)
 
-    def _convert_workflow_schema(self, old_workflow: Dict[str, Any], 
-                                agents: Dict[str, Dict[str, Any]], 
-                                tools: Dict[str, Dict[str, Any]], 
-                                messages: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+    def _convert_workflow_schema(self, old_workflow: Dict[str, Any],
+                                 agents: Dict[str, Dict[str, Any]],
+                                 tools: Dict[str, Dict[str, Any]],
+                                 messages: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
         """
         Convert workflow to new schema format.
         
@@ -125,30 +125,36 @@ class WorkflowMigrator:
             Converted workflow in new schema format
         """
         workflow_name = old_workflow.get('workflow_name', 'migrated_workflow')
-        
+
         # Create new workflow structure
         new_workflow = {
             "version": "1.0",
             "name": workflow_name,
             "desc": f"Migrated from {workflow_name}",
             "initialState": old_workflow.get('initial_state', 'none'),
-            "active": True,
+            "active": False,
+            "criterion": {
+                "type": "simple",
+                "jsonPath": "$.workflow_name",
+                "operation": "EQUALS",
+                "value": workflow_name
+            },
             "states": {}
         }
-        
+
         # Convert states
         old_states = old_workflow.get('states', {})
         for state_name, state_config in old_states.items():
             new_workflow["states"][state_name] = self._convert_state(
                 state_name, state_config, workflow_name, agents, tools, messages
             )
-        
+
         return new_workflow
 
-    def _convert_state(self, state_name: str, state_config: Dict[str, Any], 
-                      workflow_name: str, agents: Dict[str, Dict[str, Any]], 
-                      tools: Dict[str, Dict[str, Any]], 
-                      messages: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+    def _convert_state(self, state_name: str, state_config: Dict[str, Any],
+                       workflow_name: str, agents: Dict[str, Dict[str, Any]],
+                       tools: Dict[str, Dict[str, Any]],
+                       messages: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
         """
         Convert a single state to new format.
         
@@ -166,23 +172,27 @@ class WorkflowMigrator:
         new_state = {
             "transitions": []
         }
-        
+
         # Convert transitions
         old_transitions = state_config.get('transitions', {})
         for transition_name, transition_config in old_transitions.items():
             new_transition = self._convert_transition(
-                state_name, transition_name, transition_config, 
+                state_name, transition_name, transition_config,
                 workflow_name, agents, tools, messages
             )
             new_state["transitions"].append(new_transition)
-        
+            retry_transition = self._create_retry_transition(state_name=state_name)
+            new_state["transitions"].append(retry_transition)
+            fail_transition = self._create_fail_transition(state_name=state_name)
+            new_state["transitions"].append(fail_transition)
+
         return new_state
 
-    def _convert_transition(self, state_name: str, transition_name: str, 
-                           transition_config: Dict[str, Any], workflow_name: str,
-                           agents: Dict[str, Dict[str, Any]], 
-                           tools: Dict[str, Dict[str, Any]], 
-                           messages: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+    def _convert_transition(self, state_name: str, transition_name: str,
+                            transition_config: Dict[str, Any], workflow_name: str,
+                            agents: Dict[str, Dict[str, Any]],
+                            tools: Dict[str, Dict[str, Any]],
+                            messages: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
         """
         Convert a single transition to new format.
         
@@ -203,7 +213,7 @@ class WorkflowMigrator:
             "next": transition_config.get("next", ""),
             "manual": transition_config.get("manual", False)
         }
-        
+
         # Convert actions to processors
         action = transition_config.get("action", {})
         if action:
@@ -212,21 +222,21 @@ class WorkflowMigrator:
             )
             if processors:
                 new_transition["processors"] = processors
-        
+
         # Convert conditions to criteria
         condition = transition_config.get("condition", {})
         if condition:
             criterion = self._convert_condition_to_criterion(condition, tools)
             if criterion:
                 new_transition["criterion"] = criterion
-        
+
         return new_transition
 
-    def _convert_action_to_processors(self, action: Dict[str, Any], state_name: str, 
-                                     transition_name: str, workflow_name: str,
-                                     agents: Dict[str, Dict[str, Any]], 
-                                     tools: Dict[str, Dict[str, Any]], 
-                                     messages: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _convert_action_to_processors(self, action: Dict[str, Any], state_name: str,
+                                      transition_name: str, workflow_name: str,
+                                      agents: Dict[str, Dict[str, Any]],
+                                      tools: Dict[str, Dict[str, Any]],
+                                      messages: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Convert action configuration to processors.
         
@@ -245,24 +255,24 @@ class WorkflowMigrator:
         processors = []
         config = action.get("config", {})
         action_type = config.get("type", "")
-        
+
         if action_type in ["prompt", "agent"]:
             # Create agent processor
             agent_name = f"{workflow_name}_{state_name}_{transition_name}"
-            
+
             # Extract agent configuration
             agent_config = {
                 "type": "agent",
                 "model": config.get("model", {}),
                 "messages": config.get("messages", [])
             }
-            
+
             # Add agent-level fields
             agent_fields = ["publish", "approve", "allow_anonymous_users", "tool_choice", "max_iteration"]
             for field in agent_fields:
                 if field in config:
                     agent_config[field] = config[field]
-            
+
             # Add tools if present
             if "tools" in config:
                 agent_config["tools"] = config["tools"]
@@ -272,9 +282,9 @@ class WorkflowMigrator:
                         func_def = tool["function"]
                         if "name" in func_def:
                             tools[func_def["name"]] = tool
-            
+
             agents[agent_name] = agent_config
-            
+
             # Create processor reference
             processor_config = {
                 "name": f"AgentProcessor.{agent_name}",
@@ -283,21 +293,21 @@ class WorkflowMigrator:
                     "calculationNodesTags": "ai_assistant"
                 }
             }
-            
+
             # Add workflow-level fields
             workflow_fields = ["input", "output", "response_format"]
             for field in workflow_fields:
                 if field in config:
                     processor_config[field] = config[field]
-            
+
             processors.append(processor_config)
-            
+
         elif action_type == "function":
             # Create function processor
             function_config = config.get("function", {})
             if function_config and "name" in function_config:
                 function_name = function_config["name"]
-                
+
                 # Create tool definition
                 tool_config = {
                     "type": "function",
@@ -312,7 +322,7 @@ class WorkflowMigrator:
                     }
                 }
                 tools[function_name] = tool_config
-                
+
                 # Create processor reference
                 processor_config = {
                     "name": f"FunctionProcessor.{function_name}",
@@ -321,27 +331,27 @@ class WorkflowMigrator:
                         "calculationNodesTags": "ai_assistant"
                     }
                 }
-                
+
                 # Add workflow-level fields
                 workflow_fields = ["input", "output", "response_format"]
                 for field in workflow_fields:
                     if field in config:
                         processor_config[field] = config[field]
-                
+
                 processors.append(processor_config)
-        
+
         elif action_type in ["question", "notification"]:
             # Create message processor
             message_name = f"{state_name}_{transition_name}"
             message_path = f"{workflow_name}/{message_name}"
-            
+
             # Extract message content
             message_content = config.get("notification", config.get("question", ""))
             messages[message_path] = {
                 "type": action_type,
                 "content": message_content
             }
-            
+
             # Create processor reference
             processor_config = {
                 "name": f"MessageProcessor.{message_path}",
@@ -350,19 +360,19 @@ class WorkflowMigrator:
                     "calculationNodesTags": "ai_assistant"
                 }
             }
-            
+
             # Add workflow-level fields
             workflow_fields = ["input", "output", "response_format"]
             for field in workflow_fields:
                 if field in config:
                     processor_config[field] = config[field]
-            
+
             processors.append(processor_config)
-        
+
         return processors
 
     def _convert_condition_to_criterion(self, condition: Dict[str, Any],
-                                       tools: Dict[str, Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+                                        tools: Dict[str, Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         """
         Convert old condition format to new criterion format.
 
@@ -550,30 +560,50 @@ class WorkflowMigrator:
         self.created_files.append(str(file_path))
         logger.info(f"Created: {file_path}")
 
+    def _create_retry_transition(self, state_name):
+        return {
+            "name": 'retry',
+            "next": state_name,
+            "manual": True
+        }
+
+    def _create_fail_transition(self, state_name):
+        return {
+            "name": f'fail_{state_name}',
+            "next": f'locked_{state_name}',
+            "manual": False,
+            "criterion": {
+                "type": "group",
+                "operator": "AND",
+                "conditions": [
+                    {
+                        "type": "simple",
+                        "jsonPath": "$.failed",
+                        "operation": "EQUALS",
+                        "value": True
+                    }
+                ]
+            }
+        }
+
 
 def main():
     """Main entry point for the migration script."""
     parser = argparse.ArgumentParser(description="Migrate Cyoda workflows to new architecture")
-    parser.add_argument("workflow_file", help="Path to workflow JSON file to migrate")
+    workflow_file = "/home/kseniia/IdeaProjects/ai-assistant-2/common/workflow/config/agentic_flow_entity/chat_entity/chat_entity.json"
     parser.add_argument("--output-dir", default=".", help="Output directory for migrated files")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be created without creating files")
 
     args = parser.parse_args()
 
-    if not os.path.exists(args.workflow_file):
-        print(f"Error: Workflow file {args.workflow_file} not found")
-        return 1
-
     migrator = WorkflowMigrator(args.output_dir)
-
-    print(f"Migrating workflow: {args.workflow_file}")
 
     if args.dry_run:
         print("DRY RUN MODE - No files will be created")
         # TODO: Implement dry run mode
         return 0
 
-    result = migrator.migrate_workflow(args.workflow_file)
+    result = migrator.migrate_workflow(workflow_file)
 
     if result["success"]:
         print(f"✅ Migration successful!")

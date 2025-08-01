@@ -3,7 +3,13 @@
   "name": "chat_entity",
   "desc": "Migrated from chat_entity",
   "initialState": "none",
-  "active": true,
+  "active": false,
+  "criterion": {
+    "type": "simple",
+    "jsonPath": "$.workflow_name",
+    "operation": "EQUALS",
+    "value": "chat_entity"
+  },
   "states": {
     "none": {
       "transitions": [
@@ -11,6 +17,28 @@
           "name": "initialize_chat",
           "next": "initialized_chat",
           "manual": false
+        },
+        {
+          "name": "retry",
+          "next": "none",
+          "manual": true
+        },
+        {
+          "name": "fail_none",
+          "next": "locked_none",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
         }
       ]
     },
@@ -29,6 +57,28 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "initialized_chat",
+          "manual": true
+        },
+        {
+          "name": "fail_initialized_chat",
+          "next": "locked_initialized_chat",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
         }
       ]
     },
@@ -49,27 +99,26 @@
           ]
         },
         {
-          "name": "lock_chat",
-          "next": "locked_chat",
+          "name": "retry",
+          "next": "submitted_workflow_question",
+          "manual": true
+        },
+        {
+          "name": "fail_submitted_workflow_question",
+          "next": "locked_submitted_workflow_question",
           "manual": false,
           "criterion": {
-            "type": "function",
-            "function": {
-              "name": "is_chat_locked",
-              "config": {
-                "calculationNodesTags": "ai_assistant"
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
               }
-            }
+            ]
           }
-        }
-      ]
-    },
-    "processed_question": {
-      "transitions": [
-        {
-          "name": "rollback",
-          "next": "locked_chat",
-          "manual": true
         },
         {
           "name": "lock_chat",
@@ -83,6 +132,95 @@
                 "calculationNodesTags": "ai_assistant"
               }
             }
+          }
+        },
+        {
+          "name": "retry",
+          "next": "submitted_workflow_question",
+          "manual": true
+        },
+        {
+          "name": "fail_submitted_workflow_question",
+          "next": "locked_submitted_workflow_question",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "processed_question": {
+      "transitions": [
+        {
+          "name": "rollback",
+          "next": "locked_chat",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "processed_question",
+          "manual": true
+        },
+        {
+          "name": "fail_processed_question",
+          "next": "locked_processed_question",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "lock_chat",
+          "next": "locked_chat",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "is_chat_locked",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          }
+        },
+        {
+          "name": "retry",
+          "next": "processed_question",
+          "manual": true
+        },
+        {
+          "name": "fail_processed_question",
+          "next": "locked_processed_question",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
           }
         },
         {
@@ -98,6 +236,28 @@
               }
             }
           }
+        },
+        {
+          "name": "retry",
+          "next": "processed_question",
+          "manual": true
+        },
+        {
+          "name": "fail_processed_question",
+          "next": "locked_processed_question",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
         }
       ]
     },
@@ -107,6 +267,28 @@
           "name": "unlock_chat",
           "next": "submitted_workflow_question",
           "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_chat",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_chat",
+          "next": "locked_locked_chat",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
         }
       ]
     }

@@ -1,0 +1,32 @@
+{
+  "type": "function",
+  "function": {
+    "name": "init_setup_workflow",
+    "description": "Launches workflow that is necessary to help the user to do initial setup and launch locally their client (user) application.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "git_branch": {
+          "type": "string"
+        },
+        "user_request": {
+          "type": "string"
+        },
+        "programming_language": {
+          "type": "string",
+          "enum": [
+            "JAVA",
+            "PYTHON"
+          ]
+        }
+      },
+      "required": [
+        "user_request",
+        "git_branch",
+        "programming_language"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
