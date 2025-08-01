@@ -73,20 +73,37 @@ class AdkAgent:
             List of types.Content objects
         """
         adapted_messages = []
-        for message in messages:
+        for i, message in enumerate(messages):
             if isinstance(message, AIMessage):
                 content = message.content
-                if content:
+
+                # Handle empty content - don't skip, but provide placeholder
+                if not content:
+                    logger.debug(f"Message {i} has empty content, using placeholder")
+                    text_content = "[Empty message]"
+                else:
                     # Convert to ADK Content format
-                    text_content = " ".join(content) if isinstance(content, list) else content
-                    adapted_messages.append(
-                        types.Content(
-                            role=message.role or 'user',
-                            parts=[types.Part(text=text_content)]
-                        )
+                    text_content = " ".join(content) if isinstance(content, list) else str(content)
+
+                # Map roles properly for ADK
+                role = message.role or 'user'
+                if role == 'assistant':
+                    role = 'model'  # ADK uses 'model' instead of 'assistant'
+                elif role not in ['user', 'model', 'system']:
+                    logger.warning(f"Unknown role '{role}' in message {i}, defaulting to 'user'")
+                    role = 'user'
+
+                adapted_messages.append(
+                    types.Content(
+                        role=role,
+                        parts=[types.Part(text=text_content)]
                     )
+                )
+                logger.debug(f"Adapted message {i}: role={role}, content_length={len(text_content)}")
             else:
-                logger.warning(f"Unexpected message type: {type(message)}")
+                logger.warning(f"Unexpected message type: {type(message)} at index {i}")
+
+        logger.info(f"Adapted {len(adapted_messages)} messages from {len(messages)} input messages")
         return adapted_messages
 
     def _create_function_tools(self, tools: List[Dict[str, Any]],
@@ -483,6 +500,64 @@ class AdkAgent:
                 msg = f"{msg} If the task is too complex, simplify but ensure valid JSON."
             return None, msg
 
+    def _build_conversation_context(self, messages: List[types.Content]) -> types.Content:
+        """
+        Build a single conversation context message from multiple messages.
+
+        This is crucial for ADK to understand the full conversation history,
+        as ADK handles conversation differently than OpenAI SDK.
+
+        Args:
+            messages: List of Content objects representing the conversation
+
+        Returns:
+            Single Content object with the full conversation context
+        """
+        if not messages:
+            return types.Content(
+                role='user',
+                parts=[types.Part(text="Please help me.")]
+            )
+
+        if len(messages) == 1:
+            return messages[0]
+
+        # Build conversation context by combining all messages
+        conversation_parts = []
+        conversation_parts.append("Here is our conversation history:")
+
+        for i, msg in enumerate(messages[:-1]):  # All but the last message
+            role_label = "User" if msg.role == "user" else "Assistant" if msg.role == "model" else msg.role.title()
+
+            # Extract text from message parts
+            message_text = ""
+            if msg.parts:
+                for part in msg.parts:
+                    if part.text:
+                        message_text += part.text
+
+            conversation_parts.append(f"{role_label}: {message_text}")
+
+        # Add the current/latest message
+        latest_msg = messages[-1]
+        latest_text = ""
+        if latest_msg.parts:
+            for part in latest_msg.parts:
+                if part.text:
+                    latest_text += part.text
+
+        conversation_parts.append(f"\nCurrent message: {latest_text}")
+
+        # Combine all parts into a single message
+        full_context = "\n\n".join(conversation_parts)
+
+        logger.debug(f"Built conversation context with {len(messages)} messages, total length: {len(full_context)}")
+
+        return types.Content(
+            role='user',  # Always send as user message to ADK
+            parts=[types.Part(text=full_context)]
+        )
+
     async def _create_session(self, technical_id: str, messages: List[types.Content] = None) -> Any:
         """
         Create or get session for conversation management using ADK patterns.
@@ -632,7 +707,12 @@ class AdkAgent:
             )
 
             # Convert messages to ADK format
+            logger.info(f"Converting {len(messages)} input messages to ADK format")
             adapted_messages = self.adapt_messages(messages)
+
+            if not adapted_messages:
+                logger.error("No messages were successfully adapted for ADK!")
+                return "Error: No valid messages provided"
 
             # Create function tools from JSON definitions
             function_tools = self._create_function_tools(tools, context)
@@ -669,24 +749,20 @@ For regular functions, you may provide explanatory text as normal."""
                 session_service=self.session_service
             )
 
-            # For multi-message conversations, we need to build up the conversation context
-            # This is crucial for maintaining response quality comparable to OpenAI SDK
+            # For multi-message conversations, we need to provide proper context
+            # ADK handles conversation history differently than OpenAI
             if len(adapted_messages) > 1:
-                # Add all previous messages to build conversation context
-                for i, msg in enumerate(adapted_messages[:-1]):
-                    try:
-                        # Add each message to the conversation history
-                        async for _ in runner.run_async(
-                            user_id="default_user",
-                            session_id=session.id,
-                            new_message=msg
-                        ):
-                            break  # Just add to history, don't need full response
-                    except Exception as e:
-                        logger.warning(f"Failed to add message {i} to conversation history: {e}")
+                logger.info(f"Multi-message conversation detected: {len(adapted_messages)} messages")
 
-            # Convert messages to input format (always use latest message for ADK)
-            new_message = self._convert_messages_to_input(adapted_messages, use_session=True)
+                # For ADK, we should provide the full conversation context in a single message
+                # rather than trying to build it incrementally
+                conversation_context = self._build_conversation_context(adapted_messages)
+                new_message = conversation_context
+            else:
+                # Single message - use it directly
+                new_message = self._convert_messages_to_input(adapted_messages, use_session=True)
+
+            logger.debug(f"Final message for ADK: role={new_message.role}, parts={len(new_message.parts)}")
 
             # Run the agent using ADK patterns
             logger.info(f"Running ADK agent with {len(function_tools)} tools")
