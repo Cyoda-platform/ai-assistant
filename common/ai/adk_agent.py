@@ -1,6 +1,7 @@
 import json
 import logging
 import asyncio
+import uuid
 from typing import Dict, Any, List, Optional, Union
 import os
 
@@ -11,6 +12,8 @@ from jsonschema import ValidationError
 from google.adk.agents import Agent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.adk.tools import FunctionTool
+from google.adk.models.lite_llm import LiteLlm
 from google.genai import types
 
 # Try to import MCPTool, but handle gracefully if not available
@@ -54,219 +57,276 @@ class AdkAgent:
             mcp_servers: List of MCP server names to enable (optional)
         """
         self.max_calls = max_calls
+        self.session_service = InMemorySessionService()
         self.mcp_servers = mcp_servers or []
-        self._sessions = {}  # Cache sessions per technical_id for context retention
-        self._session_services = {}  # Cache session services per technical_id
+        self._agent_cache = {}
+        self._session_cache = {}
 
     def adapt_messages(self, messages: List[AIMessage]) -> List[types.Content]:
         """
         Convert AIMessage objects to ADK-compatible Content format.
-        Simplified version that focuses on the essential conversion.
+
+        Args:
+            messages: List of AIMessage objects
+
+        Returns:
+            List of types.Content objects
         """
         adapted_messages = []
-        for message in messages:
-            if not isinstance(message, AIMessage):
-                continue
+        for i, message in enumerate(messages):
+            if isinstance(message, AIMessage):
+                content = message.content
 
-            # Convert content to string
-            if isinstance(message.content, list):
-                text_content = " ".join(str(item) for item in message.content)
-            else:
-                text_content = str(message.content) if message.content else ""
+                # Handle empty content - don't skip, but provide placeholder
+                if not content:
+                    logger.debug(f"Message {i} has empty content, using placeholder")
+                    text_content = "[Empty message]"
+                else:
+                    # Convert to ADK Content format
+                    text_content = " ".join(content) if isinstance(content, list) else str(content)
 
-            # Map role (ADK uses 'model' instead of 'assistant')
-            role = message.role or 'user'
-            if role == 'assistant':
-                role = 'model'
-            elif role not in ['user', 'model', 'system']:
-                role = 'user'
+                # Map roles properly for ADK
+                role = message.role or 'user'
+                if role == 'assistant':
+                    role = 'model'  # ADK uses 'model' instead of 'assistant'
+                elif role not in ['user', 'model', 'system']:
+                    logger.warning(f"Unknown role '{role}' in message {i}, defaulting to 'user'")
+                    role = 'user'
 
-            adapted_messages.append(
-                types.Content(
-                    role=role,
-                    parts=[types.Part(text=text_content)]
+                adapted_messages.append(
+                    types.Content(
+                        role=role,
+                        parts=[types.Part(text=text_content)]
+                    )
                 )
-            )
+                logger.debug(f"Adapted message {i}: role={role}, content_length={len(text_content)}")
+            else:
+                logger.warning(f"Unexpected message type: {type(message)} at index {i}")
 
+        logger.info(f"Adapted {len(adapted_messages)} messages from {len(messages)} input messages")
         return adapted_messages
 
     def _create_function_tools(self, tools: List[Dict[str, Any]],
-                              context: AdkAgentContext) -> List[Any]:
+                               context: AdkAgentContext) -> List[Any]:
         """
-        Convert JSON tool definitions to simple Python functions for ADK.
-        ADK handles the complex wrapping automatically.
+        Convert JSON tool definitions to ADK-compatible functions using proper ADK patterns.
+
+        According to ADK docs, functions should be passed directly to the tools list,
+        not wrapped in FunctionTool manually. ADK will handle the wrapping automatically.
+
+        Args:
+            tools: List of tool definitions in JSON format
+            context: Agent context for dependency injection
+
+        Returns:
+            List of function objects that ADK can use directly
         """
         function_tools = []
 
         for tool in tools or []:
-            if tool.get("type") != "function":
-                continue
+            if tool.get("type") == "function":
+                func_def = tool.get("function", {})
+                func_name = func_def.get("name")
 
-            func_def = tool.get("function", {})
-            func_name = func_def.get("name")
+                if not func_name:
+                    logger.warning(f"Tool missing name: {tool}")
+                    continue
 
-            if not func_name:
-                continue
+                # Allow UI functions even if they're not in methods_dict
+                if func_name not in context.methods_dict and not func_name.startswith(const.UI_FUNCTION_PREFIX):
+                    logger.warning(f"Tool {func_name} not found in methods_dict")
+                    continue
 
-            # Skip if function not available (unless it's a UI function)
-            if func_name not in context.methods_dict and not func_name.startswith(const.UI_FUNCTION_PREFIX):
-                logger.warning(f"Tool {func_name} not found in methods_dict")
-                continue
+                # Create ADK-compatible function using proper patterns
+                def create_tool_function(name: str, description: str, parameters: dict):
+                    # Extract parameter information from the JSON schema
+                    param_props = parameters.get("properties", {})
+                    required_params = parameters.get("required", [])
 
-            # Create a simple wrapper function following ADK patterns
-            def create_tool_wrapper(name: str, description: str):
-                def tool_function(*args, **kwargs) -> str:
-                    """Simple tool wrapper for ADK - handles both args and kwargs"""
-                    try:
-                        # ADK may pass arguments in different ways, handle both
-                        all_params = {}
+                    # Build enhanced description with enum information
+                    enhanced_description = description
+                    enum_info = []
+                    for param_name, param_info in param_props.items():
+                        param_enum = param_info.get("enum")
+                        if param_enum:
+                            enum_info.append(f"{param_name} must be one of: {param_enum}")
 
-                        # If we have positional args, try to parse as JSON (like OpenAI SDK)
-                        if args and len(args) > 0:
-                            try:
-                                if isinstance(args[0], str):
-                                    # Try to parse as JSON string
-                                    parsed_args = json.loads(args[0])
-                                    if isinstance(parsed_args, dict):
-                                        all_params.update(parsed_args)
-                                elif isinstance(args[0], dict):
-                                    # Direct dict argument
-                                    all_params.update(args[0])
-                            except (json.JSONDecodeError, TypeError):
-                                # If parsing fails, treat as regular args
-                                pass
+                    if enum_info:
+                        enhanced_description += f"\n\nParameter constraints:\n" + "\n".join(f"- {info}" for info in enum_info)
 
-                        # Add any keyword arguments
-                        all_params.update(kwargs)
+                    # Create a wrapper function that calls the actual method
+                    def create_wrapper():
+                        # Build the function signature dynamically
+                        import inspect
 
-                        logger.debug(f"Tool {name} called with params: {all_params}")
+                        # Create parameter list for the function signature
+                        sig_params = []
+                        for param_name, param_info in param_props.items():
+                            param_type = param_info.get("type", "string")
+                            param_enum = param_info.get("enum")
 
-                        # Handle UI functions - return clean JSON without markers
-                        if name.startswith(const.UI_FUNCTION_PREFIX):
-                            logger.debug(f"Handling UI function: {name} with params: {all_params}")
-
-                            # Add default parameters for common UI function requirements
-                            ui_params = {
-                                "type": const.UI_FUNCTION_PREFIX,
-                                "function": name,
-                                **all_params
-                            }
-
-                            # Add common default parameters if missing
-                            if name == "ui_function_list_all_technical_users" and not all_params:
-                                logger.warning(f"UI function {name} called without parameters, adding defaults")
-                                ui_params.update({
-                                    "method": "GET",
-                                    "path": "/api/clients",
-                                    "response_format": "text"
-                                })
-                            elif name == "ui_function_issue_technical_user" and not all_params:
-                                logger.warning(f"UI function {name} called without parameters, adding defaults")
-                                ui_params.update({
-                                    "method": "POST",
-                                    "path": "/api/users",
-                                    "response_format": "json"
-                                })
-
-                            ui_json = json.dumps(ui_params)
-                            logger.info(f"UI function {name} returning: {ui_json}")
-                            return ui_json
-
-                        # Execute regular function
-                        if name in context.methods_dict:
-                            method = context.methods_dict[name]
-                            method_kwargs = {
-                                'technical_id': context.technical_id,
-                                'entity': context.entity,
-                                **all_params
-                            }
-
-                            # Handle async methods
-                            if asyncio.iscoroutinefunction(method):
-                                # Run async method in new event loop if needed
-                                try:
-                                    loop = asyncio.get_event_loop()
-                                    if loop.is_running():
-                                        # Create new loop in thread
-                                        import concurrent.futures
-                                        with concurrent.futures.ThreadPoolExecutor() as executor:
-                                            future = executor.submit(
-                                                lambda: asyncio.run(method(context.cls_instance, **method_kwargs))
-                                            )
-                                            result = future.result()
-                                    else:
-                                        result = loop.run_until_complete(method(context.cls_instance, **method_kwargs))
-                                except Exception:
-                                    # Fallback to sync call
-                                    result = method(context.cls_instance, **method_kwargs)
+                            # Determine annotation based on type
+                            if param_type == "string":
+                                annotation = str
+                            elif param_type == "integer":
+                                annotation = int
+                            elif param_type == "number":
+                                annotation = float
+                            elif param_type == "boolean":
+                                annotation = bool
                             else:
-                                result = method(context.cls_instance, **method_kwargs)
+                                annotation = str
 
-                            return str(result)
-                        else:
-                            return f"Method {name} not found"
+                            # Handle enum constraints - create a custom type hint for better ADK understanding
+                            if param_enum:
+                                # For enum parameters, we'll use a Union type or Literal for better type hints
+                                try:
+                                    from typing import Literal
+                                    # Create a Literal type with the enum values
+                                    if len(param_enum) == 1:
+                                        # Single enum value - use Literal
+                                        annotation = Literal[param_enum[0]]
+                                    else:
+                                        # Multiple enum values - use Literal with all values
+                                        annotation = Literal[tuple(param_enum)]
+                                except ImportError:
+                                    # Fallback if Literal is not available
+                                    annotation = str
 
-                    except Exception as e:
-                        logger.exception(f"Error executing tool {name}: {e}")
-                        return f"Error executing {name}: {str(e)}"
+                                logger.debug(f"Parameter {param_name} has enum constraint: {param_enum}")
 
-                # Set function metadata for ADK
-                tool_function.__name__ = name
-                tool_function.__doc__ = description
-                return tool_function
+                            # Create parameter with proper annotation
+                            if param_name in required_params:
+                                param = inspect.Parameter(param_name, inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=annotation)
+                            else:
+                                param = inspect.Parameter(param_name, inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=annotation, default=None)
+                            sig_params.append(param)
 
-            # Create the function with enhanced description for UI functions
-            description = func_def.get("description", f"Execute {func_name}")
-            if func_name.startswith(const.UI_FUNCTION_PREFIX):
-                # Get required parameters from schema
-                parameters = func_def.get("parameters", {})
-                required_params = parameters.get("required", [])
-                properties = parameters.get("properties", {})
+                        # Create the function signature
+                        sig = inspect.Signature(sig_params, return_annotation=str)
 
-                param_descriptions = []
-                for param in required_params:
-                    param_info = properties.get(param, {})
-                    param_type = param_info.get("type", "string")
-                    param_desc = param_info.get("description", param)
-                    param_enum = param_info.get("enum", [])
+                        # Create the actual function
+                        def tool_function(*args, **kwargs) -> str:
+                            """Dynamically created tool function for ADK"""
+                            try:
+                                # Bind arguments to parameters
+                                bound_args = sig.bind(*args, **kwargs)
+                                bound_args.apply_defaults()
 
-                    if param_enum:
-                        param_descriptions.append(f"- {param} ({param_type}): {param_desc}. Must be one of: {param_enum}")
-                    else:
-                        param_descriptions.append(f"- {param} ({param_type}): {param_desc}")
+                                logger.debug(f"Tool {name} called with args: {bound_args.arguments}")
 
-                required_params_text = "\n".join(param_descriptions) if param_descriptions else "No required parameters"
+                                # Check if this is a UI function that needs special handling
+                                if name.startswith(const.UI_FUNCTION_PREFIX):
+                                    logger.debug(f"Handling UI function: {name}")
+                                    # For UI functions, return JSON directly
+                                    ui_json = json.dumps({
+                                        "type": const.UI_FUNCTION_PREFIX,
+                                        "function": name,
+                                        **bound_args.arguments
+                                    })
+                                    return ui_json
 
-                description = f"""{description}
+                                # Validate enum constraints for regular functions
+                                for param_name, param_value in bound_args.arguments.items():
+                                    if param_value is not None:  # Skip validation for None values
+                                        param_info = param_props.get(param_name, {})
+                                        param_enum = param_info.get("enum")
+                                        if param_enum and param_value not in param_enum:
+                                            error_msg = f"Parameter '{param_name}' value '{param_value}' is not valid. Must be one of: {param_enum}"
+                                            logger.error(error_msg)
+                                            return f"Error: {error_msg}"
 
-CRITICAL UI FUNCTION INSTRUCTIONS:
-- This is a UI function that returns JSON data
-- You MUST call this function with ALL required parameters
-- Required parameters:
-{required_params_text}
-- You MUST return ONLY the raw JSON output from this function
-- Do NOT add any text before or after the JSON
-- Example: Call with all required parameters, then return only the JSON result"""
+                                # Add required parameters that the method expects
+                                method_kwargs = {
+                                    'technical_id': context.technical_id,
+                                    'entity': context.entity,
+                                    **bound_args.arguments  # Include all parameters passed by ADK
+                                }
 
-            function_obj = create_tool_wrapper(func_name, description)
-            function_tools.append(function_obj)
-            logger.debug(f"Created function tool: {func_name}")
+                                logger.debug(f"Calling method {name} with: {method_kwargs}")
 
-        logger.info(f"Created {len(function_tools)} function tools")
+                                # Execute the method (only for non-UI functions)
+                                if name in context.methods_dict:
+                                    method = context.methods_dict[name]
+                                    if asyncio.iscoroutinefunction(method):
+                                        # Handle async methods - run them synchronously for ADK
+                                        try:
+                                            loop = asyncio.get_event_loop()
+                                            if loop.is_running():
+                                                # We're already in an async context
+                                                import concurrent.futures
+
+                                                def run_async():
+                                                    new_loop = asyncio.new_event_loop()
+                                                    asyncio.set_event_loop(new_loop)
+                                                    try:
+                                                        return new_loop.run_until_complete(method(context.cls_instance, **method_kwargs))
+                                                    finally:
+                                                        new_loop.close()
+
+                                                with concurrent.futures.ThreadPoolExecutor() as executor:
+                                                    future = executor.submit(run_async)
+                                                    result = future.result()
+                                            else:
+                                                result = loop.run_until_complete(method(context.cls_instance, **method_kwargs))
+                                        except Exception as async_error:
+                                            logger.warning(f"Async execution failed, trying sync: {async_error}")
+                                            # Fallback: try to call it synchronously (might fail)
+                                            result = method(context.cls_instance, **method_kwargs)
+                                    else:
+                                        result = method(context.cls_instance, **method_kwargs)
+                                else:
+                                    # This should not happen for regular functions, but handle gracefully
+                                    result = f"Method {name} not found in methods_dict"
+
+                                logger.info(f"Tool {name} executed successfully: {result}")
+                                return str(result)
+
+                            except Exception as e:
+                                logger.exception(f"Error executing tool {name}: {e}")
+                                return f"Error executing {name}: {str(e)}"
+
+                        # Set function metadata for ADK (this is crucial!)
+                        tool_function.__name__ = name
+                        tool_function.__doc__ = enhanced_description  # Use enhanced description with enum info
+                        tool_function.__signature__ = sig
+
+                        return tool_function
+
+                    return create_wrapper()
+
+                # Enhance description for UI functions
+                original_description = func_def.get("description", f"Execute {func_name}")
+                if func_name.startswith(const.UI_FUNCTION_PREFIX):
+                    enhanced_description = f"{original_description} CRITICAL: This is a UI function. Return ONLY the raw JSON output from this function call. Do not add any explanatory text."
+                else:
+                    enhanced_description = original_description
+
+                # Create the function and add it directly (ADK will wrap it automatically)
+                func_parameters = func_def.get("parameters", {})
+                function_obj = create_tool_function(func_name, enhanced_description, func_parameters)
+                function_tools.append(function_obj)
+                logger.debug(f"Created ADK function: {func_name}")
+
         return function_tools
 
     def _create_mcp_tools(self) -> List[Any]:
         """
-        Create MCP tools from configured servers.
+        Create MCP tools from configured servers using ADK patterns.
+
+        Returns:
+            List of MCP tool objects
         """
-        if not self.mcp_servers or not MCP_AVAILABLE:
+        if not self.mcp_servers:
             return []
 
         mcp_tools = []
+
+        # Predefined MCP server configurations
         mcp_configs = {
             "test_server": {
                 "command": ["python", "mcp_servers/test_server.py"],
-                "description": "Test MCP server"
+                "description": "Test MCP server with sample functions"
             },
             "filesystem": {
                 "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem"],
@@ -275,12 +335,12 @@ CRITICAL UI FUNCTION INSTRUCTIONS:
             },
             "memory": {
                 "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
-                "description": "Memory storage"
+                "description": "Persistent memory storage"
             },
             "sqlite": {
                 "command": ["npx", "-y", "@modelcontextprotocol/server-sqlite"],
                 "args": ["/app/data/workflow.db"],
-                "description": "SQLite operations"
+                "description": "SQLite database operations"
             }
         }
 
@@ -288,16 +348,27 @@ CRITICAL UI FUNCTION INSTRUCTIONS:
             if server_name in mcp_configs:
                 config = mcp_configs[server_name]
                 try:
-                    mcp_tool = MCPTool(
-                        command=config["command"],
-                        args=config.get("args", []),
-                        env=config.get("env", {})
-                    )
-                    mcp_tools.append(mcp_tool)
-                    logger.info(f"Created MCP tool: {server_name}")
-                except Exception as e:
-                    logger.error(f"Failed to create MCP server {server_name}: {e}")
+                    if MCP_AVAILABLE:
+                        # Create actual MCPTool instance using ADK patterns
+                        mcp_tool = MCPTool(
+                            command=config["command"],
+                            args=config.get("args", []),
+                            env=config.get("env", {})
+                        )
+                        mcp_tools.append(mcp_tool)
+                        logger.info(f"Created ADK MCPTool for server: {server_name}")
+                    else:
+                        logger.warning(f"MCP not available, skipping server: {server_name}")
 
+                    logger.debug(f"  Command: {config['command']}")
+                    logger.debug(f"  Description: {config['description']}")
+
+                except Exception as e:
+                    logger.error(f"Failed to configure MCP server {server_name}: {e}")
+            else:
+                logger.warning(f"Unknown MCP server: {server_name}")
+
+        logger.info(f"Configured {len(mcp_tools)} MCP servers")
         return mcp_tools
 
     def _convert_json_schema_to_adk(self, json_schema: dict) -> Any:
@@ -338,88 +409,101 @@ CRITICAL UI FUNCTION INSTRUCTIONS:
             )
 
     def _sanitize_agent_name(self, technical_id: str) -> str:
-        """Create a valid ADK agent name from technical_id."""
-        # Replace invalid characters with underscores
-        sanitized = ''.join(c if c.isalnum() or c == '_' else '_' for c in technical_id)
+        """
+        Sanitize technical_id to create a valid ADK agent name.
+
+        ADK agent names must be valid Python identifiers:
+        - Start with letter or underscore
+        - Contain only letters, digits, and underscores
+        - No hyphens or other special characters
+
+        Args:
+            technical_id: Technical identifier (may contain hyphens, etc.)
+
+        Returns:
+            Sanitized agent name
+        """
+        # Replace hyphens and other invalid characters with underscores
+        sanitized = technical_id.replace('-', '_').replace('.', '_')
+
+        # Remove any other non-alphanumeric characters except underscores
+        sanitized = ''.join(c if c.isalnum() or c == '_' else '_' for c in sanitized)
 
         # Ensure it starts with a letter or underscore
         if sanitized and sanitized[0].isdigit():
             sanitized = f'agent_{sanitized}'
-        elif not sanitized:
-            sanitized = 'workflow_agent'
+        elif not sanitized or not (sanitized[0].isalpha() or sanitized[0] == '_'):
+            sanitized = f'workflow_agent_{sanitized}'
 
-        return sanitized[:50]  # Limit length
+        # Ensure it's not empty and has a reasonable length
+        if not sanitized:
+            sanitized = 'workflow_agent'
+        elif len(sanitized) > 50:  # Keep reasonable length
+            sanitized = sanitized[:50]
+
+        return sanitized
 
     def _create_agent(self, tools: List[Any], model: Any,
-                     instructions: str, technical_id: str,
-                     response_format: Optional[Dict[str, Any]] = None) -> Agent:
-        """Create a Google ADK Agent with simplified configuration."""
+                      instructions: str, technical_id: str,
+                      response_format: Optional[Dict[str, Any]] = None) -> Agent:
+        """
+        Create a Google ADK Agent using proper ADK patterns.
+
+        Args:
+            tools: List of function objects (ADK will wrap them automatically)
+            model: Model configuration
+            instructions: Agent instructions
+            technical_id: Technical identifier for the agent
+
+        Returns:
+            Agent instance
+        """
         try:
             # Extract model name from model parameter, default to Gemini
-            model_name = getattr(model, 'model_name', 'gemini-2.0-flash')
+            model_name = getattr(model, 'model_name', 'gemini-2.5-flash')
 
             # ADK only supports Google/Gemini models, not OpenAI
             if model_name.startswith(('gpt-', 'o1-', 'text-')):
-                logger.warning(f"OpenAI model {model_name} not supported by ADK, using gemini-2.0-flash")
-                model_name = 'gemini-2.0-flash'
+                logger.warning(f"OpenAI model {model_name} not supported by ADK, using gemini-2.5-flash")
+                model_name = 'gemini-2.5-flash'
             elif not model_name.startswith(('gemini-', 'models/')):
-                logger.warning(f"Unknown model {model_name}, using gemini-2.0-flash")
-                model_name = 'gemini-2.0-flash'
+                logger.warning(f"Unknown model {model_name}, using gemini-2.5-flash")
+                model_name = 'gemini-2.5-flash'
 
             # ADK uses model name directly for Gemini models
             model_instance = model_name
             logger.info(f"Using ADK model: {model_name}")
 
-            # Create model configuration with proper temperature and context retention
+            # Create GenerateContentConfig for model settings (crucial for response quality)
             generate_content_config = types.GenerateContentConfig(
-                temperature=getattr(model, 'temperature', 0.7),  # Good temperature for natural responses
-                max_output_tokens=getattr(model, 'max_tokens', 8192),  # Ensure sufficient output length
-                top_p=getattr(model, 'top_p', 0.95),  # Good balance for coherent responses
-                top_k=getattr(model, 'top_k', 40),  # Reasonable diversity
+                temperature=getattr(model, 'temperature', 0.7),
+                max_output_tokens=getattr(model, 'max_tokens', None),
+                top_p=getattr(model, 'top_p', None),
+                top_k=getattr(model, 'top_k', None),
                 # Add safety settings if available
                 safety_settings=getattr(model, 'safety_settings', None)
             )
 
-            logger.debug(f"Model config: temp={generate_content_config.temperature}, "
-                        f"max_tokens={generate_content_config.max_output_tokens}, "
-                        f"top_p={generate_content_config.top_p}")
-
-            # Add MCP tools and create agent
+            # Add MCP tools
             mcp_tools = self._create_mcp_tools()
             all_tools = tools + mcp_tools
+
+            # Create valid agent name from technical_id
             agent_name = self._sanitize_agent_name(technical_id)
 
-            # Handle response format (output schema)
-            agent_kwargs = {
-                'model': model_instance,
-                'name': agent_name,
-                'description': 'Workflow assistant with tools and MCP support',
-                'instruction': instructions,
-                'generate_content_config': generate_content_config
-            }
+            # Create ADK agent using proper configuration with model settings
+            agent = Agent(
+                model=model_instance,
+                name=agent_name,
+                description='Workflow assistant that can use tools to complete tasks and access external services via MCP.',
+                instruction=instructions,
+                tools=all_tools,
+                generate_content_config=generate_content_config  # This is the key missing piece!
+            )
 
-            # If response_format is specified, use output_schema (no tools allowed)
-            if response_format and response_format.get("schema"):
-                # Convert JSON schema to ADK schema format
-                schema = response_format["schema"]
-                agent_kwargs['output_schema'] = self._convert_json_schema_to_adk(schema)
-                # Note: When output_schema is set, tools cannot be used
-                logger.info(f"Using output_schema - tools disabled for structured response")
-            else:
-                # Normal mode with tools
-                agent_kwargs['tools'] = all_tools
-
-            agent = Agent(**agent_kwargs)
-
-            logger.info(f"Created ADK Agent '{agent_name}' with {len(all_tools)} tools")
+            logger.info(f"Created ADK Agent '{agent_name}' with {len(all_tools)} tools ({len(tools)} function tools, {len(mcp_tools)} MCP tools)")
+            logger.info(f"Model settings: temperature={generate_content_config.temperature}, max_tokens={generate_content_config.max_output_tokens}")
             logger.debug(f"Function tools: {[getattr(t, '__name__', 'unknown') for t in tools]}")
-            logger.debug(f"MCP tools: {len(mcp_tools)}")
-            logger.debug(f"Agent has tools: {hasattr(agent, 'tools') and agent.tools is not None}")
-
-            # Log tool details for debugging
-            if hasattr(agent, 'tools') and agent.tools:
-                logger.debug(f"Agent tools count: {len(agent.tools)}")
-
             return agent
 
         except Exception as e:
@@ -427,93 +511,155 @@ CRITICAL UI FUNCTION INSTRUCTIONS:
             raise
 
     async def _validate_with_schema(self, content: str, schema: dict,
-                                   attempt: int, max_retries: int) -> tuple[Optional[str], Optional[str]]:
-        """Validate response against JSON schema."""
+                                    attempt: int, max_retries: int) -> tuple[Optional[str], Optional[str]]:
+        """
+        Validate response against JSON schema.
+
+        Args:
+            content: Response content to validate
+            schema: JSON schema for validation
+            attempt: Current attempt number
+            max_retries: Maximum number of retries
+
+        Returns:
+            Tuple of (validated_content, error_message)
+        """
         try:
             parsed = json.loads(content)
             jsonschema.validate(instance=parsed, schema=schema)
             return content, None
         except (json.JSONDecodeError, ValidationError) as e:
-            error = str(e)[:100]  # Truncate long errors
-            msg = f"Validation failed (attempt {attempt}/{max_retries}): {error}. Return valid JSON."
+            error = str(e)
+            error = (error[:50] + '...') if len(error) > 50 else error
+            msg = f"Validation failed on attempt {attempt}/{max_retries}: {error}. Please return correct JSON."
+            if attempt > 2:
+                msg = f"{msg} If the task is too complex, simplify but ensure valid JSON."
             return None, msg
 
     def _build_conversation_context(self, messages: List[types.Content]) -> types.Content:
-        """Build conversation context for multi-message conversations."""
+        """
+        Build a single conversation context message from multiple messages.
+        This ensures ADK understands the full conversation history properly.
+        """
         if not messages:
             return types.Content(role='user', parts=[types.Part(text="Please help me.")])
 
         if len(messages) == 1:
             return messages[0]
 
-        # Build comprehensive conversation context for better context retention
-        conversation_parts = [
-            "=== CONVERSATION CONTEXT ===",
-            "CRITICAL: You MUST maintain context from this conversation history when responding.",
-            "Do NOT ask the user to repeat information they have already provided.",
-            "Use the information from previous messages to inform your current response.",
-            ""
-        ]
+        # Build conversation context by combining all messages
+        conversation_parts = []
+        conversation_parts.append("Here is our conversation history:")
 
-        # Add all previous messages with clear formatting
-        for i, msg in enumerate(messages[:-1], 1):
-            role_label = "USER" if msg.role == "user" else "ASSISTANT"
-            text = ""
+        for i, msg in enumerate(messages[:-1]):  # All but the last message
+            role_label = "User" if msg.role == "user" else "Assistant" if msg.role == "model" else msg.role.title()
+
+            # Extract text from message parts
+            message_text = ""
             if msg.parts:
-                text = "".join(part.text or "" for part in msg.parts)
-            conversation_parts.append(f"[{i}] {role_label}: {text}")
+                for part in msg.parts:
+                    if part.text:
+                        message_text += part.text
 
-        # Add current message with emphasis
+            conversation_parts.append(f"{role_label}: {message_text}")
+
+        # Add the current/latest message
         latest_msg = messages[-1]
         latest_text = ""
         if latest_msg.parts:
-            latest_text = "".join(part.text or "" for part in latest_msg.parts)
+            for part in latest_msg.parts:
+                if part.text:
+                    latest_text += part.text
 
-        conversation_parts.extend([
-            "",
-            "=== CURRENT REQUEST ===",
-            f"USER: {latest_text}",
-            "",
-            "Please respond based on the full conversation context above."
-        ])
+        conversation_parts.append(f"\nCurrent message: {latest_text}")
 
-        full_context = "\n".join(conversation_parts)
-        logger.debug(f"Built conversation context with {len(messages)} messages, length: {len(full_context)}")
-        return types.Content(role='user', parts=[types.Part(text=full_context)])
+        # Combine all parts into a single message
+        full_context = "\n\n".join(conversation_parts)
 
-    async def _create_session(self, technical_id: str, session_service: Any) -> Any:
-        """Create a session for this run_agent call."""
+        logger.debug(f"Built conversation context with {len(messages)} messages, total length: {len(full_context)}")
+
+        return types.Content(
+            role='user',  # Always send as user message to ADK
+            parts=[types.Part(text=full_context)]
+        )
+
+    async def _create_session(self, technical_id: str, messages: List[types.Content] = None) -> Any:
+        """
+        Create or get session for conversation management using ADK patterns.
+
+        Args:
+            technical_id: Technical identifier for the session
+            messages: Optional conversation history (for future use)
+
+        Returns:
+            Session instance
+        """
+        session_id = f"session_{technical_id}"
+
+        # For manual conversation management, always create a fresh session
+        if technical_id.endswith('_manual'):
+            session_id = f"{session_id}_{len(messages) if messages else 0}"
+
+        if session_id in self._session_cache:
+            return self._session_cache[session_id]
+
         try:
-            import time
-            # Create unique session ID to avoid conflicts
-            session_id = f"session_{technical_id}_{int(time.time())}"
-
-            session = await session_service.create_session(
+            session = await self.session_service.create_session(
                 app_name="workflow_app",
                 user_id="default_user",
                 session_id=session_id
             )
+
+            self._session_cache[session_id] = session
             logger.debug(f"Created ADK session: {session_id}")
             return session
+
         except Exception as e:
-            logger.exception(f"Error creating session: {e}")
+            logger.exception(f"Error creating ADK session: {e}")
             raise
+
+    async def _handle_ui_functions(self, function_name: str, function_args: Dict[str, Any]) -> str:
+        """
+        Handle UI function calls that need special formatting.
+
+        Args:
+            function_name: Name of the UI function
+            function_args: Function arguments
+
+        Returns:
+            Formatted UI function response
+        """
+        try:
+            if function_name.startswith(const.UI_FUNCTION_PREFIX):
+                return json.dumps({
+                    "type": const.UI_FUNCTION_PREFIX,
+                    "function": function_name,
+                    **function_args
+                })
+            return f"Unknown UI function: {function_name}"
+
+        except Exception as e:
+            logger.exception(f"Error handling UI function {function_name}: {e}")
+            return f"Error handling UI function {function_name}: {str(e)}"
+
+
 
     def _extract_ui_function_result(self, response: str) -> Optional[str]:
         """
-        Extract UI function JSON from agent response using multiple patterns.
-        Improved to match OpenAI SDK agent reliability.
+        Extract UI function JSON from ADK agent response.
+
+        Args:
+            response: Agent response that may contain UI function result
+
+        Returns:
+            UI function JSON if found, None otherwise
         """
         import re
 
-        # Multiple patterns for robust extraction
+        # Look for UI function JSON patterns
         patterns = [
-            r'UI_FUNCTION_RESULT:(.+?):END_UI_FUNCTION',  # Primary pattern with markers
-            r'(.+?):END_UI_FUNCTION',  # Secondary pattern for direct JSON
-            r'"result":\s*"UI_FUNCTION_RESULT:(.+?):END_UI_FUNCTION"',  # Wrapped in result field
-            r'"result":\s*"([^"]*\\{.*?\\"type\\":\s*\\"ui_function\\".*?\\}[^"]*)"',  # Escaped JSON in result
-            r'(\{.*?"type":\s*"ui_function".*?\})',  # Direct JSON with ui_function type
-            r'"UI_FUNCTION_RESULT:(.+?):END_UI_FUNCTION"'  # Quoted UI function result
+            r'(\{.*?"type":\s*"ui_function".*?\})',  # JSON with ui_function type
+            r'(\{.*?"function":\s*"ui_function_.*?\})'  # JSON with ui_function_ in function name
         ]
 
         for pattern in patterns:
@@ -521,43 +667,39 @@ CRITICAL UI FUNCTION INSTRUCTIONS:
             if match:
                 ui_json = match.group(1).strip()
                 try:
-                    # Handle escaped JSON strings
-                    if '\\' in ui_json:
-                        # Unescape the JSON string
-                        ui_json = ui_json.replace('\\"', '"').replace('\\\\', '\\')
-
-                    # Validate it's proper JSON and contains ui_function type
+                    # Validate it's proper JSON and contains ui_function
                     parsed = json.loads(ui_json)
-                    if parsed.get("type") == "ui_function":
-                        logger.debug(f"Extracted UI function result using pattern: {pattern}")
+                    if (parsed.get("type") == "ui_function" or
+                            str(parsed.get("function", "")).startswith("ui_function_")):
                         return ui_json
                 except json.JSONDecodeError:
                     continue
 
         return None
 
-    def _is_ui_function_json(self, response: str) -> bool:
-        """Check if the response is a direct UI function JSON."""
-        try:
-            response = response.strip()
-            if response.startswith('{') and response.endswith('}'):
-                parsed = json.loads(response)
-                return (isinstance(parsed, dict) and
-                       parsed.get("type") == "ui_function" and
-                       "function" in parsed)
-        except (json.JSONDecodeError, AttributeError):
-            pass
-        return False
-
     async def run_agent(self, methods_dict: Dict[str, Any], technical_id: str,
-                       cls_instance: Any, entity: Any, tools: List[Dict[str, Any]],
-                       model: Any, messages: List[AIMessage], tool_choice: str = "auto",
-                       response_format: Optional[Dict[str, Any]] = None) -> str:
+                        cls_instance: Any, entity: Any, tools: List[Dict[str, Any]],
+                        model: Any, messages: List[AIMessage], tool_choice: str = "auto",
+                        response_format: Optional[Dict[str, Any]] = None) -> str:
         """
-        Simplified ADK agent runner that leverages ADK's built-in capabilities.
+        Main method to run the ADK agent using proper ADK patterns.
+
+        Args:
+            methods_dict: Dictionary of available methods/tools
+            technical_id: Technical identifier for the session
+            cls_instance: Class instance for method calls
+            entity: Entity object for context
+            tools: List of tool definitions
+            model: Model configuration
+            messages: List of AIMessage objects
+            tool_choice: Tool choice strategy (not used in ADK, tools are always available)
+            response_format: Optional response format with schema for validation
+
+        Returns:
+            Agent response as string
         """
         try:
-            # Create context for tool execution
+            # Create context for dependency injection
             context = AdkAgentContext(
                 methods_dict=methods_dict,
                 technical_id=technical_id,
@@ -566,37 +708,21 @@ CRITICAL UI FUNCTION INSTRUCTIONS:
             )
 
             # Convert messages to ADK format
+            logger.info(f"Converting {len(messages)} input messages to ADK format")
             adapted_messages = self.adapt_messages(messages)
+
             if not adapted_messages:
+                logger.error("No messages were successfully adapted for ADK!")
                 return "Error: No valid messages provided"
 
-            logger.info(f"Processing {len(messages)} input messages -> {len(adapted_messages)} adapted messages")
-            logger.debug(f"Message roles: {[msg.role for msg in adapted_messages]}")
-
-            # Log first and last message for context debugging
-            if adapted_messages:
-                first_msg = adapted_messages[0]
-                last_msg = adapted_messages[-1]
-                first_text = "".join(part.text or "" for part in first_msg.parts) if first_msg.parts else ""
-                last_text = "".join(part.text or "" for part in last_msg.parts) if last_msg.parts else ""
-                logger.debug(f"First message: {first_text[:100]}...")
-                logger.debug(f"Last message: {last_text[:100]}...")
-
-            # Create function tools
+            # Create function tools from JSON definitions
             function_tools = self._create_function_tools(tools, context)
 
-            # Create instructions based on response format and UI functions
-            has_ui_functions = any(
-                tool.get("function", {}).get("name", "").startswith(const.UI_FUNCTION_PREFIX)
-                for tool in (tools or []) if tool and tool.get("type") == "function"
-            )
+            # Create agent instructions with UI function support
+            has_ui_functions = any(tool.get("function", {}).get("name", "").startswith(const.UI_FUNCTION_PREFIX)
+                                   for tool in (tools or []) if tool and tool.get("type") == "function")
 
-            if response_format and response_format.get("schema"):
-                # When using output_schema, tools are disabled
-                instructions = """You are a helpful assistant that provides structured responses.
-
-Respond with a JSON object that matches the required schema. Use your knowledge to provide accurate information."""
-            elif has_ui_functions:
+            if has_ui_functions:
                 instructions = """You are a helpful assistant that can use tools to complete tasks.
 
 CRITICAL INSTRUCTION FOR UI FUNCTIONS:
@@ -604,89 +730,101 @@ When you call a function that starts with 'ui_function_', you MUST return ONLY t
 
 For regular functions, you may provide explanatory text as normal."""
             else:
-                instructions = """You are a helpful assistant that can use tools to complete tasks.
+                instructions = "You are a helpful assistant that can use tools to complete tasks."
 
-IMPORTANT: Always maintain context from the conversation history. If the user has provided information in previous messages, remember and use that information in your responses. Do not ask users to repeat information they have already provided."""
+            # Create or get cached agent
+            agent_key = f"agent_{technical_id}_{len(function_tools)}"
+            if agent_key not in self._agent_cache:
+                agent = self._create_agent(function_tools, model, instructions, technical_id)
+                self._agent_cache[agent_key] = agent
+            else:
+                agent = self._agent_cache[agent_key]
 
-            # Create local session service and session for this run
-            session_service = InMemorySessionService()
-            logger.debug(f"Created session service for run_agent call")
+            # Create session (always use session for ADK, but make it unique for each conversation)
+            session = await self._create_session(technical_id, adapted_messages)
 
-            # Create agent and session
-            agent = self._create_agent(function_tools, model, instructions, technical_id, response_format)
-            session = await self._create_session(technical_id, session_service)
-            logger.info(f"Using session {session.id} for entire run_agent call")
-
-            # Create runner with local session service
+            # Create runner
             runner = Runner(
                 agent=agent,
                 app_name="workflow_app",
-                session_service=session_service
+                session_service=self.session_service
             )
-            logger.debug(f"Created runner with session service")
 
-            # Build conversation context from all messages
+            # For multi-message conversations, we need to provide proper context
+            # ADK handles conversation history differently than OpenAI
             if len(adapted_messages) > 1:
-                new_message = self._build_conversation_context(adapted_messages)
-                logger.debug(f"Built conversation context from {len(adapted_messages)} messages")
-            elif adapted_messages:
-                new_message = adapted_messages[0]
-                logger.debug("Using single message")
+                logger.info(f"Multi-message conversation detected: {len(adapted_messages)} messages")
+
+                # For ADK, we should provide the full conversation context in a single message
+                # rather than trying to build it incrementally
+                conversation_context = self._build_conversation_context(adapted_messages)
+                new_message = conversation_context
             else:
-                new_message = types.Content(role='user', parts=[types.Part(text="Please help me.")])
+                # Single message - use it directly
+                new_message = adapted_messages[0]
 
-            # Log what we're sending to the model for debugging
-            if hasattr(new_message, 'parts') and new_message.parts:
-                message_text = "".join(part.text or "" for part in new_message.parts)
-                logger.info(f"Sending to ADK model: {message_text[:200]}...")
-                logger.debug(f"Full message length: {len(message_text)} characters")
+            logger.debug(f"Final message for ADK: role={new_message.role}, parts={len(new_message.parts)}")
 
-            # Run agent and collect response
-            logger.info(f"Running ADK agent with {len(function_tools)} tools using session {session.id}")
+            # Run the agent using ADK patterns
+            logger.info(f"Running ADK agent with {len(function_tools)} tools")
             final_response = ""
             async for event in runner.run_async(
-                user_id="default_user",
-                session_id=session.id,
-                new_message=new_message
+                    user_id="default_user",
+                    session_id=session.id,
+                    new_message=new_message
             ):
+                # Handle different event types
                 if event.content and event.content.parts:
                     for part in event.content.parts:
                         if part.text:
                             final_response += part.text
+                        elif hasattr(part, 'function_call') and part.function_call:
+                            # Handle UI functions specially
+                            func_call = part.function_call
+                            if func_call.name and func_call.name.startswith(const.UI_FUNCTION_PREFIX):
+                                args = func_call.args or {}
+                                return await self._handle_ui_functions(func_call.name, args)
 
+                # Check for final response
                 if event.is_final_response():
                     break
 
             response = final_response or "Task completed successfully."
             logger.info(f"ADK agent completed successfully")
-            logger.debug(f"ADK response: {response[:200]}...")
 
-            # Check for UI function result - try direct JSON parsing first
+            # Check if this is a UI function result that should return only JSON
             ui_function_result = self._extract_ui_function_result(response)
             if ui_function_result:
                 logger.debug(f"Extracted UI function result: {ui_function_result}")
                 return ui_function_result
 
-            # Also check if the response itself is a UI function JSON
-            if self._is_ui_function_json(response):
-                logger.debug("Response is direct UI function JSON")
-                return response.strip()
+            # Handle schema validation if required
+            if response_format and response_format.get("schema"):
+                response = await self._handle_schema_validation(
+                    response, response_format["schema"], agent, session, runner
+                )
 
-            # When using output_schema, ADK handles validation automatically
-            # No additional validation needed
             return response
 
         except Exception as e:
             logger.exception(f"Error in ADK agent execution: {e}")
             return f"Agent execution error: {str(e)}"
 
-        finally:
-            # Session service and session are local variables - automatic cleanup
-            logger.debug(f"Session cleanup completed for session {session.id if 'session' in locals() else 'unknown'} (local variables)")
-
     async def _handle_schema_validation(self, response: str, schema: dict,
-                                       agent: Agent, session: Any, runner: Runner) -> str:
-        """Handle schema validation with retries."""
+                                        agent: Agent, session: Any, runner: Runner) -> str:
+        """
+        Handle schema validation with retries using ADK patterns.
+
+        Args:
+            response: Initial response to validate
+            schema: JSON schema for validation
+            agent: Agent instance for retries
+            session: Session for conversation continuity
+            runner: Runner for executing retries
+
+        Returns:
+            Validated response
+        """
         for attempt in range(1, self.max_calls + 1):
             valid_str, error = await self._validate_with_schema(
                 response, schema, attempt, self.max_calls
@@ -694,37 +832,64 @@ IMPORTANT: Always maintain context from the conversation history. If the user ha
             if valid_str is not None:
                 return valid_str
 
+            # If validation failed, retry with correction
+            logger.warning(f"Schema validation failed on attempt {attempt}: {error}")
+
             if attempt < self.max_calls:
                 try:
-                    # Ask for correction
                     correction_message = types.Content(
                         role='user',
-                        parts=[types.Part(text=f"Validation error: {error}")]
+                        parts=[types.Part(text=f"The previous response had validation errors: {error}")]
                     )
 
                     correction_response = ""
                     async for event in runner.run_async(
-                        user_id="default_user",
-                        session_id=session.id,
-                        new_message=correction_message
+                            user_id="default_user",
+                            session_id=session.id,
+                            new_message=correction_message
                     ):
                         if event.content and event.content.parts:
                             for part in event.content.parts:
                                 if part.text:
                                     correction_response += part.text
+
                         if event.is_final_response():
                             break
 
                     response = correction_response
+
                 except Exception as e:
-                    logger.exception(f"Error during validation retry: {e}")
+                    logger.exception(f"Error during validation retry {attempt}: {e}")
                     break
 
-        raise Exception(f"Schema validation failed after {self.max_calls} attempts")
+        # If all retries failed
+        raise Exception(f"Schema validation failed after {self.max_calls} attempts. Last response: {response}")
 
     async def cleanup(self):
-        """Clean up resources. ADK handles most cleanup automatically."""
+        """
+        Clean up resources using ADK patterns.
+        """
         try:
-            logger.debug("ADK agent cleanup completed")
+            # Clear agent cache
+            self._agent_cache.clear()
+            logger.debug("Cleared agent cache")
+
+            # Clear session cache
+            self._session_cache.clear()
+            logger.debug("Cleared session cache")
+
         except Exception as e:
             logger.exception(f"Error during cleanup: {e}")
+
+    def __del__(self):
+        """
+        Destructor to ensure cleanup.
+        """
+        try:
+            # Clear caches
+            if hasattr(self, '_agent_cache'):
+                self._agent_cache.clear()
+            if hasattr(self, '_session_cache'):
+                self._session_cache.clear()
+        except:
+            pass

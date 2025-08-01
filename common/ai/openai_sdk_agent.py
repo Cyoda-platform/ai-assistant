@@ -11,8 +11,7 @@ from pydantic import BaseModel
 # OpenAI Agents SDK imports
 from agents import (
     Agent, Runner, function_tool, FunctionTool, ModelSettings,
-    SQLiteSession, Session, AgentsException, MaxTurnsExceeded,
-    ModelBehaviorError, RunConfig
+    AgentsException, MaxTurnsExceeded, ModelBehaviorError, RunConfig
 )
 from agents.tool_context import ToolContext
 
@@ -223,17 +222,7 @@ class OpenAiSdkAgent:
 
 
 
-    def _create_session(self, technical_id: str) -> Session:
-        """
-        Create session for this run_agent call following SDK best practices.
-        """
-        try:
-            session = SQLiteSession(session_id=f"session_{technical_id}")
-            logger.debug(f"Created session: session_{technical_id}")
-            return session
-        except Exception as e:
-            logger.exception(f"Error creating session: {e}")
-            raise
+
 
 
 
@@ -275,9 +264,12 @@ class OpenAiSdkAgent:
 
         # Look for UI function result patterns
         patterns = [
-            r'UI_FUNCTION_RESULT:(.+?):END_UI_FUNCTION',  # Original pattern
-            r'(.+?):END_UI_FUNCTION',  # New pattern for direct JSON
-            r'(\{.*?"type":\s*"ui_function".*?\})'  # Fallback: JSON with ui_function type
+            r'UI_FUNCTION_RESULT:(.+?):END_UI_FUNCTION',  # Primary pattern with markers
+            r'(.+?):END_UI_FUNCTION',  # Secondary pattern for direct JSON
+            r'"result":\s*"UI_FUNCTION_RESULT:(.+?):END_UI_FUNCTION"',  # Wrapped in result field
+            r'"result":\s*"([^"]*\\{.*?\\"type\\":\s*\\"ui_function\\".*?\\}[^"]*)"',  # Escaped JSON in result
+            r'(\{.*?"type":\s*"ui_function".*?\})',  # Direct JSON with ui_function type
+            r'"UI_FUNCTION_RESULT:(.+?):END_UI_FUNCTION"'  # Quoted UI function result
         ]
 
         for pattern in patterns:
@@ -285,14 +277,33 @@ class OpenAiSdkAgent:
             if match:
                 ui_json = match.group(1).strip()
                 try:
+                    # Handle escaped JSON strings
+                    if '\\' in ui_json:
+                        # Unescape the JSON string
+                        ui_json = ui_json.replace('\\"', '"').replace('\\\\', '\\')
+
                     # Validate it's proper JSON and contains ui_function type
                     parsed = json.loads(ui_json)
-                    if parsed.get("type") == "ui_function":
+                    if parsed.get("type") == const.UI_FUNCTION_PREFIX:
+                        logger.debug(f"Extracted UI function result using pattern: {pattern}")
                         return ui_json
                 except json.JSONDecodeError:
                     continue
 
         return None
+
+    def _is_ui_function_json(self, response: str) -> bool:
+        """Check if the response is a direct UI function JSON."""
+        try:
+            response = response.strip()
+            if response.startswith('{') and response.endswith('}'):
+                parsed = json.loads(response)
+                return (isinstance(parsed, dict) and
+                       parsed.get("type") == const.UI_FUNCTION_PREFIX and
+                       "function" in parsed)
+        except (json.JSONDecodeError, AttributeError):
+            pass
+        return False
 
     async def run_agent(self, methods_dict: Dict[str, Any], technical_id: str,
                        cls_instance: Any, entity: Any, tools: List[Dict[str, Any]],
@@ -346,15 +357,11 @@ For regular functions, you may provide explanatory text as normal."""
 
             agent = self._create_agent(function_tools, model, instructions, tool_choice, response_format)
 
-            # Create local session for this run following SDK best practices
-            use_session = len(adapted_messages) <= 1
+            # Always use full message history - no sessions needed since we have all context in messages
+            agent_input = adapted_messages if adapted_messages else [{"role": "user", "content": "Please help me."}]
 
-            if use_session:
-                session = self._create_session(technical_id)
-                agent_input = adapted_messages[-1]["content"] if adapted_messages else "Please help me."
-            else:
-                session = None
-                agent_input = adapted_messages
+            logger.info(f"Running agent with {len(function_tools)} tools and {len(agent_input)} messages")
+            logger.debug(f"Message history: {[msg.get('role', 'unknown') for msg in agent_input]}")
 
             # Create run configuration
             run_config = RunConfig(
@@ -362,12 +369,11 @@ For regular functions, you may provide explanatory text as normal."""
                 trace_id=f"trace_{technical_id}"
             )
 
-            # Run the agent
-            logger.info(f"Running agent with {len(function_tools)} tools")
+            # Run the agent with full message history (no session needed)
             result = await Runner.run(
                 starting_agent=agent,
                 input=agent_input,
-                session=session,
+                session=None,  # No session needed - all context is in messages
                 run_config=run_config,
                 max_turns=self.max_calls
             )
@@ -375,11 +381,16 @@ For regular functions, you may provide explanatory text as normal."""
             response = str(result.final_output)
             logger.info(f"Agent completed successfully")
 
-            # Check for UI function result
+            # Check for UI function result - try extraction first
             ui_function_result = self._extract_ui_function_result(response)
             if ui_function_result:
                 logger.debug(f"Extracted UI function result: {ui_function_result}")
                 return ui_function_result
+
+            # Also check if the response itself is a UI function JSON
+            if self._is_ui_function_json(response):
+                logger.debug("Response is direct UI function JSON")
+                return response.strip()
 
             # When using output_type, SDK handles structured output validation automatically
             # No manual schema validation needed
@@ -402,8 +413,8 @@ For regular functions, you may provide explanatory text as normal."""
             return f"Unexpected error occurred: {str(e)}"
 
         finally:
-            # Session is a local variable - automatic cleanup
-            logger.debug("Session cleanup completed (local variable)")
+            # No session management needed - all context is in messages
+            logger.debug("Run completed - no session cleanup needed")
 
 
 
