@@ -79,7 +79,7 @@ class OpenAiSdkAgent:
                         except json.JSONDecodeError as e:
                             return f"Invalid JSON arguments: {e}"
 
-                        # Handle UI functions with special markers
+                        # Handle UI functions - return clean JSON directly like ADK agent
                         if name.startswith(const.UI_FUNCTION_PREFIX):
                             logger.debug(f"Handling UI function: {name}")
                             ui_json = json.dumps({
@@ -87,7 +87,7 @@ class OpenAiSdkAgent:
                                 "function": name,
                                 **kwargs
                             })
-                            return f"UI_FUNCTION_RESULT:{ui_json}:END_UI_FUNCTION"
+                            return ui_json
 
                         # Execute regular function
                         if name not in context.methods_dict:
@@ -116,7 +116,7 @@ class OpenAiSdkAgent:
             # Enhanced description for UI functions
             description = function_def.get("description", f"Execute {tool_name}")
             if tool_name.startswith(const.UI_FUNCTION_PREFIX):
-                description = f"{description} CRITICAL: This is a UI function. Return ONLY the raw JSON output from this function call."
+                description = f"{description} CRITICAL: This is a UI function. Return ONLY the raw JSON output from this function call. Do not add any explanatory text."
 
             # Create FunctionTool using SDK patterns
             function_tool = FunctionTool(
@@ -253,6 +253,7 @@ class OpenAiSdkAgent:
     def _extract_ui_function_result(self, response: str) -> Optional[str]:
         """
         Extract UI function JSON from agent response.
+        Enhanced to handle cases where JSON is embedded in explanatory text.
 
         Args:
             response: Agent response that may contain UI function result
@@ -262,45 +263,66 @@ class OpenAiSdkAgent:
         """
         import re
 
-        # Look for UI function result patterns
+        # Look for UI function JSON patterns - more comprehensive search
         patterns = [
-            r'UI_FUNCTION_RESULT:(.+?):END_UI_FUNCTION',  # Primary pattern with markers
-            r'(.+?):END_UI_FUNCTION',  # Secondary pattern for direct JSON
-            r'"result":\s*"UI_FUNCTION_RESULT:(.+?):END_UI_FUNCTION"',  # Wrapped in result field
-            r'"result":\s*"([^"]*\\{.*?\\"type\\":\s*\\"ui_function\\".*?\\}[^"]*)"',  # Escaped JSON in result
-            r'(\{.*?"type":\s*"ui_function".*?\})',  # Direct JSON with ui_function type
-            r'"UI_FUNCTION_RESULT:(.+?):END_UI_FUNCTION"'  # Quoted UI function result
+            # Direct JSON patterns
+            r'(\{[^{}]*"type":\s*"ui_function"[^{}]*\})',  # Simple JSON with ui_function type
+            r'(\{[^{}]*"function":\s*"ui_function_[^"]*"[^{}]*\})',  # JSON with ui_function_ in function name
+
+            # JSON with nested content
+            r'(\{.*?"type":\s*"ui_function".*?\})',  # Complex JSON with ui_function type
+            r'(\{.*?"function":\s*"ui_function_.*?\})',  # Complex JSON with ui_function_ in function name
+
+            # JSON that might be quoted or escaped
+            r'"(\{[^"]*"type":\s*"ui_function"[^"]*\})"',  # Quoted JSON
+            r"'(\{[^']*'type':\s*'ui_function'[^']*\})'",  # Single-quoted JSON
         ]
 
         for pattern in patterns:
-            match = re.search(pattern, response, re.DOTALL)
-            if match:
-                ui_json = match.group(1).strip()
+            matches = re.findall(pattern, response, re.DOTALL)
+            for match in matches:
+                ui_json = match.strip()
                 try:
-                    # Handle escaped JSON strings
+                    # Handle potential escaping
                     if '\\' in ui_json:
-                        # Unescape the JSON string
-                        ui_json = ui_json.replace('\\"', '"').replace('\\\\', '\\')
+                        ui_json = ui_json.replace('\\"', '"').replace("\\'", "'")
 
-                    # Validate it's proper JSON and contains ui_function type
+                    # Validate it's proper JSON and contains ui_function
                     parsed = json.loads(ui_json)
-                    if parsed.get("type") == const.UI_FUNCTION_PREFIX:
+                    if (parsed.get("type") == const.UI_FUNCTION_PREFIX or
+                            str(parsed.get("function", "")).startswith(const.UI_FUNCTION_PREFIX)):
                         logger.debug(f"Extracted UI function result using pattern: {pattern}")
+                        logger.debug(f"Extracted JSON: {ui_json}")
                         return ui_json
-                except json.JSONDecodeError:
+                except json.JSONDecodeError as e:
+                    logger.debug(f"JSON decode error for '{ui_json}': {e}")
                     continue
+
+        # If no patterns match, try to find any JSON-like structure and check if it's a UI function
+        json_pattern = r'\{[^{}]*\}'
+        json_matches = re.findall(json_pattern, response)
+        for json_match in json_matches:
+            try:
+                parsed = json.loads(json_match)
+                if (isinstance(parsed, dict) and
+                    (parsed.get("type") == const.UI_FUNCTION_PREFIX or
+                     str(parsed.get("function", "")).startswith(const.UI_FUNCTION_PREFIX))):
+                    logger.debug(f"Found UI function JSON in fallback search: {json_match}")
+                    return json_match
+            except json.JSONDecodeError:
+                continue
 
         return None
 
     def _is_ui_function_json(self, response: str) -> bool:
-        """Check if the response is a direct UI function JSON."""
+        """Check if the response is a direct UI function JSON (matching ADK agent logic)."""
         try:
             response = response.strip()
             if response.startswith('{') and response.endswith('}'):
                 parsed = json.loads(response)
                 return (isinstance(parsed, dict) and
-                       parsed.get("type") == const.UI_FUNCTION_PREFIX and
-                       "function" in parsed)
+                       (parsed.get("type") == const.UI_FUNCTION_PREFIX or
+                        str(parsed.get("function", "")).startswith(const.UI_FUNCTION_PREFIX)))
         except (json.JSONDecodeError, AttributeError):
             pass
         return False
@@ -349,7 +371,17 @@ class OpenAiSdkAgent:
                 instructions = """You are a helpful assistant that can use tools to complete tasks.
 
 CRITICAL INSTRUCTION FOR UI FUNCTIONS:
-When you call a function that starts with 'ui_function_', you MUST return ONLY the raw JSON output from that function call. Do not add any explanatory text, confirmation messages, or additional content. Return the JSON exactly as provided by the function, nothing more, nothing less.
+When you call a function that starts with 'ui_function_', you MUST return ONLY the raw JSON output from that function call.
+
+ABSOLUTELY NO explanatory text, confirmation messages, greetings, or additional content of any kind.
+ABSOLUTELY NO phrases like "Here's the information you requested" or "Let me know if you need anything else".
+RETURN ONLY THE EXACT JSON STRING FROM THE FUNCTION CALL.
+
+Example of CORRECT response for UI function:
+{"type": "ui_function", "function": "ui_function_list_all_technical_users", "method": "GET", "path": "/api/clients", "response_format": "text"}
+
+Example of INCORRECT response for UI function:
+Here's the M2M user information you requested: {"type": "ui_function", ...}
 
 For regular functions, you may provide explanatory text as normal."""
             else:
@@ -380,17 +412,29 @@ For regular functions, you may provide explanatory text as normal."""
 
             response = str(result.final_output)
             logger.info(f"Agent completed successfully")
+            logger.debug(f"Raw agent response: {response}")
 
-            # Check for UI function result - try extraction first
-            ui_function_result = self._extract_ui_function_result(response)
-            if ui_function_result:
-                logger.debug(f"Extracted UI function result: {ui_function_result}")
-                return ui_function_result
+            # For UI functions, prioritize JSON extraction over everything else
+            if has_ui_functions:
+                # First check if the response itself is a UI function JSON
+                if self._is_ui_function_json(response.strip()):
+                    logger.debug("Response is direct UI function JSON")
+                    return response.strip()
 
-            # Also check if the response itself is a UI function JSON
-            if self._is_ui_function_json(response):
-                logger.debug("Response is direct UI function JSON")
-                return response.strip()
+                # Then try to extract UI function result from within the response
+                ui_function_result = self._extract_ui_function_result(response)
+                if ui_function_result:
+                    logger.debug(f"Extracted UI function result: {ui_function_result}")
+                    return ui_function_result
+
+                # If we have UI functions but couldn't extract JSON, log warning
+                logger.warning(f"UI functions available but no UI function JSON found in response: {response}")
+            else:
+                # For non-UI function responses, still check for UI function results
+                ui_function_result = self._extract_ui_function_result(response)
+                if ui_function_result:
+                    logger.debug(f"Extracted UI function result: {ui_function_result}")
+                    return ui_function_result
 
             # When using output_type, SDK handles structured output validation automatically
             # No manual schema validation needed
