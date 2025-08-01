@@ -1,0 +1,30 @@
+{
+  "type": "function",
+  "function": {
+    "name": "validate_api_changes",
+    "description": "Validate API changes for syntax and compatibility",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "api_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of API file paths to validate"
+        },
+        "validation_level": {
+          "type": "string",
+          "enum": ["syntax", "compatibility", "full"],
+          "default": "full",
+          "description": "Level of validation to perform"
+        },
+        "base_version": {
+          "type": "string",
+          "description": "Base version to compare against for compatibility checks"
+        }
+      },
+      "required": ["api_files"]
+    }
+  }
+}

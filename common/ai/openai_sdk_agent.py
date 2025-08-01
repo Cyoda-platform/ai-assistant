@@ -381,7 +381,7 @@ class OpenAiSdkAgent:
 
             # Create agent with enhanced instructions for UI functions
             has_ui_functions = any(tool.get("function", {}).get("name", "").startswith(const.UI_FUNCTION_PREFIX)
-                                 for tool in tools if tool.get("type") == "function")
+                                 for tool in (tools or []) if tool and tool.get("type") == "function")
 
             if has_ui_functions:
                 instructions = """You are a helpful assistant that can use tools to complete tasks.

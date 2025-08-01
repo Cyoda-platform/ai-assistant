@@ -187,3 +187,7 @@ project/
 **If there are multiple ways to do something, choose the one that's the most Pythonic.**
 
 The goal is to write code that is not just functional, but beautiful, maintainable, and exemplifies Python's core values of simplicity, readability, and elegance.
+
+When you add tests - all tests should be in tests directory not in root.
+
+All docs, instructions should be in docs directory not in root.

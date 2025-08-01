@@ -17,12 +17,11 @@ from common.service.service import EntityServiceImpl
 from common.service.user_service import UserService
 from common.workflow.converter_v2.workflow_converter_service import CyodaWorkflowConverterService
 from entity.model_registry import model_registry
-from entity.chat.helper_functions import WorkflowHelperService
-from entity.chat.workflow import ChatWorkflow
+from tools.workflow_orchestration_service import WorkflowOrchestrationService as WorkflowHelperService
 from services.chat_service import ChatService
 from services.labels_config_service import LabelsConfigService
 from services.scheduler import Scheduler
-from entity.workflow import Workflow
+from workflow.base_workflow import Workflow
 from workflow.dispatcher.workflow_dispatcher import WorkflowDispatcher
 
 logger = logging.getLogger(__name__)
@@ -56,22 +55,22 @@ class ServicesFactory:
             self.entity_service = EntityServiceImpl(repository=self.entity_repository, model_registry=model_registry)
             self.data_service = DataRetrievalService(cyoda_auth_service=self.cyoda_auth_service, entity_service=self.entity_service)
             self.user_service = UserService(cyoda_auth_service=self.cyoda_auth_service, entity_service=self.entity_service, data_service=self.data_service)
-            self.workflow_helper_service = WorkflowHelperService(cyoda_auth_service=self.cyoda_auth_service, entity_service=self.entity_service)
-            self.workflow = Workflow()
-
-
             self.scheduler = Scheduler(entity_service=self.entity_service, cyoda_auth_service=self.cyoda_auth_service)
-
-
-            self.chat_workflow = ChatWorkflow(
-                dataset=self.dataset,
-                workflow_helper_service=self.workflow_helper_service,
+            self.workflow_helper_service = WorkflowHelperService(
+                workflow_helper_service=None,  # Self-reference not needed for base service
                 entity_service=self.entity_service,
                 cyoda_auth_service=self.cyoda_auth_service,
                 workflow_converter_service=self.workflow_converter_service,
                 scheduler_service=self.scheduler,
-                data_service=self.data_service
+                data_service=self.data_service,
+                dataset=self.dataset
             )
+            self.workflow = Workflow()
+
+
+            # ChatWorkflow functionality is now handled by the processor-based architecture
+            # The workflow orchestration is handled by WorkflowOrchestrationService
+            self.chat_workflow = None
             # Choose AI Agent Implementation
             import os
             agent_type = os.getenv('AI_AGENT_TYPE', 'openai')  # Default to ADK
@@ -101,8 +100,8 @@ class ServicesFactory:
                 logger.info("Using Google ADK Agent with MCP support")
 
             self.workflow_dispatcher = WorkflowDispatcher(
-                cls=ChatWorkflow,
-                cls_instance=self.chat_workflow,
+                cls=None,  # No longer using ChatWorkflow class
+                cls_instance=None,  # Using processor-based architecture
                 ai_agent=self.ai_agent,
                 entity_service=self.entity_service,
                 cyoda_auth_service=self.cyoda_auth_service,

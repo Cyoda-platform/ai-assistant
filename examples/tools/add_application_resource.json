@@ -1,0 +1,31 @@
+{
+  "type": "function",
+  "function": {
+    "name": "add_application_resource",
+    "description": "Add or update an application resource file",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "resource_path": {
+          "type": "string",
+          "description": "Full relative path to the resource including filename"
+        },
+        "file_contents": {
+          "type": "string",
+          "description": "Content of the file to be written"
+        },
+        "overwrite": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to overwrite existing files"
+        },
+        "backup": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to create a backup of existing files"
+        }
+      },
+      "required": ["resource_path", "file_contents"]
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "version": "1.0",
+  "name": "API Edit Workflow",
+  "desc": "Workflow for editing API endpoints",
+  "initialState": "none",
+  "active": true,
+  "states": {
+    "none": {
+      "transitions": [
+        {
+          "name": "start_edit",
+          "next": "editing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.api_edit_agent",
+              "executionMode": "SYNC",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "editing": {
+      "transitions": [
+        {
+          "name": "validate_changes",
+          "next": "validating",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.validate_api_changes",
+              "executionMode": "SYNC",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "validating": {
+      "transitions": [
+        {
+          "name": "notify_completion",
+          "next": "completed",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.api_edit/completion_notification",
+              "executionMode": "SYNC",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "completed": {
+      "transitions": []
+    }
+  }
+}

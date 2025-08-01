@@ -1,0 +1,84 @@
+{
+  "type": "agent",
+  "model": {
+    "model_name": "gpt-4o",
+    "temperature": 0.7,
+    "max_tokens": 10000
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "prompts/chat_entity/chat_entity_submitted_workflow_question_submit_answer_prompt_0.md"
+    }
+  ],
+  "publish": true,
+  "approve": false,
+  "allow_anonymous_users": true,
+  "tool_choice": "auto",
+  "max_iteration": 30,
+  "tools": [
+    {
+      "name": "get_user_info"
+    },
+    {
+      "name": "web_search"
+    },
+    {
+      "name": "read_link"
+    },
+    {
+      "name": "web_scrape"
+    },
+    {
+      "name": "build_general_application"
+    },
+    {
+      "name": "edit_existing_app_design_additional_feature"
+    },
+    {
+      "name": "add_new_entity_for_existing_app"
+    },
+    {
+      "name": "add_new_workflow"
+    },
+    {
+      "name": "edit_api_existing_app"
+    },
+    {
+      "name": "edit_existing_workflow"
+    },
+    {
+      "name": "edit_existing_processors"
+    },
+    {
+      "name": "init_setup_workflow"
+    },
+    {
+      "name": "deploy_cyoda_env"
+    },
+    {
+      "name": "get_cyoda_guidelines"
+    },
+    {
+      "name": "ui_function_issue_technical_user"
+    },
+    {
+      "name": "ui_function_list_all_technical_users"
+    },
+    {
+      "name": "ui_function_reset_client_secret"
+    },
+    {
+      "name": "resume_build_general_application"
+    },
+    {
+      "name": "convert_workflow_to_dto"
+    },
+    {
+      "name": "get_env_deploy_status"
+    },
+    {
+      "name": "add_collaborator_to_default_repos"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "name": "condition_agent_test",
+  "desc": "Migrated from condition_agent_test",
+  "initialState": "none",
+  "active": true,
+  "states": {
+    "none": {
+      "transitions": [
+        {
+          "name": "start_processing",
+          "next": "processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.condition_agent_test_none_start_processing",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              },
+              "input": {
+                "local_fs": [
+                  "input/data.json"
+                ]
+              },
+              "output": {
+                "local_fs": [
+                  "output/result.json"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "processing": {
+      "transitions": [
+        {
+          "name": "check_chat_lock",
+          "next": "completed",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "is_chat_locked",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "completed": {
+      "transitions": []
+    }
+  }
+}

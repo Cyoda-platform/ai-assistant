@@ -8,6 +8,9 @@ from common.config.config import config as env_config
 from common.utils.utils import get_current_timestamp_num, _post_process_response, _save_file, get_repository_name
 from entity.chat.chat import AgenticFlowEntity
 from entity.model import WorkflowEntity, FlowEdgeMessage
+from processors.factory import processor_factory
+from processors.base_processor import ProcessorContext, ProcessorResult
+from .agent_processor_handler import AgentProcessorHandler
 
 logger = logging.getLogger(__name__)
 
@@ -42,106 +45,162 @@ class EventProcessor:
         self.entity_service = entity_service
         self.cyoda_auth_service = cyoda_auth_service
         self._write_output_lock = asyncio.Lock()
+
+        # Initialize the new agent processor handler
+        self.agent_processor_handler = AgentProcessorHandler(ai_agent_handler, entity_service)
     
-    async def process_event(self, entity: WorkflowEntity, action: Dict[str, Any], 
+    async def process_event(self, entity: WorkflowEntity, processor_name: str,
                            technical_id: str) -> Tuple[WorkflowEntity, str]:
         """
-        Process a workflow event.
-        
+        Process a workflow event using the new processor-based architecture.
+
         Args:
             entity: Workflow entity
-            action: Action configuration
+            processor_name: Processor name (e.g., "AgentProcessor.agent_name", "MessageProcessor.workflow/message")
             technical_id: Technical identifier
-            
+
         Returns:
             Tuple of (updated_entity, response)
         """
         response = "returned empty response"
-        
+
         try:
             # Get user account information
             entity.user_id = await self.user_service.get_entity_account(user_id=entity.user_id)
-            
-            config = action.get("config")
-            action_name = action.get("name")
-            
-            # Route to appropriate handler based on entity type and config
-            if config and config.get("type") and isinstance(entity, AgenticFlowEntity):
-                entity = AgenticFlowEntity(**entity.model_dump())
-                entity, response = await self._handle_agentic_flow_event(
-                    config=config, entity=entity, technical_id=technical_id
-                )
-            elif config and config.get("type") and isinstance(entity, WorkflowEntity):
-                response = await self._handle_workflow_entity_event(
-                    config=config, entity=entity, technical_id=technical_id
-                )
-            elif action_name and self.method_registry.has_method(action_name):
-                response = await self._execute_direct_method(
-                    method_name=action_name, entity=entity, technical_id=technical_id
-                )
+
+            # Initialize processor factory if needed
+            processor_factory.initialize_processors()
+
+            # Create processor context
+            context = ProcessorContext(
+                workflow_name=getattr(entity, 'workflow_name', 'unknown'),
+                state_name=getattr(entity, 'current_state', 'unknown'),
+                transition_name=getattr(entity, 'current_transition', 'unknown'),
+                entity_id=technical_id,
+                entity_data=entity,  # Pass the entity directly instead of converting to dict
+                memory_tags=getattr(entity, 'memory_tags', None),
+                execution_mode="ASYNC",
+                config={"processor_name": processor_name}
+            )
+
+            # Handle different processor types
+            if processor_name.startswith("AgentProcessor."):
+                # Use specialized agent processor handler for AgenticFlowEntity
+                if isinstance(entity, AgenticFlowEntity):
+                    agent_name = processor_name.split(".", 1)[1]
+                    result = await self.agent_processor_handler.execute_agent_processor(
+                        agent_name=agent_name,
+                        context=context,
+                        entity=entity
+                    )
+                else:
+                    raise ValueError(f"AgentProcessor requires AgenticFlowEntity, got {type(entity)}")
             else:
-                raise ValueError(f"Unknown processing step: {action_name}")
-                
+                # Use standard processor framework for other processors
+                processor = processor_factory.get_processor(processor_name)
+                if not processor:
+                    raise ValueError(f"Processor not found: {processor_name}")
+
+                result = await processor.execute(context)
+
+            # Handle processor result
+            if result.success:
+                response = self._format_processor_response(result)
+
+                # Apply memory updates if any
+                if result.memory_updates and isinstance(entity, AgenticFlowEntity):
+                    await self._apply_memory_updates(entity, result.memory_updates)
+
+                # Update entity with any data from processor result
+                if result.data:
+                    await self._apply_entity_updates(entity, result.data)
+
+            else:
+                raise Exception(result.error_message or "Processor execution failed")
+
         except Exception as e:
             entity.failed = True
             entity.last_modified = get_current_timestamp_num()
             entity.error = f"Error: {e}"
             logger.exception(f"Exception occurred while processing event: {e}")
-        
-        logger.info(f"{action}: {response}")
+
+        logger.info(f"Processor {processor_name}: {response}")
         entity.last_modified = get_current_timestamp_num()
         return entity, response
-    
-    async def _handle_agentic_flow_event(self, config: Dict[str, Any],
-                                        entity: AgenticFlowEntity,
-                                        technical_id: str) -> Tuple[AgenticFlowEntity, str]:
+
+
+
+    def _format_processor_response(self, result: ProcessorResult) -> str:
         """
-        Handle events for agentic flow entities.
+        Format processor result into response string.
 
         Args:
-            config: Event configuration
-            entity: Agentic flow entity
-            technical_id: Technical identifier
+            result: Processor execution result
 
         Returns:
-            Tuple of (updated_entity, response)
+            Formatted response string
         """
-        response = None
-        config_type = config.get("type")
-        finished_flow = entity.chat_flow.finished_flow
-        child_entities_size_before = len(entity.child_entities)
-
-        try:
-            # Handle different config types
-            if config_type in ("notification", "question"):
-                response = await self._handle_notification_or_question(config=config, entity=entity)
-            elif config_type == "function":
-                response = await self._handle_function_call(config=config, entity=entity, technical_id=technical_id)
-            elif config_type in ("prompt", "agent", "batch"):
-                response = await self._handle_ai_agent_call(config=config, entity=entity, technical_id=technical_id)
+        if result.data:
+            # If data contains a specific response field, use that
+            if isinstance(result.data, dict):
+                if "response" in result.data:
+                    return str(result.data["response"])
+                elif "message" in result.data:
+                    return str(result.data["message"])
+                elif "content" in result.data:
+                    return str(result.data["content"])
+                else:
+                    # Return a summary of the data
+                    return f"Processor executed successfully. Data: {result.data}"
             else:
-                logger.warning(f"Unknown config type: {config_type}")
-                response = f"Unknown config type: {config_type}"
+                return str(result.data)
+        else:
+            return "Processor executed successfully"
 
-            # Calculate new entities created during processing
-            new_entities = entity.child_entities[child_entities_size_before:] if child_entities_size_before < len(
-                entity.child_entities) else []
+    async def _apply_memory_updates(self, entity: AgenticFlowEntity, memory_updates: Dict[str, Any]) -> None:
+        """
+        Apply memory updates from processor result.
 
-            # Finalize response with proper workflow management
-            await self._finalize_response(
-                technical_id=technical_id,
-                config=config,
-                entity=entity,
-                finished_flow=finished_flow,
-                new_entities=new_entities,
-                response=response
-            )
+        Args:
+            entity: Agentic flow entity
+            memory_updates: Memory updates to apply
+        """
+        try:
+            if "content" in memory_updates:
+                memory_tags = memory_updates.get("tags", [env_config.GENERAL_MEMORY_TAG])
+                await self.memory_manager.append_to_ai_memory(
+                    entity=entity,
+                    content=memory_updates["content"],
+                    memory_tags=memory_tags
+                )
+        except Exception as e:
+            logger.exception(f"Error applying memory updates: {e}")
+
+    async def _apply_entity_updates(self, entity: WorkflowEntity, data: Dict[str, Any]) -> None:
+        """
+        Apply entity updates from processor result.
+
+        Args:
+            entity: Workflow entity
+            data: Data to apply to entity
+        """
+        try:
+            # Update workflow cache if available
+            if hasattr(entity, 'workflow_cache') and "workflow_cache" in data:
+                entity.workflow_cache.update(data["workflow_cache"])
+
+            # Update other entity attributes as needed
+            if "entity_updates" in data:
+                for key, value in data["entity_updates"].items():
+                    if hasattr(entity, key):
+                        setattr(entity, key, value)
 
         except Exception as e:
-            logger.exception(f"Error handling agentic flow event: {e}")
-            response = f"Error: {e}"
-
-        return entity, response or "No response generated"
+            logger.exception(f"Error applying entity updates: {e}")
+    
+    # NOTE: _handle_agentic_flow_event method has been removed and migrated to AgentProcessorHandler
+    # The logic for handling agentic flow events is now in AgentProcessorHandler.execute_agent_processor()
+    # which provides better separation of concerns and uses the new processor architecture
     
     async def _handle_workflow_entity_event(self, config: Dict[str, Any], 
                                            entity: WorkflowEntity, 

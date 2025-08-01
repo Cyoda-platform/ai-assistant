@@ -28,7 +28,6 @@ KEEP_ALIVE_EVENT_TYPE = "CalculationMemberKeepAliveEvent"
 EVENT_ACK_TYPE = "EventAckResponse"
 ERROR_EVENT_TYPE = "ErrorEvent"
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -197,7 +196,8 @@ class GrpcClient:
         error_message = data.get('message', 'Unknown error')
         error_code = data.get('code', 'UNKNOWN')
         source_event_id = data.get('sourceEventId', 'Unknown')
-        logger.error(f"Server error event received - Code: {error_code}, Message: {error_message}, SourceEventId: {source_event_id}")
+        logger.error(
+            f"Server error event received - Code: {error_code}, Message: {error_message}, SourceEventId: {source_event_id}")
         logger.error(f"Full error event data: {data}")
         # No response event is created for error events
 
@@ -216,7 +216,8 @@ class GrpcClient:
                 entity_id = data.get('entityId', 'Unknown')
                 request_id = data.get('requestId', 'Unknown')
                 processor_name = data.get('processorName') or data.get('criteriaName', 'Unknown')
-                logger.info(f"[IN] CalcRequest - EntityId: {entity_id}, RequestId: {request_id}, Processor: {processor_name}")
+                logger.info(
+                    f"[IN] CalcRequest - EntityId: {entity_id}, RequestId: {request_id}, Processor: {processor_name}")
             elif response.type == GREET_EVENT_TYPE:
                 logger.info(f"[IN] GreetEvent - Data: {data}")
             elif response.type == KEEP_ALIVE_EVENT_TYPE:
@@ -248,13 +249,11 @@ class GrpcClient:
         entity.current_transition = data['transition']['name']
 
         try:
-            logger.info(f"[PROCESSING] Starting {type} - Processor: {processor_name}, EntityId: {data['entityId']}, RequestId: {data.get('requestId')}")
+            logger.info(
+                f"[PROCESSING] Starting {type} - Processor: {processor_name}, EntityId: {data['entityId']}, RequestId: {data.get('requestId')}")
             entity, resp = await self.workflow_dispatcher.process_event(
                 entity=entity,
-                action={
-                    "name": processor_name,
-                    "config": json.loads(data['parameters']['context'])
-                },
+                processor_name=processor_name,
                 technical_id=data['entityId'])
             data['payload']['data'] = model_cls.model_dump(entity)
             logger.info(f"[PROCESSING] Success {type} - Processor: {processor_name}, EntityId: {data['entityId']}")
@@ -266,7 +265,8 @@ class GrpcClient:
             resp = None
 
         response_type = CALC_RESP_EVENT_TYPE if type == CALC_REQ_EVENT_TYPE else CRITERIA_CALC_RESP_EVENT_TYPE
-        logger.info(f"[OUT] Sending {response_type} - Processor: {processor_name}, EntityId: {data['entityId']}, RequestId: {data.get('requestId')}")
+        logger.info(
+            f"[OUT] Sending {response_type} - Processor: {processor_name}, EntityId: {data['entityId']}, RequestId: {data.get('requestId')}")
         notif = self.create_notification_event(data=data, response=resp, type=type)
         await queue.put(notif)
 
@@ -283,7 +283,7 @@ class GrpcClient:
                     ('grpc.keepalive_timeout_ms', 30_000),  # wait 10 s for PONG
                     ('grpc.keepalive_permit_without_calls', 1),  # even if idle
                     ('grpc.enable_http_proxy', 0),
-                    ("grpc.max_send_message_length", 100 * 1024 * 1024),     # e.g., 100MB
+                    ("grpc.max_send_message_length", 100 * 1024 * 1024),  # e.g., 100MB
                     ("grpc.max_receive_message_length", 100 * 1024 * 1024),
                 ]
 
@@ -314,7 +314,8 @@ class GrpcClient:
                             asyncio.create_task(self.handle_error_event(response, queue))
                         else:
                             logger.error(f"Unhandled event type: {response.type}")
-                            logger.error(f"Unhandled event details - ID: {response.id}, Source: {response.source}, Data: {response.text_data}")
+                            logger.error(
+                                f"Unhandled event details - ID: {response.id}, Source: {response.source}, Data: {response.text_data}")
 
                 # If we exit the stream cleanly, break out of the retry loop
                 logger.info("Stream closed by server—reconnecting")
@@ -360,7 +361,6 @@ class GrpcClient:
             await self.consume_stream()
         except Exception as e:
             logger.exception(e)
-
 
     async def rollback_failed_workflows(self):
         logger.info("restarting entities workflows....")

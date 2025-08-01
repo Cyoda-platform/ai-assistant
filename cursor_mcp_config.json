@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "ai-assistant": {
+      "type": "sse",
+      "url": "http://localhost:8000/sse",
+      "disabled": false,
+      "autoApprove": [
+        "get_catalog",
+        "get_tool_info",
+        "run_tool"
+      ],
+      "description": "AI Assistant MCP Server - Only 3 tools visible: get_catalog (discover 95+ tools), get_tool_info (tool details), run_tool (execute any tool)"
+    }
+  }
+}

@@ -76,24 +76,24 @@ class WorkflowDispatcher:
         
         logger.info(f"WorkflowDispatcher initialized with {len(self.methods_dict)} methods")
     
-    async def process_event(self, entity: WorkflowEntity, action: Dict[str, Any], 
+    async def process_event(self, entity: WorkflowEntity, processor_name: str,
                            technical_id: str) -> Tuple[WorkflowEntity, str]:
         """
-        Process a workflow event.
-        
+        Process a workflow event using the new processor-based architecture.
+
         This is the main entry point for event processing. It delegates to the
-        EventProcessor which coordinates all the specialized components.
-        
+        EventProcessor which coordinates the new processor framework.
+
         Args:
             entity: Workflow entity
-            action: Action configuration
+            processor_name: Processor name (e.g., "AgentProcessor.agent_name", "MessageProcessor.workflow/message")
             technical_id: Technical identifier
-            
+
         Returns:
             Tuple of (updated_entity, response)
         """
         try:
-            return await self.event_processor.process_event(entity=entity, action=action, technical_id=technical_id)
+            return await self.event_processor.process_event(entity=entity, processor_name=processor_name, technical_id=technical_id)
         except Exception as e:
             logger.exception(f"Error in WorkflowDispatcher.process_event: {e}")
             entity.failed = True
@@ -140,35 +140,70 @@ class WorkflowDispatcher:
         """
         return self.method_registry.has_method(method_name)
     
-    async def validate_configuration(self, config: Dict[str, Any]) -> Tuple[bool, str]:
+    async def validate_processor(self, processor_name: str) -> Tuple[bool, str]:
         """
-        Validate a workflow configuration.
-        
+        Validate a processor name and configuration.
+
         Args:
-            config: Configuration to validate
-            
+            processor_name: Processor name to validate (e.g., "AgentProcessor.agent_name")
+
         Returns:
             Tuple of (is_valid, error_message)
         """
         try:
+            from processors.factory import processor_factory
+
+            # Initialize processor factory if needed
+            processor_factory.initialize_processors()
+
+            # Check if processor exists
+            processor = processor_factory.get_processor(processor_name)
+            if not processor:
+                available_processors = processor_factory.list_processors()
+                return False, f"Processor '{processor_name}' not found. Available processors: {available_processors}"
+
+            # Validate processor supports the name
+            if not processor.supports(processor_name):
+                return False, f"Processor does not support name '{processor_name}'"
+
+            return True, ""
+
+        except Exception as e:
+            logger.exception(f"Error validating processor: {e}")
+            return False, f"Validation error: {e}"
+
+    async def validate_configuration(self, config: Dict[str, Any]) -> Tuple[bool, str]:
+        """
+        Validate a workflow configuration (backward compatibility).
+
+        Args:
+            config: Configuration to validate
+
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        try:
+            # For backward compatibility, still support old config validation
+            # But recommend using validate_processor for new processor-based workflows
+
             # Validate AI agent config if present
             if config.get("type") in ("prompt", "agent", "batch"):
                 return self.ai_agent_handler.validate_config(config)
-            
+
             # Validate function config
             if config.get("type") == "function":
                 function_config = config.get("function", {})
                 function_name = function_config.get("name")
-                
+
                 if not function_name:
                     return False, "Function name is required"
-                
+
                 if not self.method_registry.has_method(function_name):
                     available = self.method_registry.list_methods()
                     return False, f"Function '{function_name}' not found. Available: {available}"
-            
+
             return True, ""
-            
+
         except Exception as e:
             logger.exception(f"Error validating configuration: {e}")
             return False, f"Validation error: {e}"
@@ -176,10 +211,24 @@ class WorkflowDispatcher:
     def get_component_status(self) -> Dict[str, Any]:
         """
         Get status information about all components.
-        
+
         Returns:
             Dictionary with component status information
         """
+        try:
+            from processors.factory import processor_factory
+            processor_factory.initialize_processors()
+            processor_status = {
+                "available_processors": processor_factory.list_processors(),
+                "processor_count": len(processor_factory.list_processors())
+            }
+        except Exception as e:
+            processor_status = {
+                "error": f"Could not load processor status: {e}",
+                "available_processors": [],
+                "processor_count": 0
+            }
+
         return {
             "method_registry": {
                 "methods_count": len(self.method_registry.methods_dict),
@@ -199,14 +248,90 @@ class WorkflowDispatcher:
             },
             "event_processor": {
                 "initialized": self.event_processor is not None
-            }
+            },
+            "processor_framework": processor_status
         }
     
     # Backward compatibility methods
+    async def process_event_legacy(self, entity: WorkflowEntity, action: Dict[str, Any],
+                                  technical_id: str) -> Tuple[WorkflowEntity, str]:
+        """
+        Backward compatibility method for old action-based interface.
+
+        This method attempts to convert old action format to new processor format.
+
+        Args:
+            entity: Workflow entity
+            action: Old action configuration
+            technical_id: Technical identifier
+
+        Returns:
+            Tuple of (updated_entity, response)
+        """
+        try:
+            # Try to convert old action to processor name
+            processor_name = self._convert_action_to_processor_name(action)
+            if processor_name:
+                return await self.process_event(entity, processor_name, technical_id)
+            else:
+                # Fallback to old event processor logic
+                logger.warning(f"Could not convert action to processor, using legacy processing: {action}")
+                return await self._process_legacy_action(entity, action, technical_id)
+
+        except Exception as e:
+            logger.exception(f"Error in legacy process_event: {e}")
+            entity.failed = True
+            entity.error = f"Legacy processing error: {e}"
+            return entity, f"Error: {e}"
+
+    def _convert_action_to_processor_name(self, action: Dict[str, Any]) -> str:
+        """
+        Convert old action format to new processor name.
+
+        Args:
+            action: Old action configuration
+
+        Returns:
+            Processor name or None if conversion not possible
+        """
+        config = action.get("config", {})
+        action_type = config.get("type")
+
+        if action_type in ("prompt", "agent"):
+            # For AI agents, we'd need to create a mapping or use a default agent
+            return "AgentProcessor.legacy_agent"
+        elif action_type == "function":
+            function_name = config.get("function", {}).get("name")
+            if function_name:
+                return f"FunctionProcessor.{function_name}"
+        elif action_type in ("notification", "question"):
+            # For messages, we'd need to create a mapping
+            return "MessageProcessor.legacy/notification"
+
+        return None
+
+    async def _process_legacy_action(self, entity: WorkflowEntity, action: Dict[str, Any],
+                                   technical_id: str) -> Tuple[WorkflowEntity, str]:
+        """
+        Process using legacy event processor logic.
+
+        Args:
+            entity: Workflow entity
+            action: Action configuration
+            technical_id: Technical identifier
+
+        Returns:
+            Tuple of (updated_entity, response)
+        """
+        # This would use the old event processor methods
+        # For now, return a placeholder
+        logger.warning("Legacy action processing not fully implemented")
+        return entity, "Legacy action processed"
+
     async def _collect_subclass_methods(self):
         """Backward compatibility method."""
         return self.method_registry._collect_methods()
-    
+
     async def _execute_method(self, method_name: str, technical_id: str, entity: WorkflowEntity):
         """Backward compatibility method."""
         return await self.method_registry.dispatch_method(

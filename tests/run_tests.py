@@ -42,8 +42,8 @@ def main():
     parser = argparse.ArgumentParser(description="Run tests for AI Assistant project")
     
     parser.add_argument(
-        "--component", 
-        choices=["all", "tools", "dispatcher", "base"],
+        "--component",
+        choices=["all", "tools", "dispatcher", "base", "migration", "processors"],
         default="all",
         help="Which component to test (default: all)"
     )
@@ -119,6 +119,10 @@ def main():
         cmd.append("tests/workflow/dispatcher/")
     elif args.component == "base":
         cmd.append("tests/tools/test_base_service.py")
+    elif args.component == "migration":
+        cmd.append("tests/test_workflow_migration.py")
+    elif args.component == "processors":
+        cmd.extend(["tests/test_function_processor.py", "tests/test_workflow_orchestration.py"])
     
     # Add verbosity
     if args.verbose > 0:
@@ -129,6 +133,7 @@ def main():
         cmd.extend([
             "--cov=tools",
             "--cov=workflow/dispatcher",
+            "--cov=processors",
             "--cov-report=term-missing"
         ])
         
@@ -188,6 +193,8 @@ def run_specific_tests():
     print("3. All tests with coverage")
     print("4. Integration tests")
     print("5. Failed tests only")
+    print("6. Migration tests")
+    print("7. Processor tests")
     
     scenarios = {
         "1": {
@@ -214,10 +221,23 @@ def run_specific_tests():
         "5": {
             "cmd": ["python", "-m", "pytest", "--lf", "-v"],
             "desc": "Last failed tests only"
+        },
+        "6": {
+            "cmd": ["python", "-m", "pytest", "tests/test_workflow_migration.py", "-v", "--tb=short"],
+            "desc": "Migration tests"
+        },
+        "7": {
+            "cmd": [
+                "python", "-m", "pytest",
+                "tests/test_function_processor.py",
+                "tests/test_workflow_orchestration.py",
+                "-v", "--tb=short"
+            ],
+            "desc": "Processor tests"
         }
     }
     
-    choice = input("\nEnter scenario number (1-5): ").strip()
+    choice = input("\nEnter scenario number (1-7): ").strip()
     
     if choice in scenarios:
         scenario = scenarios[choice]
