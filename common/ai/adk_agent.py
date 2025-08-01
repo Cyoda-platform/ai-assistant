@@ -1,6 +1,7 @@
 import json
 import logging
 import asyncio
+import uuid
 from typing import Dict, Any, List, Optional, Union
 import os
 
@@ -43,9 +44,8 @@ class AdkAgentContext:
 
 class AdkAgent:
     """
-    Google ADK-based AI Agent using modern ADK patterns and best practices.
-    Supports both OpenAI models (via LiteLlm) and Gemini models with proper
-    agent configuration, tool management, and session handling.
+    Simplified Google ADK-based AI Agent following ADK best practices.
+    Focuses on simplicity and leverages ADK's built-in capabilities.
     """
 
     def __init__(self, max_calls=config.MAX_AI_AGENT_ITERATIONS, mcp_servers=None):
@@ -73,24 +73,41 @@ class AdkAgent:
             List of types.Content objects
         """
         adapted_messages = []
-        for message in messages:
+        for i, message in enumerate(messages):
             if isinstance(message, AIMessage):
                 content = message.content
-                if content:
+
+                # Handle empty content - don't skip, but provide placeholder
+                if not content:
+                    logger.debug(f"Message {i} has empty content, using placeholder")
+                    text_content = "[Empty message]"
+                else:
                     # Convert to ADK Content format
-                    text_content = " ".join(content) if isinstance(content, list) else content
-                    adapted_messages.append(
-                        types.Content(
-                            role=message.role or 'user',
-                            parts=[types.Part(text=text_content)]
-                        )
+                    text_content = " ".join(content) if isinstance(content, list) else str(content)
+
+                # Map roles properly for ADK
+                role = message.role or 'user'
+                if role == 'assistant':
+                    role = 'model'  # ADK uses 'model' instead of 'assistant'
+                elif role not in ['user', 'model', 'system']:
+                    logger.warning(f"Unknown role '{role}' in message {i}, defaulting to 'user'")
+                    role = 'user'
+
+                adapted_messages.append(
+                    types.Content(
+                        role=role,
+                        parts=[types.Part(text=text_content)]
                     )
+                )
+                logger.debug(f"Adapted message {i}: role={role}, content_length={len(text_content)}")
             else:
-                logger.warning(f"Unexpected message type: {type(message)}")
+                logger.warning(f"Unexpected message type: {type(message)} at index {i}")
+
+        logger.info(f"Adapted {len(adapted_messages)} messages from {len(messages)} input messages")
         return adapted_messages
 
     def _create_function_tools(self, tools: List[Dict[str, Any]],
-                              context: AdkAgentContext) -> List[Any]:
+                               context: AdkAgentContext) -> List[Any]:
         """
         Convert JSON tool definitions to ADK-compatible functions using proper ADK patterns.
 
@@ -354,6 +371,43 @@ class AdkAgent:
         logger.info(f"Configured {len(mcp_tools)} MCP servers")
         return mcp_tools
 
+    def _convert_json_schema_to_adk(self, json_schema: dict) -> Any:
+        """
+        Convert JSON schema to ADK schema format.
+        ADK uses google.genai.types.Schema for output_schema.
+        """
+        try:
+            # Create ADK Schema from JSON schema
+            schema_kwargs = {
+                'type': json_schema.get('type', 'OBJECT').upper()
+            }
+
+            if 'description' in json_schema:
+                schema_kwargs['description'] = json_schema['description']
+
+            if 'properties' in json_schema:
+                properties = {}
+                for prop_name, prop_def in json_schema['properties'].items():
+                    prop_schema = types.Schema(
+                        type=prop_def.get('type', 'string').upper(),
+                        description=prop_def.get('description', '')
+                    )
+                    properties[prop_name] = prop_schema
+                schema_kwargs['properties'] = properties
+
+            if 'required' in json_schema:
+                schema_kwargs['required'] = json_schema['required']
+
+            return types.Schema(**schema_kwargs)
+
+        except Exception as e:
+            logger.warning(f"Failed to convert JSON schema to ADK schema: {e}")
+            # Fallback: return a simple object schema
+            return types.Schema(
+                type='OBJECT',
+                description='Response object'
+            )
+
     def _sanitize_agent_name(self, technical_id: str) -> str:
         """
         Sanitize technical_id to create a valid ADK agent name.
@@ -390,7 +444,8 @@ class AdkAgent:
         return sanitized
 
     def _create_agent(self, tools: List[Any], model: Any,
-                     instructions: str, technical_id: str) -> Agent:
+                      instructions: str, technical_id: str,
+                      response_format: Optional[Dict[str, Any]] = None) -> Agent:
         """
         Create a Google ADK Agent using proper ADK patterns.
 
@@ -404,22 +459,20 @@ class AdkAgent:
             Agent instance
         """
         try:
-            # Extract model name
-            # Determine the model name and configure for OpenAI if needed
-            model_name = model.model_name if hasattr(model, 'model_name') else 'gemini-2.0-flash'
+            # Extract model name from model parameter, default to Gemini
+            model_name = getattr(model, 'model_name', 'gemini-2.5-flash')
 
-            # Configure model based on provider
+            # ADK only supports Google/Gemini models, not OpenAI
             if model_name.startswith(('gpt-', 'o1-', 'text-')):
-                # For OpenAI models, use LiteLlm wrapper
-                if not os.getenv('OPENAI_API_KEY'):
-                    logger.warning("OpenAI model specified but OPENAI_API_KEY not set")
+                logger.warning(f"OpenAI model {model_name} not supported by ADK, using gemini-2.5-flash")
+                model_name = 'gemini-2.5-flash'
+            elif not model_name.startswith(('gemini-', 'models/')):
+                logger.warning(f"Unknown model {model_name}, using gemini-2.5-flash")
+                model_name = 'gemini-2.5-flash'
 
-                model_instance = LiteLlm(model=f"openai/{model_name}")
-                logger.info(f"Using OpenAI model via LiteLlm: {model_name}")
-            else:
-                # For Gemini models, use model name directly
-                model_instance = model_name
-                logger.info(f"Using Gemini model: {model_name}")
+            # ADK uses model name directly for Gemini models
+            model_instance = model_name
+            logger.info(f"Using ADK model: {model_name}")
 
             # Create GenerateContentConfig for model settings (crucial for response quality)
             generate_content_config = types.GenerateContentConfig(
@@ -458,7 +511,7 @@ class AdkAgent:
             raise
 
     async def _validate_with_schema(self, content: str, schema: dict,
-                                   attempt: int, max_retries: int) -> tuple[Optional[str], Optional[str]]:
+                                    attempt: int, max_retries: int) -> tuple[Optional[str], Optional[str]]:
         """
         Validate response against JSON schema.
 
@@ -482,6 +535,53 @@ class AdkAgent:
             if attempt > 2:
                 msg = f"{msg} If the task is too complex, simplify but ensure valid JSON."
             return None, msg
+
+    def _build_conversation_context(self, messages: List[types.Content]) -> types.Content:
+        """
+        Build a single conversation context message from multiple messages.
+        This ensures ADK understands the full conversation history properly.
+        """
+        if not messages:
+            return types.Content(role='user', parts=[types.Part(text="Please help me.")])
+
+        if len(messages) == 1:
+            return messages[0]
+
+        # Build conversation context by combining all messages
+        conversation_parts = []
+        conversation_parts.append("Here is our conversation history:")
+
+        for i, msg in enumerate(messages[:-1]):  # All but the last message
+            role_label = "User" if msg.role == "user" else "Assistant" if msg.role == "model" else msg.role.title()
+
+            # Extract text from message parts
+            message_text = ""
+            if msg.parts:
+                for part in msg.parts:
+                    if part.text:
+                        message_text += part.text
+
+            conversation_parts.append(f"{role_label}: {message_text}")
+
+        # Add the current/latest message
+        latest_msg = messages[-1]
+        latest_text = ""
+        if latest_msg.parts:
+            for part in latest_msg.parts:
+                if part.text:
+                    latest_text += part.text
+
+        conversation_parts.append(f"\nCurrent message: {latest_text}")
+
+        # Combine all parts into a single message
+        full_context = "\n\n".join(conversation_parts)
+
+        logger.debug(f"Built conversation context with {len(messages)} messages, total length: {len(full_context)}")
+
+        return types.Content(
+            role='user',  # Always send as user message to ADK
+            parts=[types.Part(text=full_context)]
+        )
 
     async def _create_session(self, technical_id: str, messages: List[types.Content] = None) -> Any:
         """
@@ -518,32 +618,6 @@ class AdkAgent:
             logger.exception(f"Error creating ADK session: {e}")
             raise
 
-    def _convert_messages_to_input(self, messages: List[types.Content], use_session: bool = True) -> Union[types.Content, List[types.Content]]:
-        """
-        Convert messages to input format for ADK Runner.
-
-        Args:
-            messages: List of Content objects
-            use_session: Whether to use session management or manual conversation history
-
-        Returns:
-            Input for the runner (latest message when using session, all messages when not)
-        """
-        if not messages:
-            return types.Content(
-                role='user',
-                parts=[types.Part(text="Please help me.")]
-            )
-
-        if use_session:
-            # ADK Runner expects the latest message as new_message
-            # Previous conversation history is managed by the session
-            return messages[-1]
-        else:
-            # For complex conversations, we need to provide full context
-            # This is crucial for maintaining conversation quality
-            return messages
-
     async def _handle_ui_functions(self, function_name: str, function_args: Dict[str, Any]) -> str:
         """
         Handle UI function calls that need special formatting.
@@ -567,6 +641,8 @@ class AdkAgent:
         except Exception as e:
             logger.exception(f"Error handling UI function {function_name}: {e}")
             return f"Error handling UI function {function_name}: {str(e)}"
+
+
 
     def _extract_ui_function_result(self, response: str) -> Optional[str]:
         """
@@ -594,7 +670,7 @@ class AdkAgent:
                     # Validate it's proper JSON and contains ui_function
                     parsed = json.loads(ui_json)
                     if (parsed.get("type") == "ui_function" or
-                        str(parsed.get("function", "")).startswith("ui_function_")):
+                            str(parsed.get("function", "")).startswith("ui_function_")):
                         return ui_json
                 except json.JSONDecodeError:
                     continue
@@ -602,9 +678,9 @@ class AdkAgent:
         return None
 
     async def run_agent(self, methods_dict: Dict[str, Any], technical_id: str,
-                       cls_instance: Any, entity: Any, tools: List[Dict[str, Any]],
-                       model: Any, messages: List[AIMessage], tool_choice: str = "auto",
-                       response_format: Optional[Dict[str, Any]] = None) -> str:
+                        cls_instance: Any, entity: Any, tools: List[Dict[str, Any]],
+                        model: Any, messages: List[AIMessage], tool_choice: str = "auto",
+                        response_format: Optional[Dict[str, Any]] = None) -> str:
         """
         Main method to run the ADK agent using proper ADK patterns.
 
@@ -632,14 +708,19 @@ class AdkAgent:
             )
 
             # Convert messages to ADK format
+            logger.info(f"Converting {len(messages)} input messages to ADK format")
             adapted_messages = self.adapt_messages(messages)
+
+            if not adapted_messages:
+                logger.error("No messages were successfully adapted for ADK!")
+                return "Error: No valid messages provided"
 
             # Create function tools from JSON definitions
             function_tools = self._create_function_tools(tools, context)
 
             # Create agent instructions with UI function support
             has_ui_functions = any(tool.get("function", {}).get("name", "").startswith(const.UI_FUNCTION_PREFIX)
-                                 for tool in (tools or []) if tool and tool.get("type") == "function")
+                                   for tool in (tools or []) if tool and tool.get("type") == "function")
 
             if has_ui_functions:
                 instructions = """You are a helpful assistant that can use tools to complete tasks.
@@ -669,33 +750,28 @@ For regular functions, you may provide explanatory text as normal."""
                 session_service=self.session_service
             )
 
-            # For multi-message conversations, we need to build up the conversation context
-            # This is crucial for maintaining response quality comparable to OpenAI SDK
+            # For multi-message conversations, we need to provide proper context
+            # ADK handles conversation history differently than OpenAI
             if len(adapted_messages) > 1:
-                # Add all previous messages to build conversation context
-                for i, msg in enumerate(adapted_messages[:-1]):
-                    try:
-                        # Add each message to the conversation history
-                        async for _ in runner.run_async(
-                            user_id="default_user",
-                            session_id=session.id,
-                            new_message=msg
-                        ):
-                            break  # Just add to history, don't need full response
-                    except Exception as e:
-                        logger.warning(f"Failed to add message {i} to conversation history: {e}")
+                logger.info(f"Multi-message conversation detected: {len(adapted_messages)} messages")
 
-            # Convert messages to input format (always use latest message for ADK)
-            new_message = self._convert_messages_to_input(adapted_messages, use_session=True)
+                # For ADK, we should provide the full conversation context in a single message
+                # rather than trying to build it incrementally
+                conversation_context = self._build_conversation_context(adapted_messages)
+                new_message = conversation_context
+            else:
+                # Single message - use it directly
+                new_message = adapted_messages[0]
+
+            logger.debug(f"Final message for ADK: role={new_message.role}, parts={len(new_message.parts)}")
 
             # Run the agent using ADK patterns
             logger.info(f"Running ADK agent with {len(function_tools)} tools")
-
             final_response = ""
             async for event in runner.run_async(
-                user_id="default_user",
-                session_id=session.id,
-                new_message=new_message
+                    user_id="default_user",
+                    session_id=session.id,
+                    new_message=new_message
             ):
                 # Handle different event types
                 if event.content and event.content.parts:
@@ -735,7 +811,7 @@ For regular functions, you may provide explanatory text as normal."""
             return f"Agent execution error: {str(e)}"
 
     async def _handle_schema_validation(self, response: str, schema: dict,
-                                       agent: Agent, session: Any, runner: Runner) -> str:
+                                        agent: Agent, session: Any, runner: Runner) -> str:
         """
         Handle schema validation with retries using ADK patterns.
 
@@ -768,9 +844,9 @@ For regular functions, you may provide explanatory text as normal."""
 
                     correction_response = ""
                     async for event in runner.run_async(
-                        user_id="default_user",
-                        session_id=session.id,
-                        new_message=correction_message
+                            user_id="default_user",
+                            session_id=session.id,
+                            new_message=correction_message
                     ):
                         if event.content and event.content.parts:
                             for part in event.content.parts:
@@ -792,9 +868,6 @@ For regular functions, you may provide explanatory text as normal."""
     async def cleanup(self):
         """
         Clean up resources using ADK patterns.
-
-        Note: ADK handles most cleanup automatically,
-        but we can clear our caches.
         """
         try:
             # Clear agent cache
@@ -811,9 +884,6 @@ For regular functions, you may provide explanatory text as normal."""
     def __del__(self):
         """
         Destructor to ensure cleanup.
-
-        Note: ADK manages resources automatically,
-        so minimal cleanup is needed.
         """
         try:
             # Clear caches
