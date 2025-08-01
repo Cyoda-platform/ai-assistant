@@ -491,19 +491,37 @@ class AdkAgent:
             # Create valid agent name from technical_id
             agent_name = self._sanitize_agent_name(technical_id)
 
-            # Create ADK agent using proper configuration with model settings
-            agent = Agent(
-                model=model_instance,
-                name=agent_name,
-                description='Workflow assistant that can use tools to complete tasks and access external services via MCP.',
-                instruction=instructions,
-                tools=all_tools,
-                generate_content_config=generate_content_config  # This is the key missing piece!
-            )
+            # Handle response format (output schema)
+            agent_kwargs = {
+                'model': model_instance,
+                'name': agent_name,
+                'description': 'Workflow assistant with tools and MCP support',
+                'instruction': instructions,
+                'generate_content_config': generate_content_config
+            }
 
-            logger.info(f"Created ADK Agent '{agent_name}' with {len(all_tools)} tools ({len(tools)} function tools, {len(mcp_tools)} MCP tools)")
-            logger.info(f"Model settings: temperature={generate_content_config.temperature}, max_tokens={generate_content_config.max_output_tokens}")
+            # If response_format is specified, use output_schema (no tools allowed)
+            if response_format and response_format.get("schema"):
+                # Convert JSON schema to ADK schema format
+                schema = response_format["schema"]
+                agent_kwargs['output_schema'] = self._convert_json_schema_to_adk(schema)
+                # Note: When output_schema is set, tools cannot be used
+                logger.info(f"Using output_schema - tools disabled for structured response")
+            else:
+                # Normal mode with tools
+                agent_kwargs['tools'] = all_tools
+
+            agent = Agent(**agent_kwargs)
+
+            logger.info(f"Created ADK Agent '{agent_name}' with {len(all_tools)} tools")
             logger.debug(f"Function tools: {[getattr(t, '__name__', 'unknown') for t in tools]}")
+            logger.debug(f"MCP tools: {len(mcp_tools)}")
+            logger.debug(f"Agent has tools: {hasattr(agent, 'tools') and agent.tools is not None}")
+
+            # Log tool details for debugging
+            if hasattr(agent, 'tools') and agent.tools:
+                logger.debug(f"Agent tools count: {len(agent.tools)}")
+
             return agent
 
         except Exception as e:
@@ -718,11 +736,16 @@ class AdkAgent:
             # Create function tools from JSON definitions
             function_tools = self._create_function_tools(tools, context)
 
-            # Create agent instructions with UI function support
-            has_ui_functions = any(tool.get("function", {}).get("name", "").startswith(const.UI_FUNCTION_PREFIX)
-                                   for tool in (tools or []) if tool and tool.get("type") == "function")
+            # Create instructions based on response format and UI functions
+            has_ui_functions = any(
+                tool.get("function", {}).get("name", "").startswith(const.UI_FUNCTION_PREFIX)
+                for tool in (tools or []) if tool and tool.get("type") == "function"
+            )
 
-            if has_ui_functions:
+            if response_format and response_format.get("schema"):
+                instructions = """You are a helpful assistant that provides structured responses.
+Respond with a JSON object that matches the required schema."""
+            elif has_ui_functions:
                 instructions = """You are a helpful assistant that can use tools to complete tasks.
 
 CRITICAL INSTRUCTION FOR UI FUNCTIONS:
@@ -730,12 +753,13 @@ When you call a function that starts with 'ui_function_', you MUST return ONLY t
 
 For regular functions, you may provide explanatory text as normal."""
             else:
-                instructions = "You are a helpful assistant that can use tools to complete tasks."
+                instructions = """You are a helpful assistant that can use tools to complete tasks.
+Use the conversation history in this session to provide contextual responses."""
 
             # Create or get cached agent
             agent_key = f"agent_{technical_id}_{len(function_tools)}"
             if agent_key not in self._agent_cache:
-                agent = self._create_agent(function_tools, model, instructions, technical_id)
+                agent = self._create_agent(function_tools, model, instructions, technical_id, response_format)
                 self._agent_cache[agent_key] = agent
             else:
                 agent = self._agent_cache[agent_key]
