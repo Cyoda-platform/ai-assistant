@@ -406,7 +406,7 @@ class AdkAgent:
         try:
             # Extract model name
             # Determine the model name and configure for OpenAI if needed
-            model_name = model.model_name if hasattr(model, 'model_name') else 'gemini-2.0-flash'
+            model_name = 'gemini-2.0-flash'
 
             # Configure model based on provider
             if model_name.startswith(('gpt-', 'o1-', 'text-')):
