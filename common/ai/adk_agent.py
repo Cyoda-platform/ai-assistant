@@ -413,6 +413,13 @@ CRITICAL UI FUNCTION INSTRUCTIONS:
 
             logger.info(f"Created ADK Agent '{agent_name}' with {len(all_tools)} tools")
             logger.debug(f"Function tools: {[getattr(t, '__name__', 'unknown') for t in tools]}")
+            logger.debug(f"MCP tools: {len(mcp_tools)}")
+            logger.debug(f"Agent has tools: {hasattr(agent, 'tools') and agent.tools is not None}")
+
+            # Log tool details for debugging
+            if hasattr(agent, 'tools') and agent.tools:
+                logger.debug(f"Agent tools count: {len(agent.tools)}")
+
             return agent
 
         except Exception as e:
@@ -603,10 +610,12 @@ IMPORTANT: Always maintain context from the conversation history. If the user ha
 
             # Create local session service and session for this run
             session_service = InMemorySessionService()
+            logger.debug(f"Created session service for run_agent call")
 
             # Create agent and session
             agent = self._create_agent(function_tools, model, instructions, technical_id, response_format)
             session = await self._create_session(technical_id, session_service)
+            logger.info(f"Using session {session.id} for entire run_agent call")
 
             # Create runner with local session service
             runner = Runner(
@@ -614,6 +623,7 @@ IMPORTANT: Always maintain context from the conversation history. If the user ha
                 app_name="workflow_app",
                 session_service=session_service
             )
+            logger.debug(f"Created runner with session service")
 
             # Build conversation context from all messages
             if len(adapted_messages) > 1:
@@ -632,7 +642,7 @@ IMPORTANT: Always maintain context from the conversation history. If the user ha
                 logger.debug(f"Full message length: {len(message_text)} characters")
 
             # Run agent and collect response
-            logger.info(f"Running ADK agent with {len(function_tools)} tools")
+            logger.info(f"Running ADK agent with {len(function_tools)} tools using session {session.id}")
             final_response = ""
             async for event in runner.run_async(
                 user_id="default_user",
@@ -672,7 +682,7 @@ IMPORTANT: Always maintain context from the conversation history. If the user ha
 
         finally:
             # Session service and session are local variables - automatic cleanup
-            logger.debug("Session cleanup completed (local variables)")
+            logger.debug(f"Session cleanup completed for session {session.id if 'session' in locals() else 'unknown'} (local variables)")
 
     async def _handle_schema_validation(self, response: str, schema: dict,
                                        agent: Agent, session: Any, runner: Runner) -> str:
