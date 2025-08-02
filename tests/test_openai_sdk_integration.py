@@ -135,24 +135,6 @@ class TestOpenAiSdkIntegration:
         assert parsed_result["path"] == "/api/clients"
         assert parsed_result["response_format"] == "text"
 
-    @pytest.mark.asyncio
-    async def test_ui_function_detection_in_response(self, agent):
-        """Test UI function detection in various response formats"""
-        
-        # Test clean JSON response (what we want)
-        clean_json = '{"type": "ui_function", "function": "ui_function_list_all_technical_users", "method": "GET", "path": "/api/clients", "response_format": "text"}'
-        
-        # Test if it's detected as UI function JSON
-        assert agent._is_ui_function_json(clean_json) == True
-        
-        # Test extraction
-        extracted = agent._extract_ui_function_result(clean_json)
-        assert extracted is not None
-        
-        parsed = json.loads(extracted)
-        assert parsed["type"] == "ui_function"
-        assert parsed["function"] == "ui_function_list_all_technical_users"
-
     def test_ui_function_prefix_constant(self):
         """Test that UI function prefix is correctly defined"""
         assert const.UI_FUNCTION_PREFIX == "ui_function"

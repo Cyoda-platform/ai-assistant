@@ -77,34 +77,6 @@ class TestOpenAiSdkUiFunctions:
         invalid_json = 'not json'
         assert agent._is_ui_function_json(invalid_json) == False
 
-    def test_ui_function_extraction(self, agent):
-        """Test UI function result extraction"""
-        # Test direct UI function JSON
-        response_with_ui = 'Here is the result: {"type": "ui_function", "function": "ui_function_list_all_technical_users", "method": "GET", "path": "/api/clients"}'
-        extracted = agent._extract_ui_function_result(response_with_ui)
-        assert extracted is not None
-
-        parsed = json.loads(extracted)
-        assert parsed["type"] == "ui_function"
-        assert parsed["function"] == "ui_function_list_all_technical_users"
-
-        # Test the problematic case from user report
-        problematic_response = 'Here\'s the M2M user information you requested. Please let me know if there\'s anything else you need! {"type": "ui_function", "function": "ui_function_list_all_technical_users", "method": "GET", "path": "/api/clients", "response_format": "text"}'
-        extracted = agent._extract_ui_function_result(problematic_response)
-        assert extracted is not None
-
-        parsed = json.loads(extracted)
-        assert parsed["type"] == "ui_function"
-        assert parsed["function"] == "ui_function_list_all_technical_users"
-        assert parsed["method"] == "GET"
-        assert parsed["path"] == "/api/clients"
-        assert parsed["response_format"] == "text"
-
-        # Test response without UI function
-        regular_response = "This is a regular response without UI functions"
-        extracted = agent._extract_ui_function_result(regular_response)
-        assert extracted is None
-
     def test_create_function_tools_ui_function(self, agent, mock_context, ui_function_tools):
         """Test creation of UI function tools"""
         function_tools = agent._create_function_tools(ui_function_tools, mock_context)

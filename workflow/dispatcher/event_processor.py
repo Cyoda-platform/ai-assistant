@@ -335,7 +335,7 @@ class EventProcessor:
         if config_type in ("function", "prompt", "agent"):
 
             if response and response != "None":
-                if isinstance(response, str) and response.strip().startswith('{\"type\": \"ui_function\"'):
+                if isinstance(response, str) and self.check_ui_function(response):
                     response = json.loads(response)
                     notification = FlowEdgeMessage(
                         publish=config.get("publish", False),
@@ -368,6 +368,10 @@ class EventProcessor:
                                       last_modified=get_current_timestamp_num())
             await self.add_edge_message(message=message, flow=finished_flow,
                                         user_id=entity.user_id)
+
+    def check_ui_function(self, response):
+        response = response.strip()
+        return response.startswith('{\"type\": \"ui_function\"')
 
     async def add_edge_message(self, message: FlowEdgeMessage, flow: List[FlowEdgeMessage], user_id: str) -> FlowEdgeMessage:
         """
