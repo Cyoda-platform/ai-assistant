@@ -4,8 +4,15 @@ import asyncio
 from typing import Dict, Any, List, Optional, Union, Type
 import os
 
-import jsonschema
-from jsonschema import ValidationError
+try:
+    import jsonschema
+    from jsonschema import ValidationError
+    JSONSCHEMA_AVAILABLE = True
+except ImportError:
+    jsonschema = None
+    ValidationError = Exception
+    JSONSCHEMA_AVAILABLE = False
+
 from pydantic import BaseModel
 
 # OpenAI Agents SDK imports
@@ -79,7 +86,7 @@ class OpenAiSdkAgent:
                         except json.JSONDecodeError as e:
                             return f"Invalid JSON arguments: {e}"
 
-                        # Handle UI functions - return clean JSON directly like ADK agent
+                        # Handle UI functions - return clean JSON directly
                         if name.startswith(const.UI_FUNCTION_PREFIX):
                             logger.debug(f"Handling UI function: {name}")
                             ui_json = json.dumps({
@@ -87,7 +94,10 @@ class OpenAiSdkAgent:
                                 "function": name,
                                 **kwargs
                             })
-                            return ui_json
+                            # Convert to single quotes format as requested
+                            ui_json_single_quotes = ui_json.replace('"', "'")
+                            logger.debug(f"UI function JSON: {ui_json_single_quotes}")
+                            return ui_json_single_quotes
 
                         # Execute regular function
                         if name not in context.methods_dict:
@@ -132,67 +142,114 @@ class OpenAiSdkAgent:
         logger.info(f"Created {len(function_tools)} function tools")
         return function_tools
 
-    def _create_output_type_from_schema(self, schema: dict) -> Type[BaseModel]:
+    def _sanitize_schema_for_openai(self, schema: dict) -> dict:
         """
-        Create a Pydantic model from JSON schema for structured outputs.
-        Following OpenAI Agents SDK best practices for output_type.
+        Sanitize JSON schema to be compatible with OpenAI's structured outputs.
+        OpenAI has restrictions on certain JSON schema features.
+        """
+        def clean_schema_recursive(obj):
+            if isinstance(obj, dict):
+                cleaned = {}
+                for key, value in obj.items():
+                    # Remove unsupported features
+                    if key in ['default', 'oneOf', 'anyOf', 'allOf', 'not', 'if', 'then', 'else']:
+                        logger.debug(f"Removing unsupported schema feature: {key}")
+                        continue
+
+                    # Handle specific cases
+                    if key == 'type' and isinstance(value, list):
+                        # Convert type arrays to single type (take first)
+                        cleaned[key] = value[0] if value else 'string'
+                    elif key == 'additionalProperties':
+                        # OpenAI requires explicit false for additionalProperties
+                        cleaned[key] = False
+                    else:
+                        cleaned[key] = clean_schema_recursive(value)
+                return cleaned
+            elif isinstance(obj, list):
+                return [clean_schema_recursive(item) for item in obj]
+            else:
+                return obj
+
+        sanitized = clean_schema_recursive(schema)
+
+        # Ensure required top-level properties
+        if 'type' not in sanitized:
+            sanitized['type'] = 'object'
+        if 'additionalProperties' not in sanitized:
+            sanitized['additionalProperties'] = False
+
+        return sanitized
+
+    def _create_openai_response_format(self, schema: dict) -> dict:
+        """
+        Create proper OpenAI response_format structure for structured outputs.
+        OpenAI expects: {"type": "json_schema", "json_schema": {"name": "...", "schema": {...}}}
         """
         try:
-            from pydantic import create_model
+            # Sanitize schema for OpenAI compatibility
+            sanitized_schema = self._sanitize_schema_for_openai(schema)
 
-            # Extract properties and create Pydantic fields
-            properties = schema.get('properties', {})
-            required_fields = schema.get('required', [])
+            # Create proper OpenAI response_format structure
+            response_format = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": sanitized_schema.get('title', 'response'),
+                    "schema": sanitized_schema,
+                    "strict": True  # Enable strict mode for better validation
+                }
+            }
 
-            # Build field definitions for Pydantic
-            field_definitions = {}
-            for field_name, field_def in properties.items():
-                field_type = str  # Default to string
-
-                # Map JSON schema types to Python types
-                json_type = field_def.get('type', 'string')
-                if json_type == 'integer':
-                    field_type = int
-                elif json_type == 'number':
-                    field_type = float
-                elif json_type == 'boolean':
-                    field_type = bool
-                elif json_type == 'array':
-                    field_type = List[str]  # Simplified array handling
-
-                # Handle required vs optional fields
-                if field_name in required_fields:
-                    field_definitions[field_name] = (field_type, ...)
-                else:
-                    field_definitions[field_name] = (Optional[field_type], None)
-
-            # Create dynamic Pydantic model
-            model_name = schema.get('title', 'ResponseModel')
-            return create_model(model_name, **field_definitions)
+            logger.debug(f"Created OpenAI response_format: {response_format}")
+            return response_format
 
         except Exception as e:
-            logger.warning(f"Failed to create Pydantic model from schema: {e}")
-            # Fallback to a simple string response
-            return str
+            logger.warning(f"Failed to create OpenAI response_format: {e}")
+            # Fallback to simple JSON mode
+            return {"type": "json_object"}
 
     def _create_agent(self, tools: List[FunctionTool], model: Any,
                      instructions: str, tool_choice: str = "auto",
-                     response_format: Optional[Dict[str, Any]] = None) -> Agent:
+                     response_format: Optional[Dict[str, Any]] = None,
+                     original_tools: Optional[List[Dict[str, Any]]] = None) -> Agent:
         """
         Create an OpenAI Agents SDK Agent following modern best practices.
-        Supports response_format for structured outputs.
+        Supports response_format for structured outputs using proper OpenAI format.
         """
         try:
             # Extract model name
             model_name = getattr(model, 'model_name', 'gpt-4o-mini')
 
-            # Create model settings following SDK best practices
-            model_settings = ModelSettings(
-                tool_choice=tool_choice,
-                temperature=getattr(model, 'temperature', 0.7),
-                max_tokens=getattr(model, 'max_tokens', None),
-                top_p=getattr(model, 'top_p', None)
-            )
+            # Identify UI function names for stop_at_tool_names from original tools
+            ui_function_names = []
+            if original_tools:
+                for tool in original_tools:
+                    if tool.get("type") == "function":
+                        func_name = tool.get("function", {}).get("name", "")
+                        if func_name.startswith(const.UI_FUNCTION_PREFIX):
+                            ui_function_names.append(func_name)
+            else:
+                # Fallback: extract from FunctionTool objects
+                for tool in tools or []:
+                    if hasattr(tool, 'name') and tool.name.startswith(const.UI_FUNCTION_PREFIX):
+                        ui_function_names.append(tool.name)
+
+            # Create model settings with tool_use_behavior for UI functions
+            model_settings_kwargs = {
+                'tool_choice': tool_choice,
+                'temperature': getattr(model, 'temperature', 0.7),
+                'max_tokens': getattr(model, 'max_tokens', None),
+                'top_p': getattr(model, 'top_p', None)
+            }
+
+            # Add tool_use_behavior to stop execution when UI functions are called
+            if ui_function_names:
+                model_settings_kwargs['tool_use_behavior'] = {
+                    "stop_at_tool_names": ui_function_names
+                }
+                logger.debug(f"Configured stop_at_tool_names for UI functions: {ui_function_names}")
+
+            model_settings = ModelSettings(**model_settings_kwargs)
 
             # Handle response_format for structured outputs
             agent_kwargs = {
@@ -204,10 +261,17 @@ class OpenAiSdkAgent:
 
             # Add response format support
             if response_format and response_format.get("schema"):
-                # Convert JSON schema to Pydantic model for output_type
-                output_type = self._create_output_type_from_schema(response_format["schema"])
-                agent_kwargs['output_type'] = output_type
-                logger.info("Using structured output with response schema")
+                # Create proper OpenAI response_format instead of using output_type
+                openai_response_format = self._create_openai_response_format(response_format["schema"])
+
+                # Update model settings with response format
+                model_settings.response_format = openai_response_format
+                agent_kwargs['model_settings'] = model_settings
+
+                # Add tools even with response format (OpenAI supports both)
+                agent_kwargs['tools'] = tools
+
+                logger.info(f"Using structured output with OpenAI response_format: {openai_response_format['type']}")
             else:
                 # Normal mode with tools
                 agent_kwargs['tools'] = tools
@@ -314,6 +378,90 @@ class OpenAiSdkAgent:
 
         return None
 
+    async def _validate_with_schema(self, content: str, schema: dict,
+                                   attempt: int, max_retries: int) -> tuple[Optional[str], Optional[str]]:
+        """
+        Validate response against JSON schema.
+
+        Args:
+            content: Response content to validate
+            schema: JSON schema for validation
+            attempt: Current attempt number
+            max_retries: Maximum number of retries
+
+        Returns:
+            Tuple of (validated_content, error_message)
+        """
+        try:
+            if not JSONSCHEMA_AVAILABLE:
+                logger.warning("jsonschema not available, skipping validation")
+                return content, None
+
+            parsed = json.loads(content)
+            jsonschema.validate(instance=parsed, schema=schema)
+            return content, None
+        except (json.JSONDecodeError, ValidationError) as e:
+            error = str(e)
+            error = (error[:100] + '...') if len(error) > 100 else error
+            msg = f"Validation failed on attempt {attempt}/{max_retries}: {error}. Please return correct JSON."
+            if attempt > 2:
+                msg = f"{msg} If the task is too complex, simplify but ensure valid JSON."
+            return None, msg
+
+    async def _validate_and_retry_schema(self, response: str, schema: dict,
+                                        tools: List[FunctionTool], model: Any,
+                                        instructions: str, tool_choice: str,
+                                        messages: List[Dict[str, str]]) -> str:
+        """
+        Validate response against schema and retry if needed.
+        """
+        for attempt in range(1, self.max_calls + 1):
+            valid_str, error = await self._validate_with_schema(
+                response, schema, attempt, self.max_calls
+            )
+            if valid_str is not None:
+                return valid_str
+
+            # If validation failed, retry with correction
+            logger.warning(f"Schema validation failed on attempt {attempt}: {error}")
+
+            if attempt < self.max_calls:
+                try:
+                    # Create correction message
+                    correction_messages = messages + [{
+                        "role": "user",
+                        "content": f"The previous response had validation errors: {error}"
+                    }]
+
+                    # Create new agent for retry
+                    retry_agent = self._create_agent(tools, model, instructions, tool_choice,
+                                                   {"schema": schema})
+
+                    # Create run configuration
+                    run_config = RunConfig(
+                        workflow_name="OpenAI_SDK_Agent_Retry",
+                        trace_id=f"retry_{attempt}"
+                    )
+
+                    # Run retry
+                    retry_result = await Runner.run(
+                        starting_agent=retry_agent,
+                        input=correction_messages,
+                        session=None,
+                        run_config=run_config,
+                        max_turns=1
+                    )
+
+                    response = str(retry_result.final_output)
+
+                except Exception as e:
+                    logger.exception(f"Error during validation retry {attempt}: {e}")
+                    break
+
+        # If all retries failed, return the last response with a warning
+        logger.error(f"Schema validation failed after {self.max_calls} attempts. Returning last response.")
+        return response
+
     def _is_ui_function_json(self, response: str) -> bool:
         """Check if the response is a direct UI function JSON (matching ADK agent logic)."""
         try:
@@ -367,27 +515,10 @@ class OpenAiSdkAgent:
             has_ui_functions = any(tool.get("function", {}).get("name", "").startswith(const.UI_FUNCTION_PREFIX)
                                  for tool in (tools or []) if tool and tool.get("type") == "function")
 
-            if has_ui_functions:
-                instructions = """You are a helpful assistant that can use tools to complete tasks.
+            # Simplified instructions since tool_use_behavior handles UI function stopping
+            instructions = "You are a helpful assistant that can use tools to complete tasks."
 
-CRITICAL INSTRUCTION FOR UI FUNCTIONS:
-When you call a function that starts with 'ui_function_', you MUST return ONLY the raw JSON output from that function call.
-
-ABSOLUTELY NO explanatory text, confirmation messages, greetings, or additional content of any kind.
-ABSOLUTELY NO phrases like "Here's the information you requested" or "Let me know if you need anything else".
-RETURN ONLY THE EXACT JSON STRING FROM THE FUNCTION CALL.
-
-Example of CORRECT response for UI function:
-{"type": "ui_function", "function": "ui_function_list_all_technical_users", "method": "GET", "path": "/api/clients", "response_format": "text"}
-
-Example of INCORRECT response for UI function:
-Here's the M2M user information you requested: {"type": "ui_function", ...}
-
-For regular functions, you may provide explanatory text as normal."""
-            else:
-                instructions = "You are a helpful assistant that can use tools to complete tasks."
-
-            agent = self._create_agent(function_tools, model, instructions, tool_choice, response_format)
+            agent = self._create_agent(function_tools, model, instructions, tool_choice, response_format, tools)
 
             # Always use full message history - no sessions needed since we have all context in messages
             agent_input = adapted_messages if adapted_messages else [{"role": "user", "content": "Please help me."}]
@@ -414,30 +545,45 @@ For regular functions, you may provide explanatory text as normal."""
             logger.info(f"Agent completed successfully")
             logger.debug(f"Raw agent response: {response}")
 
-            # For UI functions, prioritize JSON extraction over everything else
-            if has_ui_functions:
-                # First check if the response itself is a UI function JSON
-                if self._is_ui_function_json(response.strip()):
-                    logger.debug("Response is direct UI function JSON")
-                    return response.strip()
+            # Check if execution was stopped due to UI function tool call
+            if hasattr(result, 'tool_calls') and result.tool_calls:
+                # Check if any tool call was a UI function
+                for call in result.tool_calls:
+                    if hasattr(call, 'function') and call.function.name.startswith(const.UI_FUNCTION_PREFIX):
+                        logger.debug(f"Execution stopped at UI function: {call.function.name}")
 
-                # Then try to extract UI function result from within the response
-                ui_function_result = self._extract_ui_function_result(response)
-                if ui_function_result:
-                    logger.debug(f"Extracted UI function result: {ui_function_result}")
-                    return ui_function_result
+                        # Parse arguments if available
+                        args = {}
+                        if hasattr(call.function, 'arguments') and call.function.arguments:
+                            try:
+                                args = json.loads(call.function.arguments)
+                            except json.JSONDecodeError:
+                                logger.warning(f"Failed to parse UI function arguments: {call.function.arguments}")
 
-                # If we have UI functions but couldn't extract JSON, log warning
-                logger.warning(f"UI functions available but no UI function JSON found in response: {response}")
-            else:
-                # For non-UI function responses, still check for UI function results
-                ui_function_result = self._extract_ui_function_result(response)
-                if ui_function_result:
-                    logger.debug(f"Extracted UI function result: {ui_function_result}")
-                    return ui_function_result
+                        # Return UI function JSON directly (single quotes as requested)
+                        if isinstance(args, dict):
+                            ui_json = json.dumps({"type": const.UI_FUNCTION_PREFIX, "function": call.function.name, **args})
+                        else:
+                            ui_json = json.dumps({"type": const.UI_FUNCTION_PREFIX, "function": call.function.name})
 
-            # When using output_type, SDK handles structured output validation automatically
-            # No manual schema validation needed
+                        # Convert to single quotes format
+                        ui_json_single_quotes = ui_json.replace('"', "'")
+                        logger.debug(f"UI function JSON: {ui_json_single_quotes}")
+                        return ui_json_single_quotes
+
+            # Check if the response itself contains UI function JSON
+            if self._is_ui_function_json(response.strip()):
+                logger.debug("Response is direct UI function JSON")
+                return response.strip()
+
+            # Handle schema validation for structured outputs
+            if response_format and response_format.get("schema"):
+                validated_response = await self._validate_and_retry_schema(
+                    response, response_format["schema"], function_tools, model,
+                    instructions, tool_choice, adapted_messages
+                )
+                return validated_response
+
             return response
 
         except MaxTurnsExceeded as e:
