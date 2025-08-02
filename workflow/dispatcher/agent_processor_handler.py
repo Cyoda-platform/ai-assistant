@@ -25,10 +25,10 @@ logger = logging.getLogger(__name__)
 class AgentProcessorHandler:
     """
     Handler for AgentProcessor execution within the workflow dispatcher.
-    
+
     This class bridges the new processor architecture with the existing AI agent
     infrastructure by:
-    1. Loading agent configurations from the agents/ directory
+    1. Loading agent configurations from the agent_configs/ directory
     2. Converting them to the format expected by AIAgentHandler
     3. Managing the execution flow and result processing
     """

@@ -103,7 +103,7 @@ class WorkflowMigrator:
 
     def _create_directories(self):
         """Create necessary output directories."""
-        directories = ["workflows", "agents", "tools", "messages"]
+        directories = ["workflows", "agent_configs", "tools", "messages", "prompts"]
         for dir_name in directories:
             dir_path = self.output_dir / dir_name
             dir_path.mkdir(parents=True, exist_ok=True)
@@ -264,7 +264,7 @@ class WorkflowMigrator:
             agent_config = {
                 "type": "agent",
                 "model": config.get("model", {}),
-                "messages": config.get("messages", [])
+                "messages": self._process_messages(config.get("messages", []), agent_name, messages)
             }
 
             # Add agent-level fields
@@ -275,7 +275,7 @@ class WorkflowMigrator:
 
             # Add tools if present
             if "tools" in config:
-                agent_config["tools"] = config["tools"]
+                agent_config["tools"] = self._process_tools(config["tools"], tools)
                 # Extract tool definitions
                 for tool in config["tools"]:
                     if tool.get("type") == "function" and "function" in tool:
@@ -522,10 +522,80 @@ class WorkflowMigrator:
 
         return None
 
+    def _process_messages(self, messages: List[Dict[str, Any]], agent_name: str,
+                         messages_dict: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Process messages and extract content to separate files.
+
+        Args:
+            messages: List of message configurations
+            agent_name: Name of the agent
+            messages_dict: Dictionary to store extracted messages
+
+        Returns:
+            List of processed messages with file references
+        """
+        processed_messages = []
+
+        for i, message in enumerate(messages):
+            processed_message = message.copy()
+
+            # If message has inline content, extract it to a file
+            if "content" in message:
+                content = message["content"]
+
+                # Handle both string and list content
+                if isinstance(content, list):
+                    content = "\n".join(content)
+
+                # Create message file path
+                message_file_path = f"prompts/{agent_name}/message_{i}.md"
+
+                # Store message content for saving
+                messages_dict[message_file_path] = {
+                    "type": "prompt",
+                    "content": content
+                }
+
+                # Replace inline content with file reference
+                processed_message = {
+                    "role": message.get("role", "user"),
+                    "content_from_file": message_file_path
+                }
+
+            processed_messages.append(processed_message)
+
+        return processed_messages
+
+    def _process_tools(self, tools: List[Dict[str, Any]], tools_dict: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Process tools and convert to name references.
+
+        Args:
+            tools: List of tool configurations
+            tools_dict: Dictionary to store extracted tools
+
+        Returns:
+            List of processed tools with just name references
+        """
+        processed_tools = []
+
+        for tool in tools:
+            if tool.get("type") == "function" and "function" in tool:
+                func_def = tool["function"]
+                if "name" in func_def:
+                    # Add just the name reference
+                    processed_tools.append({"name": func_def["name"]})
+            elif "name" in tool:
+                # Already in correct format
+                processed_tools.append({"name": tool["name"]})
+
+        return processed_tools
+
     def _save_agents(self, agents: Dict[str, Dict[str, Any]]):
         """Save extracted agent configurations."""
         for agent_name, agent_config in agents.items():
-            agent_dir = self.output_dir / "agents" / agent_name
+            agent_dir = self.output_dir / "agent_configs" / agent_name
             agent_dir.mkdir(parents=True, exist_ok=True)
 
             agent_file = agent_dir / "agent.json"
@@ -542,13 +612,13 @@ class WorkflowMigrator:
         for message_path, message_config in messages.items():
             # Create directory structure
             path_parts = message_path.split('/')
-            message_dir = self.output_dir / "messages"
+            message_dir = self.output_dir
             for part in path_parts[:-1]:
                 message_dir = message_dir / part
             message_dir.mkdir(parents=True, exist_ok=True)
 
-            # Save as markdown file
-            message_file = message_dir / f"{path_parts[-1]}.md"
+            # Save as markdown file (path already includes .md extension)
+            message_file = message_dir / path_parts[-1]
             content = f"# {message_config['type'].title()}\n\n{message_config['content']}"
 
             with open(message_file, 'w') as f:

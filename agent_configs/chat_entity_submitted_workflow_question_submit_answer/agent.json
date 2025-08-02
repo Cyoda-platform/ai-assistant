@@ -8,7 +8,7 @@
   "messages": [
     {
       "role": "user",
-      "content_from_file": "prompts/chat_entity/chat_entity_submitted_workflow_question_submit_answer_prompt_0.md"
+      "content_from_file": "prompts/chat_entity_submitted_workflow_question_submit_answer/message_0.md"
     }
   ],
   "publish": true,

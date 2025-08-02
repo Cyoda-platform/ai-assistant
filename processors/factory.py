@@ -212,17 +212,17 @@ class ProcessorFactory:
     def _validate_agent_processor(self, processor: AgentProcessor) -> Dict[str, any]:
         """Validate agent processor configuration."""
         result = {"valid": True, "errors": [], "warnings": []}
-        
-        # Check if agents directory exists
-        agents_dir = processor.base_path / "agents"
+
+        # Check if agent_configs directory exists
+        agents_dir = processor.base_path / "agent_configs"
         if not agents_dir.exists():
-            result["warnings"].append("Agents directory not found")
+            result["warnings"].append("Agent configs directory not found")
         else:
             # List available agents
             agents = processor.agent_loader.list_agents()
             if not agents:
-                result["warnings"].append("No agents found in agents directory")
-        
+                result["warnings"].append("No agents found in agent_configs directory")
+
         return result
     
     def _validate_function_processor(self, processor: FunctionProcessor) -> Dict[str, any]:
