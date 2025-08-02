@@ -18,7 +18,20 @@ except ImportError:
     Agent = Any
     Runner = Any
     InMemorySessionService = Any
-    types = Any
+    # Create mock types for when ADK is not available
+    class MockTypes:
+        class Content:
+            def __init__(self, role, parts):
+                self.role = role
+                self.parts = parts
+        class Part:
+            def __init__(self, text):
+                self.text = text
+        class GenerateContentConfig:
+            def __init__(self, **kwargs):
+                for k, v in kwargs.items():
+                    setattr(self, k, v)
+    types = MockTypes()
     ADK_AVAILABLE = False
 
 from common.config.config import config
@@ -142,7 +155,14 @@ class AdkAgent:
             Configured Agent object
         """
         if not ADK_AVAILABLE:
-            raise RuntimeError("Google ADK not available")
+            logger.warning("Google ADK not available, returning mock agent")
+            class MockAgent:
+                def __init__(self, model_name, tools):
+                    self.model = model_name
+                    self.tools = tools
+                    self.name = "mock_agent"
+            model_config = self._extract_model_config(model)
+            return MockAgent(model_config['name'], function_tools)
 
         # Extract model configuration
         model_config = self._extract_model_config(model)
@@ -275,6 +295,10 @@ Use the conversation history in this session to provide contextual responses."""
 
     def _convert_to_adk_content(self, adapted_messages: List[Dict[str, str]]) -> List[Any]:
         """Convert adapted messages to ADK Content format."""
+        if not ADK_AVAILABLE:
+            logger.warning("ADK not available, returning adapted messages as-is")
+            return adapted_messages
+
         adk_messages = []
         for message in adapted_messages:
             role = message.get('role', 'user')
@@ -297,6 +321,13 @@ Use the conversation history in this session to provide contextual responses."""
 
     async def _create_session(self, technical_id: str, adk_messages: List[Any]) -> Any:
         """Create ADK session with proper initialization."""
+        if not ADK_AVAILABLE:
+            logger.warning("ADK not available, returning mock session")
+            class MockSession:
+                def __init__(self, session_id):
+                    self.id = session_id
+            return MockSession(f"adk_session_{technical_id}")
+
         session_service = InMemorySessionService()
         session_id = f"adk_session_{technical_id}"
 
@@ -314,29 +345,49 @@ Use the conversation history in this session to provide contextual responses."""
         # rather than trying to build it incrementally
         context_parts = []
 
-        for i, msg in enumerate(adk_messages[:-1]):  # All but the last message
-            role_text = "User" if msg.role == 'user' else "Assistant"
-            for part in msg.parts:
-                if hasattr(part, 'text'):
-                    context_parts.append(f"{role_text}: {part.text}")
+        if not ADK_AVAILABLE:
+            # Handle dict format when ADK is not available
+            for i, msg in enumerate(adk_messages[:-1]):  # All but the last message
+                role_text = "User" if msg.get('role') == 'user' else "Assistant"
+                content = msg.get('content', '')
+                context_parts.append(f"{role_text}: {content}")
 
-        # Add the latest message
-        latest_msg = adk_messages[-1]
-        latest_text = ""
-        for part in latest_msg.parts:
-            if hasattr(part, 'text'):
-                latest_text += part.text
+            # Add the latest message
+            latest_msg = adk_messages[-1]
+            latest_text = latest_msg.get('content', '')
 
-        # Combine context with latest message
-        if context_parts:
-            full_context = "Previous conversation:\n" + "\n".join(context_parts) + f"\n\nCurrent request: {latest_text}"
+            # Combine context with latest message
+            if context_parts:
+                full_context = "Previous conversation:\n" + "\n".join(context_parts) + f"\n\nCurrent request: {latest_text}"
+            else:
+                full_context = latest_text
+
+            return {"role": latest_msg.get('role', 'user'), "content": full_context}
         else:
-            full_context = latest_text
+            # Handle ADK Content objects
+            for i, msg in enumerate(adk_messages[:-1]):  # All but the last message
+                role_text = "User" if msg.role == 'user' else "Assistant"
+                for part in msg.parts:
+                    if hasattr(part, 'text'):
+                        context_parts.append(f"{role_text}: {part.text}")
 
-        return types.Content(
-            role=latest_msg.role,
-            parts=[types.Part(text=full_context)]
-        )
+            # Add the latest message
+            latest_msg = adk_messages[-1]
+            latest_text = ""
+            for part in latest_msg.parts:
+                if hasattr(part, 'text'):
+                    latest_text += part.text
+
+            # Combine context with latest message
+            if context_parts:
+                full_context = "Previous conversation:\n" + "\n".join(context_parts) + f"\n\nCurrent request: {latest_text}"
+            else:
+                full_context = latest_text
+
+            return types.Content(
+                role=latest_msg.role,
+                parts=[types.Part(text=full_context)]
+            )
 
     async def _process_agent_result(self, result: Any, response_format: Optional[Dict[str, Any]],
                                    function_tools: List[Any], model: Any,

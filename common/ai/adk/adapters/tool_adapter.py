@@ -11,10 +11,12 @@ import asyncio
 from typing import List, Dict, Any, Optional, Callable, Union, TYPE_CHECKING
 
 try:
-    from google.adk.tools import FunctionTool
+    import inspect
+    from typing import Literal
     ADK_AVAILABLE = True
 except ImportError:
-    FunctionTool = Any
+    inspect = Any
+    Literal = Any
     ADK_AVAILABLE = False
 
 if TYPE_CHECKING:
@@ -42,17 +44,20 @@ class AdkToolAdapter(ToolAdapterInterface):
         """
         self.ui_function_handler = ui_function_handler
 
-    def create_function_tools(self, tools: List[Dict[str, Any]], 
-                             context: Any) -> List[FunctionTool]:
+    def create_function_tools(self, tools: List[Dict[str, Any]],
+                             context: Any) -> List[Any]:
         """
-        Convert JSON tool definitions to Google ADK FunctionTool objects.
-        
+        Convert JSON tool definitions to ADK-compatible functions.
+
+        ADK doesn't use FunctionTool objects - it uses regular Python functions
+        that it wraps automatically.
+
         Args:
             tools: List of JSON tool definitions
             context: Execution context for dependency injection
-            
+
         Returns:
-            List of FunctionTool objects
+            List of function objects that ADK can use directly
         """
         if not ADK_AVAILABLE:
             logger.error("Google ADK not available")
@@ -66,31 +71,34 @@ class AdkToolAdapter(ToolAdapterInterface):
 
             function_def = tool.get("function", {})
             tool_name = function_def.get("name")
-            
-            # Create the tool function with proper error handling
-            tool_function = self._create_tool_function(tool_name, context)
-            
-            # Create FunctionTool with enhanced configuration
-            function_tool = self._build_function_tool(function_def, tool_function)
-            
+
+            # Allow UI functions even if they're not in methods_dict
+            if (tool_name not in context.methods_dict and
+                not self.ui_function_handler.is_ui_function(tool_name)):
+                logger.warning(f"Tool {tool_name} not found in methods_dict")
+                continue
+
+            # Create ADK-compatible function using proper patterns
+            function_tool = self._create_adk_function(function_def, context)
+
             if function_tool:
                 function_tools.append(function_tool)
-                logger.debug(f"Created ADK function tool: {tool_name}")
+                logger.debug(f"Created ADK function: {tool_name}")
 
-        logger.info(f"Created {len(function_tools)} ADK function tools")
+        logger.info(f"Created {len(function_tools)} ADK functions")
         return function_tools
 
     def create_function_tool_from_json(self, tool_json: Dict[str, Any],
-                                      on_invoke_tool: Callable) -> Optional[FunctionTool]:
+                                      on_invoke_tool: Callable) -> Optional[Any]:
         """
-        Create a single FunctionTool from JSON definition for Google ADK.
-        
+        Create a single function from JSON definition for Google ADK.
+
         Args:
             tool_json: JSON tool definition
             on_invoke_tool: Function to handle tool invocation
-            
+
         Returns:
-            FunctionTool object or None if invalid
+            Function object or None if invalid
         """
         if not ADK_AVAILABLE:
             logger.error("Google ADK not available")
@@ -98,28 +106,11 @@ class AdkToolAdapter(ToolAdapterInterface):
 
         if not self.validate_tool_definition(tool_json):
             return None
-            
+
         function_def = tool_json.get("function", {})
-        tool_name = function_def.get("name")
-        
-        if not tool_name:
-            logger.warning(f"Tool missing name: {tool_json}")
-            return None
-            
-        description = function_def.get("description", f"Execute {tool_name}")
-        params_schema = function_def.get("parameters", {"type": "object", "properties": {}})
-        
-        # Enhance description for UI functions
-        if self.ui_function_handler.is_ui_function(tool_name):
-            description = self.ui_function_handler.enhance_ui_function_description(description)
-        
-        # Google ADK FunctionTool creation
-        return FunctionTool(
-            name=tool_name,
-            description=description,
-            parameters=params_schema,  # ADK uses 'parameters' instead of 'params_json_schema'
-            func=on_invoke_tool
-        )
+
+        # Create ADK-compatible function
+        return self._create_adk_function(function_def, None)
 
     def validate_tool_definition(self, tool: Dict[str, Any]) -> bool:
         """
@@ -196,68 +187,143 @@ class AdkToolAdapter(ToolAdapterInterface):
 
         return str(result)
 
-    def _create_tool_function(self, tool_name: str, context: Any):
+    def _create_adk_function(self, function_def: Dict[str, Any], context: Any) -> Optional[Any]:
         """
-        Create a tool function following Google ADK patterns.
-        
-        Args:
-            tool_name: Name of the tool
-            context: Execution context
-            
-        Returns:
-            Async tool function for Google ADK
-        """
-        async def tool_function(args: Dict[str, Any]) -> str:
-            """Tool function implementation following ADK best practices"""
-            try:
-                # Google ADK passes arguments as dict directly, not JSON string
-                kwargs = args if isinstance(args, dict) else {}
+        Create ADK-compatible function using proper ADK patterns.
 
-                # Handle UI functions with clean JSON output
-                if self.ui_function_handler.is_ui_function(tool_name):
-                    return self.ui_function_handler.handle_ui_function(tool_name, kwargs)
-
-                # Execute regular function with proper context
-                return await self.execute_function(tool_name, kwargs, context)
-
-            except Exception as e:
-                logger.exception(f"Error executing ADK tool {tool_name}: {e}")
-                return f"Tool execution failed: {str(e)}"
-
-        return tool_function
-
-    def _build_function_tool(self, function_def: Dict[str, Any], tool_function) -> Optional[FunctionTool]:
-        """
-        Build FunctionTool object with proper configuration for Google ADK.
-        
         Args:
             function_def: Function definition from JSON
-            tool_function: Tool function implementation
-            
+            context: Execution context
+
         Returns:
-            FunctionTool object or None if creation fails
+            Function object that ADK can use directly
         """
         try:
             tool_name = function_def.get("name")
             description = function_def.get("description", f"Execute {tool_name}")
-            
-            # Enhanced description for UI functions
+            parameters = function_def.get("parameters", {"type": "object", "properties": {}})
+
+            if not tool_name:
+                logger.warning(f"Function missing name: {function_def}")
+                return None
+
+            # Extract parameter information from the JSON schema
+            param_props = parameters.get("properties", {})
+            required_params = parameters.get("required", [])
+
+            # Build enhanced description with enum information
+            enhanced_description = description
+            enum_info = []
+            for param_name, param_info in param_props.items():
+                param_enum = param_info.get("enum")
+                if param_enum:
+                    enum_info.append(f"{param_name} must be one of: {param_enum}")
+
+            if enum_info:
+                enhanced_description += f"\n\nParameter constraints:\n" + "\n".join(f"- {info}" for info in enum_info)
+
+            # Enhance description for UI functions
             if self.ui_function_handler.is_ui_function(tool_name):
-                description = self.ui_function_handler.enhance_ui_function_description(description)
+                enhanced_description = self.ui_function_handler.enhance_ui_function_description(enhanced_description)
 
-            # Get parameters schema with validation
-            params_schema = function_def.get("parameters", {})
-            if not isinstance(params_schema, dict):
-                logger.warning(f"Invalid parameters schema for {tool_name}, using empty schema")
-                params_schema = {"type": "object", "properties": {}}
+            # Create parameter list for the function signature
+            sig_params = []
+            for param_name, param_info in param_props.items():
+                param_type = param_info.get("type", "string")
+                param_enum = param_info.get("enum")
 
-            # Google ADK FunctionTool creation
-            return FunctionTool(
-                name=tool_name,
-                description=description,
-                parameters=params_schema,
-                func=tool_function
-            )
+                # Determine annotation based on type
+                if param_type == "string":
+                    annotation = str
+                elif param_type == "integer":
+                    annotation = int
+                elif param_type == "number":
+                    annotation = float
+                elif param_type == "boolean":
+                    annotation = bool
+                else:
+                    annotation = str
+
+                # Handle enum constraints
+                if param_enum:
+                    try:
+                        if len(param_enum) == 1:
+                            annotation = Literal[param_enum[0]]
+                        else:
+                            annotation = Literal[tuple(param_enum)]
+                    except (ImportError, TypeError):
+                        annotation = str
+                    logger.debug(f"Parameter {param_name} has enum constraint: {param_enum}")
+
+                # Create parameter with proper annotation
+                if param_name in required_params:
+                    param = inspect.Parameter(param_name, inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=annotation)
+                else:
+                    param = inspect.Parameter(param_name, inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=annotation, default=None)
+                sig_params.append(param)
+
+            # Create the function signature
+            sig = inspect.Signature(sig_params, return_annotation=str)
+
+            # Create the actual function
+            def tool_function(*args, **kwargs) -> str:
+                """Dynamically created tool function for ADK"""
+                try:
+                    # Bind arguments to parameters
+                    bound_args = sig.bind(*args, **kwargs)
+                    bound_args.apply_defaults()
+
+                    logger.debug(f"Tool {tool_name} called with args: {bound_args.arguments}")
+
+                    # Handle UI functions with special handling
+                    if self.ui_function_handler.is_ui_function(tool_name):
+                        logger.debug(f"Handling UI function: {tool_name}")
+                        return self.ui_function_handler.handle_ui_function(tool_name, bound_args.arguments)
+
+                    # Execute regular function
+                    if context and context.has_method(tool_name):
+                        # Inject context parameters
+                        final_kwargs = bound_args.arguments.copy()
+                        final_kwargs.update(context.get_context_params())
+
+                        method = context.get_method(tool_name)
+                        if asyncio.iscoroutinefunction(method):
+                            # For async functions, we need to handle them properly
+                            try:
+                                loop = asyncio.get_event_loop()
+                                if loop.is_running():
+                                    # If we're already in an async context, we can't use run_until_complete
+                                    # Instead, we'll need to await this properly
+                                    logger.warning(f"Async function {tool_name} called from sync context, this may cause issues")
+                                    # Create a new event loop in a thread for this case
+                                    import concurrent.futures
+                                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                                        future = executor.submit(asyncio.run, method(context.cls_instance, **final_kwargs))
+                                        result = future.result()
+                                else:
+                                    result = loop.run_until_complete(method(context.cls_instance, **final_kwargs))
+                            except RuntimeError:
+                                # No event loop, create one
+                                result = asyncio.run(method(context.cls_instance, **final_kwargs))
+                        else:
+                            result = method(context.cls_instance, **final_kwargs)
+
+                        return str(result)
+                    else:
+                        return f"Function '{tool_name}' not found or no context provided"
+
+                except Exception as e:
+                    logger.exception(f"Error executing ADK tool {tool_name}: {e}")
+                    return f"Tool execution failed: {str(e)}"
+
+            # Set function metadata for ADK
+            tool_function.__name__ = tool_name
+            tool_function.__doc__ = enhanced_description
+            tool_function.__signature__ = sig
+
+            logger.debug(f"Created ADK function: {tool_name} with signature: {sig}")
+            return tool_function
+
         except Exception as e:
-            logger.exception(f"Error building ADK function tool for {function_def.get('name')}: {e}")
+            logger.exception(f"Error creating ADK function for {function_def.get('name')}: {e}")
             return None

@@ -18,17 +18,17 @@ class ToolAdapterInterface(ABC):
     """
 
     @abstractmethod
-    def create_function_tools(self, tools: List[Dict[str, Any]], 
+    def create_function_tools(self, tools: List[Dict[str, Any]],
                              context: Any) -> List[Any]:
         """
         Convert JSON tool definitions to agent-specific tool objects.
-        
+
         Args:
             tools: List of JSON tool definitions
             context: Execution context for dependency injection
-            
+
         Returns:
-            List of agent-specific tool objects
+            List of agent-specific tool objects (FunctionTool for OpenAI, functions for ADK)
         """
         pass
 
