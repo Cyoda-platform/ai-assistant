@@ -12,13 +12,13 @@ try:
     from google.adk.agents import Agent
     from google.adk.runners import Runner
     from google.adk.sessions import InMemorySessionService
-    from google.adk.models.lite_llm import LiteLlm
+    from google.genai import types
     ADK_AVAILABLE = True
 except ImportError:
     Agent = Any
     Runner = Any
     InMemorySessionService = Any
-    LiteLlm = Any
+    types = Any
     ADK_AVAILABLE = False
 
 from common.config.config import config
@@ -130,14 +130,14 @@ class AdkAgent:
                                 adapted_messages: List[Dict[str, str]],
                                 response_format: Optional[Dict[str, Any]]) -> Any:
         """
-        Create agent with proper configuration using adapters.
-        
+        Create agent with proper configuration using ADK patterns.
+
         Args:
             function_tools: List of FunctionTool objects
             model: Model configuration
             adapted_messages: Adapted message history
             response_format: Optional response format
-            
+
         Returns:
             Configured Agent object
         """
@@ -146,35 +146,77 @@ class AdkAgent:
 
         # Extract model configuration
         model_config = self._extract_model_config(model)
-        
-        # Create LiteLLM model for Google ADK
-        adk_model = LiteLlm(
-            model_name=model_config['name'],
+
+        # Create instructions based on response format and UI functions
+        instructions = self._create_instructions(response_format, function_tools)
+
+        # Create GenerateContentConfig for model settings
+        generate_content_config = types.GenerateContentConfig(
             temperature=model_config['temperature'],
-            max_tokens=model_config['max_tokens']
+            max_output_tokens=model_config['max_tokens'],
+            top_p=model_config['top_p'],
+            top_k=model_config['top_k']
         )
-        
-        # Create agent with Google ADK
+
+        # Create agent with Google ADK (use model name directly for Gemini)
         agent = Agent(
-            model=adk_model,
-            tools=function_tools,
-            system_instruction="You are a helpful assistant that can use tools to complete tasks."
+            model=model_config['name'],
+            name=f"workflow_agent_{hash(str(function_tools)) % 10000}",
+            description='Workflow assistant with tools support',
+            instruction=instructions,
+            generate_content_config=generate_content_config,
+            tools=function_tools
         )
-        
+
+        logger.info(f"Created ADK agent with model: {model_config['name']}")
         return agent
 
     def _extract_model_config(self, model: Any) -> Dict[str, Any]:
-        """Extract model configuration parameters."""
+        """Extract model configuration parameters and ensure Google/Gemini model."""
+        model_name = getattr(model, 'model_name', 'gemini-2.5-flash')
+
+        # ADK only supports Google/Gemini models, not OpenAI
+        if model_name.startswith(('gpt-', 'o1-', 'text-')):
+            logger.warning(f"OpenAI model {model_name} not supported by ADK, using gemini-2.5-flash")
+            model_name = 'gemini-2.5-flash'
+        elif not model_name.startswith(('gemini-', 'models/')):
+            logger.warning(f"Unknown model {model_name}, using gemini-2.5-flash")
+            model_name = 'gemini-2.5-flash'
+
         return {
-            'name': getattr(model, 'model_name', 'gpt-4o-mini'),
+            'name': model_name,
             'temperature': getattr(model, 'temperature', 0.7),
             'max_tokens': getattr(model, 'max_tokens', None),
-            'top_p': getattr(model, 'top_p', None)
+            'top_p': getattr(model, 'top_p', None),
+            'top_k': getattr(model, 'top_k', None)
         }
+
+    def _create_instructions(self, response_format: Optional[Dict[str, Any]],
+                           function_tools: List[Any]) -> str:
+        """Create appropriate instructions based on response format and tools."""
+        # Check for UI functions
+        has_ui_functions = any(
+            hasattr(tool, 'name') and tool.name.startswith('ui_function_')
+            for tool in function_tools
+        )
+
+        if response_format and response_format.get("schema"):
+            return """You are a helpful assistant that provides structured responses.
+Respond with a JSON object that matches the required schema."""
+        elif has_ui_functions:
+            return """You are a helpful assistant that can use tools to complete tasks.
+
+CRITICAL INSTRUCTION FOR UI FUNCTIONS:
+When you call a function that starts with 'ui_function_', you MUST return ONLY the raw JSON output from that function call. Do not add any explanatory text, confirmation messages, or additional content. Return the JSON exactly as provided by the function, nothing more, nothing less.
+
+For regular functions, you may provide explanatory text as normal."""
+        else:
+            return """You are a helpful assistant that can use tools to complete tasks.
+Use the conversation history in this session to provide contextual responses."""
 
     async def _execute_agent(self, agent: Any, adapted_messages: List[Dict[str, str]],
                             technical_id: str) -> Any:
-        """Execute the agent with proper configuration."""
+        """Execute the agent with proper ADK session patterns."""
         if not ADK_AVAILABLE:
             raise RuntimeError("Google ADK not available")
 
@@ -186,48 +228,136 @@ class AdkAgent:
                    f"and {len(adapted_messages)} messages")
         logger.debug(f"Message history: {[msg.get('role', 'unknown') for msg in adapted_messages]}")
 
+        # Convert messages to proper ADK Content format
+        adk_messages = self._convert_to_adk_content(adapted_messages)
+
         # Create session for Google ADK
         session_service = InMemorySessionService()
-        session_id = f"adk_session_{technical_id}"
-        
-        # Google ADK execution pattern
-        runner = Runner(agent=agent, session_service=session_service)
-        
-        # Convert messages to ADK format and run
-        user_input = adapted_messages[-1]['content'] if adapted_messages else "Please help me."
-        
-        result = await runner.run(
-            session_id=session_id,
-            user_input=user_input,
-            max_turns=self.max_calls
+        session = await self._create_session(technical_id, adk_messages)
+
+        # Create runner
+        runner = Runner(
+            agent=agent,
+            app_name="workflow_app",
+            session_service=session_service
         )
-        
-        return result
+
+        # For multi-message conversations, build proper context
+        if len(adk_messages) > 1:
+            logger.info(f"Multi-message conversation detected: {len(adk_messages)} messages")
+            new_message = self._build_conversation_context(adk_messages)
+        else:
+            new_message = adk_messages[0]
+
+        logger.debug(f"Final message for ADK: role={new_message.role}, parts={len(new_message.parts)}")
+
+        # Run the agent using ADK async patterns
+        final_response = ""
+        async for event in runner.run_async(
+                user_id="default_user",
+                session_id=session.id,
+                new_message=new_message
+        ):
+            # Handle different event types
+            if hasattr(event, 'type'):
+                if event.type == 'agent_response':
+                    if hasattr(event, 'content') and event.content:
+                        final_response = str(event.content)
+                elif event.type == 'tool_call':
+                    logger.debug(f"Tool call event: {event}")
+                elif event.type == 'error':
+                    logger.error(f"ADK error event: {event}")
+            else:
+                # Fallback for different event structures
+                final_response = str(event)
+
+        return final_response or "No response from ADK agent"
+
+    def _convert_to_adk_content(self, adapted_messages: List[Dict[str, str]]) -> List[Any]:
+        """Convert adapted messages to ADK Content format."""
+        adk_messages = []
+        for message in adapted_messages:
+            role = message.get('role', 'user')
+            content = message.get('content', '')
+
+            # Map roles properly for ADK
+            if role == 'assistant':
+                role = 'model'  # ADK uses 'model' instead of 'assistant'
+            elif role not in ['user', 'model', 'system']:
+                logger.warning(f"Unknown role '{role}', defaulting to 'user'")
+                role = 'user'
+
+            adk_messages.append(
+                types.Content(
+                    role=role,
+                    parts=[types.Part(text=content)]
+                )
+            )
+        return adk_messages
+
+    async def _create_session(self, technical_id: str, adk_messages: List[Any]) -> Any:
+        """Create ADK session with proper initialization."""
+        session_service = InMemorySessionService()
+        session_id = f"adk_session_{technical_id}"
+
+        # Create session
+        session = await session_service.create_session(
+            session_id=session_id,
+            user_id="default_user"
+        )
+
+        return session
+
+    def _build_conversation_context(self, adk_messages: List[Any]) -> Any:
+        """Build conversation context for multi-message conversations."""
+        # For ADK, we provide the full conversation context in a single message
+        # rather than trying to build it incrementally
+        context_parts = []
+
+        for i, msg in enumerate(adk_messages[:-1]):  # All but the last message
+            role_text = "User" if msg.role == 'user' else "Assistant"
+            for part in msg.parts:
+                if hasattr(part, 'text'):
+                    context_parts.append(f"{role_text}: {part.text}")
+
+        # Add the latest message
+        latest_msg = adk_messages[-1]
+        latest_text = ""
+        for part in latest_msg.parts:
+            if hasattr(part, 'text'):
+                latest_text += part.text
+
+        # Combine context with latest message
+        if context_parts:
+            full_context = "Previous conversation:\n" + "\n".join(context_parts) + f"\n\nCurrent request: {latest_text}"
+        else:
+            full_context = latest_text
+
+        return types.Content(
+            role=latest_msg.role,
+            parts=[types.Part(text=full_context)]
+        )
 
     async def _process_agent_result(self, result: Any, response_format: Optional[Dict[str, Any]],
                                    function_tools: List[Any], model: Any,
                                    adapted_messages: List[Dict[str, str]]) -> str:
         """Process agent execution result using adapters."""
-        # Extract response from ADK result
-        if hasattr(result, 'messages') and result.messages:
-            response = str(result.messages[-1].content) if result.messages[-1].content else ""
-        elif hasattr(result, 'content'):
-            response = str(result.content)
-        else:
-            response = str(result)
-            
+        # ADK result is already a string from our execution method
+        response = str(result) if result else ""
+
         logger.info("ADK Agent completed successfully")
         logger.debug(f"Raw ADK agent response: {response}")
-
-        # Check for UI function tool calls using UI function handler
-        ui_result = self.ui_function_handler.extract_ui_function_from_result(result)
-        if ui_result:
-            return ui_result
 
         # Check if response itself is UI function JSON
         if self.ui_function_handler.is_ui_function_json(response.strip()):
             logger.debug("Response is direct UI function JSON")
             return response.strip()
+
+        # Try to extract UI function from response content
+        ui_result = self.ui_function_handler.extract_ui_function_result(response)
+        if ui_result:
+            logger.debug("Extracted UI function from response content")
+            return ui_result
 
         # Handle schema validation for structured outputs using schema adapter
         if response_format and response_format.get("schema"):

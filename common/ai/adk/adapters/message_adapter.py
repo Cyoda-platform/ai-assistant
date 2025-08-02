@@ -117,22 +117,22 @@ class AdkMessageAdapter(MessageAdapterInterface):
     def _normalize_role(self, role: str) -> str:
         """
         Normalize role names for Google ADK compatibility.
-        
+
         Args:
             role: Original role name
-            
+
         Returns:
             Normalized role name
         """
         if not role:
             return 'user'
-            
-        # Google ADK uses 'model' instead of 'assistant' in some contexts
+
+        # Google ADK uses 'model' instead of 'assistant'
         role_mapping = {
-            'assistant': 'assistant',  # Keep as assistant for consistency
+            'assistant': 'model',  # ADK uses 'model' instead of 'assistant'
             'user': 'user',
             'system': 'system',
             'model': 'model'
         }
-        
+
         return role_mapping.get(role.lower(), 'user')
