@@ -349,7 +349,9 @@ class WorkflowMigrator:
             message_content = config.get("notification", config.get("question", ""))
             messages[message_path] = {
                 "type": action_type,
-                "content": message_content
+                "content": message_content,
+                "approve": config.get("approve", False),
+                "publish": config.get("publish", False)
             }
 
             # Create processor reference
@@ -532,7 +534,7 @@ class WorkflowMigrator:
     def _save_tools(self, tools: Dict[str, Dict[str, Any]]):
         """Save extracted tool configurations."""
         for tool_name, tool_config in tools.items():
-            tool_file = self.output_dir / "tools" / f"{tool_name}.json"
+            tool_file = self.output_dir / "tools_configs" / tool_name / "tool.json"
             self._save_json(tool_file, tool_config)
 
     def _save_messages(self, messages: Dict[str, Dict[str, Any]]):
@@ -555,6 +557,8 @@ class WorkflowMigrator:
 
     def _save_json(self, file_path: Path, data: Dict[str, Any]):
         """Save JSON data to file."""
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
         with open(file_path, 'w') as f:
             json.dump(data, f, indent=2)
         self.created_files.append(str(file_path))
