@@ -68,13 +68,22 @@ class AdkAgent:
             max_calls: Maximum number of agent iterations
         """
         self.max_calls = max_calls
-        
+
+        # Initialize session service like the deprecated version
+        if ADK_AVAILABLE:
+            self.session_service = InMemorySessionService()
+        else:
+            self.session_service = None
+
         # Initialize adapters with dependency injection
         self.ui_function_handler = AdkUiFunctionHandler()
         self.message_adapter = AdkMessageAdapter()
         self.tool_adapter = AdkToolAdapter(self.ui_function_handler)
         self.schema_adapter = AdkSchemaAdapter()
-        
+
+        # Session cache like the deprecated version
+        self._session_cache = {}
+
         logger.info(f"Initialized Google ADK Agent with max_calls: {max_calls}")
 
     async def run_agent(self, methods_dict: Dict[str, Any], technical_id: str,
@@ -251,15 +260,14 @@ Use the conversation history in this session to provide contextual responses."""
         # Convert messages to proper ADK Content format
         adk_messages = self._convert_to_adk_content(adapted_messages)
 
-        # Create session for Google ADK
-        session_service = InMemorySessionService()
+        # Create session for Google ADK using the instance session service
         session = await self._create_session(technical_id, adk_messages)
 
-        # Create runner
+        # Create runner using the same session service instance
         runner = Runner(
             agent=agent,
             app_name="workflow_app",
-            session_service=session_service
+            session_service=self.session_service
         )
 
         # For multi-message conversations, build proper context
@@ -320,7 +328,7 @@ Use the conversation history in this session to provide contextual responses."""
         return adk_messages
 
     async def _create_session(self, technical_id: str, adk_messages: List[Any]) -> Any:
-        """Create ADK session with proper initialization."""
+        """Create ADK session with proper initialization following deprecated patterns."""
         if not ADK_AVAILABLE:
             logger.warning("ADK not available, returning mock session")
             class MockSession:
@@ -328,14 +336,23 @@ Use the conversation history in this session to provide contextual responses."""
                     self.id = session_id
             return MockSession(f"adk_session_{technical_id}")
 
-        session_service = InMemorySessionService()
         session_id = f"adk_session_{technical_id}"
 
-        # Create session
-        session = await session_service.create_session(
+        # Check if session already exists in cache (like deprecated version)
+        if session_id in self._session_cache:
+            logger.debug(f"Using cached session: {session_id}")
+            return self._session_cache[session_id]
+
+        # Create session with required app_name parameter
+        session = await self.session_service.create_session(
             session_id=session_id,
-            user_id="default_user"
+            user_id="default_user",
+            app_name="workflow_app"  # Required parameter that was missing
         )
+
+        # Cache the session like the deprecated version
+        self._session_cache[session_id] = session
+        logger.debug(f"Created and cached new session: {session_id}")
 
         return session
 
