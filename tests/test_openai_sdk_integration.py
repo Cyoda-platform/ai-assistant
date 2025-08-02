@@ -101,8 +101,8 @@ class TestOpenAiSdkIntegration:
         ]
 
     @pytest.mark.asyncio
-    @patch('common.ai.openai_sdk_agent.Agent', MockAgent)
-    @patch('common.ai.openai_sdk_agent.Runner', MockRunner)
+    @patch('common.ai.openai_sdk.agent.Agent', MockAgent)
+    @patch('common.ai.openai_sdk.agent.Runner', MockRunner)
     async def test_ui_function_integration(self, agent, mock_model, ui_function_tools, messages):
         """Test complete UI function integration"""
         

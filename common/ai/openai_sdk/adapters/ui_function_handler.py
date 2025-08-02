@@ -87,53 +87,59 @@ class UiFunctionHandler(UiFunctionHandlerInterface):
         """
         Extract UI function result from agent execution result.
 
+        This method checks for UI function results in completed tool call outputs,
+        not in pending tool calls. The OpenAI Agents SDK handles multiple tool calls
+        automatically and only returns when the agent has completed execution.
+
         Args:
             result: Agent execution result
 
         Returns:
             UI function JSON string if found, None otherwise
         """
-        # Check for UI function output in result.new_items[1].output
+        # Check for UI function output in completed tool call outputs
+        if hasattr(result, 'new_items') and result.new_items:
+            # Iterate through new_items to find ToolCallOutputItem with UI function results
+            for item in result.new_items:
+                # Check if this is a tool call output item
+                if (hasattr(item, '__class__') and
+                    item.__class__.__name__ == 'ToolCallOutputItem' and
+                    hasattr(item, 'output')):
+
+                    output = item.output
+                    logger.debug(f"Found tool call output: {output}")
+
+                    # Check if the output is UI function JSON
+                    if self.is_ui_function_json(str(output)):
+                        logger.debug(f"Found UI function in tool call output: {output}")
+                        return str(output)
+
+                    # Also check if output contains UI function data that needs formatting
+                    try:
+                        if isinstance(output, str) and output.strip():
+                            # Try to parse as JSON to see if it's UI function data
+                            parsed = json.loads(output)
+                            if (isinstance(parsed, dict) and
+                                (parsed.get("type") == const.UI_FUNCTION_PREFIX or
+                                 str(parsed.get("function", "")).startswith(const.UI_FUNCTION_PREFIX))):
+                                logger.debug(f"Found UI function JSON in tool output: {output}")
+                                return output
+                    except (json.JSONDecodeError, AttributeError):
+                        pass
+
+        # Legacy fallback: Check for UI function output in result.new_items[1].output
+        # This is kept for backward compatibility but should not be the primary method
         if (hasattr(result, 'new_items') and
             len(result.new_items) > 1 and
             hasattr(result.new_items[1], 'output') and
             result.new_items[1].output):
 
             output = result.new_items[1].output
-            logger.debug(f"Found output in result.new_items[1].output: {output}")
+            logger.debug(f"Found output in result.new_items[1].output (legacy): {output}")
 
             # Check if the output is UI function JSON
-            ui_json = json.dumps(output)
-            if ui_json.startswith('"') and ui_json.endswith('"'):
-                ui_json = ui_json[1:-1]
-            ui_json_double_quotes = ui_json.replace("'", '"')
-            logger.debug(f"UI function JSON: {ui_json_double_quotes}")
-            return ui_json_double_quotes
-
-        if not (hasattr(result, 'tool_calls') and result.tool_calls):
-            return None
-
-        for call in result.tool_calls:
-            if hasattr(call, 'function') and self.is_ui_function(call.function.name):
-                logger.debug(f"Execution stopped at UI function: {call.function.name}")
-                
-                # Parse arguments
-                args = {}
-                if hasattr(call.function, 'arguments') and call.function.arguments:
-                    try:
-                        args = json.loads(call.function.arguments)
-                    except json.JSONDecodeError:
-                        logger.warning(f"Failed to parse UI function arguments: {call.function.arguments}")
-
-                # Create UI function JSON
-                ui_data = {"type": const.UI_FUNCTION_PREFIX, "function": call.function.name}
-                if isinstance(args, dict):
-                    ui_data.update(args)
-
-                ui_json = json.dumps(ui_data)
-                ui_json_single_quotes = ui_json.replace('"', "'")
-                logger.debug(f"UI function JSON: {ui_json_single_quotes}")
-                return ui_json_single_quotes
+            if self.is_ui_function_json(str(output)):
+                return str(output)
 
         return None
 

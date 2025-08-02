@@ -286,19 +286,39 @@ Use the conversation history in this session to provide contextual responses."""
                 session_id=session.id,
                 new_message=new_message
         ):
-            # Handle different event types
-            if hasattr(event, 'type'):
-                if event.type == 'agent_response':
-                    if hasattr(event, 'content') and event.content:
-                        final_response = str(event.content)
-                elif event.type == 'tool_call':
+            logger.debug(f"ADK event received: {type(event)}")
+
+            # Extract text content from ADK response structure
+            if hasattr(event, 'content') and event.content:
+                logger.debug(f"Event has content: {type(event.content)}")
+
+                # Handle Content object with parts
+                if hasattr(event.content, 'parts') and event.content.parts:
+                    logger.debug(f"Content has {len(event.content.parts)} parts")
+                    for part in event.content.parts:
+                        if hasattr(part, 'text') and part.text:
+                            final_response = part.text
+                            logger.debug(f"Extracted text from part: {final_response[:100]}...")
+                            break  # Use the first text part
+                elif hasattr(event.content, 'text'):
+                    # Direct text content
+                    final_response = event.content.text
+                    logger.debug(f"Extracted direct text: {final_response[:100]}...")
+                else:
+                    # Fallback to string conversion
+                    final_response = str(event.content)
+                    logger.debug(f"Fallback string conversion: {final_response[:100]}...")
+            elif hasattr(event, 'type'):
+                # Handle different event types for logging
+                if event.type == 'tool_call':
                     logger.debug(f"Tool call event: {event}")
                 elif event.type == 'error':
                     logger.error(f"ADK error event: {event}")
             else:
-                # Fallback for different event structures
-                final_response = str(event)
+                # Last resort fallback
+                logger.debug(f"Unhandled event structure: {type(event)} - {str(event)[:200]}...")
 
+        logger.debug(f"Final response extracted: {final_response}")
         return final_response or "No response from ADK agent"
 
     def _convert_to_adk_content(self, adapted_messages: List[Dict[str, str]]) -> List[Any]:

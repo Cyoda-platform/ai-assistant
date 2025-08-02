@@ -178,12 +178,9 @@ class OpenAiSdkAgent:
         # Extract model configuration
         model_config = self._extract_model_config(model)
         
-        # Configure UI function behavior using UI function handler
-        ui_function_names = self.ui_function_handler.extract_ui_function_names(original_tools)
-        
         # Build model settings with proper configuration
         model_settings = self._build_model_settings(
-            model_config, tool_choice, ui_function_names, response_format
+            model_config, tool_choice, response_format
         )
         
         # Create agent with clean configuration
@@ -207,7 +204,6 @@ class OpenAiSdkAgent:
         }
 
     def _build_model_settings(self, model_config: Dict[str, Any], tool_choice: str,
-                             ui_function_names: List[str],
                              response_format: Optional[Dict[str, Any]]) -> Any:
         """Build ModelSettings with proper configuration using schema adapter."""
         if not AGENTS_SDK_AVAILABLE:
@@ -230,11 +226,11 @@ class OpenAiSdkAgent:
             'top_p': model_config['top_p']
         }
 
-        # Configure tool use behavior for UI functions
-        if ui_function_names:
-            model_settings_kwargs['tool_use_behavior'] = {
-                "stop_at_tool_names": ui_function_names
-            }
+        # Note: Removed stop_at_tool_names behavior for UI functions
+        # The OpenAI Agents SDK should execute all tools naturally and return
+        # the final output after all tool calls are completed. UI functions
+        # will be detected in the completed tool call outputs, not by stopping
+        # execution prematurely.
 
         model_settings = ModelSettings(**model_settings_kwargs)
 
