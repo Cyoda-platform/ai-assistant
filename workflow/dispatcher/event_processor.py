@@ -61,10 +61,10 @@ class EventProcessor:
         try:
             # Get user account information
             entity.user_id = await self.user_service.get_entity_account(user_id=entity.user_id)
-            
-            config = action.get("config")
-            action_name = action.get("name")
-            
+            #here processor name will be ProcessorType.command_name
+
+            action_name = processor_name.split(".")[1]
+            config = #build config from processor_name
             # Route to appropriate handler based on entity type and config
             if config and config.get("type") and isinstance(entity, AgenticFlowEntity):
                 entity = AgenticFlowEntity(**entity.model_dump())
