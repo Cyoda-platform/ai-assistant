@@ -304,18 +304,7 @@ class WorkflowMigrator:
                 function_name = function_config["name"]
 
                 # Create tool definition
-                tool_config = {
-                    "type": "function",
-                    "function": {
-                        "name": function_name,
-                        "description": function_config.get("description", f"Function: {function_name}"),
-                        "parameters": function_config.get("parameters", {
-                            "type": "object",
-                            "properties": {},
-                            "required": []
-                        })
-                    }
-                }
+                tool_config = config
                 tools[function_name] = tool_config
 
                 # Create processor reference

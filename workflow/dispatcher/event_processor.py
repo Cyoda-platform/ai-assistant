@@ -19,7 +19,8 @@ class EventProcessor:
     """
     
     def __init__(self, method_registry, ai_agent_handler, memory_manager,
-                 file_handler, message_processor, user_service, entity_service, cyoda_auth_service):
+                 file_handler, message_processor, user_service, entity_service, cyoda_auth_service,
+                 config_builder):
         """
         Initialize the event processor.
 
@@ -42,6 +43,7 @@ class EventProcessor:
         self.entity_service = entity_service
         self.cyoda_auth_service = cyoda_auth_service
         self._write_output_lock = asyncio.Lock()
+        self.config_builder = config_builder
     
     async def process_event(self, entity: WorkflowEntity, processor_name: str,
                            technical_id: str) -> Tuple[WorkflowEntity, str]:
@@ -63,8 +65,10 @@ class EventProcessor:
             entity.user_id = await self.user_service.get_entity_account(user_id=entity.user_id)
             #here processor name will be ProcessorType.command_name
 
-            action_name = processor_name.split(".")[1]
-            config = #build config from processor_name
+            action_name = processor_name.split(".")[1] if "Processor." in processor_name else processor_name
+            if not "Processor." in processor_name:
+                processor_name = f"FunctionProcessor.{processor_name}"
+            config = self.config_builder.build_config(processor_name)
             # Route to appropriate handler based on entity type and config
             if config and config.get("type") and isinstance(entity, AgenticFlowEntity):
                 entity = AgenticFlowEntity(**entity.model_dump())
@@ -88,7 +92,7 @@ class EventProcessor:
             entity.error = f"Error: {e}"
             logger.exception(f"Exception occurred while processing event: {e}")
         
-        logger.info(f"{action}: {response}")
+        logger.info(f"{processor_name}: {response}")
         entity.last_modified = get_current_timestamp_num()
         return entity, response
     

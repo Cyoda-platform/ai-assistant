@@ -2,6 +2,7 @@ import logging
 from typing import Dict, Any, Tuple
 
 from entity.model import WorkflowEntity
+from workflow.config_builder import ConfigBuilder
 from workflow.dispatcher.method_registry import MethodRegistry
 from workflow.dispatcher.memory_manager import MemoryManager
 from workflow.dispatcher.ai_agent_handler import AIAgentHandler
@@ -63,7 +64,8 @@ class WorkflowDispatcher:
             self.message_processor,
             user_service,
             entity_service,
-            cyoda_auth_service
+            cyoda_auth_service,
+            config_builder=ConfigBuilder()
         )
         
         # Store services for backward compatibility
