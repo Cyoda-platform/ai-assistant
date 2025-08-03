@@ -63,29 +63,53 @@ class EventProcessor:
         try:
             # Get user account information
             entity.user_id = await self.user_service.get_entity_account(user_id=entity.user_id)
-            #here processor name will be ProcessorType.command_name
 
+            # Extract action name from processor name
             action_name = processor_name.split(".")[1] if "Processor." in processor_name else processor_name
-            if not "Processor." in processor_name:
-                processor_name = f"FunctionProcessor.{processor_name}"
-            config = self.config_builder.build_config(processor_name)
-            # Route to appropriate handler based on entity type and config
-            if config and config.get("type") and isinstance(entity, AgenticFlowEntity):
-                entity = AgenticFlowEntity(**entity.model_dump())
-                entity, response = await self._handle_agentic_flow_event(
-                    config=config, entity=entity, technical_id=technical_id
-                )
-            elif config and config.get("type") and isinstance(entity, WorkflowEntity):
-                response = await self._handle_workflow_entity_event(
-                    config=config, entity=entity, technical_id=technical_id
-                )
-            elif action_name and self.method_registry.has_method(action_name):
+
+            # If no "Processor." prefix, execute direct method
+            if "Processor." not in processor_name:
                 response = await self._execute_direct_method(
                     method_name=action_name, entity=entity, technical_id=technical_id
                 )
             else:
-                raise ValueError(f"Unknown processing step: {action_name}")
-                
+                # Build config for processor-based actions
+                try:
+                    # Ensure proper processor name format
+                    if not processor_name.startswith(("AgentProcessor.", "FunctionProcessor.", "MessageProcessor.")):
+                        processor_name = f"FunctionProcessor.{action_name}"
+
+                    config = self.config_builder.build_config(processor_name)
+
+                    # Route to appropriate handler based on entity type and config
+                    if config and config.get("type") and isinstance(entity, AgenticFlowEntity):
+                        entity = AgenticFlowEntity(**entity.model_dump())
+                        entity, response = await self._handle_agentic_flow_event(
+                            config=config, entity=entity, technical_id=technical_id
+                        )
+                    elif config and config.get("type") and isinstance(entity, WorkflowEntity):
+                        response = await self._handle_workflow_entity_event(
+                            config=config, entity=entity, technical_id=technical_id
+                        )
+                    else:
+                        # Fallback to direct method execution if config doesn't match expected patterns
+                        if self.method_registry.has_method(action_name):
+                            response = await self._execute_direct_method(
+                                method_name=action_name, entity=entity, technical_id=technical_id
+                            )
+                        else:
+                            raise ValueError(f"Unknown processing step: {action_name}")
+
+                except (FileNotFoundError, ValueError) as config_error:
+                    logger.warning(f"Config build failed for {processor_name}: {config_error}. Trying direct method execution.")
+                    # Fallback to direct method execution if config building fails
+                    if self.method_registry.has_method(action_name):
+                        response = await self._execute_direct_method(
+                            method_name=action_name, entity=entity, technical_id=technical_id
+                        )
+                    else:
+                        raise ValueError(f"Unknown processing step: {action_name}") from config_error
+
         except Exception as e:
             entity.failed = True
             entity.last_modified = get_current_timestamp_num()
