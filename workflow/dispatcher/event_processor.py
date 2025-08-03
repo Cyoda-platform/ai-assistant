@@ -43,7 +43,7 @@ class EventProcessor:
         self.cyoda_auth_service = cyoda_auth_service
         self._write_output_lock = asyncio.Lock()
     
-    async def process_event(self, entity: WorkflowEntity, action: Dict[str, Any], 
+    async def process_event(self, entity: WorkflowEntity, processor_name: str,
                            technical_id: str) -> Tuple[WorkflowEntity, str]:
         """
         Process a workflow event.

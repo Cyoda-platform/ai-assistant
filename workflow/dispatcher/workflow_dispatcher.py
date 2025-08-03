@@ -76,7 +76,7 @@ class WorkflowDispatcher:
         
         logger.info(f"WorkflowDispatcher initialized with {len(self.methods_dict)} methods")
     
-    async def process_event(self, entity: WorkflowEntity, action: Dict[str, Any], 
+    async def process_event(self, entity: WorkflowEntity, processor_name: str,
                            technical_id: str) -> Tuple[WorkflowEntity, str]:
         """
         Process a workflow event.
@@ -93,7 +93,7 @@ class WorkflowDispatcher:
             Tuple of (updated_entity, response)
         """
         try:
-            return await self.event_processor.process_event(entity=entity, action=action, technical_id=technical_id)
+            return await self.event_processor.process_event(entity=entity, processor_name=processor_name, technical_id=technical_id)
         except Exception as e:
             logger.exception(f"Error in WorkflowDispatcher.process_event: {e}")
             entity.failed = True

@@ -17,6 +17,7 @@ import argparse
 import json
 import logging
 import os
+import uuid
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
@@ -43,7 +44,7 @@ class WorkflowMigrator:
         Args:
             output_dir: Directory to output migrated files
         """
-        self.output_dir = Path(output_dir)
+        self.output_dir = Path(output_dir) / "workflow_configs"
         self.created_files = []
 
     def migrate_workflow(self, workflow_file: str) -> Dict[str, Any]:
@@ -103,7 +104,7 @@ class WorkflowMigrator:
 
     def _create_directories(self):
         """Create necessary output directories."""
-        directories = ["workflows", "agent_configs", "tools", "messages", "prompts"]
+        directories = ["workflows", "agents", "tools", "messages", "prompts"]
         for dir_name in directories:
             dir_path = self.output_dir / dir_name
             dir_path.mkdir(parents=True, exist_ok=True)
@@ -182,9 +183,11 @@ class WorkflowMigrator:
             )
             new_state["transitions"].append(new_transition)
             retry_transition = self._create_retry_transition(state_name=state_name)
-            new_state["transitions"].append(retry_transition)
+            # todo
+            # new_state["transitions"].append(retry_transition)
+            # todo
             fail_transition = self._create_fail_transition(state_name=state_name)
-            new_state["transitions"].append(fail_transition)
+            # new_state["transitions"].append(fail_transition)
 
         return new_state
 
@@ -258,14 +261,12 @@ class WorkflowMigrator:
 
         if action_type in ["prompt", "agent"]:
             # Create agent processor
-            agent_name = transition_name
+            agent_name = f'{transition_name}_{uuid.uuid4().hex[:4]}'
 
             # Extract agent configuration
-            agent_config = {
-                "type": "agent",
-                "model": config.get("model", {}),
-                "messages": self._process_messages(config.get("messages", []), transition_name, messages)
-            }
+            agent_config = config.copy()
+
+            agent_config["messages"] = self._process_messages(config.get("messages", []), transition_name, messages)
 
             # Add agent-level fields
             agent_fields = ["publish", "approve", "allow_anonymous_users", "tool_choice", "max_iteration"]
@@ -293,12 +294,6 @@ class WorkflowMigrator:
                     "calculationNodesTags": "ai_assistant"
                 }
             }
-
-            # Add workflow-level fields
-            workflow_fields = ["input", "output", "response_format"]
-            for field in workflow_fields:
-                if field in config:
-                    processor_config[field] = config[field]
 
             processors.append(processor_config)
 
@@ -342,7 +337,7 @@ class WorkflowMigrator:
 
         elif action_type in ["question", "notification"]:
             # Create message processor
-            message_name = transition_name
+            message_name = f'{transition_name}_{uuid.uuid4().hex[:4]}'
 
             # Extract message content
             message_content = config.get("notification", config.get("question", ""))
@@ -522,7 +517,7 @@ class WorkflowMigrator:
         return None
 
     def _process_messages(self, messages: List[Dict[str, Any]], transition_name: str,
-                         messages_dict: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
+                          messages_dict: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Process messages and extract content to separate files.
 
@@ -547,8 +542,9 @@ class WorkflowMigrator:
                 if isinstance(content, list):
                     content = "\n".join(content)
 
+                message_name = f'{transition_name}_{uuid.uuid4().hex[:4]}'
                 # Create message file path using just transition name
-                message_file_path = f"prompts/{transition_name}/message_{i}.md"
+                message_file_path = f"prompts/{message_name}/message_{i}.md"
 
                 # Store message content for saving
                 messages_dict[message_file_path] = {
@@ -559,14 +555,15 @@ class WorkflowMigrator:
                 # Replace inline content with file reference
                 processed_message = {
                     "role": message.get("role", "user"),
-                    "content_from_file": message_file_path
+                    "content_from_file": message_name
                 }
 
             processed_messages.append(processed_message)
 
         return processed_messages
 
-    def _process_tools(self, tools: List[Dict[str, Any]], tools_dict: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _process_tools(self, tools: List[Dict[str, Any]], tools_dict: Dict[str, Dict[str, Any]]) -> List[
+        Dict[str, Any]]:
         """
         Process tools and convert to name references.
 
@@ -594,7 +591,7 @@ class WorkflowMigrator:
     def _save_agents(self, agents: Dict[str, Dict[str, Any]]):
         """Save extracted agent configurations."""
         for agent_name, agent_config in agents.items():
-            agent_dir = self.output_dir / "agent_configs" / agent_name
+            agent_dir = self.output_dir / "agents" / agent_name
             agent_dir.mkdir(parents=True, exist_ok=True)
 
             agent_file = agent_dir / "agent.json"
@@ -603,7 +600,7 @@ class WorkflowMigrator:
     def _save_tools(self, tools: Dict[str, Dict[str, Any]]):
         """Save extracted tool configurations."""
         for tool_name, tool_config in tools.items():
-            tool_file = self.output_dir / "tools_configs" / tool_name / "tool.json"
+            tool_file = self.output_dir / "tools" / tool_name / "tool.json"
             self._save_json(tool_file, tool_config)
 
     def _save_messages(self, messages: Dict[str, Dict[str, Any]]):
@@ -626,10 +623,20 @@ class WorkflowMigrator:
                 message_dir.mkdir(parents=True, exist_ok=True)
 
                 # Save as markdown file
-                message_file = message_dir / f"{message_path}.md"
+                message_file = message_dir / message_path / "message.md"
 
-            content = f"# {message_config['type'].title()}\n\n{message_config['content']}"
+                message_meta_file = message_dir / message_path / "meta.json"
 
+                os.makedirs(os.path.dirname(message_meta_file), exist_ok=True)
+                meta_content = {"type": message_config["type"],
+                                "approve": message_config.get("approve", False),
+                                "publish": message_config.get("publish", False)}
+                with open(message_meta_file, 'w') as f:
+                    f.write(json.dumps(meta_content, indent=2))
+                self.created_files.append(str(message_meta_file))
+
+            content = f"{message_config['content']}"
+            os.makedirs(os.path.dirname(message_file), exist_ok=True)
             with open(message_file, 'w') as f:
                 f.write(content)
             self.created_files.append(str(message_file))
@@ -673,7 +680,9 @@ class WorkflowMigrator:
 def main():
     """Main entry point for the migration script."""
     parser = argparse.ArgumentParser(description="Migrate Cyoda workflows to new architecture")
-    workflow_file = "/home/kseniia/IdeaProjects/ai-assistant-2/common/workflow/config/agentic_flow_entity/chat_entity/build_general_application_java.json"
+    #workflow_file = "/home/kseniia/IdeaProjects/ai-assistant-2/common/workflow/config/agentic_flow_entity/chat_entity/build_general_application_java.json"
+    #workflow_file = '/home/kseniia/IdeaProjects/ai-assistant-2/common/workflow/config/chat_business_entity/chat_business_entity.json'
+    workflow_file = '/home/kseniia/IdeaProjects/ai-assistant-2/common/workflow/config/agentic_flow_entity/chat_entity/chat_entity.json'
     parser.add_argument("--output-dir", default=".", help="Output directory for migrated files")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be created without creating files")
 

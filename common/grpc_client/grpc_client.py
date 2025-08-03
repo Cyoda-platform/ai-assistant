@@ -251,10 +251,7 @@ class GrpcClient:
             logger.info(f"[PROCESSING] Starting {type} - Processor: {processor_name}, EntityId: {data['entityId']}, RequestId: {data.get('requestId')}")
             entity, resp = await self.workflow_dispatcher.process_event(
                 entity=entity,
-                action={
-                    "name": processor_name,
-                    "config": json.loads(data['parameters']['context'])
-                },
+                processor_name=processor_name,
                 technical_id=data['entityId'])
             data['payload']['data'] = model_cls.model_dump(entity)
             logger.info(f"[PROCESSING] Success {type} - Processor: {processor_name}, EntityId: {data['entityId']}")
