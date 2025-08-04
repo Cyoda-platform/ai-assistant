@@ -1,0 +1,41 @@
+{
+  "type": "agent",
+  "publish": true,
+  "allow_anonymous_users": true,
+  "model": {},
+  "tools": [
+    {
+      "name": "add_collaborator_to_default_repos_865f"
+    },
+    {
+      "name": "get_user_info_4f38"
+    },
+    {
+      "name": "get_cyoda_guidelines_f3bb"
+    },
+    {
+      "name": "finish_discussion_8f05"
+    },
+    {
+      "name": "get_env_deploy_status_5dd8"
+    },
+    {
+      "name": "ui_function_issue_technical_user_808a"
+    },
+    {
+      "name": "ui_function_list_all_technical_users_7489"
+    },
+    {
+      "name": "ui_function_reset_client_secret_1cf5"
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "process_user_input_33bb"
+    }
+  ],
+  "tool_choice": "auto",
+  "max_iteration": 30,
+  "approve": true
+}

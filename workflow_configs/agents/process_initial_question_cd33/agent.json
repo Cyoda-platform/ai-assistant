@@ -1,0 +1,35 @@
+{
+  "type": "agent",
+  "publish": true,
+  "allow_anonymous_users": true,
+  "model": {},
+  "tools": [
+    {
+      "name": "add_collaborator_to_default_repos_ffe7"
+    },
+    {
+      "name": "get_cyoda_guidelines_c748"
+    },
+    {
+      "name": "web_search_7e4b"
+    },
+    {
+      "name": "read_link_c472"
+    },
+    {
+      "name": "web_scrape_bc54"
+    }
+  ],
+  "memory_tags": [
+    "requirements_generation"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "process_initial_question_f6f7"
+    }
+  ],
+  "tool_choice": "auto",
+  "max_iteration": 30,
+  "approve": true
+}

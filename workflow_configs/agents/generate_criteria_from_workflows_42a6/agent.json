@@ -1,0 +1,26 @@
+{
+  "type": "agent",
+  "publish": false,
+  "model": {},
+  "tools": [
+    {
+      "name": "add_application_resource_3968"
+    }
+  ],
+  "memory_tags": [
+    "generating_criteria_from_workflows"
+  ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/application/entity/{EntityName}.java",
+      "src/main/java/com/java_template/application/workflow/{EntityName}.json",
+      "src/main/java/com/java_template/prototype/functional_requirement.md"
+    ]
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "generate_criteria_from_workflows_b1cc"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "type": "function",
+  "function": {
+    "name": "delete_files",
+    "description": "delete_files",
+    "parameters": {
+      "files": [
+        "src/main/java/com/java_template/prototype/EntityControllerPrototypeWithoutProcessing.java"
+      ],
+      "directories": [
+        "src/main/java/com/java_template/application/workflow_prototypes"
+      ]
+    }
+  },
+  "publish": false
+}

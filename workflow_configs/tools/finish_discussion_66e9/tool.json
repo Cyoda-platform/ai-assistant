@@ -1,0 +1,23 @@
+{
+  "type": "function",
+  "function": {
+    "name": "finish_discussion",
+    "description": "Use if you have enough information or the user asks to proceed to the next question. Summarise the requirement in a couple of sentences and set to true if the user chooses your example answers or after 6 attempts! Do not hold the user too long.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "transition": {
+          "type": "string",
+          "enum": [
+            "process_application_requirement"
+          ]
+        }
+      },
+      "required": [
+        "transition"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

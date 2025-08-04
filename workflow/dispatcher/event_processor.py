@@ -45,7 +45,7 @@ class EventProcessor:
         self._write_output_lock = asyncio.Lock()
         self.config_builder = config_builder
     
-    async def process_event(self, entity: WorkflowEntity, processor_name: str,
+    async def process_event(self, entity: WorkflowEntity, processor_name: str, payload: Any,
                            technical_id: str) -> Tuple[WorkflowEntity, str]:
         """
         Process a workflow event.
@@ -68,18 +68,17 @@ class EventProcessor:
             action_name = processor_name.split(".")[1] if "Processor." in processor_name else processor_name
 
             # If no "Processor." prefix, execute direct method
-            if "Processor." not in processor_name:
+            if "Processor." not in processor_name and processor_name != "process_event":
                 response = await self._execute_direct_method(
                     method_name=action_name, entity=entity, technical_id=technical_id
                 )
             else:
                 # Build config for processor-based actions
                 try:
-                    # Ensure proper processor name format
-                    if not processor_name.startswith(("AgentProcessor.", "FunctionProcessor.", "MessageProcessor.")):
-                        processor_name = f"FunctionProcessor.{action_name}"
-
-                    config = self.config_builder.build_config(processor_name)
+                    if processor_name == "process_event" and payload.get('parameters', {}).get('context'):
+                        config = json.loads(payload['parameters']['context'])
+                    else:
+                        config = self.config_builder.build_config(processor_name)
 
                     # Route to appropriate handler based on entity type and config
                     if config and config.get("type") and isinstance(entity, AgenticFlowEntity):

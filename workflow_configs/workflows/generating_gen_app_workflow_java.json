@@ -1,0 +1,141 @@
+{
+  "version": "1.0",
+  "name": "generating_gen_app_workflow_java",
+  "desc": "Migrated from generating_gen_app_workflow_java",
+  "initialState": "none",
+  "active": true,
+  "criterion": {
+    "type": "simple",
+    "jsonPath": "$.workflow_name",
+    "operation": "EQUALS",
+    "value": "generating_gen_app_workflow_java"
+  },
+  "states": {
+    "none": {
+      "transitions": [
+        {
+          "name": "start_workflow_generation",
+          "next": "started_workflow_generation",
+          "manual": false
+        }
+      ]
+    },
+    "started_workflow_generation": {
+      "transitions": [
+        {
+          "name": "save_workflow_code",
+          "next": "saved_workflow_code",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.save_workflow_code_977a",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "saved_workflow_code": {
+      "transitions": [
+        {
+          "name": "design_workflow_config_from_code",
+          "next": "designed_workflow_json",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.design_workflow_config_from_code_fe21",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "designed_workflow_json": {
+      "transitions": [
+        {
+          "name": "enrich_workflow",
+          "next": "formatted_workflow_json",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.enrich_workflow_f2c6",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "formatted_workflow_json": {
+      "transitions": [
+        {
+          "name": "convert_workflow_to_cyoda_dto",
+          "next": "converted_workflow_to_cyoda_dto",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.convert_workflow_to_dto_d870",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "converted_workflow_to_cyoda_dto": {
+      "transitions": [
+        {
+          "name": "analyze_workflows_and_extract_operations",
+          "next": "processors_generated",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.analyze_workflows_and_extract_operations_960f",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "processors_generated": {
+      "transitions": [
+        {
+          "name": "generate_criteria_from_workflows",
+          "next": "criteria_generated",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.generate_criteria_from_workflows_42a6",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "criteria_generated": {
+      "transitions": [
+        {
+          "name": "lock_chat",
+          "next": "locked_chat",
+          "manual": false
+        }
+      ]
+    }
+  }
+}

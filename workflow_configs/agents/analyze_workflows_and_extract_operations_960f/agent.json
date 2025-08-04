@@ -1,0 +1,27 @@
+{
+  "type": "agent",
+  "publish": false,
+  "model": {},
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/application/entity/{EntityName}.java",
+      "src/main/java/com/java_template/application/workflow/{EntityName}.json",
+      "src/main/java/com/java_template/application/workflow_prototypes/{EntityName}.txt",
+      "src/main/java/com/java_template/prototype/functional_requirement.md"
+    ]
+  },
+  "memory_tags": [
+    "processors_generation"
+  ],
+  "tools": [
+    {
+      "name": "add_application_resource_3968"
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "analyze_workflows_and_extract_operations_f28d"
+    }
+  ]
+}

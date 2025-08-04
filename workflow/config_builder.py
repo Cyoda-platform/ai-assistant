@@ -8,6 +8,32 @@ from typing import Dict, Any, Optional
 logger = logging.getLogger(__name__)
 
 
+def _find_project_root() -> Path:
+    """
+    Find the project root directory by looking for key files.
+
+    Returns:
+        Path to the project root directory
+
+    Raises:
+        FileNotFoundError: If project root cannot be determined
+    """
+    # Start from current file's directory and walk up
+    current_path = Path(__file__).parent
+
+    # Look for project indicators
+    project_indicators = ['app.py', 'workflow_configs', '.git', 'requirements.txt']
+
+    for parent in [current_path] + list(current_path.parents):
+        if any((parent / indicator).exists() for indicator in project_indicators):
+            return parent
+
+    # Fallback: if we can't find project root, use current working directory
+    cwd = Path.cwd()
+    logger.warning(f"Could not determine project root, using current working directory: {cwd}")
+    return cwd
+
+
 class ConfigBuilder:
     """
     Builds processor configurations from workflow_configs directory structure.
@@ -25,9 +51,15 @@ class ConfigBuilder:
         Initialize config builder.
 
         Args:
-            workflow_configs_path: Path to workflow_configs directory
+            workflow_configs_path: Path to workflow_configs directory (relative or absolute)
         """
-        self.workflow_configs_path = Path(workflow_configs_path)
+        # If path is relative, resolve it relative to project root
+        if not Path(workflow_configs_path).is_absolute():
+            project_root = _find_project_root()
+            self.workflow_configs_path = project_root / workflow_configs_path
+        else:
+            self.workflow_configs_path = Path(workflow_configs_path)
+
         self.agents_path = self.workflow_configs_path / "agents"
         self.tools_path = self.workflow_configs_path / "tools"
         self.prompts_path = self.workflow_configs_path / "prompts"
@@ -36,6 +68,11 @@ class ConfigBuilder:
         # Thread-safe cache for configurations
         self._config_cache: Dict[str, Dict[str, Any]] = {}
         self._cache_lock = threading.RLock()
+
+        # Log initialization for debugging
+        logger.debug(f"ConfigBuilder initialized with workflow_configs_path: {self.workflow_configs_path}")
+        logger.debug(f"Current working directory: {Path.cwd()}")
+        logger.debug(f"Workflow configs directory exists: {self.workflow_configs_path.exists()}")
     
     def build_config(self, processor_name: str) -> Dict[str, Any]:
         """
@@ -96,10 +133,18 @@ class ConfigBuilder:
             Complete agent configuration with resolved tools and prompts
         """
         agent_config_path = self.agents_path / agent_name / "agent.json"
-        
+
         if not agent_config_path.exists():
-            raise FileNotFoundError(f"Agent config not found: {agent_config_path}")
-        
+            # Enhanced error message with debugging information
+            error_msg = (
+                f"Agent config not found: {agent_config_path}\n"
+                f"Current working directory: {Path.cwd()}\n"
+                f"Workflow configs path: {self.workflow_configs_path}\n"
+                f"Agents path exists: {self.agents_path.exists()}\n"
+                f"Agent directory exists: {(self.agents_path / agent_name).exists()}"
+            )
+            raise FileNotFoundError(error_msg)
+
         with open(agent_config_path, 'r', encoding='utf-8') as f:
             config = json.load(f)
         
@@ -147,10 +192,10 @@ class ConfigBuilder:
         
         if not message_dir.exists():
             raise FileNotFoundError(f"Message directory not found: {message_dir}")
-        
+
         if not message_file.exists():
             raise FileNotFoundError(f"Message file not found: {message_file}")
-        
+
         if not meta_file.exists():
             raise FileNotFoundError(f"Meta file not found: {meta_file}")
         
@@ -165,8 +210,9 @@ class ConfigBuilder:
         # Build message config
         config = {
             "type": meta.get("type", "notification"),
-            "notification": message_content,
+            meta.get("type", "notification"): message_content,
             "publish": meta.get("publish", True),
+            "approve": meta.get("approve", False),
             "allow_anonymous_users": meta.get("allow_anonymous_users", True)
         }
         
@@ -242,7 +288,7 @@ class ConfigBuilder:
         
         if not prompt_dir.exists():
             raise FileNotFoundError(f"Prompt directory not found: {prompt_dir}")
-        
+
         # Look for message files (message_0.md, message_1.md, etc.)
         message_files = sorted(prompt_dir.glob("message_*.md"))
         
@@ -273,11 +319,11 @@ class ConfigBuilder:
 def build_processor_config(processor_name: str, workflow_configs_path: str = "workflow_configs") -> Dict[str, Any]:
     """
     Build processor configuration for the given processor name.
-    
+
     Args:
         processor_name: Processor name in format "ProcessorType.config_name"
-        workflow_configs_path: Path to workflow_configs directory
-    
+        workflow_configs_path: Path to workflow_configs directory (relative or absolute)
+
     Returns:
         Built configuration dictionary
     """

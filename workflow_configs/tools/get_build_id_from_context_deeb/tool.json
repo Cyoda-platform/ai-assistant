@@ -1,0 +1,14 @@
+{
+  "type": "function",
+  "function": {
+    "name": "get_build_id_from_context",
+    "description": "Use this tool to get the build ID from deployment workflow context. This tool automatically finds the build ID from the parent entity's deployment workflow without requiring any parameters.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  }
+}

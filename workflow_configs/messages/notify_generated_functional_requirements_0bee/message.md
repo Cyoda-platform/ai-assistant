@@ -1,0 +1,1 @@
+✅  Saved functional requirements to `src/main/java/com/java_template/prototype/functional_requirement.md`. Continuing to generate the first prototype....⏳😌

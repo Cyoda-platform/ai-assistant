@@ -1,0 +1,23 @@
+{
+  "type": "function",
+  "function": {
+    "name": "finish_discussion",
+    "description": "Finish the iteration if the user is happy with the result and has no more questions.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "transition": {
+          "type": "string",
+          "enum": [
+            "discuss_prototype"
+          ]
+        }
+      },
+      "required": [
+        "transition"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

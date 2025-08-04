@@ -40,12 +40,16 @@ class WorkflowMigrator:
     def __init__(self, output_dir: str = "."):
         """
         Initialize the workflow migrator.
-        
+
         Args:
             output_dir: Directory to output migrated files
         """
         self.output_dir = Path(output_dir) / "workflow_configs"
         self.created_files = []
+
+        # Track existing tools to avoid duplicates
+        # Key: JSON string of tool config, Value: tool folder name
+        self.existing_tools: Dict[str, str] = {}
 
     def migrate_workflow(self, workflow_file: str) -> Dict[str, Any]:
         """
@@ -277,12 +281,6 @@ class WorkflowMigrator:
             # Add tools if present
             if "tools" in config:
                 agent_config["tools"] = self._process_tools(config["tools"], tools)
-                # Extract tool definitions
-                for tool in config["tools"]:
-                    if tool.get("type") == "function" and "function" in tool:
-                        func_def = tool["function"]
-                        if "name" in func_def:
-                            tools[func_def["name"]] = tool
 
             agents[agent_name] = agent_config
 
@@ -303,13 +301,16 @@ class WorkflowMigrator:
             if function_config and "name" in function_config:
                 function_name = function_config["name"]
 
+                # Get or create unique tool folder name (reuses existing if same config)
+                unique_tool_name = self._get_or_create_tool_name(config)
+
                 # Create tool definition
                 tool_config = config
-                tools[function_name] = tool_config
+                tools[unique_tool_name] = tool_config
 
-                # Create processor reference
+                # Create processor reference using unique tool name
                 processor_config = {
-                    "name": f"FunctionProcessor.{function_name}",
+                    "name": f"FunctionProcessor.{unique_tool_name}",
                     "executionMode": "ASYNC_NEW_TX",
                     "config": {
                         "calculationNodesTags": "ai_assistant"
@@ -379,24 +380,19 @@ class WorkflowMigrator:
                     function_name = function_config["name"]
 
                     # Create tool configuration for condition function
+                    # Use the complete function config for proper comparison
                     tool_config = {
                         "type": "function",
-                        "function": {
-                            "name": function_name,
-                            "description": function_config.get("description", f"Condition function: {function_name}"),
-                            "parameters": function_config.get("parameters", {
-                                "type": "object",
-                                "properties": {},
-                                "required": []
-                            })
-                        }
+                        "function": function_config
                     }
-                    tools[function_name] = tool_config
+                    # Get or create unique tool folder name (reuses existing if same config)
+                    tool_name = self._get_or_create_tool_name(tool_config)
+                    tools[tool_name] = tool_config
 
                     return {
                         "type": "function",
                         "function": {
-                            "name": function_name,
+                            "name": f"FunctionProcessor.{tool_name}",
                             "config": {
                                 "calculationNodesTags": "ai_assistant"
                             }
@@ -413,24 +409,19 @@ class WorkflowMigrator:
                 function_name = function_config["name"]
 
                 # Create tool configuration for condition function
+                # Use the complete function config for proper comparison
                 tool_config = {
                     "type": "function",
-                    "function": {
-                        "name": function_name,
-                        "description": function_config.get("description", f"Condition function: {function_name}"),
-                        "parameters": function_config.get("parameters", {
-                            "type": "object",
-                            "properties": {},
-                            "required": []
-                        })
-                    }
+                    "function": function_config
                 }
-                tools[function_name] = tool_config
+                # Get or create unique tool folder name (reuses existing if same config)
+                tool_name = self._get_or_create_tool_name(tool_config)
+                tools[tool_name] = tool_config
 
                 return {
                     "type": "function",
                     "function": {
-                        "name": function_name,
+                        "name": f"FunctionProcessor.{tool_name}",
                         "config": {
                             "calculationNodesTags": "ai_assistant"
                         }
@@ -453,12 +444,14 @@ class WorkflowMigrator:
                         }
                     }
                 }
-                tools[function_name] = tool_config
+                # Get or create unique tool folder name (reuses existing if same config)
+                tool_name = self._get_or_create_tool_name(tool_config)
+                tools[tool_name] = tool_config
 
                 return {
                     "type": "function",
                     "function": {
-                        "name": function_name,
+                        "name": f"FunctionProcessor.{tool_name}",
                         "config": {
                             "calculationNodesTags": "ai_assistant"
                         }
@@ -491,12 +484,14 @@ class WorkflowMigrator:
                     }
                 }
             }
-            tools[function_name] = tool_config
+            # Get or create unique tool folder name (reuses existing if same config)
+            tool_name = self._get_or_create_tool_name(tool_config)
+            tools[tool_name] = tool_config
 
             return {
                 "type": "function",
                 "function": {
-                    "name": function_name,
+                    "name": f"FunctionProcessor.{tool_name}",
                     "config": {
                         "calculationNodesTags": "ai_assistant"
                     }
@@ -551,17 +546,46 @@ class WorkflowMigrator:
 
         return processed_messages
 
+    def _get_or_create_tool_name(self, tool_config: Dict[str, Any]) -> str:
+        """
+        Get existing tool name if the same config exists, or create a new unique name.
+
+        Args:
+            tool_config: Tool configuration dictionary
+
+        Returns:
+            Tool folder name (existing or newly created)
+        """
+        # Create a normalized JSON string for comparison
+        tool_config_str = json.dumps(tool_config, sort_keys=True, separators=(',', ':'))
+
+        # Check if this exact tool config already exists
+        if tool_config_str in self.existing_tools:
+            existing_name = self.existing_tools[tool_config_str]
+            logger.info(f"Reusing existing tool: {existing_name}")
+            return existing_name
+
+        # Create new unique tool name
+        function_name = tool_config.get("function", {}).get("name", "unknown_function")
+        unique_tool_name = f"{function_name}_{uuid.uuid4().hex[:4]}"
+
+        # Store the mapping
+        self.existing_tools[tool_config_str] = unique_tool_name
+
+        return unique_tool_name
+
     def _process_tools(self, tools: List[Dict[str, Any]], tools_dict: Dict[str, Dict[str, Any]]) -> List[
         Dict[str, Any]]:
         """
-        Process tools and convert to name references.
+        Process tools and convert to name references with unique folder names.
+        Reuses existing tools if the same configuration already exists.
 
         Args:
             tools: List of tool configurations
-            tools_dict: Dictionary to store extracted tools
+            tools_dict: Dictionary to store extracted tools (will be populated with unique names)
 
         Returns:
-            List of processed tools with just name references
+            List of processed tools with unique folder name references
         """
         processed_tools = []
 
@@ -569,11 +593,33 @@ class WorkflowMigrator:
             if tool.get("type") == "function" and "function" in tool:
                 func_def = tool["function"]
                 if "name" in func_def:
-                    # Add just the name reference
-                    processed_tools.append({"name": func_def["name"]})
+                    # Get or create unique tool folder name (reuses existing if same config)
+                    unique_tool_name = self._get_or_create_tool_name(tool)
+
+                    # Add reference using unique folder name
+                    processed_tools.append({"name": unique_tool_name})
+
+                    # Store tool config with unique name for later saving
+                    tools_dict[unique_tool_name] = tool
             elif "name" in tool:
-                # Already in correct format
-                processed_tools.append({"name": tool["name"]})
+                # For existing name references, we can't check for duplicates without the full config
+                # So we'll create a minimal tool config and generate unique name
+                original_name = tool["name"]
+                minimal_tool_config = {
+                    "type": "function",
+                    "function": {
+                        "name": original_name,
+                        "description": f"Referenced tool: {original_name}",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {},
+                            "required": []
+                        }
+                    }
+                }
+                unique_tool_name = self._get_or_create_tool_name(minimal_tool_config)
+                processed_tools.append({"name": unique_tool_name})
+                tools_dict[unique_tool_name] = minimal_tool_config
 
         return processed_tools
 
@@ -671,7 +717,9 @@ def main():
     parser = argparse.ArgumentParser(description="Migrate Cyoda workflows to new architecture")
     #workflow_file = "/home/kseniia/IdeaProjects/ai-assistant-2/common/workflow/config/agentic_flow_entity/chat_entity/build_general_application_java.json"
     #workflow_file = '/home/kseniia/IdeaProjects/ai-assistant-2/common/workflow/config/chat_business_entity/chat_business_entity.json'
-    workflow_file = '/home/kseniia/IdeaProjects/ai-assistant-2/common/workflow/config/agentic_flow_entity/chat_entity/chat_entity.json'
+    #workflow_file = '/home/kseniia/IdeaProjects/ai-assistant-2/common/workflow/config/agentic_flow_entity/chat_entity/chat_entity.json'
+    #workflow_file = '/home/kseniia/IdeaProjects/ai-assistant-2/common/workflow/config/agentic_flow_entity/generating_gen_app_workflow_java.json'
+    #workflow_file = '/home/kseniia/IdeaProjects/ai-assistant-2/common/workflow/config/agentic_flow_entity/chat_entity/init_setup_workflow_java.json'
     parser.add_argument("--output-dir", default=".", help="Output directory for migrated files")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be created without creating files")
 

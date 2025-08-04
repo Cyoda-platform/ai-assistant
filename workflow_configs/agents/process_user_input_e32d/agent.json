@@ -1,0 +1,59 @@
+{
+  "type": "agent",
+  "publish": true,
+  "allow_anonymous_users": true,
+  "model": {},
+  "tools": [
+    {
+      "name": "add_collaborator_to_default_repos_865f"
+    },
+    {
+      "name": "get_user_info_4f38"
+    },
+    {
+      "name": "read_link_16a6"
+    },
+    {
+      "name": "add_new_entity_for_existing_app_cb15"
+    },
+    {
+      "name": "add_new_workflow_f610"
+    },
+    {
+      "name": "edit_api_existing_app_21f5"
+    },
+    {
+      "name": "edit_existing_workflow_f38d"
+    },
+    {
+      "name": "edit_existing_processors_b3f3"
+    },
+    {
+      "name": "get_cyoda_guidelines_f3bb"
+    },
+    {
+      "name": "finish_discussion_782e"
+    },
+    {
+      "name": "get_env_deploy_status_5dd8"
+    },
+    {
+      "name": "ui_function_issue_technical_user_808a"
+    },
+    {
+      "name": "ui_function_list_all_technical_users_7489"
+    },
+    {
+      "name": "ui_function_reset_client_secret_1cf5"
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "process_user_input_a094"
+    }
+  ],
+  "tool_choice": "auto",
+  "max_iteration": 30,
+  "approve": true
+}

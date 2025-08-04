@@ -1,0 +1,9 @@
+{
+  "type": "function",
+  "function": {
+    "name": "not_stage_completed",
+    "parameters": {
+      "transition": "migration_confirmation"
+    }
+  }
+}

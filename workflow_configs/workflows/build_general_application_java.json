@@ -1,0 +1,1057 @@
+{
+  "version": "1.0",
+  "name": "build_general_application_java",
+  "desc": "Migrated from build_general_application_java",
+  "initialState": "none",
+  "active": true,
+  "criterion": {
+    "type": "simple",
+    "jsonPath": "$.workflow_name",
+    "operation": "EQUALS",
+    "value": "build_general_application_java"
+  },
+  "states": {
+    "none": {
+      "transitions": [
+        {
+          "name": "initialize",
+          "next": "initialized",
+          "manual": false
+        }
+      ]
+    },
+    "initialized": {
+      "transitions": [
+        {
+          "name": "build_new_app",
+          "next": "building_new_app",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "name": "build_new_app_criteria",
+            "operator": "AND",
+            "parameters": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "IEQUALS",
+                "value": "build_new_app",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        {
+          "name": "discuss_functional_requirements",
+          "next": "chats_initialized",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "name": "discuss_functional_requirements_criteria",
+            "operator": "AND",
+            "parameters": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "IEQUALS",
+                "value": "discuss_functional_requirements",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        {
+          "name": "edit_functional_requirements",
+          "next": "functional_requirements_specified",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "name": "edit_functional_requirements_criteria",
+            "operator": "AND",
+            "parameters": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "IEQUALS",
+                "value": "edit_functional_requirements",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        {
+          "name": "prototype_discussion_requested",
+          "next": "prototype_discussion_requested_submitted_answer",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "name": "prototype_discussion_requested_criteria",
+            "operator": "AND",
+            "parameters": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "IEQUALS",
+                "value": "prototype_discussion_requested",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        {
+          "name": "resume_migration",
+          "next": "start_environment_setup",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "name": "resume_migration_criteria",
+            "operator": "AND",
+            "parameters": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "IEQUALS",
+                "value": "resume_migration",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        {
+          "name": "resume_prototype_cyoda_workflow",
+          "next": "generated_initial_cyoda_prototype",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "name": "resume_prototype_cyoda_workflow_criteria",
+            "operator": "AND",
+            "parameters": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "IEQUALS",
+                "value": "resume_prototype_cyoda_workflow",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        {
+          "name": "resume_gen_prototype_cyoda_workflow_json",
+          "next": "validated_controller",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "name": "resume_gen_prototype_cyoda_workflow_json_criteria",
+            "operator": "AND",
+            "parameters": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "IEQUALS",
+                "value": "resume_gen_prototype_cyoda_workflow_json",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        {
+          "name": "resume_gen_entities",
+          "next": "validated_controller",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "name": "resume_gen_entities_criteria",
+            "operator": "AND",
+            "parameters": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "IEQUALS",
+                "value": "resume_gen_entities",
+                "type": "simple"
+              }
+            ]
+          }
+        },
+        {
+          "name": "resume_post_app_build_steps",
+          "next": "finished_app_generation_flow",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "name": "resume_post_app_build_steps_criteria",
+            "operator": "AND",
+            "parameters": [
+              {
+                "jsonPath": "resume_transition",
+                "operatorType": "IEQUALS",
+                "value": "resume_post_app_build_steps",
+                "type": "simple"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "building_new_app": {
+      "transitions": [
+        {
+          "name": "welcome_user",
+          "next": "greeting_sent",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.welcome_user_25fc",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "greeting_sent": {
+      "transitions": [
+        {
+          "name": "clone_repo",
+          "next": "repository_cloned",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.clone_repo_b60a",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "repository_cloned": {
+      "transitions": [
+        {
+          "name": "init_chats",
+          "next": "chats_initialized",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.init_chats_d512",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "chats_initialized": {
+      "transitions": [
+        {
+          "name": "generate_original_requirements",
+          "next": "generated_original_requirements",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.generate_original_requirements_c87e",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "generated_original_requirements": {
+      "transitions": [
+        {
+          "name": "notify_generated_original_requirements",
+          "next": "notified_generated_original_requirements",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_generated_original_requirements_b94e",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "notified_generated_original_requirements": {
+      "transitions": [
+        {
+          "name": "process_initial_question",
+          "next": "app_requirements_requested",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_initial_question_cd33",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "app_requirements_requested": {
+      "transitions": [
+        {
+          "name": "submit_answer",
+          "next": "app_requirements_requested_submitted_answer",
+          "manual": true
+        },
+        {
+          "name": "manual_approve",
+          "next": "app_requirements_finalized",
+          "manual": true
+        },
+        {
+          "name": "rollback",
+          "next": "app_requirements_requested_submitted_answer",
+          "manual": true
+        }
+      ]
+    },
+    "app_requirements_requested_submitted_answer": {
+      "transitions": [
+        {
+          "name": "process_user_input",
+          "next": "app_requirements_requested_processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_user_input_2c31",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "app_requirements_requested_processing": {
+      "transitions": [
+        {
+          "name": "process_application_requirement_processing",
+          "next": "app_requirements_requested",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.not_stage_completed_f57d",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          }
+        },
+        {
+          "name": "process_application_requirement_success",
+          "next": "app_requirements_finalized",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.is_stage_completed_e7bf",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "app_requirements_finalized": {
+      "transitions": [
+        {
+          "name": "ask_about_api",
+          "next": "proceeded_to_functional_requirements",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.ask_about_api_063f",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "proceeded_to_functional_requirements": {
+      "transitions": [
+        {
+          "name": "define_functional_requirements",
+          "next": "functional_requirements_specified",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.define_functional_requirements_8ee2",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "functional_requirements_specified": {
+      "transitions": [
+        {
+          "name": "ask_about_api",
+          "next": "api_inquired",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.ask_about_api_d91f",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "api_inquired": {
+      "transitions": [
+        {
+          "name": "submit_answer",
+          "next": "api_inquired_submitted_answer",
+          "manual": true
+        },
+        {
+          "name": "manual_approve",
+          "next": "api_discussion_completed",
+          "manual": true
+        },
+        {
+          "name": "rollback",
+          "next": "api_inquired_submitted_answer",
+          "manual": true
+        }
+      ]
+    },
+    "api_inquired_submitted_answer": {
+      "transitions": [
+        {
+          "name": "process_user_input",
+          "next": "api_inquired_processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_user_input_cd43",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "api_inquired_processing": {
+      "transitions": [
+        {
+          "name": "process_api_inquiry_processing",
+          "next": "api_inquired",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.not_stage_completed_5e0e",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          }
+        },
+        {
+          "name": "process_api_inquiry_success",
+          "next": "api_discussion_completed",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.is_stage_completed_8a02",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "api_discussion_completed": {
+      "transitions": [
+        {
+          "name": "notify_prototype_generation",
+          "next": "prototype_generation_notified",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_prototype_generation_0f5b",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "prototype_generation_notified": {
+      "transitions": [
+        {
+          "name": "generate_functional_requirements",
+          "next": "generated_functional_requirements",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.generate_functional_requirements_accc",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "generated_functional_requirements": {
+      "transitions": [
+        {
+          "name": "notify_generated_functional_requirements",
+          "next": "notified_generated_functional_requirements",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_generated_functional_requirements_0bee",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "notified_generated_functional_requirements": {
+      "transitions": [
+        {
+          "name": "extract_entities_from_prototype",
+          "next": "entities_extracted",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.extract_entities_from_prototype_22c6",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "entities_extracted": {
+      "transitions": [
+        {
+          "name": "notify_entities_extracted",
+          "next": "notified_entities_extracted",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_entities_extracted_ede4",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "notified_entities_extracted": {
+      "transitions": [
+        {
+          "name": "generate_prototype_sketch",
+          "next": "prototype_completed",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.generate_prototype_sketch_2269",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "prototype_completed": {
+      "transitions": [
+        {
+          "name": "ask_to_discuss_prototype",
+          "next": "prototype_discussion_requested",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.ask_to_discuss_prototype_983f",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "prototype_discussion_requested": {
+      "transitions": [
+        {
+          "name": "submit_answer",
+          "next": "prototype_discussion_requested_submitted_answer",
+          "manual": true
+        },
+        {
+          "name": "manual_approve",
+          "next": "prototype_discussion_completed",
+          "manual": true
+        },
+        {
+          "name": "rollback",
+          "next": "prototype_discussion_requested_submitted_answer",
+          "manual": true
+        }
+      ]
+    },
+    "prototype_discussion_requested_submitted_answer": {
+      "transitions": [
+        {
+          "name": "process_user_input",
+          "next": "prototype_discussion_requested_processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_user_input_5b2b",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "prototype_discussion_requested_processing": {
+      "transitions": [
+        {
+          "name": "process_prototype_discussion_processing",
+          "next": "prototype_discussion_requested",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.not_stage_completed_41d2",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          }
+        },
+        {
+          "name": "process_prototype_discussion_success",
+          "next": "prototype_discussion_completed",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.is_stage_completed_d505",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "prototype_discussion_completed": {
+      "transitions": [
+        {
+          "name": "ask_to_confirm_migration",
+          "next": "migration_confirmation_requested",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.ask_to_confirm_migration_208e",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "migration_confirmation_requested": {
+      "transitions": [
+        {
+          "name": "submit_answer",
+          "next": "migration_confirmation_requested_submitted_answer",
+          "manual": true
+        },
+        {
+          "name": "manual_approve",
+          "next": "migration_confirmation_completed",
+          "manual": true
+        },
+        {
+          "name": "rollback",
+          "next": "migration_confirmation_requested_submitted_answer",
+          "manual": true
+        }
+      ]
+    },
+    "migration_confirmation_requested_submitted_answer": {
+      "transitions": [
+        {
+          "name": "process_user_input",
+          "next": "migration_confirmation_requested_processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_user_input_2185",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "migration_confirmation_requested_processing": {
+      "transitions": [
+        {
+          "name": "process_migration_confirmation_processing",
+          "next": "migration_confirmation_requested",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.not_stage_completed_6044",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          }
+        },
+        {
+          "name": "process_migration_confirmation_success",
+          "next": "start_environment_setup",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.is_stage_completed_c00a",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "start_environment_setup": {
+      "transitions": [
+        {
+          "name": "start_environment_setup_processing",
+          "next": "migration_confirmation_completed",
+          "manual": false
+        }
+      ]
+    },
+    "waiting_for_user_deployment_input": {
+      "transitions": [
+        {
+          "name": "submit_answer",
+          "next": "migration_confirmation_completed",
+          "manual": true
+        },
+        {
+          "name": "rollback",
+          "next": "migration_confirmation_completed",
+          "manual": true
+        }
+      ]
+    },
+    "migration_confirmation_completed": {
+      "transitions": [
+        {
+          "name": "process_user_input",
+          "next": "app_requirements_step3_processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_user_input_9a8e",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "app_requirements_step3_processing": {
+      "transitions": [
+        {
+          "name": "process_app_setup_3_processing",
+          "next": "waiting_for_user_deployment_input",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.not_stage_completed_f259",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          }
+        },
+        {
+          "name": "process_app_setup_3_success",
+          "next": "deployed_cyoda_env",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.is_stage_completed_b809",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          }
+        },
+        {
+          "name": "rollback",
+          "next": "start_environment_setup",
+          "manual": true
+        }
+      ]
+    },
+    "deployed_cyoda_env": {
+      "transitions": [
+        {
+          "name": "notify_user_env_deployed",
+          "next": "notified_user_env_deployed",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.notify_user_env_deployed_58e2",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "notified_user_env_deployed": {
+      "transitions": [
+        {
+          "name": "migration_confirmation_notify",
+          "next": "migration_confirmation_notified",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.migration_confirmation_notify_d018",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "migration_confirmation_notified": {
+      "transitions": [
+        {
+          "name": "generate_initial_cyoda_prototype",
+          "next": "generated_initial_cyoda_prototype",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.generate_initial_cyoda_prototype_9221",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "generated_initial_cyoda_prototype": {
+      "transitions": [
+        {
+          "name": "extract_processing_methods",
+          "next": "processing_methods_extracted",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.extract_processing_methods_979b",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "processing_methods_extracted": {
+      "transitions": [
+        {
+          "name": "update_routes_file",
+          "next": "validated_controller",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.update_routes_file_0a64",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "validated_controller": {
+      "transitions": [
+        {
+          "name": "register_workflow_with_app",
+          "next": "finished_app_generation_flow",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.launch_gen_app_workflows_166e",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "finished_app_generation_flow": {
+      "transitions": [
+        {
+          "name": "validate_app_quality",
+          "next": "validated_app_quality",
+          "manual": true,
+          "processors": [
+            {
+              "name": "AgentProcessor.validate_app_quality_cca3",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "validated_app_quality": {
+      "transitions": [
+        {
+          "name": "save_env_file",
+          "next": "saved_env_file",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.save_env_file_d2aa",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "saved_env_file": {
+      "transitions": [
+        {
+          "name": "delete_files",
+          "next": "deleted_files",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.delete_files_6818",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "deleted_files": {
+      "transitions": [
+        {
+          "name": "question_to_proceed_with_generated_app_editing",
+          "next": "questioned_to_proceed_with_generated_app_editing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.question_to_proceed_with_generated_app_editing_2f5f",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "questioned_to_proceed_with_generated_app_editing": {
+      "transitions": [
+        {
+          "name": "launch_setup_assistant",
+          "next": "launched_setup_assistant",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.init_setup_workflow_5f06",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "launched_setup_assistant": {
+      "transitions": [
+        {
+          "name": "lock_chat",
+          "next": "locked_chat",
+          "manual": false
+        }
+      ]
+    }
+  }
+}

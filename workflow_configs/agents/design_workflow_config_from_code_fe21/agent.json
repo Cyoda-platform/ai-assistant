@@ -1,0 +1,19 @@
+{
+  "type": "prompt",
+  "publish": false,
+  "model": {},
+  "memory_tags": [
+    "workflow_generation"
+  ],
+  "output": {
+    "local_fs": [
+      "src/main/java/com/java_template/application/workflow/{EntityName}.json"
+    ]
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "design_workflow_config_from_code_a364"
+    }
+  ]
+}

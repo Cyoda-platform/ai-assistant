@@ -1,0 +1,10 @@
+{
+  "type": "function",
+  "function": {
+    "name": "is_stage_completed",
+    "description": "Clones template repository",
+    "parameters": {
+      "transition": "process_application_requirement"
+    }
+  }
+}

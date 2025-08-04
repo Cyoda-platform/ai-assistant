@@ -1,0 +1,37 @@
+{
+  "type": "function",
+  "function": {
+    "name": "ui_function_reset_client_secret",
+    "description": "Please use ui_function_reset_client_secret for requests like please reset the client secret for my technical user. Please use clientId from the user input. The user needs to explicitly give you clientId.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "PUT"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "enum": [
+            "/api/clients/{clientId}/secret"
+          ]
+        },
+        "response_format": {
+          "type": "string",
+          "enum": [
+            "text"
+          ]
+        }
+      },
+      "required": [
+        "method",
+        "path",
+        "response_format"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

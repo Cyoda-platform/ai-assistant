@@ -1,0 +1,23 @@
+{
+  "type": "function",
+  "function": {
+    "name": "finish_discussion",
+    "description": "Use if the user asks to proceed or if the user is satisfied with the current result (e.g. says it is correct, valid, works for them). If set to false notify the user you're going to proceed with prototype generation.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "transition": {
+          "type": "string",
+          "enum": [
+            "discuss_api"
+          ]
+        }
+      },
+      "required": [
+        "transition"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "type": "function",
+  "function": {
+    "name": "not_stage_completed",
+    "parameters": {
+      "transition": "process_app_setup_4"
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "type": "agent",
+  "publish": true,
+  "allow_anonymous_users": true,
+  "model": {},
+  "tools": [
+    {
+      "name": "add_collaborator_to_default_repos_ffe7"
+    },
+    {
+      "name": "list_directory_files_1ab7"
+    },
+    {
+      "name": "read_file_2766"
+    }
+  ],
+  "tool_choice": "auto",
+  "max_iteration": 30,
+  "memory_tags": [
+    "requirements_generation",
+    "prototype_generation"
+  ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/functional_requirement.md",
+      "src/main/java/com/java_template/prototype/user_requirement.md"
+    ]
+  },
+  "output": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/EntityControllerPrototype.java"
+    ]
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "generate_prototype_sketch_4b85"
+    }
+  ]
+}

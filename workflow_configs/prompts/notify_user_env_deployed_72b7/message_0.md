@@ -1,0 +1,3 @@
+Call `get_user_info` to get user environment URL and its status (deployed/not deployed).`
+ If the environment is deployed: tell the user that their environment (tell the env url) is deployed and there is no need to deploy it again. So you proceed to building the application.
+ If the environment is not deployed: tell the user that you've scheduled the deployment and it will be available soon at {env url}. You will proceed to building the application in parallel.

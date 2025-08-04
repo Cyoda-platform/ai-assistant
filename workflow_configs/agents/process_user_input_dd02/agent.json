@@ -1,0 +1,29 @@
+{
+  "type": "agent",
+  "publish": true,
+  "allow_anonymous_users": true,
+  "model": {},
+  "tools": [
+    {
+      "name": "add_collaborator_to_default_repos_865f"
+    },
+    {
+      "name": "read_link_16a6"
+    },
+    {
+      "name": "get_cyoda_guidelines_f3bb"
+    },
+    {
+      "name": "finish_discussion_69bc"
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "process_user_input_610e"
+    }
+  ],
+  "tool_choice": "auto",
+  "max_iteration": 30,
+  "approve": true
+}

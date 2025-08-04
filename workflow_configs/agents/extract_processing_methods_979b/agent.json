@@ -1,0 +1,38 @@
+{
+  "type": "agent",
+  "publish": false,
+  "model": {},
+  "tools": [
+    {
+      "name": "add_collaborator_to_default_repos_ffe7"
+    },
+    {
+      "name": "add_application_resource_56b5"
+    },
+    {
+      "name": "list_directory_files_6ec5"
+    }
+  ],
+  "memory_tags": [
+    "processing_methods_extraction"
+  ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/application/controller/Controller.java"
+    ]
+  },
+  "output": {
+    "local_fs": [
+      "src/main/java/com/java_template/application/controller/Controller.java"
+    ]
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "extract_processing_methods_b08b"
+    }
+  ],
+  "tool_choice": "auto",
+  "max_iteration": 10,
+  "approve": true
+}

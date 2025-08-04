@@ -1,0 +1,28 @@
+{
+  "type": "agent",
+  "publish": true,
+  "model": {},
+  "memory_tags": [
+    "entity_processing_logic_validation"
+  ],
+  "tools": [
+    {
+      "name": "add_collaborator_to_default_repos_ffe7"
+    },
+    {
+      "name": "get_file_contents_2480"
+    },
+    {
+      "name": "list_directory_files_1161"
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "validate_app_quality_1b5c"
+    }
+  ],
+  "tool_choice": "auto",
+  "max_iteration": 15,
+  "approve": false
+}

@@ -1,0 +1,8 @@
+{
+  "type": "function",
+  "function": {
+    "name": "init_chats",
+    "description": "Initialises ai service"
+  },
+  "allow_anonymous_users": true
+}

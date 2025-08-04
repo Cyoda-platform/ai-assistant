@@ -1,0 +1,20 @@
+{
+  "type": "function",
+  "function": {
+    "name": "web_search",
+    "description": "Search the web using Google Custom Search API. Use this function when you need to formulate questions or requirements for information to be searched online. For example, if the user wants to add data sources for an API but does not provide an exact link or documentation.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

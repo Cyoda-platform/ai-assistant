@@ -1,0 +1,21 @@
+{
+  "type": "prompt",
+  "publish": false,
+  "allow_anonymous_users": true,
+  "model": {},
+  "memory_tags": [
+    "requirements_generation"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "generate_functional_requirements_1641"
+    }
+  ],
+  "input": {},
+  "output": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/functional_requirement.md"
+    ]
+  }
+}

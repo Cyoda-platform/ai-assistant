@@ -1,0 +1,1 @@
+✅  Saved entities to `src/main/java/com/java_template/application/entity/*`. Continuing to generate the first prototype....⏳😌

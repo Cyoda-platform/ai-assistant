@@ -1,0 +1,12 @@
+{
+  "type": "function",
+  "publish": false,
+  "function": {
+    "name": "convert_workflow_to_dto",
+    "description": "convert_workflow_to_dto",
+    "parameters": {
+      "workflow_file_name": "src/main/java/com/java_template/application/workflow/{EntityName}.json",
+      "output_file_name": "src/main/java/com/java_template/application/cyoda_dto/{EntityName}.json"
+    }
+  }
+}

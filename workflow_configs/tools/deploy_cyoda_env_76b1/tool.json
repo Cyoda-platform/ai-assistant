@@ -1,0 +1,20 @@
+{
+  "type": "function",
+  "function": {
+    "name": "deploy_cyoda_env",
+    "description": "Launches workflow that is necessary to deploy Cyoda environment for the user. User needs to explicitly ask for deployment of Cyoda environment.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "user_request": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "user_request"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -578,58 +578,6 @@
                 {
                   "type": "function",
                   "function": {
-                    "name": "convert_workflow_to_dto",
-                    "description": "Convert json workflow to cyoda dto for future import to cyoda env. Please ask the user to specify the entity name, entity version, programming language and git branch if not clear from the user request or the context.",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "entity_name": {
-                          "type": "string"
-                        },
-                        "entity_version": {
-                          "type": "string"
-                        },
-                        "programming_language": {
-                          "type": "string",
-                          "enum": [
-                            "PYTHON",
-                            "JAVA"
-                          ]
-                        },
-                        "workflow_file_name": {
-                          "type": "string",
-                          "enum": [
-                            "entity/{entity_name}/workflow.json",
-                            "src/main/java/com/java_template/entity/{entity_name}/Workflow.json"
-                          ]
-                        },
-                        "output_file_name": {
-                          "type": "string",
-                          "enum": [
-                            "cyoda_dto/{entity_name}/workflow.json",
-                            "src/main/java/com/java_template/cyoda_dto/{entity_name}/workflow.json"
-                          ]
-                        },
-                        "git_branch": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "entity_name",
-                        "entity_version",
-                        "git_branch",
-                        "workflow_file_name",
-                        "output_file_name",
-                        "programming_language"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                {
-                  "type": "function",
-                  "function": {
                     "name": "get_env_deploy_status",
                     "description": "Use if the user wants to know the status of their environment build/deploy.",
                     "strict": true,
@@ -1252,58 +1200,6 @@
                         "user_request",
                         "git_branch",
                         "transition",
-                        "programming_language"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                {
-                  "type": "function",
-                  "function": {
-                    "name": "convert_workflow_to_dto",
-                    "description": "Convert json workflow to cyoda dto for future import to cyoda env. Please ask the user to specify the entity name, entity version, programming language and git branch if not clear from the user request or the context.",
-                    "strict": true,
-                    "parameters": {
-                      "type": "object",
-                      "properties": {
-                        "entity_name": {
-                          "type": "string"
-                        },
-                        "entity_version": {
-                          "type": "string"
-                        },
-                        "programming_language": {
-                          "type": "string",
-                          "enum": [
-                            "PYTHON",
-                            "JAVA"
-                          ]
-                        },
-                        "workflow_file_name": {
-                          "type": "string",
-                          "enum": [
-                            "entity/{entity_name}/workflow.json",
-                            "src/main/java/com/java_template/entity/{entity_name}/Workflow.json"
-                          ]
-                        },
-                        "output_file_name": {
-                          "type": "string",
-                          "enum": [
-                            "cyoda_dto/{entity_name}/workflow.json",
-                            "src/main/java/com/java_template/cyoda_dto/{entity_name}/workflow.json"
-                          ]
-                        },
-                        "git_branch": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "entity_name",
-                        "entity_version",
-                        "git_branch",
-                        "workflow_file_name",
-                        "output_file_name",
                         "programming_language"
                       ],
                       "additionalProperties": false

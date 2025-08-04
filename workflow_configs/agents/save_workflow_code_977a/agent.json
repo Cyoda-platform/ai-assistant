@@ -1,0 +1,21 @@
+{
+  "type": "prompt",
+  "publish": false,
+  "model": {},
+  "output": {},
+  "memory_tags": [
+    "workflow_generation"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "save_workflow_code_959f"
+    }
+  ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/application/workflow_prototypes/{EntityName}.txt",
+      "src/main/java/com/java_template/prototype/functional_requirement.md"
+    ]
+  }
+}

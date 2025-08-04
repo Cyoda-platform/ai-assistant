@@ -1,0 +1,12 @@
+{
+  "type": "function",
+  "function": {
+    "name": "launch_gen_app_workflows",
+    "description": "register_workflow_with_app",
+    "parameters": {
+      "dir_name": "src/main/java/com/java_template/application/entity",
+      "next_transition": "validate_app_quality"
+    }
+  },
+  "publish": false
+}

@@ -1,0 +1,15 @@
+{
+  "type": "prompt",
+  "publish": true,
+  "allow_anonymous_users": true,
+  "model": {},
+  "memory_tags": [
+    "requirements_generation"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "define_functional_requirements_67a6"
+    }
+  ]
+}

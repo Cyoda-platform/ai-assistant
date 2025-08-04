@@ -1,0 +1,24 @@
+{
+  "type": "prompt",
+  "publish": false,
+  "model": {},
+  "memory_tags": [
+    "controller_generation"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "generate_initial_cyoda_prototype_9ff0"
+    }
+  ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/EntityControllerPrototype.java"
+    ]
+  },
+  "output": {
+    "local_fs": [
+      "src/main/java/com/java_template/application/controller/Controller.java"
+    ]
+  }
+}

@@ -252,6 +252,7 @@ class GrpcClient:
             entity, resp = await self.workflow_dispatcher.process_event(
                 entity=entity,
                 processor_name=processor_name,
+                payload=data,
                 technical_id=data['entityId'])
             data['payload']['data'] = model_cls.model_dump(entity)
             logger.info(f"[PROCESSING] Success {type} - Processor: {processor_name}, EntityId: {data['entityId']}")

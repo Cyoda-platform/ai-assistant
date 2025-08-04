@@ -1,0 +1,11 @@
+{
+  "type": "function",
+  "function": {
+    "name": "save_env_file",
+    "description": "save_env_file",
+    "parameters": {
+      "filename": ".env.template"
+    }
+  },
+  "publish": false
+}

@@ -1,0 +1,20 @@
+{
+  "type": "function",
+  "function": {
+    "name": "list_directory_files",
+    "description": "List all files in 'src/main/java/com/java_template/application/entity' to get the list of entities created",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "directory_path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "directory_path"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

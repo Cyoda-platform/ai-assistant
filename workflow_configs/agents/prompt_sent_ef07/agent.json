@@ -1,0 +1,32 @@
+{
+  "type": "agent",
+  "tools": [
+    {
+      "name": "add_collaborator_to_default_repos_865f"
+    },
+    {
+      "name": "get_build_id_from_context_deeb"
+    },
+    {
+      "name": "get_user_info_4f38"
+    },
+    {
+      "name": "get_env_deploy_status_5dd8"
+    },
+    {
+      "name": "ui_function_issue_technical_user_808a"
+    }
+  ],
+  "model": {},
+  "memory_tags": [
+    "chat_deploy_env"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "prompt_sent_8926"
+    }
+  ],
+  "tool_choice": "auto",
+  "publish": true
+}

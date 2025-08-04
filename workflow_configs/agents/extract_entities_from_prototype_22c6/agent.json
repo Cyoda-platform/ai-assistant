@@ -1,0 +1,33 @@
+{
+  "type": "agent",
+  "publish": false,
+  "model": {},
+  "tools": [
+    {
+      "name": "add_collaborator_to_default_repos_ffe7"
+    },
+    {
+      "name": "add_application_resource_3d0b"
+    }
+  ],
+  "memory_tags": [
+    "generate_workflow_from_prototype",
+    "general_memory_tag",
+    "requirements_generation",
+    "prototype_generation"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "extract_entities_from_prototype_e7fa"
+    }
+  ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/functional_requirement.md"
+    ]
+  },
+  "tool_choice": "auto",
+  "max_iteration": 5,
+  "approve": true
+}

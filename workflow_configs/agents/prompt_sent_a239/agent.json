@@ -1,0 +1,12 @@
+{
+  "type": "prompt",
+  "approve": true,
+  "model": {},
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "prompt_sent_f4c8"
+    }
+  ],
+  "publish": true
+}

@@ -1,0 +1,22 @@
+{
+  "type": "prompt",
+  "publish": false,
+  "allow_anonymous_users": true,
+  "model": {},
+  "memory_tags": [
+    "requirements_generation",
+    "general_memory_tag"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "generate_original_requirements_52ef"
+    }
+  ],
+  "input": {},
+  "output": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/user_requirement.md"
+    ]
+  }
+}

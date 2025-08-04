@@ -1,0 +1,7 @@
+{
+  "type": "function",
+  "function": {
+    "name": "is_chat_locked",
+    "description": "Verifies if the chat is locked"
+  }
+}
