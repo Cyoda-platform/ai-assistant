@@ -230,7 +230,7 @@ FILES_NOTIFICATIONS = {
     },
 }
 
-BRANCH_READY_NOTIFICATION = "🎉 **Your branch `{git_branch}` is live!**\nI’ve added a GitHub branch in our public repository where I’ll be posting updates.\nYou can check it out now or come back to it anytime:\n🔗 [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch}) 👀 \n"
+BRANCH_READY_NOTIFICATION = "🎉 **Your branch `{git_branch}` is ready!**\nI’ve added a GitHub branch in our public repository where I’ll be posting updates.\nYou can check it out now or come back to it anytime:\n🔗 [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch}) 👀 \n"
 
 # === Miscellaneous design strings ===
 LOGIC_CODE_DESIGN_STR = "Additional logic code design"
