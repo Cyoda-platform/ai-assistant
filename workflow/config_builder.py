@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -74,7 +75,7 @@ class ConfigBuilder:
         logger.debug(f"Current working directory: {Path.cwd()}")
         logger.debug(f"Workflow configs directory exists: {self.workflow_configs_path.exists()}")
     
-    def build_config(self, processor_name: str) -> Dict[str, Any]:
+    async def build_config(self, processor_name: str) -> Dict[str, Any]:
         """
         Build configuration for the given processor name with caching.
 
@@ -103,11 +104,11 @@ class ConfigBuilder:
 
         try:
             if processor_type == "AgentProcessor":
-                config = self._build_agent_config(config_name)
+                config = await self._build_agent_config(config_name)
             elif processor_type == "FunctionProcessor":
-                config = self._build_function_config(config_name)
+                config = await self._build_function_config(config_name)
             elif processor_type == "MessageProcessor":
-                config = self._build_message_config(config_name)
+                config = await self._build_message_config(config_name)
             else:
                 raise ValueError(f"Unknown processor type: {processor_type}")
 
@@ -122,7 +123,7 @@ class ConfigBuilder:
             logger.error(f"Failed to build config for {processor_name}: {e}")
             raise
     
-    def _build_agent_config(self, agent_name: str) -> Dict[str, Any]:
+    async def _build_agent_config(self, agent_name: str) -> Dict[str, Any]:
         """
         Build agent configuration by loading agent.json and resolving references.
         
@@ -158,7 +159,7 @@ class ConfigBuilder:
         
         return config
     
-    def _build_function_config(self, function_name: str) -> Dict[str, Any]:
+    async def _build_function_config(self, function_name: str) -> Dict[str, Any]:
         """
         Build function configuration by loading tool.json.
         
@@ -176,7 +177,7 @@ class ConfigBuilder:
         with open(tool_config_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     
-    def _build_message_config(self, message_name: str) -> Dict[str, Any]:
+    async def _build_message_config(self, message_name: str) -> Dict[str, Any]:
         """
         Build message configuration from message directory.
         
@@ -328,4 +329,4 @@ def build_processor_config(processor_name: str, workflow_configs_path: str = "wo
         Built configuration dictionary
     """
     builder = ConfigBuilder(workflow_configs_path)
-    return builder.build_config(processor_name)
+    return asyncio.run(builder.build_config(processor_name))

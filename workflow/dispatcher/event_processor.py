@@ -78,7 +78,7 @@ class EventProcessor:
                     if processor_name == "process_event" and payload.get('parameters', {}).get('context'):
                         config = json.loads(payload['parameters']['context'])
                     else:
-                        config = self.config_builder.build_config(processor_name)
+                        config = await self.config_builder.build_config(processor_name)
 
                     # Route to appropriate handler based on entity type and config
                     if config and config.get("type") and isinstance(entity, AgenticFlowEntity):
