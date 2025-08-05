@@ -19,7 +19,7 @@ Important guidelines:
 - Save the extracted methods to 'src/main/java/com/java_template/application/workflow_prototypes/{EntityName}.txt' using add_application_resource for the respective entity name
 - Include any private methods that are called directly from the process methods
 - Preserve the original code structure and formatting
-- The cleaned controller should remain fully functional for CRUD operations
+- The cleaned controller should remain fully functional
 - Use the entity name in PascalCase for the filename (e.g., User.txt)
 
 Start by reading the Controller.java file to analyze its structure.

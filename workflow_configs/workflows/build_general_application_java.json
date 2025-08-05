@@ -490,7 +490,7 @@
       "transitions": [
         {
           "name": "notify_prototype_generation",
-          "next": "prototype_generation_notified",
+          "next": "configs_generation_notified",
           "manual": false,
           "processors": [
             {
@@ -504,7 +504,7 @@
         }
       ]
     },
-    "prototype_generation_notified": {
+    "configs_generation_notified": {
       "transitions": [
         {
           "name": "generate_functional_requirements",
@@ -579,8 +579,44 @@
     "notified_entities_extracted": {
       "transitions": [
         {
+          "name": "generate_workflows",
+          "next": "generated_workflows",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.generate_workflow_from_requirements_0000",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "generated_workflows": {
+      "transitions": [
+        {
+          "name": "notify_generated_workflows",
+          "next": "notified_generated_workflows",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_workflows_extracted_0000",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "notified_generated_workflows": {
+      "transitions": [
+        {
           "name": "generate_prototype_sketch",
-          "next": "prototype_completed",
+          "next": "configs_generation_completed",
           "manual": false,
           "processors": [
             {
@@ -594,15 +630,15 @@
         }
       ]
     },
-    "prototype_completed": {
+    "configs_generation_completed": {
       "transitions": [
         {
-          "name": "ask_to_discuss_prototype",
-          "next": "prototype_discussion_requested",
+          "name": "ask_to_discuss_configs",
+          "next": "configs_discussion_requested",
           "manual": false,
           "processors": [
             {
-              "name": "MessageProcessor.ask_to_discuss_prototype_983f",
+              "name": "MessageProcessor.ask_to_discuss_configs_0000",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant"
@@ -612,30 +648,30 @@
         }
       ]
     },
-    "prototype_discussion_requested": {
+    "configs_discussion_requested": {
       "transitions": [
         {
           "name": "submit_answer",
-          "next": "prototype_discussion_requested_submitted_answer",
+          "next": "configs_discussion_requested_submitted_answer",
           "manual": true
         },
         {
           "name": "manual_approve",
-          "next": "prototype_discussion_completed",
+          "next": "configs_discussion_completed",
           "manual": true
         },
         {
           "name": "rollback",
-          "next": "prototype_discussion_requested_submitted_answer",
+          "next": "configs_discussion_requested_submitted_answer",
           "manual": true
         }
       ]
     },
-    "prototype_discussion_requested_submitted_answer": {
+    "configs_discussion_requested_submitted_answer": {
       "transitions": [
         {
           "name": "process_user_input",
-          "next": "prototype_discussion_requested_processing",
+          "next": "configs_discussion_requested_processing",
           "manual": false,
           "processors": [
             {
@@ -649,11 +685,11 @@
         }
       ]
     },
-    "prototype_discussion_requested_processing": {
+    "configs_discussion_requested_processing": {
       "transitions": [
         {
-          "name": "process_prototype_discussion_processing",
-          "next": "prototype_discussion_requested",
+          "name": "process_configs_discussion_processing",
+          "next": "configs_discussion_requested",
           "manual": false,
           "criterion": {
             "type": "function",
@@ -666,8 +702,8 @@
           }
         },
         {
-          "name": "process_prototype_discussion_success",
-          "next": "prototype_discussion_completed",
+          "name": "process_configs_discussion_success",
+          "next": "configs_discussion_completed",
           "manual": false,
           "criterion": {
             "type": "function",
@@ -681,7 +717,7 @@
         }
       ]
     },
-    "prototype_discussion_completed": {
+    "configs_discussion_completed": {
       "transitions": [
         {
           "name": "ask_to_confirm_migration",

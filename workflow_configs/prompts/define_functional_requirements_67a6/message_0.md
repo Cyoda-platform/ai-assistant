@@ -65,21 +65,8 @@ Specify JSON structures for all API endpoints.
 ## VISUAL REPRESENTATION:
 Provide Mermaid diagrams showing:
 
-**State Diagram Example:**
-```mermaid
-stateDiagram-v2
-    [*] --> EntityCreated
-    EntityCreated --> Processing : processEntity()
-    Processing --> Completed : success
-    Processing --> Failed : error
-    Completed --> [*]
-    Failed --> [*]
-```
-
 **Required Diagrams:**
-- Entity lifecycle state diagrams
 - Event-driven processing chains
-- User interaction sequence flows
 
 ## FORMATTING REQUIREMENTS:
 - Keep requirements minimalistic and focused
