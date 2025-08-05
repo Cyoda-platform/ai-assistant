@@ -151,7 +151,7 @@ class ConfigBuilder:
         
         # Resolve tool references
         if "tools" in config:
-            config["tools"] = self._resolve_tool_references(config["tools"])
+            config["tools"] = await self._resolve_tool_references(config["tools"])
         
         # Resolve message content references
         if "messages" in config:
@@ -219,7 +219,7 @@ class ConfigBuilder:
         
         return config
     
-    def _resolve_tool_references(self, tools: list) -> list:
+    async def _resolve_tool_references(self, tools: list) -> list:
         """
         Resolve tool references by replacing tool names with full tool configs.
         
@@ -235,7 +235,7 @@ class ConfigBuilder:
             if isinstance(tool, dict) and "name" in tool:
                 tool_name = tool["name"]
                 try:
-                    full_tool_config = self._build_function_config(tool_name)
+                    full_tool_config = await self._build_function_config(tool_name)
                     resolved_tools.append(full_tool_config)
                 except FileNotFoundError:
                     logger.warning(f"Tool config not found for: {tool_name}, keeping original reference")
