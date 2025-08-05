@@ -615,24 +615,6 @@
     "notified_generated_workflows": {
       "transitions": [
         {
-          "name": "generate_prototype_sketch",
-          "next": "configs_generation_completed",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.generate_prototype_sketch_2269",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "configs_generation_completed": {
-      "transitions": [
-        {
           "name": "ask_to_discuss_configs",
           "next": "configs_discussion_requested",
           "manual": false,
@@ -675,7 +657,7 @@
           "manual": false,
           "processors": [
             {
-              "name": "AgentProcessor.process_user_input_5b2b",
+              "name": "AgentProcessor.process_configs_discussion_0000",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant"
@@ -694,7 +676,7 @@
           "criterion": {
             "type": "function",
             "function": {
-              "name": "FunctionProcessor.not_stage_completed_41d2",
+              "name": "FunctionProcessor.not_stage_completed_discuss_configs_0000",
               "config": {
                 "calculationNodesTags": "ai_assistant"
               }
@@ -708,7 +690,7 @@
           "criterion": {
             "type": "function",
             "function": {
-              "name": "FunctionProcessor.is_stage_completed_d505",
+              "name": "FunctionProcessor.is_stage_completed_discuss_configs_0000",
               "config": {
                 "calculationNodesTags": "ai_assistant"
               }
