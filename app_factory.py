@@ -38,10 +38,16 @@ def create_app():
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
             response.headers['Pragma'] = 'no-cache'
             response.headers['Expires'] = '0'
+            # Content type and vary headers
+            if 'Content-Type' not in response.headers:
+                response.headers['Content-Type'] = 'application/json'
             response.headers["Vary"] = "Authorization, Accept-Encoding"
 
-            # Security
+            # Security headers
             response.headers["X-Content-Type-Options"] = "nosniff"
+            response.headers["X-XSS-Protection"] = "0"
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            response.headers["X-Frame-Options"] = "DENY"
             response.headers["Referrer-Policy"] = "no-referrer"
             response.headers["Permissions-Policy"] = "geolocation=(), microphone=()"
 
