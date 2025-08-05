@@ -44,8 +44,6 @@ def create_app():
             response.headers["X-Content-Type-Options"] = "nosniff"
             response.headers["Referrer-Policy"] = "no-referrer"
             response.headers["Permissions-Policy"] = "geolocation=(), microphone=()"
-            response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
-            response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
 
             return response
 
