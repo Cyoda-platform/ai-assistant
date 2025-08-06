@@ -17,18 +17,18 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "model": {},
         "output": {},
         "memory_tags": [
-                "workflow_generation"
+            "workflow_generation"
         ],
         "messages": [
-                {
-                        "role": "user",
-                        "content_from_file": SaveWorkflowCode959fPromptConfig.get_name()
-                }
+            {
+                "role": "user",
+                "content_from_file": SaveWorkflowCode959fPromptConfig.get_name()
+            }
         ],
         "input": {
-                "local_fs": [
-                        "src/main/java/com/java_template/application/workflow_prototypes/{EntityName}.txt",
-                        "src/main/java/com/java_template/prototype/functional_requirement.md"
-                ]
+            "local_fs": [
+                "src/main/java/com/java_template/application/workflow_prototypes/{EntityName}.txt",
+                "src/main/java/com/java_template/prototype/functional_requirement.md"
+            ]
         }
-}
+    }

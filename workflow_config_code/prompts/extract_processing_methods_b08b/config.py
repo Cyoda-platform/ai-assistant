@@ -14,7 +14,7 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
 - Use `list_directory_files` to discover all entity names
 
 Your tasks:
-1. Get all entity names.
+1. Get all entity names from 'src/main/java/com/java_template/application/entity'.
 1. Read the Controller.java file contents
 2. Identify all process methods (methods that start with 'process' followed by an entity name or some variation of this pattern. these methods are right after putting entity to cache/ 'saving')
 3. For each processEntityName method found:
