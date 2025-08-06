@@ -65,10 +65,7 @@
                       "type": "string"
                     },
                     "manual": {
-                      "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "type": "boolean"
                     },
                     "processors": {
                       "type": "array",

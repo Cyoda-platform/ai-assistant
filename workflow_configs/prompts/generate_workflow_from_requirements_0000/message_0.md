@@ -31,10 +31,10 @@ Workflow JSON Example:
   "version": "1.0",
   "name": "{{EntityName}} Workflow",
   "desc": "Description of the workflow for {{EntityName}}",
-  "initialState": "none",
+  "initialState": "initial_state",
   "active": true,
   "states": {{
-    "none": {{
+    "initial_state": {{
       "transitions": [
         {{
           "name": "transition_to_01",

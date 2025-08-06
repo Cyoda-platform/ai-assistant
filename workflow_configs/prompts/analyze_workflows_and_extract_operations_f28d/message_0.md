@@ -5,8 +5,8 @@ Analyze the workflow json and find all unique ProcessorClassNames
  Ignore any criteria/criterion 
 Now for each ProcessorClassName that you've outlined in the workflow configurations,
 please provide the code for it based on the prototype code and the entity pojo and call add_application_resource tool with processor name and content - processor java code.
-Add processor classes exactly for each ProcessorClassName from the workflow json. No more, no less.
 First check workflow json and extract all unique ProcessorClassNames. Then check the code for it.
+
 BEFORE WRITING ANY PROCESSOR CODE:
 1. Review the entity POJO structure to see what getters/setters are actually available
 2. Only use properties that exist in the entity POJO - do not invent or assume properties
@@ -116,11 +116,6 @@ WHAT TO LOOK FOR IN CyodaEntityControllerPrototype.java:
 - Private methods that contain business logic for your entity type
 
 ONLY use existing entity properties - do not access non-existent getters/setters.
-
-
-add_application_resource Tool Usage
-
-After each processor is generated, call the add_application_resource tool like:
 
 Exhaustive list of EntityService methods:
 CompletableFuture<UUID> addItem(String entityModel, String entityVersion, Object entity);

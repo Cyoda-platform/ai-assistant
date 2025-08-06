@@ -23,42 +23,6 @@
     "started_workflow_generation": {
       "transitions": [
         {
-          "name": "save_workflow_code",
-          "next": "saved_workflow_code",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.save_workflow_code_977a",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "saved_workflow_code": {
-      "transitions": [
-        {
-          "name": "design_workflow_config_from_code",
-          "next": "designed_workflow_json",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.design_workflow_config_from_code_fe21",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "designed_workflow_json": {
-      "transitions": [
-        {
           "name": "enrich_workflow",
           "next": "formatted_workflow_json",
           "manual": false,
