@@ -86,8 +86,8 @@ class Config:
 
         # — optional ints with defaults —
         self.MAX_ITERATION = _get_int_env("MAX_ITERATION", default=30)
-        self.MAX_AI_AGENT_ITERATIONS = _get_int_env("MAX_AI_AGENT_ITERATIONS", default=4)
-        self.MAX_AI_AGENT_VALIDATION_RETRIES = _get_int_env("MAX_AI_AGENT_ITERATIONS", default=4)
+        self.MAX_AI_AGENT_ITERATIONS = _get_int_env("MAX_AI_AGENT_ITERATIONS", default=30)
+        self.MAX_AI_AGENT_VALIDATION_RETRIES = _get_int_env("MAX_AI_AGENT_ITERATIONS", default=30)
         self.MAX_GUEST_CHATS = _get_int_env("MAX_GUEST_CHATS", default=2)
         self.CHECK_DEPLOY_INTERVAL = _get_int_env("CHECK_DEPLOY_INTERVAL", default=30)
         self.MAX_IPS_PER_DEVICE_BEFORE_BLOCK = _get_int_env(

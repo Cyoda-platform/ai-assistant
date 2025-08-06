@@ -1,0 +1,27 @@
+{
+  "type": "agent",
+  "publish": true,
+  "allow_anonymous_users": true,
+  "model": {
+    "model_name": "gpt-4o",
+    "temperature": 0.7,
+    "max_tokens": 10000
+  },
+  "tools": [
+    {
+      "name": "ui_function_issue_technical_user"
+    },
+    {
+      "name": "add_collaborator_to_default_repos"
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "submit_answer_b8b2"
+    }
+  ],
+  "tool_choice": "auto",
+  "max_iteration": 30,
+  "approve": false
+}

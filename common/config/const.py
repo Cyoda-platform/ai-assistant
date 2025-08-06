@@ -230,7 +230,7 @@ FILES_NOTIFICATIONS = {
     },
 }
 
-BRANCH_READY_NOTIFICATION = "🎉 **Your branch `{git_branch}` is live!**\nI’ve added a GitHub branch in our public repository where I’ll be posting updates.\nYou can check it out now or come back to it anytime:\n🔗 [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch}) 👀 \n"
+BRANCH_READY_NOTIFICATION = "🎉 **Your branch `{git_branch}` is ready!**\n\nI’ve added a GitHub branch in our public repository where I’ll be posting updates.\n\nYou can check it out now or come back to it anytime:\n\n🔗 [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch}) 👀 \n"
 
 # === Miscellaneous design strings ===
 LOGIC_CODE_DESIGN_STR = "Additional logic code design"
@@ -243,7 +243,7 @@ QUESTION_OR_VALIDATE = (
     "Could you please help me review my output and approve it if you are happy with the result 😸"
 )
 GIT_BRANCH_PARAM="git_branch"
-
+REPOSITORY_NAME_PARAM="repository_name"
 # === Numeric limits ===
 RATE_LIMIT = 300
 SCHEDULER_CHECK_INTERVAL = 60
@@ -255,16 +255,16 @@ SCHEDULER_STATUS_WAITING = "waiting"
 UI_FUNCTION_PREFIX = "ui_function"
 
 CYODA_WELCOME_MESSAGE = """\
-Hi! I’m Cyoda 🧚 and I’ll be guiding you on your journey!
+Hi there! I'm Cyoda ai-assistant 🧚, and I'll be your guide.
 
-We’re currently in alpha, so you might run into a few bumps. No worries — if you need help, just reach out on [Discord](https://discord.gg/95rdAyBZr2)!
+Welcome to our alpha! We’re an early-stage product, so we might run into a few bumps. Don't worry—if you need help, just reach out on [Discord](https://discord.gg/95rdAyBZr2)💬
 
-Cyoda is entity-based — each entity follows its own workflow.  
-I'm also workflow-driven! To track progress, open the *Entities Data* window.
+Cyoda is entity-based, meaning each entity follows its own unique workflow. I’m also Cyoda workflow-driven. To track progress, troubleshoot issues, or simply watch things in action, open the Entities Data window.
 
-I’ll be kicking off new workflows for you — you’ll see them appear in that window. Once a flow reaches the **locked** state, it’s done and dusted ✅.
+I'll save entities for you and kick off new workflows as we go. You'll see them appear in the Entities Data window and progress through different states 📊. Once a workflow reaches the locked state, it’s done and dusted ✅.
 
-Curious about what I can do? Just ask: **"Show me your agent tools."**
+Curious about what else I can do? Just ask: "Show me your agent tools.🛠️✨
 
 Have fun exploring!
 """
+

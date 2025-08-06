@@ -1,13 +1,18 @@
 You are provided with the requirements document.
 
-You need to identify entities from the requirements document.
-Min 1 entity, Max 3 entities: orchestration entities like 'Job', 'Task' take precedence, then business domain entities.
- There can be only one orchestration entity. But you should call add_application_resource at least once
-For each entity, call add_application_resource with:
-- resource_path: 'src/main/java/com/java_template/application/entity/{EntityName}.java'
-- file_contents: entity java pojo with lombok @Data annotation
+Your task:
+- Identify entities from the requirements document.
+- Min 1 entity, Max 3 entities unless explicitly asked for more:
+  - Orchestration entities (e.g. 'Job', 'Task') take precedence.
+  - After orchestration entities, identify business domain entities.
+  - There can only be one orchestration entity.
+- You must call add_application_resource at least once.
 
-Use this entity class template (replace EntityName with your actual entity name):
+For each identified entity, call add_application_resource with:
+- resource_path: 'src/main/java/com/java_template/application/entity/{EntityName}.java'
+- file_contents: entity Java POJO using Lombok @Data annotation.
+
+Use the following entity class template (replace EntityName with the actual entity name):
 
 package com.java_template.application.entity;
 
@@ -38,20 +43,14 @@ public class EntityName implements CyodaEntity {
     }
 }
 
-Replace:
-- EntityName with your actual entity class name (PascalCase)
-- Add appropriate fields based on the prototype code
-- Implement proper validation logic in isValid() method
+Rules:
+- Replace "EntityName" with the actual entity class name (PascalCase).
+- Add appropriate fields based on the prototype code.
+- Implement proper validation logic in isValid() (e.g., use .isBlank() for String fields, not null checks for UUID fields).
+- If enums are needed, use String instead.
+- Ensure @Data from Lombok generates all required getters/setters.
+- POST endpoints that add entities should return only a technical id.
+- Use String types for foreign key references representing serialized UUIDs.
+- Ensure add_application_resource is called at least once.
 
-It should be a single class, no nested classes or enum. If there is necessity to use enum - use string instead.
-When creating entity classes that implement CyodaEntity:
-1.
-
-POST endpoints that add entities should return only technical id. Nothing else.
-Use String types for foreign key references when they represent serialized UUIDs
-4. 
-Update validation logic to match the actual field types (use .isBlank() for String fields, not null checks for UUID fields)
-
-5. Ensure @Data annotation from Lombok generates all necessary getters/setters
- CRITICAL: add_application_resource should be called at least once.
 Requirement:

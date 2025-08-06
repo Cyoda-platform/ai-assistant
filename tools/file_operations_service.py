@@ -356,6 +356,7 @@ class FileOperationsService(BaseWorkflowService):
             
             # Update workflow cache
             entity.workflow_cache[const.GIT_BRANCH_PARAM] = technical_id
+            entity.workflow_cache[const.REPOSITORY_NAME_PARAM] = repository_name
             return const.BRANCH_READY_NOTIFICATION.format(
                 repository_name=repository_name, 
                 git_branch=technical_id

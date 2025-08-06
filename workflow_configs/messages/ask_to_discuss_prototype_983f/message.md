@@ -9,7 +9,7 @@ The initial prototype based on your functional requirements is now ready! You ca
 #### **Option 1: GitHub Codespaces **
 You can open the repo in GitHub Codespaces and launch the prototype there:
 
-1. Open the repository in [GitHub Codespaces](https://github.com/Cyoda-platform/java-client-template/tree/{git_branch}).
+1. Open the repository in [GitHub Codespaces](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch}).
 2. In the Codespace terminal, run:
 
 ```bash

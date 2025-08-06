@@ -1,0 +1,81 @@
+{
+  "type": "agent",
+  "publish": true,
+  "allow_anonymous_users": true,
+  "model": {
+    "model_name": "gpt-4o",
+    "temperature": 0.7,
+    "max_tokens": 10000
+  },
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "ui_function_issue_technical_user",
+        "description": "Please use ui_function_issue_technical_user for requests like give me a technical user. This will return CYODA_CLIENT_ID and CYODA_CLIENT_SECRET.",
+        "strict": true,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string",
+              "enum": [
+                "POST"
+              ]
+            },
+            "path": {
+              "type": "string",
+              "enum": [
+                "/api/clients"
+              ]
+            },
+            "response_format": {
+              "type": "string",
+              "enum": [
+                "file"
+              ]
+            }
+          },
+          "required": [
+            "method",
+            "path",
+            "response_format"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "add_collaborator_to_default_repos",
+        "description": "Adds a user as collaborator to the default Cyoda repositories (quart-client-template, java-client-template). Use when user requests repository access, push rights, or to be added to repositories. The AI must extract the GitHub username from the user's request - cannot invent usernames.",
+        "strict": true,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "username": {
+              "type": "string",
+              "description": "GitHub username extracted from user's request. Must be provided by the user - AI cannot invent this."
+            }
+          },
+          "required": [
+            "username"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        " Hello! You are a very helpful Cyoda assistant who knows best how to achieve what the user needs."
+      ]
+    }
+  ],
+  "tool_choice": "auto",
+  "max_iteration": 30,
+  "approve": false
+}

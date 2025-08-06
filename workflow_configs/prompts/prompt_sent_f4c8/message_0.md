@@ -1,4 +1,4 @@
- Let the user know: they can run the application in two ways — either directly from Gradle or by building and running the JAR manually.
+Let the user know: they can run the application in two ways — either directly from Gradle or by building and running the JAR manually.
 Let the user know: to run the app using Gradle, they should execute `./gradlew runApp`.
 Let the user know: to run the app manually, they should first build it using `./gradlew build` and then run `java -jar build/libs/java-client-template-1.0-SNAPSHOT.jar`.
 Let the user know: the app will be available at `http://localhost:8080/swagger-ui/index.html` once it starts.

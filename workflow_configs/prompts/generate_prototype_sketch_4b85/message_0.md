@@ -3,8 +3,9 @@
 Create a Spring Boot REST controller prototype that demonstrates the API design and validates functionality before full implementation.
 
 ### 1. DISCOVERY PHASE (MANDATORY)
-**You can use the following tools:**
+**You must use the following tools:**
 - Use `list_directory_files` to discover all entity classes in 'src/main/java/com/java_template/application/entity'
+- Use `list_directory_files` to discover all workflow files in 'src/main/java/com/java_template/application/workflow'
 - Use `read_file` to examine each entity class and understand their fields and structure
 
 ### 2. CONTROLLER STRUCTURE
@@ -57,8 +58,26 @@ private final AtomicLong entityNameIdCounter = new AtomicLong(1);
 ### 5. CRITICAL: processEntityName() METHODS (variation: process{EntityName}{ProcessorName}() - if stated in the functional requirement). There might be multiple processors and criteria (check{EntityName}{CriteriaName}() methods. You should call them one by one after save. If criteria returns true then processor etc) .
 **Each entity MUST have a corresponding process method with meaningful business logic:**
 
+You should have a single process method for each entity workflow.
+The method name should be process{EntityName}. 
+The method should take two parameters: String technicalId and EntityName entity.
+The method should return void. The method should be private.
+The method should be called from the POST endpoint after saving the entity to cache. 
+The method should contain the actual business logic from the requirements.
+The method should have simulations for each Processor and Criteria (Conditions).
+If the entity has a processor call simulate{ProcessorName}() method, same for criteria.
+For example:
+
+  
+
 ```java
 private void process{EntityName}(String technicalId, EntityName entity) {
+
+    simulateProcessor1();
+    if simulateCriteria1() {
+        simulateProcessor2();
+    }
+
      IMPLEMENT ACTUAL BUSINESS LOGIC HERE
      Examples:
      - Data validation and enrichment
@@ -70,6 +89,7 @@ private void process{EntityName}(String technicalId, EntityName entity) {
     Replace with actual business logic from requirements. no todos. here should be real logic.
 }
 CRITICAL: If the user provides any external API calls, make sure to implement them.
+CRITICAL: You can add static classes only for request/response dtos. Import entities from com.java_template.application.entity, do not duplicate them.
 ```
 
 ### 8. IMPLEMENTATION GUIDELINES

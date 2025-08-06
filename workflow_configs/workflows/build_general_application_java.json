@@ -494,7 +494,7 @@
           "manual": false,
           "processors": [
             {
-              "name": "MessageProcessor.notify_prototype_generation_0f5b",
+              "name": "MessageProcessor.notify_config_generation_0f5b",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant"
@@ -700,6 +700,129 @@
       ]
     },
     "configs_discussion_completed": {
+      "transitions": [
+        {
+          "name": "notify_prototype_generation_started",
+          "next": "prototype_generation_started",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_prototype_generation_0000",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "prototype_generation_started": {
+      "transitions": [
+        {
+          "name": "generate_prototype",
+          "next": "prototype_generation_finished",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.generate_prototype_sketch_2269",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "prototype_generation_finished": {
+      "transitions": [
+        {
+          "name": "notify_prototype_generation_finished",
+          "next": "prototype_discussion_requested",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.ask_to_discuss_prototype_983f",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "prototype_discussion_requested": {
+      "transitions": [
+        {
+          "name": "submit_answer",
+          "next": "prototype_discussion_processing",
+          "manual": true
+        },
+        {
+          "name": "manual_approve",
+          "next": "prototype_discussion_completed",
+          "manual": true
+        },
+        {
+          "name": "rollback",
+          "next": "prototype_discussion_processing",
+          "manual": true
+        }
+      ]
+    },
+    "prototype_discussion_processing": {
+      "transitions": [
+        {
+          "name": "process_user_input",
+          "next": "prototype_discussion_requested_processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_prototype_discussion_0000",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "prototype_discussion_requested_processing": {
+      "transitions": [
+        {
+          "name": "process_prototype_discussion_processing",
+          "next": "prototype_discussion_requested",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.not_stage_completed_discuss_prototype_0000",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          }
+        },
+        {
+          "name": "process_configs_discussion_success",
+          "next": "prototype_discussion_completed",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.is_stage_completed_discuss_prototype_0000",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "prototype_discussion_completed": {
       "transitions": [
         {
           "name": "ask_to_confirm_migration",

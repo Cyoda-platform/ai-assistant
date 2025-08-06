@@ -17,7 +17,7 @@
   "tool_choice": "auto",
   "max_iteration": 30,
   "memory_tags": [
-    "requirements_generation",
+    "configs_generation",
     "prototype_generation"
   ],
   "input": {

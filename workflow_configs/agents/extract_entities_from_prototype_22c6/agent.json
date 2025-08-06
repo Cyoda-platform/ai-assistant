@@ -11,10 +11,7 @@
     }
   ],
   "memory_tags": [
-    "generate_workflow_from_prototype",
-    "general_memory_tag",
-    "requirements_generation",
-    "prototype_generation"
+    "configs_generation"
   ],
   "messages": [
     {

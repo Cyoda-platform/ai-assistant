@@ -1,0 +1,1280 @@
+"""
+BuildGeneralApplicationJavaWorkflowConfig Configuration
+
+Generated from config: workflow_configs/workflows/build_general_application_java.json
+Configuration data for the workflow.
+"""
+
+from typing import Any, Dict, Callable
+
+from workflow_config_code.agents.generate_prototype_sketch_2269.agent import GeneratePrototypeSketch2269AgentConfig
+from workflow_config_code.agents.process_prototype_discussion_0000.agent import \
+    ProcessPrototypeDiscussion0000AgentConfig
+from workflow_config_code.messages.ask_to_discuss_prototype_983f.message import AskToDiscussPrototype983fMessageConfig
+from workflow_config_code.messages.notify_prototype_generation_0000.message import \
+    NotifyPrototypeGeneration0000MessageConfig
+from workflow_config_code.tools.is_stage_completed_c00a.tool import IsStageCompletedC00aToolConfig
+from workflow_config_code.messages.notify_workflows_extracted_0000.message import \
+    NotifyWorkflowsExtracted0000MessageConfig
+from workflow_config_code.tools.is_stage_completed_discuss_prototype_0000.tool import \
+    IsStageCompletedDiscussPrototype0000ToolConfig
+from workflow_config_code.tools.is_stage_completed_e7bf.tool import IsStageCompletedE7bfToolConfig
+from workflow_config_code.tools.is_stage_completed_8a02.tool import IsStageCompleted8a02ToolConfig
+from workflow_config_code.messages.welcome_user_25fc.message import WelcomeUser25fcMessageConfig
+from workflow_config_code.agents.process_configs_discussion_0000.agent import ProcessConfigsDiscussion0000AgentConfig
+from workflow_config_code.messages.ask_to_confirm_migration_208e.message import AskToConfirmMigration208eMessageConfig
+from workflow_config_code.messages.notify_generated_original_requirements_b94e.message import \
+    NotifyGeneratedOriginalRequirementsB94eMessageConfig
+from workflow_config_code.messages.question_to_proceed_with_generated_app_editing_2f5f.message import \
+    QuestionToProceedWithGeneratedAppEditing2f5fMessageConfig
+from workflow_config_code.messages.ask_about_api_d91f.message import AskAboutApiD91fMessageConfig
+from workflow_config_code.agents.process_initial_question_cd33.agent import ProcessInitialQuestionCd33AgentConfig
+from workflow_config_code.agents.generate_functional_requirements_accc.agent import \
+    GenerateFunctionalRequirementsAcccAgentConfig
+from workflow_config_code.agents.process_user_input_9a8e.agent import ProcessUserInput9a8eAgentConfig
+from workflow_config_code.agents.validate_app_quality_cca3.agent import ValidateAppQualityCca3AgentConfig
+from workflow_config_code.tools.init_chats_d512.tool import InitChatsD512ToolConfig
+from workflow_config_code.tools.clone_repo_b60a.tool import CloneRepoB60aToolConfig
+from workflow_config_code.agents.generate_workflow_from_requirements_0000.agent import \
+    GenerateWorkflowFromRequirements0000AgentConfig
+from workflow_config_code.tools.launch_gen_app_workflows_166e.tool import LaunchGenAppWorkflows166eToolConfig
+from workflow_config_code.messages.ask_about_api_063f.message import AskAboutApi063fMessageConfig
+from workflow_config_code.agents.generate_initial_cyoda_prototype_9221.agent import \
+    GenerateInitialCyodaPrototype9221AgentConfig
+from workflow_config_code.tools.not_stage_completed_6044.tool import NotStageCompleted6044ToolConfig
+from workflow_config_code.tools.not_stage_completed_5e0e.tool import NotStageCompleted5e0eToolConfig
+from workflow_config_code.tools.not_stage_completed_discuss_prototype_0000.tool import \
+    NotStageCompletedDiscussPrototype0000ToolConfig
+from workflow_config_code.tools.not_stage_completed_f259.tool import NotStageCompletedF259ToolConfig
+from workflow_config_code.messages.notify_config_generation_0f5b.message import \
+    NotifyConfigGeneration0f5bMessageConfig
+from workflow_config_code.tools.is_stage_completed_b809.tool import IsStageCompletedB809ToolConfig
+from workflow_config_code.tools.delete_files_6818.tool import DeleteFiles6818ToolConfig
+from workflow_config_code.messages.notify_generated_functional_requirements_0bee.message import \
+    NotifyGeneratedFunctionalRequirements0beeMessageConfig
+from workflow_config_code.messages.migration_confirmation_notify_d018.message import \
+    MigrationConfirmationNotifyD018MessageConfig
+from workflow_config_code.tools.save_env_file_d2aa.tool import SaveEnvFileD2aaToolConfig
+from workflow_config_code.agents.process_user_input_cd43.agent import ProcessUserInputCd43AgentConfig
+from workflow_config_code.messages.notify_entities_extracted_ede4.message import \
+    NotifyEntitiesExtractedEde4MessageConfig
+from workflow_config_code.agents.process_user_input_2185.agent import ProcessUserInput2185AgentConfig
+from workflow_config_code.agents.extract_entities_from_prototype_22c6.agent import \
+    ExtractEntitiesFromPrototype22c6AgentConfig
+from workflow_config_code.agents.process_user_input_2c31.agent import ProcessUserInput2c31AgentConfig
+from workflow_config_code.agents.notify_user_env_deployed_58e2.agent import NotifyUserEnvDeployed58e2AgentConfig
+from workflow_config_code.agents.define_functional_requirements_8ee2.agent import \
+    DefineFunctionalRequirements8ee2AgentConfig
+from workflow_config_code.tools.not_stage_completed_discuss_configs_0000.tool import \
+    NotStageCompletedDiscussConfigs0000ToolConfig
+from workflow_config_code.agents.update_routes_file_0a64.agent import UpdateRoutesFile0a64AgentConfig
+from workflow_config_code.tools.is_stage_completed_discuss_configs_0000.tool import \
+    IsStageCompletedDiscussConfigs0000ToolConfig
+from workflow_config_code.tools.init_setup_workflow_5f06.tool import InitSetupWorkflow5f06ToolConfig
+from workflow_config_code.messages.ask_to_discuss_configs_0000.message import AskToDiscussConfigs0000MessageConfig
+from workflow_config_code.agents.extract_processing_methods_979b.agent import ExtractProcessingMethods979bAgentConfig
+from workflow_config_code.tools.not_stage_completed_f57d.tool import NotStageCompletedF57dToolConfig
+from workflow_config_code.agents.generate_original_requirements_c87e.agent import \
+    GenerateOriginalRequirementsC87eAgentConfig
+
+
+def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+    """Get workflow configuration factory"""
+    return lambda params=None: {
+        "version": "1.0",
+        "name": "build_general_application_java",
+        "desc": "Migrated from build_general_application_java",
+        "initialState": "none",
+        "active": True,
+        "criterion": {
+            "type": "simple",
+            "jsonPath": "$.workflow_name",
+            "operation": "EQUALS",
+            "value": "build_general_application_java"
+        },
+        "states": {
+            "none": {
+                "transitions": [
+                    {
+                        "name": "initialize",
+                        "next": "initialized",
+                        "manual": False
+                    }
+                ]
+            },
+            "initialized": {
+                "transitions": [
+                    {
+                        "name": "build_new_app",
+                        "next": "building_new_app",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "name": "build_new_app_criteria",
+                            "operator": "AND",
+                            "parameters": [
+                                {
+                                    "jsonPath": "resume_transition",
+                                    "operatorType": "IEQUALS",
+                                    "value": "build_new_app",
+                                    "type": "simple"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "discuss_functional_requirements",
+                        "next": "chats_initialized",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "name": "discuss_functional_requirements_criteria",
+                            "operator": "AND",
+                            "parameters": [
+                                {
+                                    "jsonPath": "resume_transition",
+                                    "operatorType": "IEQUALS",
+                                    "value": "discuss_functional_requirements",
+                                    "type": "simple"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "edit_functional_requirements",
+                        "next": "functional_requirements_specified",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "name": "edit_functional_requirements_criteria",
+                            "operator": "AND",
+                            "parameters": [
+                                {
+                                    "jsonPath": "resume_transition",
+                                    "operatorType": "IEQUALS",
+                                    "value": "edit_functional_requirements",
+                                    "type": "simple"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "prototype_discussion_requested",
+                        "next": "prototype_discussion_requested_submitted_answer",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "name": "prototype_discussion_requested_criteria",
+                            "operator": "AND",
+                            "parameters": [
+                                {
+                                    "jsonPath": "resume_transition",
+                                    "operatorType": "IEQUALS",
+                                    "value": "prototype_discussion_requested",
+                                    "type": "simple"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "resume_migration",
+                        "next": "start_environment_setup",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "name": "resume_migration_criteria",
+                            "operator": "AND",
+                            "parameters": [
+                                {
+                                    "jsonPath": "resume_transition",
+                                    "operatorType": "IEQUALS",
+                                    "value": "resume_migration",
+                                    "type": "simple"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "resume_prototype_cyoda_workflow",
+                        "next": "generated_initial_cyoda_prototype",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "name": "resume_prototype_cyoda_workflow_criteria",
+                            "operator": "AND",
+                            "parameters": [
+                                {
+                                    "jsonPath": "resume_transition",
+                                    "operatorType": "IEQUALS",
+                                    "value": "resume_prototype_cyoda_workflow",
+                                    "type": "simple"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "resume_gen_prototype_cyoda_workflow_json",
+                        "next": "validated_controller",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "name": "resume_gen_prototype_cyoda_workflow_json_criteria",
+                            "operator": "AND",
+                            "parameters": [
+                                {
+                                    "jsonPath": "resume_transition",
+                                    "operatorType": "IEQUALS",
+                                    "value": "resume_gen_prototype_cyoda_workflow_json",
+                                    "type": "simple"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "resume_gen_entities",
+                        "next": "validated_controller",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "name": "resume_gen_entities_criteria",
+                            "operator": "AND",
+                            "parameters": [
+                                {
+                                    "jsonPath": "resume_transition",
+                                    "operatorType": "IEQUALS",
+                                    "value": "resume_gen_entities",
+                                    "type": "simple"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "resume_post_app_build_steps",
+                        "next": "finished_app_generation_flow",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "name": "resume_post_app_build_steps_criteria",
+                            "operator": "AND",
+                            "parameters": [
+                                {
+                                    "jsonPath": "resume_transition",
+                                    "operatorType": "IEQUALS",
+                                    "value": "resume_post_app_build_steps",
+                                    "type": "simple"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "building_new_app": {
+                "transitions": [
+                    {
+                        "name": "welcome_user",
+                        "next": "greeting_sent",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": WelcomeUser25fcMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "greeting_sent": {
+                "transitions": [
+                    {
+                        "name": "clone_repo",
+                        "next": "repository_cloned",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": CloneRepoB60aToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "repository_cloned": {
+                "transitions": [
+                    {
+                        "name": "init_chats",
+                        "next": "chats_initialized",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": InitChatsD512ToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "chats_initialized": {
+                "transitions": [
+                    {
+                        "name": "generate_original_requirements",
+                        "next": "generated_original_requirements",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": GenerateOriginalRequirementsC87eAgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "generated_original_requirements": {
+                "transitions": [
+                    {
+                        "name": "notify_generated_original_requirements",
+                        "next": "notified_generated_original_requirements",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyGeneratedOriginalRequirementsB94eMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "notified_generated_original_requirements": {
+                "transitions": [
+                    {
+                        "name": "process_initial_question",
+                        "next": "app_requirements_requested",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ProcessInitialQuestionCd33AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "app_requirements_requested": {
+                "transitions": [
+                    {
+                        "name": "submit_answer",
+                        "next": "app_requirements_requested_submitted_answer",
+                        "manual": True
+                    },
+                    {
+                        "name": "manual_approve",
+                        "next": "app_requirements_finalized",
+                        "manual": True
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "app_requirements_requested_submitted_answer",
+                        "manual": True
+                    }
+                ]
+            },
+            "app_requirements_requested_submitted_answer": {
+                "transitions": [
+                    {
+                        "name": "process_user_input",
+                        "next": "app_requirements_requested_processing",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ProcessUserInput2c31AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "app_requirements_requested_processing": {
+                "transitions": [
+                    {
+                        "name": "process_application_requirement_processing",
+                        "next": "app_requirements_requested",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": NotStageCompletedF57dToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "process_application_requirement_success",
+                        "next": "app_requirements_finalized",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": IsStageCompletedE7bfToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "app_requirements_finalized": {
+                "transitions": [
+                    {
+                        "name": "ask_about_api",
+                        "next": "proceeded_to_functional_requirements",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": AskAboutApi063fMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "proceeded_to_functional_requirements": {
+                "transitions": [
+                    {
+                        "name": "define_functional_requirements",
+                        "next": "functional_requirements_specified",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": DefineFunctionalRequirements8ee2AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "functional_requirements_specified": {
+                "transitions": [
+                    {
+                        "name": "ask_about_api",
+                        "next": "api_inquired",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": AskAboutApiD91fMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "api_inquired": {
+                "transitions": [
+                    {
+                        "name": "submit_answer",
+                        "next": "api_inquired_submitted_answer",
+                        "manual": True
+                    },
+                    {
+                        "name": "manual_approve",
+                        "next": "api_discussion_completed",
+                        "manual": True
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "api_inquired_submitted_answer",
+                        "manual": True
+                    }
+                ]
+            },
+            "api_inquired_submitted_answer": {
+                "transitions": [
+                    {
+                        "name": "process_user_input",
+                        "next": "api_inquired_processing",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ProcessUserInputCd43AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "api_inquired_processing": {
+                "transitions": [
+                    {
+                        "name": "process_api_inquiry_processing",
+                        "next": "api_inquired",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": NotStageCompleted5e0eToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "process_api_inquiry_success",
+                        "next": "api_discussion_completed",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": IsStageCompleted8a02ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "api_discussion_completed": {
+                "transitions": [
+                    {
+                        "name": "notify_prototype_generation",
+                        "next": "configs_generation_notified",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyConfigGeneration0f5bMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "configs_generation_notified": {
+                "transitions": [
+                    {
+                        "name": "generate_functional_requirements",
+                        "next": "generated_functional_requirements",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": GenerateFunctionalRequirementsAcccAgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "generated_functional_requirements": {
+                "transitions": [
+                    {
+                        "name": "notify_generated_functional_requirements",
+                        "next": "notified_generated_functional_requirements",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyGeneratedFunctionalRequirements0beeMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "notified_generated_functional_requirements": {
+                "transitions": [
+                    {
+                        "name": "extract_entities_from_prototype",
+                        "next": "entities_extracted",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ExtractEntitiesFromPrototype22c6AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "entities_extracted": {
+                "transitions": [
+                    {
+                        "name": "notify_entities_extracted",
+                        "next": "notified_entities_extracted",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyEntitiesExtractedEde4MessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "notified_entities_extracted": {
+                "transitions": [
+                    {
+                        "name": "generate_workflows",
+                        "next": "generated_workflows",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": GenerateWorkflowFromRequirements0000AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "generated_workflows": {
+                "transitions": [
+                    {
+                        "name": "notify_generated_workflows",
+                        "next": "notified_generated_workflows",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyWorkflowsExtracted0000MessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "notified_generated_workflows": {
+                "transitions": [
+                    {
+                        "name": "ask_to_discuss_configs",
+                        "next": "configs_discussion_requested",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": AskToDiscussConfigs0000MessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "configs_discussion_requested": {
+                "transitions": [
+                    {
+                        "name": "submit_answer",
+                        "next": "configs_discussion_requested_submitted_answer",
+                        "manual": True
+                    },
+                    {
+                        "name": "manual_approve",
+                        "next": "configs_discussion_completed",
+                        "manual": True
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "configs_discussion_requested_submitted_answer",
+                        "manual": True
+                    }
+                ]
+            },
+            "configs_discussion_requested_submitted_answer": {
+                "transitions": [
+                    {
+                        "name": "process_user_input",
+                        "next": "configs_discussion_requested_processing",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ProcessConfigsDiscussion0000AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "configs_discussion_requested_processing": {
+                "transitions": [
+                    {
+                        "name": "process_configs_discussion_processing",
+                        "next": "configs_discussion_requested",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": NotStageCompletedDiscussConfigs0000ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "process_configs_discussion_success",
+                        "next": "configs_discussion_completed",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": IsStageCompletedDiscussConfigs0000ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "configs_discussion_completed": {
+                "transitions": [
+                    {
+                        "name": "notify_prototype_generation_started",
+                        "next": "prototype_generation_started",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyPrototypeGeneration0000MessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "prototype_generation_started": {
+                "transitions": [
+                    {
+                        "name": "generate_prototype",
+                        "next": "prototype_generation_finished",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": GeneratePrototypeSketch2269AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "prototype_generation_finished": {
+                "transitions": [
+                    {
+                        "name": "notify_prototype_generation_finished",
+                        "next": "prototype_discussion_requested",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": AskToDiscussPrototype983fMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "prototype_discussion_requested": {
+                "transitions": [
+                    {
+                        "name": "submit_answer",
+                        "next": "prototype_discussion_processing",
+                        "manual": True
+                    },
+                    {
+                        "name": "manual_approve",
+                        "next": "prototype_discussion_completed",
+                        "manual": True
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "prototype_discussion_processing",
+                        "manual": True
+                    }
+                ]
+            },
+            "prototype_discussion_processing": {
+                "transitions": [
+                    {
+                        "name": "process_user_input",
+                        "next": "prototype_discussion_requested_processing",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ProcessPrototypeDiscussion0000AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "prototype_discussion_requested_processing": {
+                "transitions": [
+                    {
+                        "name": "process_prototype_discussion_processing",
+                        "next": "prototype_discussion_requested",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": NotStageCompletedDiscussPrototype0000ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "process_configs_discussion_success",
+                        "next": "prototype_discussion_completed",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": IsStageCompletedDiscussPrototype0000ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "prototype_discussion_completed": {
+                "transitions": [
+                    {
+                        "name": "ask_to_confirm_migration",
+                        "next": "migration_confirmation_requested",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": AskToConfirmMigration208eMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "migration_confirmation_requested": {
+                "transitions": [
+                    {
+                        "name": "submit_answer",
+                        "next": "migration_confirmation_requested_submitted_answer",
+                        "manual": True
+                    },
+                    {
+                        "name": "manual_approve",
+                        "next": "migration_confirmation_completed",
+                        "manual": True
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "migration_confirmation_requested_submitted_answer",
+                        "manual": True
+                    }
+                ]
+            },
+            "migration_confirmation_requested_submitted_answer": {
+                "transitions": [
+                    {
+                        "name": "process_user_input",
+                        "next": "migration_confirmation_requested_processing",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ProcessUserInput2185AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "migration_confirmation_requested_processing": {
+                "transitions": [
+                    {
+                        "name": "process_migration_confirmation_processing",
+                        "next": "migration_confirmation_requested",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": NotStageCompleted6044ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "process_migration_confirmation_success",
+                        "next": "start_environment_setup",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": IsStageCompletedC00aToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "start_environment_setup": {
+                "transitions": [
+                    {
+                        "name": "start_environment_setup_processing",
+                        "next": "migration_confirmation_completed",
+                        "manual": False
+                    }
+                ]
+            },
+            "waiting_for_user_deployment_input": {
+                "transitions": [
+                    {
+                        "name": "submit_answer",
+                        "next": "migration_confirmation_completed",
+                        "manual": True
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "migration_confirmation_completed",
+                        "manual": True
+                    }
+                ]
+            },
+            "migration_confirmation_completed": {
+                "transitions": [
+                    {
+                        "name": "process_user_input",
+                        "next": "app_requirements_step3_processing",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ProcessUserInput9a8eAgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "app_requirements_step3_processing": {
+                "transitions": [
+                    {
+                        "name": "process_app_setup_3_processing",
+                        "next": "waiting_for_user_deployment_input",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": NotStageCompletedF259ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "process_app_setup_3_success",
+                        "next": "deployed_cyoda_env",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": IsStageCompletedB809ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "start_environment_setup",
+                        "manual": True
+                    }
+                ]
+            },
+            "deployed_cyoda_env": {
+                "transitions": [
+                    {
+                        "name": "notify_user_env_deployed",
+                        "next": "notified_user_env_deployed",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyUserEnvDeployed58e2AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "notified_user_env_deployed": {
+                "transitions": [
+                    {
+                        "name": "migration_confirmation_notify",
+                        "next": "migration_confirmation_notified",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": MigrationConfirmationNotifyD018MessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "migration_confirmation_notified": {
+                "transitions": [
+                    {
+                        "name": "generate_initial_cyoda_prototype",
+                        "next": "generated_initial_cyoda_prototype",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": GenerateInitialCyodaPrototype9221AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "generated_initial_cyoda_prototype": {
+                "transitions": [
+                    {
+                        "name": "extract_processing_methods",
+                        "next": "processing_methods_extracted",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ExtractProcessingMethods979bAgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "processing_methods_extracted": {
+                "transitions": [
+                    {
+                        "name": "update_routes_file",
+                        "next": "validated_controller",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": UpdateRoutesFile0a64AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "validated_controller": {
+                "transitions": [
+                    {
+                        "name": "register_workflow_with_app",
+                        "next": "finished_app_generation_flow",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": LaunchGenAppWorkflows166eToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "finished_app_generation_flow": {
+                "transitions": [
+                    {
+                        "name": "validate_app_quality",
+                        "next": "validated_app_quality",
+                        "manual": True,
+                        "processors": [
+                            {
+                                "name": ValidateAppQualityCca3AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "validated_app_quality": {
+                "transitions": [
+                    {
+                        "name": "save_env_file",
+                        "next": "saved_env_file",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": SaveEnvFileD2aaToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "saved_env_file": {
+                "transitions": [
+                    {
+                        "name": "delete_files",
+                        "next": "deleted_files",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": DeleteFiles6818ToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "deleted_files": {
+                "transitions": [
+                    {
+                        "name": "question_to_proceed_with_generated_app_editing",
+                        "next": "questioned_to_proceed_with_generated_app_editing",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": QuestionToProceedWithGeneratedAppEditing2f5fMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "questioned_to_proceed_with_generated_app_editing": {
+                "transitions": [
+                    {
+                        "name": "launch_setup_assistant",
+                        "next": "launched_setup_assistant",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": InitSetupWorkflow5f06ToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "launched_setup_assistant": {
+                "transitions": [
+                    {
+                        "name": "lock_chat",
+                        "next": "locked_chat",
+                        "manual": False
+                    }
+                ]
+            }
+        }
+    }

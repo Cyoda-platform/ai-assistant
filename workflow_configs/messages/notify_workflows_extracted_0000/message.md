@@ -1,0 +1,1 @@
+✅  Saved workflows to `src/main/java/com/java_template/application/workflow/*`. Continuing to generate the first prototype....⏳😌

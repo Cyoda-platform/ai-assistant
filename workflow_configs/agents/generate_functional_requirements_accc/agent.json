@@ -4,7 +4,8 @@
   "allow_anonymous_users": true,
   "model": {},
   "memory_tags": [
-    "requirements_generation"
+    "requirements_generation",
+    "configs_generation"
   ],
   "messages": [
     {

@@ -64,15 +64,19 @@ Specify JSON structures for all API endpoints.
 
 ## VISUAL REPRESENTATION:
 Provide Mermaid diagrams showing:
-
-**Required Diagrams:**
 - Event-driven processing chains
+
+    1. Always start with ```mermaid and close with ``` on a new line.
+    2. Do NOT chain multiple arrows on one line. Write each connection separately.
+    3. Wrap node labels in double quotes.
+    4. Escape special characters in labels (use &#39; for single quotes).
+    5. Use 
+ for manual line breaks in long labels if needed.
+    6. Ensure node IDs only contain letters, numbers, or underscores.
+    7. Output only valid Mermaid code inside the code block, no extra text
 
 ## FORMATTING REQUIREMENTS:
 - Keep requirements minimalistic and focused
-- **Each Mermaid diagram must be in complete markdown code blocks**
-- Start with ```mermaid and end with ``` on separate lines
-- Return markdown document without triple backtick wrapping
-- Min 1 entity is mandatory. Max 3 entities.
- - If there is an orchestration entity (like Job, Task, Workflow), it should be the first one defined.
+- Min 1 entity is mandatory. Max 3 entities unless explicitly asked for more.
+- If there is an orchestration entity (like Job, Task, Workflow), it should be the first one defined.
 - Ensure all Mermaid blocks are properly closed
