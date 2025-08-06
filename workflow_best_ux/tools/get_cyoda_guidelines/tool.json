@@ -1,0 +1,19 @@
+{
+  "type": "function",
+  "function": {
+    "name": "get_cyoda_guidelines",
+    "description": "Retrieve Cyoda platform guidelines for a specific workflow using WebOperationsService",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "workflow_name": {
+          "type": "string",
+          "description": "Name of the workflow to get guidelines for"
+        }
+      },
+      "required": ["workflow_name"],
+      "additionalProperties": false
+    }
+  }
+}

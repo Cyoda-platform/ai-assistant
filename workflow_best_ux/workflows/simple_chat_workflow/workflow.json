@@ -1,0 +1,101 @@
+{
+  "version": "1.0",
+  "name": "simple_chat_workflow",
+  "desc": "Simple chat workflow with AI agent processing",
+  "initialState": "none",
+  "active": true,
+  "criterion": {
+    "type": "simple",
+    "jsonPath": "$.workflow_name",
+    "operation": "EQUALS",
+    "value": "simple_chat_workflow"
+  },
+  "states": {
+    "none": {
+      "transitions": [
+        {
+          "name": "initialize_chat",
+          "next": "ready",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.welcome_message",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "messaging"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "ready": {
+      "transitions": [
+        {
+          "name": "submit_question",
+          "next": "processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.chat_assistant",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "processing": {
+      "transitions": [
+        {
+          "name": "complete_processing",
+          "next": "ready",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.completion_message",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "messaging"
+              }
+            }
+          ]
+        },
+        {
+          "name": "error_occurred",
+          "next": "error_state",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.check_error_condition",
+              "config": {
+                "calculationNodesTags": "validation"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "error_state": {
+      "transitions": [
+        {
+          "name": "retry",
+          "next": "ready",
+          "manual": true,
+          "processors": [
+            {
+              "name": "MessageProcessor.error_message",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "messaging"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

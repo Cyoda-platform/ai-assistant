@@ -1,0 +1,21 @@
+{
+  "type": "function",
+  "function": {
+    "name": "read_link",
+    "description": "Read the content of a given URL and return its textual content using WebOperationsService",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "URL to read content from - should be a valid HTTP/HTTPS URL"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

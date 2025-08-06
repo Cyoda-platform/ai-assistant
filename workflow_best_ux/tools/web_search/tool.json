@@ -1,0 +1,21 @@
+{
+  "type": "function",
+  "function": {
+    "name": "web_search",
+    "description": "Search the web using Google Custom Search API. Use this function when you need to search for current information online.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Search query string - should be descriptive and specific"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
