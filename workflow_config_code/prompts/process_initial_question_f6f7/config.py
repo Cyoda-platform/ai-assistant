@@ -33,7 +33,9 @@ Constraints:
 - Ignore all non-functional topics such as health checks, deployment details, recovery, or logging (assume logger is used by default).
 - Preserve all technical and business logic details exactly as given.
 - Be polite and concise.
+- Never ask any questions about frameworks, databases, or infrastructure decisions. Never offer to implement the workflow engine as a custom state machine within the application.
+- Ask questions only about functional requirements and business logic.
 
 Output format:
-- End with a "Ready-to-Copy Example User Response" in Markdown that the user can paste if they have no specific preference.
+- End with a "Ready-to-Copy Example User Response" in Markdown that the user can paste if they have no specific preference. It should be only regarding the functional requirements and business logic.
 """
