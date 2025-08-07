@@ -31,4 +31,5 @@ Once the user is happy with the result or has no more questions, please call fin
 Entities can be found in the file 'src/main/java/com/java_template/application/entity/{EntityName}.java'.
 Workflows can be found in the file 'src/main/java/com/java_template/application/workflow/{EntityName}.json'.
 Functional requirements can be found in the file 'src/main/java/com/java_template/prototype/functional_requirement.md'.
+Initial user requirement can be found in the file 'src/main/java/com/java_template/prototype/user_requirement.md'.
 Prototype file can be found in 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java'.

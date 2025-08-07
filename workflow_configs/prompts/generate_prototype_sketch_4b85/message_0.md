@@ -73,15 +73,15 @@ For example:
 ```java
 private void process{EntityName}(String technicalId, EntityName entity) {
 
-    simulateProcessor1();
-    if simulateCriteria1() {
-        simulateProcessor2();
+    simulateFullProcessor1Name();
+    if simulateFullCriteria1Name() {
+        simulateFullProcessor2Name();
     }
 
      IMPLEMENT ACTUAL BUSINESS LOGIC HERE
      Examples:
      - Data validation and enrichment
-     - External API calls
+     - External API calls - API calls should be fully implemented , not mocked.
      - Triggering workflows
      - Creating related entities
      - Sending notifications
@@ -90,6 +90,9 @@ private void process{EntityName}(String technicalId, EntityName entity) {
 }
 CRITICAL: If the user provides any external API calls, make sure to implement them.
 CRITICAL: You can add static classes only for request/response dtos. Import entities from com.java_template.application.entity, do not duplicate them.
+simulateFullProcessor1Name should be replaced with the actual processor name.
+simulateFullCriteria1Name should be replaced with the actual criteria name.
+simulate methods should have fully implemented business logic from requirements.
 ```
 
 ### 8. IMPLEMENTATION GUIDELINES
