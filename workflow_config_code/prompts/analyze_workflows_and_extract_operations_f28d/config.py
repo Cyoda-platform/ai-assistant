@@ -10,14 +10,18 @@ from typing import Any, Dict, Callable
 
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get prompt configuration factory"""
-    return lambda params=None: """Analyze the workflow json and find all unique ProcessorClassNames 
+    return lambda params=None: """
+First check workflow json and extract all unique ProcessorClassNames.
+Analyze the workflow json and find all unique ProcessorClassNames 
         "processors": [ {
      from here --->       "name": "ProcessorClassName" 
           } ]
- Ignore any criteria/criterion 
+Ignore any criteria/criterion 
 Now for each ProcessorClassName that you've outlined in the workflow configurations,
+find the corresponding code in the prototype code. Usually it is a method that has the same name as the processor or simulate{ProcessorClassName}.
 please provide the code for it based on the prototype code and the entity pojo and call add_application_resource tool with processor name and content - processor java code.
-First check workflow json and extract all unique ProcessorClassNames. Then check the code for it.
+You should include the code solely for this ProcessorClassName. Do not include any other processors in the same file.
+Do not include word 'simulate' in the code. It's not simulation anymore. 
 
 BEFORE WRITING ANY PROCESSOR CODE:
 1. Review the entity POJO structure to see what getters/setters are actually available

@@ -10,7 +10,7 @@ Generate Java criterion classes for workflow configurations that contain criteri
    - Use ONLY existing getters/setters
    - Never invent properties that don't exist
 
-3. **Understand Business Logic**: Review prototype code for validation rules
+3. **Understand Business Logic**: Review prototype code for validation rules, look for simulate{CriterionClassName} methods.
    - Look for conditional logic, business constraints
    - Identify what the criterion should validate
 
