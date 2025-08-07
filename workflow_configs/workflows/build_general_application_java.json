@@ -2,7 +2,7 @@
   "version": "1.0",
   "name": "build_general_application_java",
   "desc": "Migrated from build_general_application_java",
-  "initialState": "none",
+  "initialState": "initial_state",
   "active": true,
   "criterion": {
     "type": "simple",
@@ -11,7 +11,7 @@
     "value": "build_general_application_java"
   },
   "states": {
-    "none": {
+    "initial_state": {
       "transitions": [
         {
           "name": "initialize",
@@ -197,7 +197,8 @@
               "name": "MessageProcessor.welcome_user_25fc",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -215,7 +216,8 @@
               "name": "FunctionProcessor.clone_repo_b60a",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -233,7 +235,8 @@
               "name": "FunctionProcessor.init_chats_d512",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -251,7 +254,8 @@
               "name": "AgentProcessor.generate_original_requirements_c87e",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -269,7 +273,8 @@
               "name": "MessageProcessor.notify_generated_original_requirements_b94e",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -287,7 +292,8 @@
               "name": "AgentProcessor.process_initial_question_cd33",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -324,7 +330,8 @@
               "name": "AgentProcessor.process_user_input_2c31",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -342,7 +349,8 @@
             "function": {
               "name": "FunctionProcessor.not_stage_completed_f57d",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -356,7 +364,8 @@
             "function": {
               "name": "FunctionProcessor.is_stage_completed_e7bf",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -374,7 +383,8 @@
               "name": "MessageProcessor.ask_about_api_063f",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -392,7 +402,8 @@
               "name": "AgentProcessor.define_functional_requirements_8ee2",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -410,7 +421,8 @@
               "name": "MessageProcessor.ask_about_api_d91f",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -447,7 +459,8 @@
               "name": "AgentProcessor.process_user_input_cd43",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -465,7 +478,8 @@
             "function": {
               "name": "FunctionProcessor.not_stage_completed_5e0e",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -479,7 +493,8 @@
             "function": {
               "name": "FunctionProcessor.is_stage_completed_8a02",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -497,7 +512,8 @@
               "name": "MessageProcessor.notify_config_generation_0f5b",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -515,7 +531,8 @@
               "name": "AgentProcessor.generate_functional_requirements_accc",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -533,7 +550,8 @@
               "name": "MessageProcessor.notify_generated_functional_requirements_0bee",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -551,7 +569,8 @@
               "name": "AgentProcessor.extract_entities_from_prototype_22c6",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -569,7 +588,8 @@
               "name": "MessageProcessor.notify_entities_extracted_ede4",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -587,7 +607,8 @@
               "name": "AgentProcessor.generate_workflow_from_requirements_0000",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -605,7 +626,8 @@
               "name": "MessageProcessor.notify_workflows_extracted_0000",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -623,7 +645,8 @@
               "name": "MessageProcessor.ask_to_discuss_configs_0000",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -660,7 +683,8 @@
               "name": "AgentProcessor.process_configs_discussion_0000",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -678,7 +702,8 @@
             "function": {
               "name": "FunctionProcessor.not_stage_completed_discuss_configs_0000",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -692,7 +717,8 @@
             "function": {
               "name": "FunctionProcessor.is_stage_completed_discuss_configs_0000",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -710,7 +736,8 @@
               "name": "MessageProcessor.notify_prototype_generation_0000",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -728,7 +755,8 @@
               "name": "AgentProcessor.generate_prototype_sketch_2269",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -746,7 +774,8 @@
               "name": "MessageProcessor.ask_to_discuss_prototype_983f",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -783,7 +812,8 @@
               "name": "AgentProcessor.process_prototype_discussion_0000",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -801,7 +831,8 @@
             "function": {
               "name": "FunctionProcessor.not_stage_completed_discuss_prototype_0000",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -815,7 +846,8 @@
             "function": {
               "name": "FunctionProcessor.is_stage_completed_discuss_prototype_0000",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -833,7 +865,8 @@
               "name": "MessageProcessor.ask_to_confirm_migration_208e",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -870,7 +903,8 @@
               "name": "AgentProcessor.process_user_input_2185",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -888,7 +922,8 @@
             "function": {
               "name": "FunctionProcessor.not_stage_completed_6044",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -902,7 +937,8 @@
             "function": {
               "name": "FunctionProcessor.is_stage_completed_c00a",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -943,7 +979,8 @@
               "name": "AgentProcessor.process_user_input_9a8e",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -961,7 +998,8 @@
             "function": {
               "name": "FunctionProcessor.not_stage_completed_f259",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -975,7 +1013,8 @@
             "function": {
               "name": "FunctionProcessor.is_stage_completed_b809",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -998,7 +1037,8 @@
               "name": "AgentProcessor.notify_user_env_deployed_58e2",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -1016,7 +1056,8 @@
               "name": "MessageProcessor.migration_confirmation_notify_d018",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -1034,7 +1075,8 @@
               "name": "AgentProcessor.generate_initial_cyoda_prototype_9221",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -1052,7 +1094,8 @@
               "name": "AgentProcessor.extract_processing_methods_979b",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -1070,7 +1113,8 @@
               "name": "AgentProcessor.update_routes_file_0a64",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -1088,7 +1132,8 @@
               "name": "FunctionProcessor.launch_gen_app_workflows_166e",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -1106,7 +1151,8 @@
               "name": "AgentProcessor.validate_app_quality_cca3",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -1124,7 +1170,8 @@
               "name": "FunctionProcessor.save_env_file_d2aa",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -1142,7 +1189,8 @@
               "name": "FunctionProcessor.delete_files_6818",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -1160,7 +1208,8 @@
               "name": "MessageProcessor.question_to_proceed_with_generated_app_editing_2f5f",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -1178,7 +1227,8 @@
               "name": "FunctionProcessor.init_setup_workflow_5f06",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]

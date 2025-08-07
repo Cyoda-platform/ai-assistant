@@ -23,7 +23,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "version": "1.0",
         "name": "generating_gen_app_workflow_java",
         "desc": "Migrated from generating_gen_app_workflow_java",
-        "initialState": "none",
+        "initialState": "initial_state",
         "active": True,
         "criterion": {
             "type": "simple",
@@ -32,7 +32,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             "value": "generating_gen_app_workflow_java"
         },
         "states": {
-            "none": {
+            "initial_state": {
                 "transitions": [
                     {
                         "name": "start_workflow_generation",
@@ -52,7 +52,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": EnrichWorkflowF2c6AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -70,7 +71,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": ConvertWorkflowToDtoD870ToolConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -88,7 +90,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": AnalyzeWorkflowsAndExtractOperations960fAgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -106,7 +109,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": GenerateCriteriaFromWorkflows42a6AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]

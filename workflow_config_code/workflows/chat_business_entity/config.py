@@ -15,7 +15,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "version": "1.0",
         "name": "chat_business_entity",
         "desc": "Migrated from chat_business_entity",
-        "initialState": "none",
+        "initialState": "initial_state",
         "active": True,
         "criterion": {
                 "type": "simple",
@@ -24,7 +24,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "value": "chat_business_entity"
         },
         "states": {
-                "none": {
+                "initial_state": {
                         "transitions": [
                                 {
                                         "name": "initialize_chat",

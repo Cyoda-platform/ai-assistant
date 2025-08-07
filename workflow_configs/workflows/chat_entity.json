@@ -2,7 +2,7 @@
   "version": "1.0",
   "name": "chat_entity",
   "desc": "Migrated from chat_entity",
-  "initialState": "none",
+  "initialState": "initial_state",
   "active": true,
   "criterion": {
     "type": "simple",
@@ -11,7 +11,7 @@
     "value": "chat_entity"
   },
   "states": {
-    "none": {
+    "initial_state": {
       "transitions": [
         {
           "name": "initialize_chat",
@@ -31,7 +31,8 @@
               "name": "AgentProcessor.submit_answer_4a45",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -49,7 +50,8 @@
               "name": "AgentProcessor.submit_answer_b135",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -63,7 +65,8 @@
             "function": {
               "name": "FunctionProcessor.is_chat_locked_5b22",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -86,7 +89,8 @@
             "function": {
               "name": "FunctionProcessor.is_chat_locked_5b22",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -100,7 +104,8 @@
             "function": {
               "name": "FunctionProcessor.is_chat_unlocked_f77c",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }

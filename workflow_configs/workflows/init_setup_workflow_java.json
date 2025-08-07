@@ -2,7 +2,7 @@
   "version": "1.0",
   "name": "init_setup_workflow_java",
   "desc": "Migrated from init_setup_workflow_java",
-  "initialState": "none",
+  "initialState": "initial_state",
   "active": true,
   "criterion": {
     "type": "simple",
@@ -11,7 +11,7 @@
     "value": "init_setup_workflow_java"
   },
   "states": {
-    "none": {
+    "initial_state": {
       "transitions": [
         {
           "name": "start_chat",
@@ -40,7 +40,8 @@
               "name": "AgentProcessor.prompt_sent_59d6",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -77,7 +78,8 @@
               "name": "AgentProcessor.process_user_input_dd02",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -95,7 +97,8 @@
             "function": {
               "name": "FunctionProcessor.not_stage_completed_d1b6",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -109,7 +112,8 @@
             "function": {
               "name": "FunctionProcessor.is_stage_completed_cf58",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -127,7 +131,8 @@
               "name": "AgentProcessor.prompt_sent_ef07",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -164,7 +169,8 @@
               "name": "AgentProcessor.process_user_input_52da",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -182,7 +188,8 @@
             "function": {
               "name": "FunctionProcessor.not_stage_completed_2f18",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -196,7 +203,8 @@
             "function": {
               "name": "FunctionProcessor.is_stage_completed_d5ca",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -214,7 +222,8 @@
               "name": "AgentProcessor.prompt_sent_a239",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -251,7 +260,8 @@
               "name": "AgentProcessor.process_user_input_57d2",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -269,7 +279,8 @@
             "function": {
               "name": "FunctionProcessor.not_stage_completed_6d2b",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -283,7 +294,8 @@
             "function": {
               "name": "FunctionProcessor.is_stage_completed_ebb9",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -301,7 +313,8 @@
               "name": "AgentProcessor.prompt_sent_68db",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -338,7 +351,8 @@
               "name": "AgentProcessor.process_user_input_e32d",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -356,7 +370,8 @@
             "function": {
               "name": "FunctionProcessor.not_stage_completed_812b",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -370,7 +385,8 @@
             "function": {
               "name": "FunctionProcessor.is_stage_completed_68b2",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -388,7 +404,8 @@
               "name": "AgentProcessor.prompt_sent_956f",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -425,7 +442,8 @@
               "name": "AgentProcessor.process_user_input_f107",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -443,7 +461,8 @@
             "function": {
               "name": "FunctionProcessor.not_stage_completed_85df",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -457,7 +476,8 @@
             "function": {
               "name": "FunctionProcessor.is_stage_completed_e0d9",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           }
@@ -475,7 +495,8 @@
               "name": "MessageProcessor.lock_chat_1135",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]

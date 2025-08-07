@@ -84,7 +84,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "version": "1.0",
         "name": "build_general_application_java",
         "desc": "Migrated from build_general_application_java",
-        "initialState": "none",
+        "initialState": "initial_state",
         "active": True,
         "criterion": {
             "type": "simple",
@@ -93,7 +93,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             "value": "build_general_application_java"
         },
         "states": {
-            "none": {
+            "initial_state": {
                 "transitions": [
                     {
                         "name": "initialize",
@@ -279,7 +279,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": WelcomeUser25fcMessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -297,7 +298,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": CloneRepoB60aToolConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -315,7 +317,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": InitChatsD512ToolConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -333,7 +336,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": GenerateOriginalRequirementsC87eAgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -351,7 +355,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": NotifyGeneratedOriginalRequirementsB94eMessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -369,7 +374,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": ProcessInitialQuestionCd33AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -406,7 +412,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": ProcessUserInput2c31AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -424,7 +431,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                             "function": {
                                 "name": NotStageCompletedF57dToolConfig.get_name(),
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         }
@@ -438,7 +446,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                             "function": {
                                 "name": IsStageCompletedE7bfToolConfig.get_name(),
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         }
@@ -456,7 +465,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": AskAboutApi063fMessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -474,7 +484,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": DefineFunctionalRequirements8ee2AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -492,7 +503,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": AskAboutApiD91fMessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -529,7 +541,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": ProcessUserInputCd43AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -547,7 +560,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                             "function": {
                                 "name": NotStageCompleted5e0eToolConfig.get_name(),
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         }
@@ -561,7 +575,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                             "function": {
                                 "name": IsStageCompleted8a02ToolConfig.get_name(),
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         }
@@ -579,7 +594,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": NotifyConfigGeneration0f5bMessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -597,7 +613,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": GenerateFunctionalRequirementsAcccAgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -615,7 +632,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": NotifyGeneratedFunctionalRequirements0beeMessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -633,7 +651,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": ExtractEntitiesFromPrototype22c6AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -651,7 +670,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": NotifyEntitiesExtractedEde4MessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -669,7 +689,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": GenerateWorkflowFromRequirements0000AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -687,7 +708,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": NotifyWorkflowsExtracted0000MessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -705,7 +727,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": AskToDiscussConfigs0000MessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -742,7 +765,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": ProcessConfigsDiscussion0000AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -760,7 +784,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                             "function": {
                                 "name": NotStageCompletedDiscussConfigs0000ToolConfig.get_name(),
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         }
@@ -774,7 +799,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                             "function": {
                                 "name": IsStageCompletedDiscussConfigs0000ToolConfig.get_name(),
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         }
@@ -792,7 +818,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": NotifyPrototypeGeneration0000MessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -810,7 +837,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": GeneratePrototypeSketch2269AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -828,7 +856,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": AskToDiscussPrototype983fMessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -865,7 +894,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": ProcessPrototypeDiscussion0000AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -883,7 +913,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                             "function": {
                                 "name": NotStageCompletedDiscussPrototype0000ToolConfig.get_name(),
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         }
@@ -897,7 +928,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                             "function": {
                                 "name": IsStageCompletedDiscussPrototype0000ToolConfig.get_name(),
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         }
@@ -915,7 +947,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": AskToConfirmMigration208eMessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -952,7 +985,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": ProcessUserInput2185AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -970,7 +1004,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                             "function": {
                                 "name": NotStageCompleted6044ToolConfig.get_name(),
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         }
@@ -984,7 +1019,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                             "function": {
                                 "name": IsStageCompletedC00aToolConfig.get_name(),
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         }
@@ -1025,7 +1061,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": ProcessUserInput9a8eAgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -1043,7 +1080,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                             "function": {
                                 "name": NotStageCompletedF259ToolConfig.get_name(),
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         }
@@ -1057,7 +1095,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                             "function": {
                                 "name": IsStageCompletedB809ToolConfig.get_name(),
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         }
@@ -1080,7 +1119,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": NotifyUserEnvDeployed58e2AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -1098,7 +1138,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": MigrationConfirmationNotifyD018MessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -1116,7 +1157,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": GenerateInitialCyodaPrototype9221AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -1134,7 +1176,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": ExtractProcessingMethods979bAgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -1152,7 +1195,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": UpdateRoutesFile0a64AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -1170,7 +1214,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": LaunchGenAppWorkflows166eToolConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -1188,7 +1233,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": ValidateAppQualityCca3AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -1206,7 +1252,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": SaveEnvFileD2aaToolConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -1224,7 +1271,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": DeleteFiles6818ToolConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -1242,7 +1290,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": QuestionToProceedWithGeneratedAppEditing2f5fMessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]
@@ -1260,7 +1309,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "name": InitSetupWorkflow5f06ToolConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
                                 }
                             }
                         ]

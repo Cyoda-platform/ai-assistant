@@ -15,7 +15,7 @@ Your tasks:
    - Keeps all other functionality intact (CRUD operations, endpoints, etc.)
 
 Important guidelines:
-- Only extract methods that follow the pattern process{EntityName}/process}EntityName}{Something} (e.g., processUser, processUserScheduler) and simulate{ProcessorName}. simulate methods should be appended to the related EntityName.txt file.
+- Only extract methods that follow the pattern process{EntityName}/process}EntityName}{Something} (e.g., processUser, processUserScheduler) and run{ProcessorName}. run methods should be appended to the related EntityName.txt file.
 - Save the extracted methods to 'src/main/java/com/java_template/application/workflow_prototypes/{EntityName}.txt' using add_application_resource for the respective entity name
 - Include any private methods that are called directly from the process methods
 - Preserve the original code structure and formatting

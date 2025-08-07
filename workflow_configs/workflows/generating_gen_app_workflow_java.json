@@ -2,7 +2,7 @@
   "version": "1.0",
   "name": "generating_gen_app_workflow_java",
   "desc": "Migrated from generating_gen_app_workflow_java",
-  "initialState": "none",
+  "initialState": "initial_state",
   "active": true,
   "criterion": {
     "type": "simple",
@@ -11,7 +11,7 @@
     "value": "generating_gen_app_workflow_java"
   },
   "states": {
-    "none": {
+    "initial_state": {
       "transitions": [
         {
           "name": "start_workflow_generation",
@@ -31,7 +31,8 @@
               "name": "AgentProcessor.enrich_workflow_f2c6",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -49,7 +50,8 @@
               "name": "FunctionProcessor.convert_workflow_to_dto_d870",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -67,7 +69,8 @@
               "name": "AgentProcessor.analyze_workflows_and_extract_operations_960f",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -85,7 +88,8 @@
               "name": "AgentProcessor.generate_criteria_from_workflows_42a6",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
               }
             }
           ]

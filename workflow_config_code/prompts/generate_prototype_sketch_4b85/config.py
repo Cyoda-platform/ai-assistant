@@ -78,7 +78,7 @@ The method should return void. The method should be private.
 The method should be called from the POST endpoint after saving the entity to cache. 
 The method should contain the actual business logic from the requirements.
 The method should have simulations for each Processor and Criteria (Conditions).
-If the entity has a processor call simulate{ProcessorName}() method, same for criteria.
+If the entity has a processor call run{ProcessorName}() method, same for criteria.
 For example:
 
   
@@ -86,9 +86,9 @@ For example:
 ```java
 private void process{EntityName}(String technicalId, EntityName entity) {
 
-    simulateFullProcessor1Name();
-    if simulateFullCriteria1Name() {
-        simulateFullProcessor2Name();
+    runFullProcessor1Name();
+    if runFullCriteria1Name() {
+        runFullProcessor2Name();
     }
 
      IMPLEMENT ACTUAL BUSINESS LOGIC HERE
@@ -103,9 +103,9 @@ private void process{EntityName}(String technicalId, EntityName entity) {
 }
 CRITICAL: If the user provides any external API calls, make sure to implement them.
 CRITICAL: You can add static classes only for request/response dtos. Import entities from com.java_template.application.entity, do not duplicate them.
-simulateFullProcessor1Name should be replaced with the actual processor name.
-simulateFullCriteria1Name should be replaced with the actual criteria name.
-simulate methods should have fully implemented business logic from requirements.
+runFullProcessor1Name should be replaced with the actual processor name.
+runFullCriteria1Name should be replaced with the actual criteria name.
+run methods should have fully implemented business logic from requirements.
 ```
 
 ### 8. IMPLEMENTATION GUIDELINES
