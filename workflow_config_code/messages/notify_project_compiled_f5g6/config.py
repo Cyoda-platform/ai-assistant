@@ -48,4 +48,4 @@ Your prototype application is now ready for use! 🎯
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get message meta configuration factory"""
-    return lambda params=None: {'type': 'notification', 'approve': True, 'publish': True}
+    return lambda params=None: {'type': 'question', 'approve': True, 'publish': True}

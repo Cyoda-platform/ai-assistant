@@ -27,11 +27,6 @@ Optional:
 3. Understand entity structure and fields from the entity class files
 4. Plan event-driven endpoints following the EDA pattern
 
-### 3. IMPLEMENTATION PHASE
-Create a single controller using add_application_resource with:
-- resource_path: 'src/main/java/com/java_template/application/controller/Controller.java'
-- file_contents: complete Java controller class
-
 **Event-Driven Flow Pattern (EDA-Compliant):**
 1. **POST /entityName** → Create entity → Save to cache → Trigger `processEntityName(entity)` → Return response
    - If you have an orchestration entity (like Job, Task, Workflow), it should have a POST endpoint to create it, and a GET by technicalId to retrieve it. You will most likely not need any other POST endpoints for business entities as saving business entity is done via the process method.
@@ -135,4 +130,6 @@ Remember:
 - Follow the Event-Driven Flow Pattern
 - Keep the controller simple and "dull" - all business intelligence goes in workflows!
 - Reuse existing entity classes, don't recreate them
+
+Return java code only. No markdown formatting or explanations. The code should be ready to be pasted into the file.
 """

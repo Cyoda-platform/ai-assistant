@@ -44,7 +44,8 @@
         "repository_name",
         "workflow_id",
         "owner",
-        "git_branch"
+        "git_branch",
+        "option"
       ],
       "additionalProperties": false
     }

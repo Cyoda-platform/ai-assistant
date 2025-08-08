@@ -55,7 +55,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     "repository_name",
                     "workflow_id",
                     "owner",
-                    "git_branch"
+                    "git_branch",
+                    "option"
                 ],
                 "additionalProperties": False
             }

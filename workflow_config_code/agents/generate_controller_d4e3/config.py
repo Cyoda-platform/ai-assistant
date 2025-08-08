@@ -19,9 +19,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "model": {},
         "tools": [
             {
-                "name": AddApplicationResource3d0bToolConfig.get_tool_name()
-            },
-            {
                 "name": ListDirectoryFiles1161ToolConfig.get_tool_name()
             },
             {
@@ -35,6 +32,11 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             "local_fs": [
                 "src/main/java/com/java_template/prototype/functional_requirement.md",
                 "src/main/java/com/java_template/application/workflow_prototypes"
+            ]
+        },
+        "output": {
+            "local_fs": [
+                "src/main/java/com/java_template/application/controller/Controller.java"
             ]
         },
         "messages": [

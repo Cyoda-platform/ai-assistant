@@ -7,12 +7,13 @@ Configuration data for the workflow.
 
 from typing import Any, Dict, Callable
 
-from workflow_config_code.tools.generate_prototype_sketch_2269.tool import GeneratePrototypeSketch2269FunctionConfig
+from workflow_config_code.agents.generate_prototype_sketch_2269.agent import GeneratePrototypeSketch2269AgentConfig
 from workflow_config_code.agents.process_prototype_discussion_0000.agent import \
     ProcessPrototypeDiscussion0000AgentConfig
 from workflow_config_code.messages.ask_to_discuss_prototype_983f.message import AskToDiscussPrototype983fMessageConfig
 from workflow_config_code.messages.notify_prototype_generation_0000.message import \
     NotifyPrototypeGeneration0000MessageConfig
+from workflow_config_code.tools.generate_prototype_sketch_2269 import GeneratePrototypeSketch2269FunctionConfig
 from workflow_config_code.tools.is_stage_completed_c00a.tool import IsStageCompletedC00aToolConfig
 from workflow_config_code.messages.notify_workflows_extracted_0000.message import \
     NotifyWorkflowsExtracted0000MessageConfig
@@ -879,6 +880,11 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     {
                         "name": "rollback",
                         "next": "prototype_discussion_processing",
+                        "manual": True
+                    },
+                    {
+                        "name": "retry",
+                        "next": "configs_discussion_completed",
                         "manual": True
                     }
                 ]

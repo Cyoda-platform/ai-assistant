@@ -4,9 +4,6 @@
   "model": {},
   "tools": [
     {
-      "name": "add_application_resource_3d0b"
-    },
-    {
       "name": "list_directory_files_1161"
     },
     {
@@ -20,6 +17,11 @@
     "local_fs": [
       "src/main/java/com/java_template/prototype/functional_requirement.md",
       "src/main/java/com/java_template/application/workflow_prototypes"
+    ]
+  },
+  "output": {
+    "local_fs": [
+      "src/main/java/com/java_template/application/controller/Controller.java"
     ]
   },
   "messages": [

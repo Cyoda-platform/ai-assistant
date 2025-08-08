@@ -183,6 +183,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 ]
             },
+
             "compile_project": {
                 "transitions": [
                     {
@@ -221,7 +222,13 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 ]
             },
             "completed": {
-                "transitions": []
+                "transitions": [
+                    {
+                        "name": "lock_chat",
+                        "next": "locked_chat",
+                        "manual": False
+                    }
+                ]
             }
         }
     }

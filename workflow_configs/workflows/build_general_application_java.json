@@ -798,6 +798,11 @@
           "name": "rollback",
           "next": "prototype_discussion_processing",
           "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "configs_discussion_completed",
+          "manual": true
         }
       ]
     },

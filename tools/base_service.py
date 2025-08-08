@@ -4,6 +4,8 @@ from typing import Any
 from entity.chat.chat import ChatEntity
 from entity.model import AgenticFlowEntity, SchedulerEntity
 
+logger = logging.getLogger(__name__)
+
 
 class BaseWorkflowService:
     """
@@ -75,6 +77,7 @@ class BaseWorkflowService:
         missing_fields = [field for field in required_fields if not params.get(field)]
         if missing_fields:
             error_msg = f"Missing required parameters: {', '.join(missing_fields)}"
+            logger.error(error_msg)
             return False, error_msg
         return True, ""
 

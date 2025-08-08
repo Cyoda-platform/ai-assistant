@@ -200,7 +200,13 @@
       ]
     },
     "completed": {
-      "transitions": []
+      "transitions": [
+        {
+          "name": "lock_chat",
+          "next": "locked_chat",
+          "manual": false
+        }
+      ]
     }
   }
 }
