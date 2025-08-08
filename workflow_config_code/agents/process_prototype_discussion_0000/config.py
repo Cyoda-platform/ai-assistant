@@ -72,5 +72,5 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         ],
         "tool_choice": "auto",
         "max_iteration": 30,
-        "approve": True
+        "approve": False
     }

@@ -1,15 +1,4 @@
-"""
-NotifyProjectCompiledF5g6MessageConfig Configuration
 
-Configuration data for the notify project compiled message.
-"""
-
-from typing import Any, Dict, Callable
-
-
-def get_config() -> Callable[[Dict[str, Any]], str]:
-    """Get message configuration factory"""
-    return lambda params=None: """
 🎉 **Project Compilation Completed Successfully!**
 
 Your application has been fully generated and compiled. All components are ready for deployment and testing.
@@ -43,9 +32,3 @@ src/main/java/com/java_template/
 Your prototype application is now ready for use! 🎯
 
 **Click approve to continue the discussion.**
-"""
-
-
-def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
-    """Get message meta configuration factory"""
-    return lambda params=None: {'type': 'notification', 'approve': True, 'publish': True}

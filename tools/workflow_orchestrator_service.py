@@ -78,7 +78,7 @@ class WorkflowOrchestratorService(BaseWorkflowService):
             async with self._file_write_lock:
                 for entity_name, workflow_json in workflow_files.items():
                     orchestrator_code = self._generate_orchestrator_code(entity_name, workflow_json)
-                    orchestrator_path = f"src/main/java/com/java_template/application/orchestrator/{entity_name}WorkflowOrchestrator.java"
+                    orchestrator_path = f"src/main/java/com/java_template/application/workflow-prototypes/{entity_name}WorkflowOrchestrator.java"
                     
                     await _save_file(
                         _data=orchestrator_code,

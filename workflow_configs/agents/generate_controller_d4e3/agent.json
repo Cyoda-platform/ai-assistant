@@ -1,0 +1,31 @@
+{
+  "type": "agent",
+  "publish": false,
+  "model": {},
+  "tools": [
+    {
+      "name": "add_application_resource_3d0b"
+    },
+    {
+      "name": "list_directory_files_1161"
+    },
+    {
+      "name": "read_file_2766"
+    }
+  ],
+  "memory_tags": [
+    "generate_controller"
+  ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/functional_requirement.md",
+      "src/main/java/com/java_template/application/workflow_prototypes"
+    ]
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "generate_controller_d4e3"
+    }
+  ]
+}

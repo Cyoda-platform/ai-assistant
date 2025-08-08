@@ -1,5 +1,5 @@
 """
-FunctionalRequirementsToApplicationWorkflowConfig Workflow
+FunctionalRequirementsToPrototypeWorkflowConfig Workflow
 
 Workflow configuration with get_name() and get_config() methods.
 """
@@ -8,13 +8,13 @@ from typing import Any, Dict
 from .config import get_config
 
 
-class FunctionalRequirementsToApplicationWorkflowConfig:
-    """Workflow configuration for functional_requirements_to_application"""
+class FunctionalRequirementsToPrototypeWorkflowConfig:
+    """Workflow configuration for functional_requirements_to_prototype_java"""
 
     @staticmethod
     def get_name() -> str:
         """Get the static name of this workflow"""
-        return "functional_requirements_to_application"
+        return "functional_requirements_to_prototype_java"
 
     @staticmethod
     def get_config(params: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -24,4 +24,4 @@ class FunctionalRequirementsToApplicationWorkflowConfig:
 
 
 # Create singleton instance
-functional_requirements_to_application_workflow = FunctionalRequirementsToApplicationWorkflowConfig()
+functional_requirements_to_prototype_java_workflow = FunctionalRequirementsToPrototypeWorkflowConfig()

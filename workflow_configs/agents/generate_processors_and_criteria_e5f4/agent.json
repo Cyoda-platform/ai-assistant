@@ -1,0 +1,26 @@
+{
+  "type": "agent",
+  "publish": false,
+  "model": {},
+  "tools": [
+    {
+      "name": "add_application_resource_3d0b"
+    }
+  ],
+  "memory_tags": [
+    "generate_processors_and_criteria"
+  ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/functional_requirement.md",
+      "src/main/java/com/java_template/prototype/user_requirement.md",
+      "src/main/java/com/java_template/application/workflow-prototypes"
+    ]
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "generate_processors_and_criteria_e5f4"
+    }
+  ]
+}

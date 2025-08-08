@@ -110,8 +110,8 @@ class TestAIAgentHandler:
         """Test AI agent execution with error."""
         with patch.object(handler, '_get_ai_memory', side_effect=Exception("Memory error")):
             result = await handler.run_ai_agent(mock_config, mock_entity, mock_memory, "tech_id")
-            
-            assert "Error running AI agent" in result
+
+            assert "Sorry, i'm having a little trouble with the LLM" in result
 
     @pytest.mark.asyncio
     async def test_get_ai_memory_basic(self, handler, mock_entity, mock_memory):
@@ -140,11 +140,11 @@ class TestAIAgentHandler:
             }
         }
         
-        with patch.object(handler, '_read_local_file', return_value="file content"), \
+        with patch.object(handler, '_read_local_path', return_value="file content"), \
              patch.object(handler, '_get_repository_name', return_value="test_repo"):
-            
+
             result = await handler._get_ai_memory(mock_entity, config, mock_memory, "tech_id")
-            
+
             # Should include file content as a message
             assert any("Reference: test_file.py" in str(msg.content) for msg in result)
 
@@ -168,6 +168,42 @@ class TestAIAgentHandler:
         assert any("Reference:" in str(msg.content) for msg in result)
 
     @pytest.mark.asyncio
+    async def test_get_ai_memory_with_directory_input(self, handler, mock_entity, mock_memory):
+        """Test AI memory retrieval with directory input."""
+        config = {
+            "memory_tags": [env_config.GENERAL_MEMORY_TAG],
+            "input": {
+                "local_fs": ["src/main/java/entities"]
+            }
+        }
+
+        directory_content = """Directory: src/main/java/entities
+==================================================
+Found 2 files:
+
+--- File: User.java ---
+public class User {
+    private String name;
+}
+
+--- File: Product.java ---
+public class Product {
+    private String title;
+}
+"""
+
+        with patch.object(handler, '_read_local_path', return_value=directory_content), \
+             patch.object(handler, '_get_repository_name', return_value="test_repo"):
+
+            result = await handler._get_ai_memory(mock_entity, config, mock_memory, "tech_id")
+
+            # Should include directory content as a message
+            assert any("Reference: src/main/java/entities" in str(msg.content) for msg in result)
+            assert any("Directory: src/main/java/entities" in str(msg.content) for msg in result)
+            assert any("User.java" in str(msg.content) for msg in result)
+            assert any("Product.java" in str(msg.content) for msg in result)
+
+    @pytest.mark.asyncio
     async def test_get_ai_memory_with_formatted_filename(self, handler, mock_entity, mock_memory):
         """Test AI memory retrieval with formatted filename."""
         config = {
@@ -182,42 +218,145 @@ class TestAIAgentHandler:
             "entity_name": "User"
         }
         
-        with patch.object(handler, '_read_local_file', return_value="model content") as mock_read, \
+        with patch.object(handler, '_read_local_path', return_value="model content") as mock_read, \
              patch.object(handler, '_get_repository_name', return_value="test_repo"):
-            
+
             result = await handler._get_ai_memory(mock_entity, config, mock_memory, "tech_id")
-            
+
             mock_read.assert_called_once_with(
-                file_name="User_model.py",
+                path_name="User_model.py",
                 technical_id="test_branch",
                 branch_name_id="test_branch",
                 repository_name="test_repo"
             )
 
     @pytest.mark.asyncio
-    async def test_read_local_file_success(self, handler):
-        """Test successful local file reading."""
-        with patch('common.utils.utils.get_project_file_name_path', 
+    async def test_read_local_path_file_success(self, handler):
+        """Test successful local file reading via _read_local_path."""
+        with patch('common.utils.utils.get_project_file_name_path',
                    new_callable=AsyncMock, return_value="/path/to/file.py"), \
-             patch('aiofiles.open', create=True) as mock_open:
-            
+             patch.object(handler, '_path_exists', return_value=True), \
+             patch.object(handler, '_is_directory', return_value=False), \
+             patch.object(handler, '_read_local_file', return_value="file content"):
+
+            result = await handler._read_local_path("test.py", "tech_id", "branch", "repo")
+
+            assert result == "file content"
+
+    @pytest.mark.asyncio
+    async def test_read_local_path_directory_success(self, handler):
+        """Test successful local directory reading via _read_local_path."""
+        with patch('common.utils.utils.get_project_file_name_path',
+                   new_callable=AsyncMock, return_value="/path/to/directory"), \
+             patch.object(handler, '_path_exists', return_value=True), \
+             patch.object(handler, '_is_directory', return_value=True), \
+             patch.object(handler, '_read_local_directory', return_value="directory content"):
+
+            result = await handler._read_local_path("test_dir", "tech_id", "branch", "repo")
+
+            assert result == "directory content"
+
+    @pytest.mark.asyncio
+    async def test_read_local_path_not_found(self, handler):
+        """Test local path reading when path doesn't exist."""
+        with patch('common.utils.utils.get_project_file_name_path',
+                   new_callable=AsyncMock, return_value="/path/to/nonexistent"), \
+             patch.object(handler, '_path_exists', return_value=False):
+
+            result = await handler._read_local_path("nonexistent", "tech_id", "branch", "repo")
+
+            assert "Path not found: nonexistent" in result
+
+    @pytest.mark.asyncio
+    async def test_read_local_path_error(self, handler):
+        """Test local path reading with error."""
+        with patch('common.utils.utils.get_project_file_name_path',
+                   new_callable=AsyncMock, side_effect=Exception("Path error")):
+
+            result = await handler._read_local_path("test.py", "tech_id", "branch", "repo")
+
+            assert "Error reading test.py" in result
+
+    @pytest.mark.asyncio
+    async def test_read_local_file_success(self, handler):
+        """Test successful individual file reading."""
+        with patch('aiofiles.open', create=True) as mock_open:
             mock_file = AsyncMock()
             mock_file.read.return_value = "file content"
             mock_open.return_value.__aenter__.return_value = mock_file
-            
-            result = await handler._read_local_file("test.py", "tech_id", "branch", "repo")
-            
+
+            result = await handler._read_local_file("/path/to/file.py", "file.py")
+
             assert result == "file content"
 
     @pytest.mark.asyncio
     async def test_read_local_file_error(self, handler):
-        """Test local file reading with error."""
-        with patch('common.utils.utils.get_project_file_name_path', 
-                   new_callable=AsyncMock, side_effect=Exception("File error")):
-            
-            result = await handler._read_local_file("test.py", "tech_id", "branch", "repo")
-            
-            assert result == ""
+        """Test individual file reading with error."""
+        with patch('aiofiles.open', create=True, side_effect=Exception("File read error")):
+
+            result = await handler._read_local_file("/path/to/file.py", "file.py")
+
+            assert "Error reading file file.py" in result
+
+    @pytest.mark.asyncio
+    async def test_read_local_directory_success(self, handler):
+        """Test successful directory reading with files."""
+        mock_files = ["file1.py", "file2.java", "file3.txt"]
+
+        with patch.object(handler, '_list_files_in_directory', return_value=mock_files), \
+             patch.object(handler, '_read_local_file', side_effect=["content1", "content2", "content3"]):
+
+            result = await handler._read_local_directory("/path/to/directory", "test_dir")
+
+            assert "Directory: test_dir" in result
+            assert "Found 3 files:" in result
+            assert "--- File: file1.py ---" in result
+            assert "--- File: file2.java ---" in result
+            assert "--- File: file3.txt ---" in result
+            assert "content1" in result
+            assert "content2" in result
+            assert "content3" in result
+
+    @pytest.mark.asyncio
+    async def test_read_local_directory_empty(self, handler):
+        """Test directory reading when directory is empty."""
+        with patch.object(handler, '_list_files_in_directory', return_value=[]):
+
+            result = await handler._read_local_directory("/path/to/empty", "empty_dir")
+
+            assert "Directory: empty_dir" in result
+            assert "Directory is empty or contains no readable files." in result
+
+    @pytest.mark.asyncio
+    async def test_read_local_directory_with_file_errors(self, handler):
+        """Test directory reading when some files have read errors."""
+        mock_files = ["good_file.py", "bad_file.py"]
+
+        def mock_read_file(file_path, file_name):
+            if "bad_file" in file_name:
+                raise Exception("Permission denied")
+            return f"content of {file_name}"
+
+        with patch.object(handler, '_list_files_in_directory', return_value=mock_files), \
+             patch.object(handler, '_read_local_file', side_effect=mock_read_file):
+
+            result = await handler._read_local_directory("/path/to/directory", "test_dir")
+
+            assert "Directory: test_dir" in result
+            assert "Found 2 files:" in result
+            assert "--- File: good_file.py ---" in result
+            assert "content of good_file.py" in result
+            assert "--- File: bad_file.py (Error reading) ---" in result
+            assert "Error: Permission denied" in result
+
+    @pytest.mark.asyncio
+    async def test_read_local_directory_error(self, handler):
+        """Test directory reading with general error."""
+        with patch.object(handler, '_list_files_in_directory', side_effect=Exception("Directory error")):
+
+            result = await handler._read_local_directory("/path/to/directory", "test_dir")
+
+            assert "Error reading directory test_dir" in result
 
     def test_get_repository_name(self, handler):
         """Test repository name retrieval."""
@@ -228,6 +367,74 @@ class TestAIAgentHandler:
             
             assert result == "test_repo"
             mock_get_repo.assert_called_once_with(mock_entity)
+
+    @pytest.mark.asyncio
+    async def test_path_exists_true(self, handler):
+        """Test path exists check when path exists."""
+        with patch('asyncio.to_thread', new_callable=AsyncMock, return_value=True):
+            result = await handler._path_exists("/existing/path")
+            assert result is True
+
+    @pytest.mark.asyncio
+    async def test_path_exists_false(self, handler):
+        """Test path exists check when path doesn't exist."""
+        with patch('asyncio.to_thread', new_callable=AsyncMock, return_value=False):
+            result = await handler._path_exists("/nonexistent/path")
+            assert result is False
+
+    @pytest.mark.asyncio
+    async def test_path_exists_error(self, handler):
+        """Test path exists check with error."""
+        with patch('asyncio.to_thread', new_callable=AsyncMock, side_effect=Exception("OS error")):
+            result = await handler._path_exists("/error/path")
+            assert result is False
+
+    @pytest.mark.asyncio
+    async def test_is_directory_true(self, handler):
+        """Test directory check when path is directory."""
+        with patch('asyncio.to_thread', new_callable=AsyncMock, return_value=True):
+            result = await handler._is_directory("/path/to/directory")
+            assert result is True
+
+    @pytest.mark.asyncio
+    async def test_is_directory_false(self, handler):
+        """Test directory check when path is file."""
+        with patch('asyncio.to_thread', new_callable=AsyncMock, return_value=False):
+            result = await handler._is_directory("/path/to/file.py")
+            assert result is False
+
+    @pytest.mark.asyncio
+    async def test_is_directory_error(self, handler):
+        """Test directory check with error."""
+        with patch('asyncio.to_thread', new_callable=AsyncMock, side_effect=Exception("OS error")):
+            result = await handler._is_directory("/error/path")
+            assert result is False
+
+    @pytest.mark.asyncio
+    async def test_list_files_in_directory_success(self, handler):
+        """Test successful file listing in directory."""
+        mock_files = ["file1.py", "file2.java", ".hidden", "subdir"]
+
+        def mock_listdir_sync():
+            return ["file1.py", "file2.java", ".hidden", "subdir"]
+
+        def mock_isfile(path):
+            return not path.endswith("subdir") and not path.endswith(".hidden")
+
+        with patch('asyncio.to_thread') as mock_to_thread:
+            # Mock the sync function that gets called by asyncio.to_thread
+            mock_to_thread.return_value = ["file1.py", "file2.java"]
+
+            result = await handler._list_files_in_directory("/path/to/directory")
+
+            assert result == ["file1.py", "file2.java"]
+
+    @pytest.mark.asyncio
+    async def test_list_files_in_directory_error(self, handler):
+        """Test file listing with error."""
+        with patch('asyncio.to_thread', new_callable=AsyncMock, side_effect=Exception("Permission denied")):
+            result = await handler._list_files_in_directory("/error/directory")
+            assert result == []
 
     def test_check_and_update_iteration_within_limit(self, handler, mock_entity):
         """Test iteration check when within limit."""

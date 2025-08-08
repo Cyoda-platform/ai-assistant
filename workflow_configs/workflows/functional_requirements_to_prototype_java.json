@@ -1,0 +1,206 @@
+{
+  "version": "1.0",
+  "name": "Functional Requirements to Prototype Workflow",
+  "desc": "Complete workflow to transform functional requirements into a working application",
+  "initialState": "initial_state",
+  "active": true,
+  "states": {
+    "initial_state": {
+      "transitions": [
+        {
+          "name": "start_save_functional_requirements",
+          "next": "save_functional_requirements",
+          "manual": false
+        }
+      ]
+    },
+    "save_functional_requirements": {
+      "transitions": [
+        {
+          "name": "functional_requirements_saved",
+          "next": "notify_saved_requirements",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.save_functional_requirements_f2a1",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "notify_saved_requirements": {
+      "transitions": [
+        {
+          "name": "proceed_to_generate_orchestrators",
+          "next": "generate_workflow_orchestrators",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_saved_fun_req_a1b2",
+              "executionMode": "SYNC",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "generate_workflow_orchestrators": {
+      "transitions": [
+        {
+          "name": "workflow_orchestrators_generated",
+          "next": "notify_parsed_configs",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.generate_workflow_orchestrators_g7h8",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "notify_parsed_configs": {
+      "transitions": [
+        {
+          "name": "proceed_to_generate_controller",
+          "next": "generate_controller",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_parsed_configs_c2d3",
+              "executionMode": "SYNC",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "generate_controller": {
+      "transitions": [
+        {
+          "name": "controller_generated",
+          "next": "notify_controller_generated",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.generate_controller_d4e3",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "notify_controller_generated": {
+      "transitions": [
+        {
+          "name": "proceed_to_generate_processors",
+          "next": "generate_processors_and_criteria",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_controller_generated_d3e4",
+              "executionMode": "SYNC",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "generate_processors_and_criteria": {
+      "transitions": [
+        {
+          "name": "processors_and_criteria_generated",
+          "next": "notify_processors_generated",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.generate_processors_and_criteria_e5f4",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "notify_processors_generated": {
+      "transitions": [
+        {
+          "name": "proceed_to_compile_project",
+          "next": "compile_project",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_processors_generated_e4f5",
+              "executionMode": "SYNC",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "compile_project": {
+      "transitions": [
+        {
+          "name": "project_compiled",
+          "next": "notify_project_compiled",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.compile_project_f6g5",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "notify_project_compiled": {
+      "transitions": [
+        {
+          "name": "workflow_completed",
+          "next": "completed",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_project_compiled_f5g6",
+              "executionMode": "SYNC",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "completed": {
+      "transitions": []
+    }
+  }
+}

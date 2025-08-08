@@ -1,0 +1,22 @@
+{
+  "type": "agent",
+  "publish": true,
+  "model": {},
+  "tools": [
+    {
+      "name": "run_github_action_ozv1"
+    },
+    {
+      "name": "add_application_resource_3d0b"
+    }
+  ],
+  "memory_tags": [
+    "compile_project"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "compile_project_f6g5"
+    }
+  ]
+}

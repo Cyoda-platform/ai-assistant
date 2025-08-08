@@ -1,0 +1,24 @@
+{
+  "type": "agent",
+  "publish": false,
+  "model": {},
+  "tools": [
+    {
+      "name": "add_application_resource_3d0b"
+    }
+  ],
+  "memory_tags": [
+    "save_functional_requirements"
+  ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/functional_requirement.md"
+    ]
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "save_functional_requirements_f2a1"
+    }
+  ]
+}

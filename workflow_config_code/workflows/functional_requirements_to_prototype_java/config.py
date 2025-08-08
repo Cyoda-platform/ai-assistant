@@ -1,5 +1,5 @@
 """
-FunctionalRequirementsToApplicationWorkflowConfig Configuration
+FunctionalRequirementsToPrototypeJavaWorkflowConfig Configuration
 
 Configuration data for the functional requirements to application workflow.
 """
@@ -21,7 +21,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get workflow configuration factory"""
     return lambda params=None: {
         "version": "1.0",
-        "name": "Functional Requirements to Application Workflow",
+        "name": "Functional Requirements to Prototype Workflow",
         "desc": "Complete workflow to transform functional requirements into a working application",
         "initialState": "initial_state",
         "active": True,

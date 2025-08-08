@@ -36,8 +36,7 @@
           "type": "string",
           "description": "Git option (optional, defaults to 'compile-only')",
           "enum": [
-            "compile-only",
-            "workflow-validation"
+            "compile-only"
           ]
         }
       },

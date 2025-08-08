@@ -142,13 +142,13 @@ class AIAgentHandler:
                         formatted_filename = file_name
                         logger.exception(e)
 
-                    file_contents = await self._read_local_file(
-                        file_name=formatted_filename,
+                    path_contents = await self._read_local_path(
+                        path_name=formatted_filename,
                         technical_id=branch_id,
                         branch_name_id=branch_id,
                         repository_name=self._get_repository_name(entity)
                     )
-                    messages.append(AIMessage(role="user", content=f"Reference: {file_name}: \n {file_contents}"))
+                    messages.append(AIMessage(role="user", content=f"Reference: {file_name}: \n {path_contents}"))
 
             # Handle cyoda edge message input
             elif input_data.get("cyoda_edge_message"):
@@ -165,38 +165,178 @@ class AIAgentHandler:
 
         return messages
 
-    async def _read_local_file(self, file_name: str, technical_id: str,
+    async def _read_local_path(self, path_name: str, technical_id: str,
                               branch_name_id: str, repository_name: str) -> str:
         """
-        Read local file content.
+        Read local file or directory content.
 
         Args:
-            file_name: File name to read
+            path_name: File or directory name to read
             technical_id: Technical identifier
             branch_name_id: Branch name identifier
             repository_name: Repository name
 
         Returns:
-            File content as string
+            File content or directory listing with file contents as string
         """
         try:
             from common.utils.utils import get_project_file_name_path
-            import aiofiles
+            import os
 
-            file_path = await get_project_file_name_path(
+            full_path = await get_project_file_name_path(
                 technical_id=technical_id,
                 git_branch_id=branch_name_id,
-                file_name=file_name,
+                file_name=path_name,
                 repository_name=repository_name
             )
 
-            async with aiofiles.open(file_path, 'r') as file:
+            # Check if path exists
+            if not await self._path_exists(full_path):
+                logger.warning(f"Path does not exist: {full_path}")
+                return f"Path not found: {path_name}"
+
+            # Check if it's a directory
+            if await self._is_directory(full_path):
+                return await self._read_local_directory(full_path, path_name)
+            else:
+                return await self._read_local_file(full_path, path_name)
+
+        except Exception as e:
+            logger.exception(f"Error during reading path {path_name}")
+            return f"Error reading {path_name}: {str(e)}"
+
+    async def _read_local_file(self, file_path: str, file_name: str) -> str:
+        """
+        Read local file content.
+
+        Args:
+            file_path: Full path to the file
+            file_name: Original file name for reference
+
+        Returns:
+            File content as string
+        """
+        try:
+            import aiofiles
+
+            async with aiofiles.open(file_path, 'r', encoding='utf-8') as file:
                 file_contents = await file.read()
             return file_contents
 
         except Exception as e:
-            logger.exception("Error during reading file")
-            return ""
+            logger.exception(f"Error reading file {file_name}")
+            return f"Error reading file {file_name}: {str(e)}"
+
+    async def _read_local_directory(self, directory_path: str, directory_name: str) -> str:
+        """
+        Read local directory content - list files and read each file's content.
+
+        Args:
+            directory_path: Full path to the directory
+            directory_name: Original directory name for reference
+
+        Returns:
+            Directory listing with file contents as formatted string
+        """
+        try:
+            import os
+            import asyncio
+
+            files_content = []
+            files_content.append(f"Directory: {directory_name}")
+            files_content.append("=" * 50)
+
+            # List files in directory
+            file_names = await self._list_files_in_directory(directory_path)
+
+            if not file_names:
+                files_content.append("Directory is empty or contains no readable files.")
+                return "\n".join(files_content)
+
+            files_content.append(f"Found {len(file_names)} files:")
+            files_content.append("")
+
+            # Read each file's content
+            for file_name in sorted(file_names):
+                file_path = os.path.join(directory_path, file_name)
+
+                try:
+                    file_content = await self._read_local_file(file_path, file_name)
+                    files_content.append(f"--- File: {file_name} ---")
+                    files_content.append(file_content)
+                    files_content.append("")
+                except Exception as e:
+                    logger.warning(f"Could not read file {file_name}: {e}")
+                    files_content.append(f"--- File: {file_name} (Error reading) ---")
+                    files_content.append(f"Error: {str(e)}")
+                    files_content.append("")
+
+            return "\n".join(files_content)
+
+        except Exception as e:
+            logger.exception(f"Error reading directory {directory_name}")
+            return f"Error reading directory {directory_name}: {str(e)}"
+
+    async def _path_exists(self, path: str) -> bool:
+        """
+        Check if a path exists asynchronously.
+
+        Args:
+            path: Path to check
+
+        Returns:
+            True if path exists, False otherwise
+        """
+        try:
+            import os
+            import asyncio
+            return await asyncio.to_thread(os.path.exists, path)
+        except Exception:
+            return False
+
+    async def _is_directory(self, path: str) -> bool:
+        """
+        Check if a path is a directory asynchronously.
+
+        Args:
+            path: Path to check
+
+        Returns:
+            True if path is a directory, False otherwise
+        """
+        try:
+            import os
+            import asyncio
+            return await asyncio.to_thread(os.path.isdir, path)
+        except Exception:
+            return False
+
+    async def _list_files_in_directory(self, directory_path: str) -> list:
+        """
+        List files in directory asynchronously (excluding subdirectories).
+
+        Args:
+            directory_path: Path to directory
+
+        Returns:
+            List of file names (not including subdirectories)
+        """
+        try:
+            import os
+            import asyncio
+
+            def _list_files_sync():
+                files = []
+                for item_name in os.listdir(directory_path):
+                    item_path = os.path.join(directory_path, item_name)
+                    if os.path.isfile(item_path) and not item_name.startswith('.'):
+                        files.append(item_name)
+                return files
+
+            return await asyncio.to_thread(_list_files_sync)
+        except Exception as e:
+            logger.debug(f"Error listing files in directory {directory_path}: {e}")
+            return []
 
     def _get_repository_name(self, entity: AgenticFlowEntity) -> str:
         """

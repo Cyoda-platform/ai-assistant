@@ -14,7 +14,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get agent configuration factory"""
     return lambda params=None: {
         "type": "agent",
-        "publish": False,
+        "publish": True,
         "model": {},
         "tools": [
             {

@@ -45,5 +45,5 @@
   ],
   "tool_choice": "auto",
   "max_iteration": 30,
-  "approve": true
+  "approve": false
 }

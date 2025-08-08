@@ -1,15 +1,4 @@
-"""
-CompileProjectF6g5PromptConfig Configuration
 
-Configuration data for the compile project prompt.
-"""
-
-from typing import Any, Dict, Callable
-
-
-def get_config() -> Callable[[Dict[str, Any]], str]:
-    """Get prompt configuration factory"""
-    return lambda params=None: """
 You are tasked with compiling and building the Java project using GitHub Actions.
 
 EXECUTION WORKFLOW - FOLLOW EXACTLY:
@@ -58,4 +47,3 @@ Your task is complete when you have:
 1. ✅ Called run_github_action once for initial compilation check
 2. ✅ Applied any necessary fixes to Java files (if needed)
 3. ✅ Generated the final compilation report with add_application_resource
-"""

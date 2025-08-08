@@ -752,7 +752,7 @@
           "manual": false,
           "processors": [
             {
-              "name": "AgentProcessor.generate_prototype_sketch_2269",
+              "name": "FunctionProcessor.generate_prototype_sketch_2269",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
