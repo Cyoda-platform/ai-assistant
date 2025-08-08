@@ -147,12 +147,49 @@
     "notify_processors_generated": {
       "transitions": [
         {
+          "name": "proceed_to_enhance_processors",
+          "next": "enhance_processors",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_processors_generated_e4f5",
+              "executionMode": "SYNC",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "enhance_processors": {
+      "transitions": [
+        {
+          "name": "processors_enhanced",
+          "next": "notify_processors_enhanced",
+          "manual": false,
+          "processors": [
+            {
+              "name": "enhance_processors_g6h7",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "notify_processors_enhanced": {
+      "transitions": [
+        {
           "name": "proceed_to_compile_project",
           "next": "compile_project",
           "manual": false,
           "processors": [
             {
-              "name": "MessageProcessor.notify_processors_generated_e4f5",
+              "name": "notify_processors_enhanced_g7h8",
               "executionMode": "SYNC",
               "config": {
                 "calculationNodesTags": "ai_assistant"

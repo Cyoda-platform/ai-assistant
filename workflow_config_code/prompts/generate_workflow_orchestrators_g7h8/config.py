@@ -26,7 +26,7 @@ Java Orchestrator Template:
 ```java
 package com.java_template.application.orchestrator;
 
-import com.cyoda.plugins.mapping.entity.CyodaEntity;
+import com.java_template.common.workflow.CyodaEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;

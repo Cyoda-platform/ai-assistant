@@ -13,6 +13,8 @@ from workflow_config_code.agents.generate_controller_d4e3.agent import GenerateC
 from workflow_config_code.messages.notify_controller_generated_d3e4.message import NotifyControllerGeneratedD3e4MessageConfig
 from workflow_config_code.agents.generate_processors_and_criteria_e5f4.agent import GenerateProcessorsAndCriteriaE5f4AgentConfig
 from workflow_config_code.messages.notify_processors_generated_e4f5.message import NotifyProcessorsGeneratedE4f5MessageConfig
+from workflow_config_code.agents.enhance_processors_g6h7.agent import EnhanceProcessorsG6h7AgentConfig
+from workflow_config_code.messages.notify_processors_enhanced_g7h8.message import NotifyProcessorsEnhancedG7h8MessageConfig
 from workflow_config_code.agents.compile_project_f6g5.agent import CompileProjectF6g5AgentConfig
 from workflow_config_code.messages.notify_project_compiled_f5g6.message import NotifyProjectCompiledF5g6MessageConfig
 
@@ -168,8 +170,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             "notify_processors_generated": {
                 "transitions": [
                     {
-                        "name": "proceed_to_compile_project",
-                        "next": "compile_project",
+                        "name": "proceed_to_enhance_processors",
+                        "next": "enhance_processors",
                         "manual": False,
                         "processors": [
                             {
@@ -183,7 +185,43 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 ]
             },
-
+            "enhance_processors": {
+                "transitions": [
+                    {
+                        "name": "processors_enhanced",
+                        "next": "notify_processors_enhanced",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": EnhanceProcessorsG6h7AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "notify_processors_enhanced": {
+                "transitions": [
+                    {
+                        "name": "proceed_to_compile_project",
+                        "next": "compile_project",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyProcessorsEnhancedG7h8MessageConfig.get_name(),
+                                "executionMode": "SYNC",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
             "compile_project": {
                 "transitions": [
                     {
