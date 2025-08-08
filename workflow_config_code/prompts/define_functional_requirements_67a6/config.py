@@ -76,7 +76,8 @@ Specify JSON structures for all API endpoints.
 
 ## VISUAL REPRESENTATION:
 Provide Mermaid diagrams showing:
-- Event-driven processing chains
+- Sequence diagrams
+- Entity lifecycle state diagrams
 
     1. Always start with ```mermaid and close with ``` on a new line.
     2. Do NOT chain multiple arrows on one line. Write each connection separately.

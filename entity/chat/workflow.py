@@ -12,6 +12,7 @@ from tools.workflow_validation_service import WorkflowValidationService
 from tools.utility_service import UtilityService
 from tools.build_id_retrieval_service import BuildIdRetrievalService
 from tools.github_operations_service import GitHubOperationsService
+from tools.workflow_orchestrator_service import WorkflowOrchestratorService
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +158,17 @@ class ChatWorkflow(Workflow):
             mock=mock
         )
 
+        self.workflow_orchestrator_service = WorkflowOrchestratorService(
+            workflow_helper_service=workflow_helper_service,
+            entity_service=entity_service,
+            cyoda_auth_service=cyoda_auth_service,
+            workflow_converter_service=workflow_converter_service,
+            scheduler_service=scheduler_service,
+            data_service=data_service,
+            dataset=dataset,
+            mock=mock
+        )
+
         # Initialize function registry
         self._function_registry = self._build_function_registry()
 
@@ -248,7 +260,14 @@ class ChatWorkflow(Workflow):
             'get_build_id_from_context': self.build_id_retrieval_service.get_build_id_from_context,
 
             # GitHub Operations
-            'add_collaborator': self.github_operations_service.add_collaborator
+            'add_collaborator': self.github_operations_service.add_collaborator,
+            'trigger_github_workflow': self.github_operations_service.trigger_github_workflow,
+            'monitor_workflow_run': self.github_operations_service.monitor_workflow_run,
+            'get_workflow_run_status': self.github_operations_service.get_workflow_run_status,
+            'run_github_action': self.github_operations_service.run_github_action,
+
+            # Workflow Orchestrator Generation
+            'generate_workflow_orchestrators': self.workflow_orchestrator_service.generate_workflow_orchestrators
 
         }
 
