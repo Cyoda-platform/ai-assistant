@@ -69,6 +69,12 @@ class EventProcessor:
 
             # If no "Processor." prefix, execute direct method
             if "Processor." not in processor_name and processor_name != "process_event":
+                # Try to map processor name to actual function name if it doesn't exist directly
+                if not self.method_registry.has_method(action_name):
+                    # Handle specific tool name mappings
+                    if action_name == "extract_workflow_components_k2l3":
+                        action_name = "extract_workflow_components"
+
                 response = await self._execute_direct_method(
                     method_name=action_name, entity=entity, technical_id=technical_id
                 )
@@ -92,9 +98,15 @@ class EventProcessor:
                         )
                     else:
                         # Fallback to direct method execution if config doesn't match expected patterns
-                        if self.method_registry.has_method(action_name):
+                        # Try to map processor name to actual function name if it doesn't exist directly
+                        mapped_action_name = action_name
+                        if not self.method_registry.has_method(action_name):
+                            if action_name == "extract_workflow_components_k2l3":
+                                mapped_action_name = "extract_workflow_components"
+
+                        if self.method_registry.has_method(mapped_action_name):
                             response = await self._execute_direct_method(
-                                method_name=action_name, entity=entity, technical_id=technical_id
+                                method_name=mapped_action_name, entity=entity, technical_id=technical_id
                             )
                         else:
                             raise ValueError(f"Unknown processing step: {action_name}")

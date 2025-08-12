@@ -159,7 +159,7 @@ class FileOperationsService(BaseWorkflowService):
 
     async def list_directory_files(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
         """
-        List all files in a directory for agent use.
+        List all files in a directory recursively for agent use.
 
         Args:
             technical_id: Technical identifier
@@ -167,7 +167,7 @@ class FileOperationsService(BaseWorkflowService):
             **params: Parameters including directory_path
 
         Returns:
-            JSON string with list of files or error message
+            JSON string with list of files (including subdirectories) or error message
         """
         try:
             is_valid, error_msg = await self._validate_required_params(params, ["directory_path"])
@@ -187,20 +187,22 @@ class FileOperationsService(BaseWorkflowService):
                 repository_name=repository_name
             )
 
-            # List files in directory using async operations
+            # List files recursively in directory using async operations
             if await self._directory_exists(full_directory_path):
-                files = await self._list_files_in_directory(full_directory_path)
+                files = await self._get_all_files_recursively(full_directory_path)
 
                 return json.dumps({
                     "directory": directory_path,
                     "files": sorted(files),
-                    "count": len(files)
+                    "count": len(files),
+                    "recursive": True
                 })
             else:
                 return json.dumps({
                     "directory": directory_path,
                     "files": [],
                     "count": 0,
+                    "recursive": True,
                     "message": "Directory does not exist or is not accessible"
                 })
 
@@ -243,6 +245,42 @@ class FileOperationsService(BaseWorkflowService):
             return files
         except Exception as e:
             self.logger.debug("Error listing files in directory %s: %s", directory_path, str(e))
+            return []
+
+    async def _get_all_files_recursively(self, directory_path: str) -> List[str]:
+        """
+        Get all files recursively from directory and all subdirectories.
+
+        Args:
+            directory_path: Path to directory
+
+        Returns:
+            List of relative file paths from the root directory
+        """
+        try:
+            import asyncio
+
+            def _walk_directory_sync():
+                files = []
+                for root, dirs, file_names in os.walk(directory_path):
+                    # Filter out hidden directories
+                    dirs[:] = [d for d in dirs if not d.startswith('.')]
+
+                    for file_name in file_names:
+                        # Skip hidden files
+                        if file_name.startswith('.'):
+                            continue
+
+                        # Get relative path from the root directory
+                        full_file_path = os.path.join(root, file_name)
+                        relative_path = os.path.relpath(full_file_path, directory_path)
+                        files.append(relative_path)
+
+                return files
+
+            return await asyncio.to_thread(_walk_directory_sync)
+        except Exception as e:
+            self.logger.debug("Error walking directory %s: %s", directory_path, str(e))
             return []
 
     async def get_entity_pojo_contents(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:

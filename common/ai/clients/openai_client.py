@@ -51,17 +51,21 @@ class AsyncOpenAIClient:
                 response_format=response_format
             )
         else:
-            response = await self.client.chat.completions.create(
-                model=model.model_name,
-                temperature=model.temperature,
-                max_tokens=model.max_tokens,
-                top_p=model.top_p,
-                frequency_penalty=model.frequency_penalty,
-                presence_penalty=model.presence_penalty,
-                messages=messages,
-                tools=tools,
-                tool_choice=tool_choice,
-                response_format=response_format
-            )
+            try:
+                response = await self.client.chat.completions.create(
+                    model=model.model_name,
+                    temperature=model.temperature,
+                    max_tokens=model.max_tokens,
+                    top_p=model.top_p,
+                    frequency_penalty=model.frequency_penalty,
+                    presence_penalty=model.presence_penalty,
+                    messages=messages,
+                    tools=tools,
+                    tool_choice=tool_choice,
+                    response_format=response_format
+                )
+            except Exception as e:
+                logger.exception(e)
+                raise e
         logger.info(f"Invoked openai client with response: {response}")
         return response

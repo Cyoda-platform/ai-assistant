@@ -22,22 +22,23 @@ Your task:
 - You must call add_application_resource at least once.
 
 For each identified entity, call add_application_resource with:
-- resource_path: 'src/main/java/com/java_template/application/entity/{EntityName}.java'
+- resource_path: 'src/main/java/com/java_template/application/entity/{entityName}/version_1/{EntityName}.java'
+Remember to replace {entityName} with the actual entity name in lowercase and {EntityName} with the actual entity name in CamelCase, starting with a capital letter.
 - file_contents: entity Java POJO using Lombok @Data annotation.
 
 Use the following entity class template (replace EntityName with the actual entity name):
 
-package com.java_template.application.entity;
+package com.java_template.application.entity.{entityName}.version_1; // replace {entityName} with actual entity name in lowercase
 
 import com.java_template.common.workflow.CyodaEntity;
 import com.java_template.common.workflow.OperationSpecification;
 import org.cyoda.cloud.api.event.common.ModelSpec;
 import lombok.Data;
-import static com.java_template.common.config.Config.ENTITY_VERSION;
 
 @Data
 public class EntityName implements CyodaEntity {
     public static final String ENTITY_NAME = "EntityName";
+    public static final Integer ENTITY_VERSION = 1;
     // Add your entity fields here
 
     public EntityName() {}
@@ -46,7 +47,7 @@ public class EntityName implements CyodaEntity {
     public OperationSpecification getModelKey() {
         ModelSpec modelSpec = new ModelSpec();
         modelSpec.setName(ENTITY_NAME);
-        modelSpec.setVersion(Integer.parseInt(ENTITY_VERSION));
+        modelSpec.setVersion(ENTITY_VERSION);
         return new OperationSpecification.Entity(modelSpec, ENTITY_NAME);
     }
 

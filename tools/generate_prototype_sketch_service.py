@@ -29,7 +29,9 @@ class GeneratePrototypeSketchService(BaseWorkflowService):
             # Prepare workflow cache with the user request and existing parameters
             workflow_cache = {
                 **params,
-                const.GIT_BRANCH_PARAM: entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
+                const.GIT_BRANCH_PARAM: entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                const.REPOSITORY_NAME_PARAM: entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM, technical_id),
+                const.PROGRAMMING_LANGUAGE_PARAM: entity.workflow_cache.get(const.PROGRAMMING_LANGUAGE_PARAM, technical_id)
             }
 
             # Launch agentic workflow for functional requirements to prototype Java

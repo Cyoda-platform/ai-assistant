@@ -31,8 +31,4 @@ The generated orchestrators include:
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get message meta configuration factory"""
-    return lambda params=None: {
-        "type": "info",
-        "title": "Workflow Orchestrators Generated",
-        "category": "workflow_progress"
-    }
+    return lambda params=None: {'type': 'notification', 'approve': False, 'publish': True}

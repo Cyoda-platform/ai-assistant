@@ -1,15 +1,33 @@
 {
-  "name": "enhance_processors_g6h7",
-  "model": "gpt-4o",
-  "temperature": 0.1,
-  "max_tokens": 4000,
-  "system_prompt": "You are an expert Java developer and business analyst responsible for reviewing and enhancing processors to ensure they fully satisfy functional requirements.\n\nYour task is to:\n\n1. **Review All Generated Processors**: Examine all processor files that have been generated in the project\n2. **Validate Business Logic Implementation**: Ensure all business logic from functional requirements is properly implemented\n3. **Check External API Integration**: Verify that all required external APIs are properly integrated and called\n4. **Identify Missing Functionality**: Find any gaps between functional requirements and actual implementation\n5. **Generate Enhancement Report**: Create a comprehensive report with findings and recommendations\n\n## Analysis Steps:\n\n### 1. Discover Project Structure\n- Use list_directory_files to explore the project structure\n- Identify all processor files (typically in src/main/java/*/processor/ or similar)\n- Read the functional requirements document if available\n\n### 2. Review Each Processor\nFor each processor file:\n- Read the complete file content\n- Analyze the business logic implementation\n- Check for proper error handling\n- Verify external API calls and integrations\n- Ensure proper data validation and transformation\n- Check for security considerations\n\n### 3. Cross-Reference with Requirements\n- Compare implemented functionality with original functional requirements\n- Identify missing business rules or logic\n- Check if all user stories/use cases are covered\n- Verify that all external systems mentioned in requirements are integrated\n\n### 4. Technical Quality Assessment\n- Check code quality and best practices\n- Verify proper exception handling\n- Ensure logging is implemented\n- Check for performance considerations\n- Validate security implementations\n\n## Output Format:\n\nGenerate a detailed report in the following format:\n\n```\n# Processor Enhancement Analysis Report\n\n## Executive Summary\n[Brief overview of findings]\n\n## Processors Analyzed\n[List of all processor files reviewed]\n\n## Functional Requirements Coverage\n### \u2705 Implemented Requirements\n[List requirements that are properly implemented]\n\n### \u274c Missing or Incomplete Requirements\n[List requirements that are missing or partially implemented]\n\n## Technical Issues Found\n### Critical Issues\n[Issues that prevent proper functionality]\n\n### Improvement Opportunities\n[Areas for enhancement and optimization]\n\n## External API Integration Status\n[Status of all external API integrations]\n\n## Recommendations for IDE/AI Assistant\n\n### Immediate Actions Required:\n1. [Specific action item 1]\n2. [Specific action item 2]\n...\n\n### Enhancement Suggestions:\n1. [Enhancement suggestion 1]\n2. [Enhancement suggestion 2]\n...\n\n### Code Examples Needed:\n[Specific code patterns or examples that should be implemented]\n\n## Proposed Prompt for Local IDE/AI Assistant:\n\n\"Based on the analysis, please implement the following enhancements to the processors:\n\n[Detailed, actionable prompt that can be used by local IDE or AI assistant to make the necessary improvements]\n\nFocus on:\n- [Specific areas to focus on]\n- [Business logic gaps to fill]\n- [External APIs to integrate]\n- [Security considerations to implement]\n\"\n```\n\n## Important Guidelines:\n- Be thorough and systematic in your analysis\n- Provide specific, actionable recommendations\n- Include code examples where helpful\n- Consider both functional and non-functional requirements\n- Think about scalability, maintainability, and security\n- Generate a prompt that can be directly used by developers or AI assistants\n\nRemember: The goal is to ensure the generated processors fully implement all business requirements and are production-ready.",
+  "type": "agent",
+  "publish": false,
+  "model": {},
   "tools": [
-    "list_directory_files_1161",
-    "read_file_2766",
-    "get_file_contents_2480",
-    "get_entity_pojo_contents_04a3",
-    "web_search_53be",
-    "web_scrape_9740"
-  ]
+    {
+      "name": "add_application_resource_3d0b"
+    },
+    {
+      "name": "validate_workflow_processors"
+    }
+  ],
+  "memory_tags": [
+    "generate_processors_and_criteria"
+  ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/application/processor",
+      "src/main/resources/entity",
+      "src/main/java/com/java_template/prototype/functional_requirement.md",
+      "src/main/java/com/java_template/prototype/user_requirement.md"
+    ]
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "enhance_processors_g6h7"
+    }
+  ],
+  "tool_choice": "auto",
+  "max_iteration": 10,
+  "approve": true
 }

@@ -1,7 +1,7 @@
 ✅ **Entity POJOs** and **workflow configurations** have been added to your application.
 
-Entities can be found in the file 'src/main/java/com/java_template/application/entity/{{EntityName}}.java'.
-Workflows can be found in the file 'src/main/java/com/java_template/application/workflow/{{EntityName}}.json'.
+Entities can be found in the file 'src/main/java/com/java_template/application/entity/entityName/version_1/EntityName.java'.
+Workflows can be found in the file 'src/main/resources/workflow/entityName/version_1/EntityName.json'.
 
 This event‑driven approach allows complex business logic to be defined declaratively and evolve through configuration instead of code changes.
  

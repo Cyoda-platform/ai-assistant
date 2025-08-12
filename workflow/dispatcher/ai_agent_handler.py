@@ -229,7 +229,7 @@ class AIAgentHandler:
 
     async def _read_local_directory(self, directory_path: str, directory_name: str) -> str:
         """
-        Read local directory content - list files and read each file's content.
+        Read local directory content recursively - list files and read each file's content from all subdirectories.
 
         Args:
             directory_path: Full path to the directory
@@ -246,28 +246,28 @@ class AIAgentHandler:
             files_content.append(f"Directory: {directory_name}")
             files_content.append("=" * 50)
 
-            # List files in directory
-            file_names = await self._list_files_in_directory(directory_path)
+            # Get all files recursively
+            all_files = await self._get_all_files_recursively(directory_path)
 
-            if not file_names:
+            if not all_files:
                 files_content.append("Directory is empty or contains no readable files.")
                 return "\n".join(files_content)
 
-            files_content.append(f"Found {len(file_names)} files:")
+            files_content.append(f"Found {len(all_files)} files (including subdirectories):")
             files_content.append("")
 
             # Read each file's content
-            for file_name in sorted(file_names):
-                file_path = os.path.join(directory_path, file_name)
+            for relative_file_path in sorted(all_files):
+                full_file_path = os.path.join(directory_path, relative_file_path)
 
                 try:
-                    file_content = await self._read_local_file(file_path, file_name)
-                    files_content.append(f"--- File: {file_name} ---")
+                    file_content = await self._read_local_file(full_file_path, relative_file_path)
+                    files_content.append(f"--- File: {relative_file_path} ---")
                     files_content.append(file_content)
                     files_content.append("")
                 except Exception as e:
-                    logger.warning(f"Could not read file {file_name}: {e}")
-                    files_content.append(f"--- File: {file_name} (Error reading) ---")
+                    logger.warning(f"Could not read file {relative_file_path}: {e}")
+                    files_content.append(f"--- File: {relative_file_path} (Error reading) ---")
                     files_content.append(f"Error: {str(e)}")
                     files_content.append("")
 
@@ -336,6 +336,43 @@ class AIAgentHandler:
             return await asyncio.to_thread(_list_files_sync)
         except Exception as e:
             logger.debug(f"Error listing files in directory {directory_path}: {e}")
+            return []
+
+    async def _get_all_files_recursively(self, directory_path: str) -> list:
+        """
+        Get all files recursively from directory and all subdirectories.
+
+        Args:
+            directory_path: Path to directory
+
+        Returns:
+            List of relative file paths from the root directory
+        """
+        try:
+            import os
+            import asyncio
+
+            def _walk_directory_sync():
+                files = []
+                for root, dirs, file_names in os.walk(directory_path):
+                    # Filter out hidden directories
+                    dirs[:] = [d for d in dirs if not d.startswith('.')]
+
+                    for file_name in file_names:
+                        # Skip hidden files
+                        if file_name.startswith('.'):
+                            continue
+
+                        # Get relative path from the root directory
+                        full_file_path = os.path.join(root, file_name)
+                        relative_path = os.path.relpath(full_file_path, directory_path)
+                        files.append(relative_path)
+
+                return files
+
+            return await asyncio.to_thread(_walk_directory_sync)
+        except Exception as e:
+            logger.debug(f"Error walking directory {directory_path}: {e}")
             return []
 
     def _get_repository_name(self, entity: AgenticFlowEntity) -> str:

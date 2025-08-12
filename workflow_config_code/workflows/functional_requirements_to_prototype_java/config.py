@@ -5,17 +5,20 @@ Configuration data for the functional requirements to application workflow.
 """
 
 from typing import Any, Dict, Callable
+
+from workflow_config_code.agents.implement_processors_business_logic_g6h7.agent import \
+    ImplementProcessorsBusinessLogicG6h7AgentConfig
 from workflow_config_code.agents.save_functional_requirements_f2a1.agent import SaveFunctionalRequirementsF2a1AgentConfig
 from workflow_config_code.messages.notify_saved_fun_req_a1b2.message import NotifySavedFunReqA1b2MessageConfig
-from workflow_config_code.tools.generate_workflow_orchestrators_g7h8.tool import GenerateWorkflowOrchestratorsG7h8ToolConfig
-from workflow_config_code.messages.notify_parsed_configs_c2d3.message import NotifyParsedConfigsC2d3MessageConfig
 from workflow_config_code.agents.generate_controller_d4e3.agent import GenerateControllerD4e3AgentConfig
 from workflow_config_code.messages.notify_controller_generated_d3e4.message import NotifyControllerGeneratedD3e4MessageConfig
 from workflow_config_code.agents.generate_processors_and_criteria_e5f4.agent import GenerateProcessorsAndCriteriaE5f4AgentConfig
 from workflow_config_code.messages.notify_processors_generated_e4f5.message import NotifyProcessorsGeneratedE4f5MessageConfig
 from workflow_config_code.agents.enhance_processors_g6h7.agent import EnhanceProcessorsG6h7AgentConfig
 from workflow_config_code.messages.notify_processors_enhanced_g7h8.message import NotifyProcessorsEnhancedG7h8MessageConfig
-from workflow_config_code.agents.compile_project_f6g5.agent import CompileProjectF6g5AgentConfig
+from workflow_config_code.tools.run_compilation_h8i9.tool import RunCompilationH8i9ToolConfig
+from workflow_config_code.agents.process_compilation_results_i9j0.agent import ProcessCompilationResultsI9j0AgentConfig
+from workflow_config_code.messages.notify_compilation_started_h8i9.message import NotifyCompilationStartedH8i9MessageConfig
 from workflow_config_code.messages.notify_project_compiled_f5g6.message import NotifyProjectCompiledF5g6MessageConfig
 
 
@@ -60,48 +63,11 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "proceed_to_generate_orchestrators",
-                        "next": "generate_workflow_orchestrators",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": NotifySavedFunReqA1b2MessageConfig.get_name(),
-                                "executionMode": "SYNC",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant"
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "generate_workflow_orchestrators": {
-                "transitions": [
-                    {
-                        "name": "workflow_orchestrators_generated",
-                        "next": "notify_parsed_configs",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": GenerateWorkflowOrchestratorsG7h8ToolConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 300000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "notify_parsed_configs": {
-                "transitions": [
-                    {
-                        "name": "proceed_to_generate_controller",
                         "next": "generate_controller",
                         "manual": False,
                         "processors": [
                             {
-                                "name": NotifyParsedConfigsC2d3MessageConfig.get_name(),
+                                "name": NotifySavedFunReqA1b2MessageConfig.get_name(),
                                 "executionMode": "SYNC",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant"
@@ -189,7 +155,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "processors_enhanced",
-                        "next": "notify_processors_enhanced",
+                        "next": "implement_business_logic",
                         "manual": False,
                         "processors": [
                             {
@@ -204,11 +170,30 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 ]
             },
+            "implement_business_logic": {
+                "transitions": [
+                    {
+                        "name": "implement_business_logic",
+                        "next": "notify_processors_enhanced",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ImplementProcessorsBusinessLogicG6h7AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
             "notify_processors_enhanced": {
                 "transitions": [
                     {
-                        "name": "proceed_to_compile_project",
-                        "next": "compile_project",
+                        "name": "proceed_to_run_compilation",
+                        "next": "run_compilation",
                         "manual": False,
                         "processors": [
                             {
@@ -222,7 +207,44 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 ]
             },
-            "compile_project": {
+            "run_compilation": {
+                "transitions": [
+                    {
+                        "name": "compilation_started",
+                        "next": "notify_compilation_started",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": RunCompilationH8i9ToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "notify_compilation_started": {
+                "transitions": [
+                    {
+                        "name": "proceed_to_process_compilation_results",
+                        "next": "process_compilation_results",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyCompilationStartedH8i9MessageConfig.get_name(),
+                                "executionMode": "SYNC",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "process_compilation_results": {
                 "transitions": [
                     {
                         "name": "project_compiled",
@@ -230,7 +252,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "manual": False,
                         "processors": [
                             {
-                                "name": CompileProjectF6g5AgentConfig.get_name(),
+                                "name": ProcessCompilationResultsI9j0AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",

@@ -37,48 +37,11 @@
       "transitions": [
         {
           "name": "proceed_to_generate_orchestrators",
-          "next": "generate_workflow_orchestrators",
-          "manual": false,
-          "processors": [
-            {
-              "name": "MessageProcessor.notify_saved_fun_req_a1b2",
-              "executionMode": "SYNC",
-              "config": {
-                "calculationNodesTags": "ai_assistant"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "generate_workflow_orchestrators": {
-      "transitions": [
-        {
-          "name": "workflow_orchestrators_generated",
-          "next": "notify_parsed_configs",
-          "manual": false,
-          "processors": [
-            {
-              "name": "FunctionProcessor.generate_workflow_orchestrators_g7h8",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "notify_parsed_configs": {
-      "transitions": [
-        {
-          "name": "proceed_to_generate_controller",
           "next": "generate_controller",
           "manual": false,
           "processors": [
             {
-              "name": "MessageProcessor.notify_parsed_configs_c2d3",
+              "name": "MessageProcessor.notify_saved_fun_req_a1b2",
               "executionMode": "SYNC",
               "config": {
                 "calculationNodesTags": "ai_assistant"
@@ -166,11 +129,30 @@
       "transitions": [
         {
           "name": "processors_enhanced",
+          "next": "implement_business_logic",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.enhance_processors_g6h7",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "implement_business_logic": {
+      "transitions": [
+        {
+          "name": "implement_business_logic",
           "next": "notify_processors_enhanced",
           "manual": false,
           "processors": [
             {
-              "name": "enhance_processors_g6h7",
+              "name": "AgentProcessor.implement_processors_business_logic_g6h7",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
@@ -184,12 +166,12 @@
     "notify_processors_enhanced": {
       "transitions": [
         {
-          "name": "proceed_to_compile_project",
-          "next": "compile_project",
+          "name": "proceed_to_run_compilation",
+          "next": "run_compilation",
           "manual": false,
           "processors": [
             {
-              "name": "notify_processors_enhanced_g7h8",
+              "name": "MessageProcessor.notify_processors_enhanced_g7h8",
               "executionMode": "SYNC",
               "config": {
                 "calculationNodesTags": "ai_assistant"
@@ -199,7 +181,44 @@
         }
       ]
     },
-    "compile_project": {
+    "run_compilation": {
+      "transitions": [
+        {
+          "name": "compilation_started",
+          "next": "notify_compilation_started",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.run_compilation_h8i9",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "notify_compilation_started": {
+      "transitions": [
+        {
+          "name": "proceed_to_process_compilation_results",
+          "next": "process_compilation_results",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_compilation_started_h8i9",
+              "executionMode": "SYNC",
+              "config": {
+                "calculationNodesTags": "ai_assistant"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "process_compilation_results": {
       "transitions": [
         {
           "name": "project_compiled",
@@ -207,7 +226,7 @@
           "manual": false,
           "processors": [
             {
-              "name": "AgentProcessor.compile_project_f6g5",
+              "name": "AgentProcessor.process_compilation_results_i9j0",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",

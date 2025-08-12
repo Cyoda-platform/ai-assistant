@@ -24,4 +24,4 @@ Would you like me to tell you more about Cyoda?
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get message meta configuration factory"""
-    return lambda params=None: {'type': 'question', 'approve': False, 'publish': True}
+    return lambda params=None: {'type': 'question', 'approve': False, 'publish': False}

@@ -1,0 +1,36 @@
+{
+  "type": "agent",
+  "publish": false,
+  "model": {},
+  "tools": [
+    {
+      "name": "list_directory_files_1ab7"
+    },
+    {
+      "name": "read_file_2766"
+    },
+    {
+      "name": "add_application_resource_3d0b"
+    }
+  ],
+  "memory_tags": [
+    "generate_processors_and_criteria"
+  ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/functional_requirement.md",
+      "src/main/java/com/java_template/prototype/user_requirement.md",
+      "src/main/java/com/java_template/application/processor",
+      "src/main/java/com/java_template/application/criterion"
+    ]
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "implement_processors_business_logic_g6h7"
+    }
+  ],
+  "tool_choice": "auto",
+  "max_iteration": 10,
+  "approve": true
+}

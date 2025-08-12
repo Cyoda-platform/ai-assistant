@@ -1,0 +1,20 @@
+{
+  "type": "function",
+  "function": {
+    "name": "run_github_action",
+    "description": "Triggers GitHub Actions compilation workflow for the Java project",
+    "parameters": {
+      "workflow_id": "build.yml",
+      "owner": "Cyoda-platform",
+      "option": "compile-only"
+    }
+  },
+  "memory_tags": [
+    "compile_project"
+  ],
+  "output": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/project_compilation.log"
+    ]
+  }
+}

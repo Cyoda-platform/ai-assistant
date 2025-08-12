@@ -9,6 +9,8 @@ from tools.application_builder_service import ApplicationBuilderService
 from tools.application_editor_service import ApplicationEditorService
 from tools.workflow_management_service import WorkflowManagementService
 from tools.workflow_validation_service import WorkflowValidationService
+from tools.workflow_processor_validation_service import WorkflowProcessorValidationService
+from tools.workflow_component_extraction_service import WorkflowComponentExtractionService
 from tools.utility_service import UtilityService
 from tools.build_id_retrieval_service import BuildIdRetrievalService
 from tools.github_operations_service import GitHubOperationsService
@@ -116,6 +118,28 @@ class ChatWorkflow(Workflow):
         )
 
         self.workflow_validation_service = WorkflowValidationService(
+            workflow_helper_service=workflow_helper_service,
+            entity_service=entity_service,
+            cyoda_auth_service=cyoda_auth_service,
+            workflow_converter_service=workflow_converter_service,
+            scheduler_service=scheduler_service,
+            data_service=data_service,
+            dataset=dataset,
+            mock=mock
+        )
+
+        self.workflow_processor_validation_service = WorkflowProcessorValidationService(
+            workflow_helper_service=workflow_helper_service,
+            entity_service=entity_service,
+            cyoda_auth_service=cyoda_auth_service,
+            workflow_converter_service=workflow_converter_service,
+            scheduler_service=scheduler_service,
+            data_service=data_service,
+            dataset=dataset,
+            mock=mock
+        )
+
+        self.workflow_component_extraction_service = WorkflowComponentExtractionService(
             workflow_helper_service=workflow_helper_service,
             entity_service=entity_service,
             cyoda_auth_service=cyoda_auth_service,
@@ -258,6 +282,8 @@ class ChatWorkflow(Workflow):
 
             # Workflow Validation
             'validate_workflow_implementation': self.workflow_validation_service.validate_workflow_implementation,
+            'validate_workflow_processors': self.workflow_processor_validation_service.validate_workflow_processors,
+            'extract_workflow_components': self.workflow_component_extraction_service.extract_workflow_components,
 
             # Utility Functions
             'get_weather': self.utility_service.get_weather,
@@ -277,6 +303,9 @@ class ChatWorkflow(Workflow):
             'monitor_workflow_run': self.github_operations_service.monitor_workflow_run,
             'get_workflow_run_status': self.github_operations_service.get_workflow_run_status,
             'run_github_action': self.github_operations_service.run_github_action,
+            'get_workflow_logs': self.github_operations_service.get_workflow_logs,
+            'get_enhanced_workflow_logs': self.github_operations_service.get_enhanced_workflow_logs,
+            'get_workflow_enhancement_suggestions': self.github_operations_service.get_workflow_enhancement_suggestions,
 
             # Workflow Orchestrator Generation
             'generate_workflow_orchestrators': self.workflow_orchestrator_service.generate_workflow_orchestrators,

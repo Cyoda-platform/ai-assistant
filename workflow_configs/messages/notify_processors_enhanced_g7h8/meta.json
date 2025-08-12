@@ -1,3 +1,5 @@
 {
-  "type": "message"
+  "type": "notification",
+  "approve": false,
+  "publish": true
 }

@@ -16,12 +16,13 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
 For each entity:
 1. Design a workflow based on the functional requirements.
 2. Call 'add_application_resource' with:
-   - resource_path = 'src/main/java/com/java_template/application/workflow/{{EntityName}}.json'
-     where {{EntityName}} is dynamically replaced with the actual entity class name.
+   - resource_path = 'src/main/resources/workflow/{entityName}/version_1/{EntityName}.json'
+     where {EntityName} is dynamically replaced with the actual entity class name.
+     replace entityName with the actual entity name in lower case. Replace {EntityName} with the actual entity name in CamelCase.
    - file_contents = workflow JSON.
 
 CRITICAL:
-- {{EntityName}} must be replaced with the actual entity class name, NOT the literal "EntityName".
+- {EntityName} must be replaced with the actual entity class name, NOT the literal "EntityName".
 - Do NOT create a workflow for "EntityName" placeholder.
 
 Workflow Design Rules:
@@ -40,63 +41,63 @@ Workflow Design Rules:
   - criterion (definition for conditional transitions)
 
 Workflow JSON Example:
-{{
+{
   "version": "1.0",
-  "name": "{{EntityName}} Workflow",
-  "desc": "Description of the workflow for {{EntityName}}",
+  "name": "{EntityName} Workflow",
+  "desc": "Description of the workflow for {EntityName}",
   "initialState": "initial_state",
   "active": true,
-  "states": {{
-    "initial_state": {{
+  "states": {
+    "initial_state": {
       "transitions": [
-        {{
+        {
           "name": "transition_to_01",
           "next": "state_01",
           "manual": false
-        }}
+        }
       ]
-    }},
-    "state_01": {{
+    },
+    "state_01": {
       "transitions": [
-        {{
+        {
           "name": "transition_to_02",
           "next": "state_02",
           "manual": false,
           "processors": [
-            {{
-              "name": "ProcessorClassName",
+            {
+              "name": "ProcessorClassName", -- CamelCase the processor class name
               "executionMode": "SYNC",
-              "config": {{
+              "config": {
                 "calculationNodesTags": "cyoda_application"
-              }}
-            }}
+              }
+            }
           ]
-        }}
+        }
       ]
-    }},
-    "state_02": {{
+    },
+    "state_02": {
       "transitions": [
-        {{
+        {
           "name": "transition_with_criterion_simple",
           "next": "state_criterion_check_01",
           "manual": false,
-          "criterion": {{
+          "criterion": {
             "type": "function",
-            "function": {{
-              "name": "CriterionClassName",
-              "config": {{
+            "function": {
+              "name": "CriterionClassName", -- CamelCase the criterion class name
+              "config": {
                 "calculationNodesTags": "cyoda_application"
-              }}
-            }}
-          }}
-        }}
+              }
+            }
+          }
+        }
       ]
-    }}
-  }}
-}}
+    }
+  }
+}
 
 Output Rules:
-- Save each workflow JSON to 'src/main/java/com/java_template/application/workflow/{{EntityName}}.json' using 'add_application_resource'.
+- Save each workflow JSON to 'src/main/java/com/java_template/application/workflow/{EntityName}.json' using 'add_application_resource'.
 - Generate valid JSON only. No extra text or markdown.
 - Ensure no file named 'EntityName.json' is ever created unless there is literally an entity with that name.
 """

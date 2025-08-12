@@ -245,6 +245,7 @@ QUESTION_OR_VALIDATE = (
 )
 GIT_BRANCH_PARAM="git_branch"
 REPOSITORY_NAME_PARAM="repository_name"
+PROGRAMMING_LANGUAGE_PARAM="programming_language"
 # === Numeric limits ===
 RATE_LIMIT = 300
 SCHEDULER_CHECK_INTERVAL = 60

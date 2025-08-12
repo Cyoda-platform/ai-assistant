@@ -5,6 +5,9 @@
   "tools": [
     {
       "name": "add_application_resource_3d0b"
+    },
+    {
+      "name": "extract_workflow_components_k2l3"
     }
   ],
   "memory_tags": [
@@ -14,7 +17,7 @@
     "local_fs": [
       "src/main/java/com/java_template/prototype/functional_requirement.md",
       "src/main/java/com/java_template/prototype/user_requirement.md",
-      "src/main/java/com/java_template/application/workflow_prototypes"
+      "src/main/resources/workflow"
     ]
   },
   "messages": [

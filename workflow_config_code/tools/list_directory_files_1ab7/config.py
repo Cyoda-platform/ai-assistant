@@ -14,7 +14,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "type": "function",
         "function": {
                 "name": "list_directory_files",
-                "description": "List all files in 'src/main/java/com/java_template/application/entity' to get the list of entities created",
+                "description": "List all files in  e.g. 'src/main/java/com/java_template/application/entity' to get the list of entities created",
                 "strict": True,
                 "parameters": {
                         "type": "object",
