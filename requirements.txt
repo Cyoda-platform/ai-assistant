@@ -22,3 +22,5 @@ beautifulsoup4==4.13.3
 inflect==7.5.0
 nltk==3.9.1
 libcst==1.6.0
+
+aiohttp==3.12.15
