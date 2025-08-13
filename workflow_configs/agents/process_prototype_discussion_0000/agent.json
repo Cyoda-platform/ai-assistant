@@ -5,33 +5,20 @@
   "allow_anonymous_users": true,
   "model": {},
   "memory_tags": [
-    "configs_generation",
     "prototype_generation"
   ],
   "tools": [
     {
-      "name": "add_collaborator_to_default_repos_ffe7"
+      "name": "add_application_resource_3d0b"
     },
     {
       "name": "list_directory_files_1ab7"
-    },
-    {
-      "name": "add_application_resource_3d0b"
     },
     {
       "name": "read_file_2766"
     },
     {
       "name": "get_cyoda_guidelines_c748"
-    },
-    {
-      "name": "web_search_7e4b"
-    },
-    {
-      "name": "read_link_c472"
-    },
-    {
-      "name": "web_scrape_bc54"
     },
     {
       "name": "finish_prototype_discussion_0000"

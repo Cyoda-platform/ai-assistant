@@ -222,7 +222,7 @@
       "transitions": [
         {
           "name": "project_compiled",
-          "next": "notify_project_compiled",
+          "next": "notify_prototype_compiled",
           "manual": false,
           "processors": [
             {
@@ -237,11 +237,11 @@
         }
       ]
     },
-    "notify_project_compiled": {
+    "notify_prototype_compiled": {
       "transitions": [
         {
           "name": "workflow_completed",
-          "next": "completed",
+          "next": "notified_prototype_compiled",
           "manual": false,
           "processors": [
             {
@@ -255,7 +255,98 @@
         }
       ]
     },
-    "completed": {
+    "notified_prototype_compiled": {
+      "transitions": [
+        {
+          "name": "submit_answer",
+          "next": "prototype_discussion_requested_submitted_answer",
+          "manual": true
+        },
+        {
+          "name": "manual_approve",
+          "next": "launch_init_setup_workflow",
+          "manual": true
+        },
+        {
+          "name": "rollback",
+          "next": "prototype_discussion_requested_submitted_answer",
+          "manual": true
+        }
+      ]
+    },
+    "prototype_discussion_requested_submitted_answer": {
+      "transitions": [
+        {
+          "name": "process_user_input",
+          "next": "prototype_discussion_requested_processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_prototype_discussion_0000",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "prototype_discussion_requested_processing": {
+      "transitions": [
+        {
+          "name": "process_configs_discussion_processing",
+          "next": "notified_prototype_compiled",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.not_stage_completed_discuss_prototype_0000",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          }
+        },
+        {
+          "name": "prototype_configs_discussion_success",
+          "next": "launch_init_setup_workflow",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.is_stage_completed_discuss_prototype_0000",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          }
+        }
+      ]
+    },
+    "launch_init_setup_workflow": {
+      "transitions": [
+        {
+          "name": "launch_setup_assistant",
+          "next": "launched_setup_assistant",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.init_setup_workflow_5f06",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "launched_setup_assistant": {
       "transitions": [
         {
           "name": "lock_chat",

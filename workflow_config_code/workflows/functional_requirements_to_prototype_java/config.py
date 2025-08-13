@@ -8,17 +8,30 @@ from typing import Any, Dict, Callable
 
 from workflow_config_code.agents.implement_processors_business_logic_g6h7.agent import \
     ImplementProcessorsBusinessLogicG6h7AgentConfig
-from workflow_config_code.agents.save_functional_requirements_f2a1.agent import SaveFunctionalRequirementsF2a1AgentConfig
+from workflow_config_code.agents.process_prototype_discussion_0000.agent import \
+    ProcessPrototypeDiscussion0000AgentConfig
+from workflow_config_code.agents.save_functional_requirements_f2a1.agent import \
+    SaveFunctionalRequirementsF2a1AgentConfig
 from workflow_config_code.messages.notify_saved_fun_req_a1b2.message import NotifySavedFunReqA1b2MessageConfig
 from workflow_config_code.agents.generate_controller_d4e3.agent import GenerateControllerD4e3AgentConfig
-from workflow_config_code.messages.notify_controller_generated_d3e4.message import NotifyControllerGeneratedD3e4MessageConfig
-from workflow_config_code.agents.generate_processors_and_criteria_e5f4.agent import GenerateProcessorsAndCriteriaE5f4AgentConfig
-from workflow_config_code.messages.notify_processors_generated_e4f5.message import NotifyProcessorsGeneratedE4f5MessageConfig
+from workflow_config_code.messages.notify_controller_generated_d3e4.message import \
+    NotifyControllerGeneratedD3e4MessageConfig
+from workflow_config_code.agents.generate_processors_and_criteria_e5f4.agent import \
+    GenerateProcessorsAndCriteriaE5f4AgentConfig
+from workflow_config_code.messages.notify_processors_generated_e4f5.message import \
+    NotifyProcessorsGeneratedE4f5MessageConfig
 from workflow_config_code.agents.enhance_processors_g6h7.agent import EnhanceProcessorsG6h7AgentConfig
-from workflow_config_code.messages.notify_processors_enhanced_g7h8.message import NotifyProcessorsEnhancedG7h8MessageConfig
+from workflow_config_code.messages.notify_processors_enhanced_g7h8.message import \
+    NotifyProcessorsEnhancedG7h8MessageConfig
+from workflow_config_code.tools.init_setup_workflow_5f06.tool import InitSetupWorkflow5f06ToolConfig
+from workflow_config_code.tools.is_stage_completed_discuss_prototype_0000.tool import \
+    IsStageCompletedDiscussPrototype0000ToolConfig
+from workflow_config_code.tools.not_stage_completed_discuss_prototype_0000.tool import \
+    NotStageCompletedDiscussPrototype0000ToolConfig
 from workflow_config_code.tools.run_compilation_h8i9.tool import RunCompilationH8i9ToolConfig
 from workflow_config_code.agents.process_compilation_results_i9j0.agent import ProcessCompilationResultsI9j0AgentConfig
-from workflow_config_code.messages.notify_compilation_started_h8i9.message import NotifyCompilationStartedH8i9MessageConfig
+from workflow_config_code.messages.notify_compilation_started_h8i9.message import \
+    NotifyCompilationStartedH8i9MessageConfig
 from workflow_config_code.messages.notify_project_compiled_f5g6.message import NotifyProjectCompiledF5g6MessageConfig
 
 
@@ -248,7 +261,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "project_compiled",
-                        "next": "notify_project_compiled",
+                        "next": "notify_prototype_compiled",
                         "manual": False,
                         "processors": [
                             {
@@ -263,11 +276,11 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 ]
             },
-            "notify_project_compiled": {
+            "notify_prototype_compiled": {
                 "transitions": [
                     {
                         "name": "workflow_completed",
-                        "next": "completed",
+                        "next": "notified_prototype_compiled",
                         "manual": False,
                         "processors": [
                             {
@@ -281,7 +294,98 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 ]
             },
-            "completed": {
+            "notified_prototype_compiled": {
+                "transitions": [
+                    {
+                        "name": "submit_answer",
+                        "next": "prototype_discussion_requested_submitted_answer",
+                        "manual": True
+                    },
+                    {
+                        "name": "manual_approve",
+                        "next": "launch_init_setup_workflow",
+                        "manual": True
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "prototype_discussion_requested_submitted_answer",
+                        "manual": True
+                    }
+                ]
+            },
+            "prototype_discussion_requested_submitted_answer": {
+                "transitions": [
+                    {
+                        "name": "process_user_input",
+                        "next": "prototype_discussion_requested_processing",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ProcessPrototypeDiscussion0000AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "prototype_discussion_requested_processing": {
+                "transitions": [
+                    {
+                        "name": "process_configs_discussion_processing",
+                        "next": "notified_prototype_compiled",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": NotStageCompletedDiscussPrototype0000ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "prototype_configs_discussion_success",
+                        "next": "launch_init_setup_workflow",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": IsStageCompletedDiscussPrototype0000ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "launch_init_setup_workflow": {
+                "transitions": [
+                    {
+                        "name": "launch_setup_assistant",
+                        "next": "launched_setup_assistant",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": InitSetupWorkflow5f06ToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "launched_setup_assistant": {
                 "transitions": [
                     {
                         "name": "lock_chat",

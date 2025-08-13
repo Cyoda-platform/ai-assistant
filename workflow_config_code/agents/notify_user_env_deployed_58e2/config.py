@@ -18,19 +18,19 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "allow_anonymous_users": True,
         "model": {},
         "tools": [
-                {
-                        "name": GetUserInfoD020ToolConfig.get_tool_name()
-                }
+            {
+                "name": GetUserInfoD020ToolConfig.get_tool_name()
+            }
         ],
         "memory_tags": [
-                "chat_deploy_env"
+            "chat_deploy_env"
         ],
         "messages": [
-                {
-                        "role": "user",
-                        "content_from_file": NotifyUserEnvDeployed72b7PromptConfig.get_name()
-                }
+            {
+                "role": "user",
+                "content_from_file": NotifyUserEnvDeployed72b7PromptConfig.get_name()
+            }
         ],
         "tool_choice": "auto",
         "max_iteration": 30
-}
+    }

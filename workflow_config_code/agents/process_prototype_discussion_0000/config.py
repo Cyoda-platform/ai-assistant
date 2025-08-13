@@ -32,33 +32,20 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "allow_anonymous_users": True,
         "model": {},
         "memory_tags": [
-            "configs_generation",
             "prototype_generation"
         ],
         "tools": [
             {
-                "name": AddCollaboratorToDefaultReposFfe7ToolConfig.get_tool_name()
+                "name": AddApplicationResource3d0bToolConfig.get_tool_name()
             },
             {
                 "name": ListDirectoryFiles1ab7ToolConfig.get_tool_name()
-            },
-            {
-                "name": AddApplicationResource3d0bToolConfig.get_tool_name()
             },
             {
                 "name": ReadFile2766ToolConfig.get_tool_name()
             },
             {
                 "name": GetCyodaGuidelinesC748ToolConfig.get_tool_name()
-            },
-            {
-                "name": WebSearch7e4bToolConfig.get_tool_name()
-            },
-            {
-                "name": ReadLinkC472ToolConfig.get_tool_name()
-            },
-            {
-                "name": WebScrapeBc54ToolConfig.get_tool_name()
             },
             {
                 "name": FinishPrototypeDiscussion0000ToolConfig.get_tool_name()

@@ -521,7 +521,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "manual_approve",
-                        "next": "env_deployment_started",
+                        "next": "api_discussion_completed",
                         "manual": True
                     },
                     {
@@ -569,7 +569,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "process_api_inquiry_success",
-                        "next": "env_deployment_started",
+                        "next": "api_discussion_completed",
                         "manual": False,
                         "criterion": {
                             "type": "function",
@@ -581,97 +581,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 }
                             }
                         }
-                    }
-                ]
-            },
-            "waiting_for_user_deployment_input": {
-                "transitions": [
-                    {
-                        "name": "submit_answer",
-                        "next": "env_deployment_started",
-                        "manual": True
-                    },
-                    {
-                        "name": "rollback",
-                        "next": "env_deployment_started",
-                        "manual": True
-                    }
-                ]
-            },
-            "env_deployment_started": {
-                "transitions": [
-                    {
-                        "name": "process_user_input",
-                        "next": "app_requirements_step3_processing",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": ProcessUserInput9a8eAgentConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 300000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "app_requirements_step3_processing": {
-                "transitions": [
-                    {
-                        "name": "process_app_setup_3_processing",
-                        "next": "waiting_for_user_deployment_input",
-                        "manual": False,
-                        "criterion": {
-                            "type": "function",
-                            "function": {
-                                "name": NotStageCompletedF259ToolConfig.get_name(),
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 300000
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "name": "process_app_setup_3_success",
-                        "next": "deployed_cyoda_env",
-                        "manual": False,
-                        "criterion": {
-                            "type": "function",
-                            "function": {
-                                "name": IsStageCompletedB809ToolConfig.get_name(),
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 300000
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "name": "rollback",
-                        "next": "start_environment_setup",
-                        "manual": True
-                    }
-                ]
-            },
-            "deployed_cyoda_env": {
-                "transitions": [
-                    {
-                        "name": "notify_user_env_deployed",
-                        "next": "api_discussion_completed",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": NotifyUserEnvDeployed58e2AgentConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 300000
-                                }
-                            }
-                        ]
                     }
                 ]
             },
@@ -918,12 +827,11 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 ]
             },
-
             "prototype_generation_started": {
                 "transitions": [
                     {
                         "name": "generate_prototype",
-                        "next": "completed",
+                        "next": "prototype_generation_finished",
                         "manual": False,
                         "processors": [
                             {
@@ -938,7 +846,487 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 ]
             },
-            "completed": {
+
+
+
+            "prototype_generation_finished": {
+                "transitions": [
+                    {
+                        "name": "notify_prototype_generation_finished",
+                        "next": "prototype_discussion_requested",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": AskToDiscussPrototype983fMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "prototype_discussion_requested": {
+                "transitions": [
+                    {
+                        "name": "submit_answer",
+                        "next": "prototype_discussion_processing",
+                        "manual": True
+                    },
+                    {
+                        "name": "manual_approve",
+                        "next": "prototype_discussion_completed",
+                        "manual": True
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "prototype_discussion_processing",
+                        "manual": True
+                    },
+                    {
+                        "name": "retry",
+                        "next": "configs_discussion_completed",
+                        "manual": True
+                    }
+                ]
+            },
+            "prototype_discussion_processing": {
+                "transitions": [
+                    {
+                        "name": "process_user_input",
+                        "next": "prototype_discussion_requested_processing",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ProcessPrototypeDiscussion0000AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "prototype_discussion_requested_processing": {
+                "transitions": [
+                    {
+                        "name": "process_prototype_discussion_processing",
+                        "next": "prototype_discussion_requested",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": NotStageCompletedDiscussPrototype0000ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "process_configs_discussion_success",
+                        "next": "prototype_discussion_completed",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": IsStageCompletedDiscussPrototype0000ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "prototype_discussion_completed": {
+                "transitions": [
+                    {
+                        "name": "ask_to_confirm_migration",
+                        "next": "migration_confirmation_requested",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": AskToConfirmMigration208eMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "migration_confirmation_requested": {
+                "transitions": [
+                    {
+                        "name": "submit_answer",
+                        "next": "migration_confirmation_requested_submitted_answer",
+                        "manual": True
+                    },
+                    {
+                        "name": "manual_approve",
+                        "next": "migration_confirmation_completed",
+                        "manual": True
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "migration_confirmation_requested_submitted_answer",
+                        "manual": True
+                    }
+                ]
+            },
+            "migration_confirmation_requested_submitted_answer": {
+                "transitions": [
+                    {
+                        "name": "process_user_input",
+                        "next": "migration_confirmation_requested_processing",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ProcessUserInput2185AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "migration_confirmation_requested_processing": {
+                "transitions": [
+                    {
+                        "name": "process_migration_confirmation_processing",
+                        "next": "migration_confirmation_requested",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": NotStageCompleted6044ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "process_migration_confirmation_success",
+                        "next": "start_environment_setup",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": IsStageCompletedC00aToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "start_environment_setup": {
+                "transitions": [
+                    {
+                        "name": "start_environment_setup_processing",
+                        "next": "migration_confirmation_completed",
+                        "manual": False
+                    }
+                ]
+            },
+            "waiting_for_user_deployment_input": {
+                "transitions": [
+                    {
+                        "name": "submit_answer",
+                        "next": "migration_confirmation_completed",
+                        "manual": True
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "migration_confirmation_completed",
+                        "manual": True
+                    }
+                ]
+            },
+            "migration_confirmation_completed": {
+                "transitions": [
+                    {
+                        "name": "process_user_input",
+                        "next": "app_requirements_step3_processing",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ProcessUserInput9a8eAgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "app_requirements_step3_processing": {
+                "transitions": [
+                    {
+                        "name": "process_app_setup_3_processing",
+                        "next": "waiting_for_user_deployment_input",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": NotStageCompletedF259ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "process_app_setup_3_success",
+                        "next": "deployed_cyoda_env",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": IsStageCompletedB809ToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "start_environment_setup",
+                        "manual": True
+                    }
+                ]
+            },
+            "deployed_cyoda_env": {
+                "transitions": [
+                    {
+                        "name": "notify_user_env_deployed",
+                        "next": "notified_user_env_deployed",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyUserEnvDeployed58e2AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "notified_user_env_deployed": {
+                "transitions": [
+                    {
+                        "name": "migration_confirmation_notify",
+                        "next": "migration_confirmation_notified",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": MigrationConfirmationNotifyD018MessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "migration_confirmation_notified": {
+                "transitions": [
+                    {
+                        "name": "generate_initial_cyoda_prototype",
+                        "next": "generated_initial_cyoda_prototype",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": GenerateInitialCyodaPrototype9221AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "generated_initial_cyoda_prototype": {
+                "transitions": [
+                    {
+                        "name": "extract_processing_methods",
+                        "next": "processing_methods_extracted",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ExtractProcessingMethods979bAgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "processing_methods_extracted": {
+                "transitions": [
+                    {
+                        "name": "update_routes_file",
+                        "next": "validated_controller",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": UpdateRoutesFile0a64AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "validated_controller": {
+                "transitions": [
+                    {
+                        "name": "register_workflow_with_app",
+                        "next": "finished_app_generation_flow",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": LaunchGenAppWorkflows166eToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "finished_app_generation_flow": {
+                "transitions": [
+                    {
+                        "name": "validate_app_quality",
+                        "next": "validated_app_quality",
+                        "manual": True,
+                        "processors": [
+                            {
+                                "name": ValidateAppQualityCca3AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "validated_app_quality": {
+                "transitions": [
+                    {
+                        "name": "save_env_file",
+                        "next": "saved_env_file",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": SaveEnvFileD2aaToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "saved_env_file": {
+                "transitions": [
+                    {
+                        "name": "delete_files",
+                        "next": "deleted_files",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": DeleteFiles6818ToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "deleted_files": {
+                "transitions": [
+                    {
+                        "name": "question_to_proceed_with_generated_app_editing",
+                        "next": "questioned_to_proceed_with_generated_app_editing",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": QuestionToProceedWithGeneratedAppEditing2f5fMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "questioned_to_proceed_with_generated_app_editing": {
+                "transitions": [
+                    {
+                        "name": "launch_setup_assistant",
+                        "next": "launched_setup_assistant",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": InitSetupWorkflow5f06ToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "launched_setup_assistant": {
                 "transitions": [
                     {
                         "name": "lock_chat",

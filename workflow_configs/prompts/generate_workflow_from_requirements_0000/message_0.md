@@ -16,7 +16,7 @@ Workflow Design Rules:
 - Construct the workflow JSON using a typical FSM model based on the functional requirements.
 - Avoid loops in the state transitions.
 - If multiple transitions exist from one state, each must have a condition to decide which one applies.
-- Limit processors to 1-2 unless the user explicitly requests more.
+- Limit processors to 1-2 unless the user explicitly requests more. At least one processor is recommended per workflow.
 - JSON should be an ordered dictionary of states.
 - Each state has a list of transitions.
 - Each transition must have:

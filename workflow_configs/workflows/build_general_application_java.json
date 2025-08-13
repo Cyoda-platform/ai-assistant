@@ -438,7 +438,7 @@
         },
         {
           "name": "manual_approve",
-          "next": "api_discussion_completed",
+          "next": "env_deployment_started",
           "manual": true
         },
         {
@@ -486,7 +486,7 @@
         },
         {
           "name": "process_api_inquiry_success",
-          "next": "api_discussion_completed",
+          "next": "env_deployment_started",
           "manual": false,
           "criterion": {
             "type": "function",
@@ -498,6 +498,97 @@
               }
             }
           }
+        }
+      ]
+    },
+    "waiting_for_user_deployment_input": {
+      "transitions": [
+        {
+          "name": "submit_answer",
+          "next": "env_deployment_started",
+          "manual": true
+        },
+        {
+          "name": "rollback",
+          "next": "env_deployment_started",
+          "manual": true
+        }
+      ]
+    },
+    "env_deployment_started": {
+      "transitions": [
+        {
+          "name": "process_user_input",
+          "next": "app_requirements_step3_processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_user_input_9a8e",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "app_requirements_step3_processing": {
+      "transitions": [
+        {
+          "name": "process_app_setup_3_processing",
+          "next": "waiting_for_user_deployment_input",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.not_stage_completed_f259",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          }
+        },
+        {
+          "name": "process_app_setup_3_success",
+          "next": "deployed_cyoda_env",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.is_stage_completed_b809",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          }
+        },
+        {
+          "name": "rollback",
+          "next": "start_environment_setup",
+          "manual": true
+        }
+      ]
+    },
+    "deployed_cyoda_env": {
+      "transitions": [
+        {
+          "name": "notify_user_env_deployed",
+          "next": "api_discussion_completed",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.notify_user_env_deployed_58e2",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
         }
       ]
     },
@@ -748,7 +839,7 @@
       "transitions": [
         {
           "name": "generate_prototype",
-          "next": "prototype_generation_finished",
+          "next": "completed",
           "manual": false,
           "processors": [
             {
@@ -763,484 +854,7 @@
         }
       ]
     },
-    "prototype_generation_finished": {
-      "transitions": [
-        {
-          "name": "notify_prototype_generation_finished",
-          "next": "prototype_discussion_requested",
-          "manual": false,
-          "processors": [
-            {
-              "name": "MessageProcessor.ask_to_discuss_prototype_983f",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "prototype_discussion_requested": {
-      "transitions": [
-        {
-          "name": "submit_answer",
-          "next": "prototype_discussion_processing",
-          "manual": true
-        },
-        {
-          "name": "manual_approve",
-          "next": "prototype_discussion_completed",
-          "manual": true
-        },
-        {
-          "name": "rollback",
-          "next": "prototype_discussion_processing",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "configs_discussion_completed",
-          "manual": true
-        }
-      ]
-    },
-    "prototype_discussion_processing": {
-      "transitions": [
-        {
-          "name": "process_user_input",
-          "next": "prototype_discussion_requested_processing",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.process_prototype_discussion_0000",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "prototype_discussion_requested_processing": {
-      "transitions": [
-        {
-          "name": "process_prototype_discussion_processing",
-          "next": "prototype_discussion_requested",
-          "manual": false,
-          "criterion": {
-            "type": "function",
-            "function": {
-              "name": "FunctionProcessor.not_stage_completed_discuss_prototype_0000",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          }
-        },
-        {
-          "name": "process_configs_discussion_success",
-          "next": "prototype_discussion_completed",
-          "manual": false,
-          "criterion": {
-            "type": "function",
-            "function": {
-              "name": "FunctionProcessor.is_stage_completed_discuss_prototype_0000",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          }
-        }
-      ]
-    },
-    "prototype_discussion_completed": {
-      "transitions": [
-        {
-          "name": "ask_to_confirm_migration",
-          "next": "migration_confirmation_requested",
-          "manual": false,
-          "processors": [
-            {
-              "name": "MessageProcessor.ask_to_confirm_migration_208e",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "migration_confirmation_requested": {
-      "transitions": [
-        {
-          "name": "submit_answer",
-          "next": "migration_confirmation_requested_submitted_answer",
-          "manual": true
-        },
-        {
-          "name": "manual_approve",
-          "next": "migration_confirmation_completed",
-          "manual": true
-        },
-        {
-          "name": "rollback",
-          "next": "migration_confirmation_requested_submitted_answer",
-          "manual": true
-        }
-      ]
-    },
-    "migration_confirmation_requested_submitted_answer": {
-      "transitions": [
-        {
-          "name": "process_user_input",
-          "next": "migration_confirmation_requested_processing",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.process_user_input_2185",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "migration_confirmation_requested_processing": {
-      "transitions": [
-        {
-          "name": "process_migration_confirmation_processing",
-          "next": "migration_confirmation_requested",
-          "manual": false,
-          "criterion": {
-            "type": "function",
-            "function": {
-              "name": "FunctionProcessor.not_stage_completed_6044",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          }
-        },
-        {
-          "name": "process_migration_confirmation_success",
-          "next": "start_environment_setup",
-          "manual": false,
-          "criterion": {
-            "type": "function",
-            "function": {
-              "name": "FunctionProcessor.is_stage_completed_c00a",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          }
-        }
-      ]
-    },
-    "start_environment_setup": {
-      "transitions": [
-        {
-          "name": "start_environment_setup_processing",
-          "next": "migration_confirmation_completed",
-          "manual": false
-        }
-      ]
-    },
-    "waiting_for_user_deployment_input": {
-      "transitions": [
-        {
-          "name": "submit_answer",
-          "next": "migration_confirmation_completed",
-          "manual": true
-        },
-        {
-          "name": "rollback",
-          "next": "migration_confirmation_completed",
-          "manual": true
-        }
-      ]
-    },
-    "migration_confirmation_completed": {
-      "transitions": [
-        {
-          "name": "process_user_input",
-          "next": "app_requirements_step3_processing",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.process_user_input_9a8e",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "app_requirements_step3_processing": {
-      "transitions": [
-        {
-          "name": "process_app_setup_3_processing",
-          "next": "waiting_for_user_deployment_input",
-          "manual": false,
-          "criterion": {
-            "type": "function",
-            "function": {
-              "name": "FunctionProcessor.not_stage_completed_f259",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          }
-        },
-        {
-          "name": "process_app_setup_3_success",
-          "next": "deployed_cyoda_env",
-          "manual": false,
-          "criterion": {
-            "type": "function",
-            "function": {
-              "name": "FunctionProcessor.is_stage_completed_b809",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          }
-        },
-        {
-          "name": "rollback",
-          "next": "start_environment_setup",
-          "manual": true
-        }
-      ]
-    },
-    "deployed_cyoda_env": {
-      "transitions": [
-        {
-          "name": "notify_user_env_deployed",
-          "next": "notified_user_env_deployed",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.notify_user_env_deployed_58e2",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "notified_user_env_deployed": {
-      "transitions": [
-        {
-          "name": "migration_confirmation_notify",
-          "next": "migration_confirmation_notified",
-          "manual": false,
-          "processors": [
-            {
-              "name": "MessageProcessor.migration_confirmation_notify_d018",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "migration_confirmation_notified": {
-      "transitions": [
-        {
-          "name": "generate_initial_cyoda_prototype",
-          "next": "generated_initial_cyoda_prototype",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.generate_initial_cyoda_prototype_9221",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "generated_initial_cyoda_prototype": {
-      "transitions": [
-        {
-          "name": "extract_processing_methods",
-          "next": "processing_methods_extracted",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.extract_processing_methods_979b",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "processing_methods_extracted": {
-      "transitions": [
-        {
-          "name": "update_routes_file",
-          "next": "validated_controller",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.update_routes_file_0a64",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "validated_controller": {
-      "transitions": [
-        {
-          "name": "register_workflow_with_app",
-          "next": "finished_app_generation_flow",
-          "manual": false,
-          "processors": [
-            {
-              "name": "FunctionProcessor.launch_gen_app_workflows_166e",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "finished_app_generation_flow": {
-      "transitions": [
-        {
-          "name": "validate_app_quality",
-          "next": "validated_app_quality",
-          "manual": true,
-          "processors": [
-            {
-              "name": "AgentProcessor.validate_app_quality_cca3",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "validated_app_quality": {
-      "transitions": [
-        {
-          "name": "save_env_file",
-          "next": "saved_env_file",
-          "manual": false,
-          "processors": [
-            {
-              "name": "FunctionProcessor.save_env_file_d2aa",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "saved_env_file": {
-      "transitions": [
-        {
-          "name": "delete_files",
-          "next": "deleted_files",
-          "manual": false,
-          "processors": [
-            {
-              "name": "FunctionProcessor.delete_files_6818",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "deleted_files": {
-      "transitions": [
-        {
-          "name": "question_to_proceed_with_generated_app_editing",
-          "next": "questioned_to_proceed_with_generated_app_editing",
-          "manual": false,
-          "processors": [
-            {
-              "name": "MessageProcessor.question_to_proceed_with_generated_app_editing_2f5f",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "questioned_to_proceed_with_generated_app_editing": {
-      "transitions": [
-        {
-          "name": "launch_setup_assistant",
-          "next": "launched_setup_assistant",
-          "manual": false,
-          "processors": [
-            {
-              "name": "FunctionProcessor.init_setup_workflow_5f06",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "launched_setup_assistant": {
+    "completed": {
       "transitions": [
         {
           "name": "lock_chat",
