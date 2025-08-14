@@ -112,7 +112,15 @@ Required Imports and Configuration:
 * Inject EntityService via constructor
 * Use unique @RequestMapping path
 * Always convert technicalId from request path to UUID using UUID.fromString()
+Example:
+ This entity technicalId=UUID.fromString(context.request().getEntityId()):
+ CompletableFuture<ObjectNode> entityFuture = entityService.getItem(
+                {EntityName}.ENTITY_NAME,
+                {EntityName}.ENTITY_VERSION,
+                UUID.fromString(context.request().getEntityId())
+            );
 * Inject ObjectMapper via constructor for JSON conversion if needed
+* You can inject only EntityService, ObjectMapper, and SerializerFactory via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES. 
 
 🎯 **SUCCESS CRITERIA**
 - ALL missing processors and criteria are IMPLEMENTED (not just planned)
@@ -120,4 +128,27 @@ Required Imports and Configuration:
 - ALL implementations are COMPLETE Java classes ready for deployment
 - Validation tool shows NO missing components
 - Code follows established patterns and quality standards
-- Each processor and criteria returns result via return serializer.withRequest(request)
+- Each processor and criteria returns result via return serializer.withRequest(request) 
+Example for processor:
+    @Override
+    public EntityProcessorCalculationResponse process(CyodaEventContext<EntityProcessorCalculationRequest> context) {
+        EntityProcessorCalculationRequest request = context.getEvent();
+        logger.info("Processing {EntityName} for request: {}", request.getId());
+
+        return serializer.withRequest(request) //always use this method name to request EntityProcessorCalculationResponse
+            .toEntity({EntityName}.class)
+            .validate(this::isValidEntity, "Invalid entity state")
+            .map(this::processEntityLogic)
+            .complete();
+    }
+    
+Example for criteria:
+@Override
+    public EntityCriteriaCalculationResponse check(CyodaEventContext<EntityCriteriaCalculationRequest> context) {
+        EntityCriteriaCalculationRequest request = context.getEvent();
+        // This is a predefined chain. Just write the business logic in processEntityLogic method.
+        return serializer.withRequest(request) //always use this method name to request EntityCriteriaCalculationResponse
+            .evaluateEntity(EntityName.class, this::validateEntity)
+            .withReasonAttachment(ReasonAttachmentStrategy.toWarnings())
+            .complete();
+    }

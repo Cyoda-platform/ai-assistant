@@ -26,7 +26,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                         "type": "string",
                                         "enum": [
                                                 "JAVA",
-                                                "PYTHON"
+                                                #"PYTHON" todo under development
                                         ]
                                 }
                         },

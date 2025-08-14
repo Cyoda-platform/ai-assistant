@@ -9,17 +9,17 @@ from typing import Any, Dict
 
 class ImplementProcessorsBusinessLogicG6h7PromptConfig:
     """Configuration for the enhance processors prompt"""
-    
+
     @staticmethod
     def get_name() -> str:
         """Get the prompt name"""
         return "implement_processors_business_logic_g6h7"
-    
+
     @staticmethod
     def get_type() -> str:
         """Get the prompt type"""
         return "PromptConfig"
-    
+
     @staticmethod
     def get_config() -> str:
         """Get the prompt configuration"""
@@ -56,14 +56,27 @@ EntityService Operations Available:
    entity=data
    )
 
-
 2. READ:
    CompletableFuture<ObjectNode> itemFuture = entityService.getItem(
    entityModel={EntityName}.ENTITY_NAME,
    entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
    technicalId=UUID.fromString(technicalId)
    )
-
+   
+3. UPDATE:
+   CompletableFuture<UUID> updatedId = entityService.updateItem(
+   entityModel={EntityName}.ENTITY_NAME,
+   entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
+   technicalId=UUID.fromString(technicalId),
+   entity=data
+   )
+   
+4. DELETE:
+   CompletableFuture<UUID> deletedId = entityService.deleteItem(
+   entityModel={EntityName}.ENTITY_NAME,
+   entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
+   technicalId=UUID.fromString(technicalId)
+   )
 CompletableFuture<ArrayNode> itemsFuture = entityService.getItems(
 entityModel={EntityName}.ENTITY_NAME,
 entityVersion=String.valueOf({EntityName}.ENTITY_VERSION)
@@ -76,7 +89,6 @@ condition=condition,
 inMemory=true
 )
 
-
 Search Conditions (for simple filtering only):
 Use SearchConditionRequest.group() and Condition.of() for basic field-based queries:
 SearchConditionRequest.group("AND",
@@ -87,6 +99,8 @@ Supported operators: "EQUALS", "NOT_EQUAL", "IEQUALS", "GREATER_THAN", "LESS_THA
 Required Imports and Configuration:
 * import static com.java_template.common.config.Config.*;
 * import com.java_template.common.service.EntityService;
+* import com.java_template.common.util.Condition; //if needed
+* import com.java_template.common.util.SearchConditionRequest;//if needed
 * package com.java_template.application.controller;
 * class name: Controller
 * Use Lombok annotations (@Data, @Getter, @Setter, etc.)
@@ -94,6 +108,16 @@ Required Imports and Configuration:
 * Inject EntityService via constructor
 * Use unique @RequestMapping path
 * Always convert technicalId from request path to UUID using UUID.fromString()
+Example:
+ This entity technicalId=UUID.fromString(context.request().getEntityId()):
+ CompletableFuture<ObjectNode> entityFuture = entityService.getItem(
+                {EntityName}.ENTITY_NAME,
+                {EntityName}.ENTITY_VERSION,
+                UUID.fromString(context.request().getEntityId())
+            );
+* Inject ObjectMapper via constructor for JSON conversion if needed
+* You can inject only EntityService, ObjectMapper, and SerializerFactory via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES. 
+
 
 You must ensure that all external API calls are implemented correctly.
 You must ensure that all calculations are implemented correctly.

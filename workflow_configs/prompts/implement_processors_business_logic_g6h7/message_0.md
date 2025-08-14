@@ -62,6 +62,8 @@ Supported operators: "EQUALS", "NOT_EQUAL", "IEQUALS", "GREATER_THAN", "LESS_THA
 Required Imports and Configuration:
 * import static com.java_template.common.config.Config.*;
 * import com.java_template.common.service.EntityService;
+* import com.java_template.common.util.Condition; //if needed
+* import com.java_template.common.util.SearchConditionRequest;//if needed
 * package com.java_template.application.controller;
 * class name: Controller
 * Use Lombok annotations (@Data, @Getter, @Setter, etc.)
@@ -69,6 +71,16 @@ Required Imports and Configuration:
 * Inject EntityService via constructor
 * Use unique @RequestMapping path
 * Always convert technicalId from request path to UUID using UUID.fromString()
+Example:
+ This entity technicalId=UUID.fromString(context.request().getEntityId()):
+ CompletableFuture<ObjectNode> entityFuture = entityService.getItem(
+                {EntityName}.ENTITY_NAME,
+                {EntityName}.ENTITY_VERSION,
+                UUID.fromString(context.request().getEntityId())
+            );
+* Inject ObjectMapper via constructor for JSON conversion if needed
+* You can inject only EntityService, ObjectMapper, and SerializerFactory via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES. 
+
 
 You must ensure that all external API calls are implemented correctly.
 You must ensure that all calculations are implemented correctly.

@@ -57,24 +57,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "name": BuildGeneralApplicationF281ToolConfig.get_tool_name()
                 },
                 {
-                        "name": EditExistingAppDesignAdditionalFeatureE0e4ToolConfig.get_tool_name()
-                },
-                {
-                        "name": AddNewEntityForExistingApp0126ToolConfig.get_tool_name()
-                },
-                {
-                        "name": AddNewWorkflow7ebeToolConfig.get_tool_name()
-                },
-                {
-                        "name": EditApiExistingAppD394ToolConfig.get_tool_name()
-                },
-                {
-                        "name": EditExistingWorkflowD34cToolConfig.get_tool_name()
-                },
-                {
-                        "name": EditExistingProcessorsC196ToolConfig.get_tool_name()
-                },
-                {
                         "name": InitSetupWorkflowD9d0ToolConfig.get_tool_name()
                 },
                 {

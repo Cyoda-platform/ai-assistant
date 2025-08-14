@@ -14,7 +14,7 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
         """Get the list of entities with 'list_directory_files' tool.
 
 For each entity:
-1. Design a workflow based on the functional requirements.
+1. Design a workflow based on the functional requirements. 
 2. Call 'add_application_resource' with:
    - resource_path = 'src/main/resources/workflow/{entityName}/version_1/{EntityName}.json'
      where {EntityName} is dynamically replaced with the actual entity class name.
@@ -39,6 +39,7 @@ Workflow Design Rules:
 - A transition may include:
   - processors (list of processor definitions)
   - criterion (definition for conditional transitions)
+Processors represent business logic execution (e.g. validation, data processing, data enrichment, data transformation, external API calls or business domain logic: order, approve, sign, notify), and criteria represent conditional logic.
 
 Workflow JSON Example:
 {
