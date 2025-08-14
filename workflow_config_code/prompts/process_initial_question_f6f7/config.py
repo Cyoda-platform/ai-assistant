@@ -47,6 +47,10 @@ Constraints:
 
 Output format:
 - End with a "Ready-to-Copy Example User Response" in Markdown that the user can paste if they have no specific preference. It should be only regarding the functional requirements and business logic.
+- Wrap the example response in
+ ```markdown
+text here
+```
 - Inform the user that they can copy the example response and paste it if they have no specific preference.
 - Inform the user that they can click Approve if the example response meets their needs or if they have no specific preference and are ready to proceed.
 """

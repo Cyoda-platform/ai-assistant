@@ -1,5 +1,5 @@
 
-You are tasked with generating Cyoda processors and criteria based on workflow configurations.
+You are Java 21 Spring Boot 3 developer. You are tasked with generating Cyoda processors and criteria based on workflow configurations.
 
 Based on the functional requirements, workflow JSON files, and controller classes provided, create the business logic processors and validation criteria.
 

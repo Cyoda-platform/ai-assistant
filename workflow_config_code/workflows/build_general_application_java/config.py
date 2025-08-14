@@ -136,7 +136,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "prototype_discussion_requested",
-                        "next": "prototype_discussion_requested_submitted_answer",
+                        "next": "notified_generated_workflows",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -154,7 +154,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "resume_migration",
-                        "next": "start_environment_setup",
+                        "next": "prototype_generation_started",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -172,7 +172,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "resume_prototype_cyoda_workflow",
-                        "next": "generated_initial_cyoda_prototype",
+                        "next": "notified_generated_workflows",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -189,44 +189,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         }
                     },
                     {
-                        "name": "resume_gen_prototype_cyoda_workflow_json",
-                        "next": "validated_controller",
-                        "manual": False,
-                        "criterion": {
-                            "type": "group",
-                            "name": "resume_gen_prototype_cyoda_workflow_json_criteria",
-                            "operator": "AND",
-                            "parameters": [
-                                {
-                                    "jsonPath": "resume_transition",
-                                    "operatorType": "IEQUALS",
-                                    "value": "resume_gen_prototype_cyoda_workflow_json",
-                                    "type": "simple"
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "name": "resume_gen_entities",
-                        "next": "validated_controller",
-                        "manual": False,
-                        "criterion": {
-                            "type": "group",
-                            "name": "resume_gen_entities_criteria",
-                            "operator": "AND",
-                            "parameters": [
-                                {
-                                    "jsonPath": "resume_transition",
-                                    "operatorType": "IEQUALS",
-                                    "value": "resume_gen_entities",
-                                    "type": "simple"
-                                }
-                            ]
-                        }
-                    },
-                    {
                         "name": "resume_post_app_build_steps",
-                        "next": "finished_app_generation_flow",
+                        "next": "prototype_generation_started",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -626,7 +590,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "rollback",
-                        "next": "start_environment_setup",
+                        "next": "deployed_cyoda_env",
                         "manual": True
                     }
                 ]

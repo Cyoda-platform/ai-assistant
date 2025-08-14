@@ -8,10 +8,16 @@
       "name": "add_collaborator_to_default_repos_865f"
     },
     {
-      "name": "read_link_16a6"
+      "name": "get_cyoda_guidelines_f3bb"
     },
     {
-      "name": "get_cyoda_guidelines_f3bb"
+      "name": "add_application_resource_3d0b"
+    },
+    {
+      "name": "list_directory_files_1ab7"
+    },
+    {
+      "name": "read_file_2766"
     },
     {
       "name": "finish_discussion_69bc"

@@ -83,6 +83,7 @@ class TransitionKey(str, Enum):
     FAIL = "fail"
     ROLLBACK = "rollback"
     BUILD_NEW_APP = "build_new_app"
+
     DISCUSS_FUNCTIONAL_REQUIREMENTS = "discuss_functional_requirements"
     EDIT_FUNCTIONAL_REQUIREMENTS = "edit_functional_requirements"
     PROTOTYPE_DISCUSSION_REQUESTED = "prototype_discussion_requested"
@@ -104,6 +105,7 @@ class ModelName(str, Enum):
     CHAT_ENTITY = "chat_entity"
     AGENTIC_FLOW_ENTITY = "agentic_flow_entity"
     GEN_APP_ENTITY_PYTHON = "build_general_application_python"
+    EDIT_GENERAL_APPLICATION_JAVA = "edit_general_application_java"
     GEN_APP_ENTITY_JAVA = "build_general_application_java"
     FUNCTIONAL_REQUIREMENTS_TO_PROTOTYPE_JAVA = "functional_requirements_to_prototype_java"
     CYODA_ENV_DEPLOYMENT_CHAT = "cyoda_env_deploy_chat"

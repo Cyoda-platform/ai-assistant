@@ -14,21 +14,6 @@
       "name": "read_link_16a6"
     },
     {
-      "name": "add_new_entity_for_existing_app_cb15"
-    },
-    {
-      "name": "add_new_workflow_f610"
-    },
-    {
-      "name": "edit_api_existing_app_21f5"
-    },
-    {
-      "name": "edit_existing_workflow_f38d"
-    },
-    {
-      "name": "edit_existing_processors_b3f3"
-    },
-    {
       "name": "get_cyoda_guidelines_f3bb"
     },
     {
@@ -45,6 +30,15 @@
     },
     {
       "name": "ui_function_reset_client_secret_1cf5"
+    },
+    {
+      "name": "add_application_resource_3d0b"
+    },
+    {
+      "name": "list_directory_files_1ab7"
+    },
+    {
+      "name": "read_file_2766"
     }
   ],
   "messages": [

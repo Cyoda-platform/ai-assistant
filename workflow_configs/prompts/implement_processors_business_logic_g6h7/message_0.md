@@ -31,14 +31,27 @@ EntityService Operations Available:
    entity=data
    )
 
-
 2. READ:
    CompletableFuture<ObjectNode> itemFuture = entityService.getItem(
    entityModel={EntityName}.ENTITY_NAME,
    entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
    technicalId=UUID.fromString(technicalId)
    )
-
+   
+3. UPDATE:
+   CompletableFuture<UUID> updatedId = entityService.updateItem(
+   entityModel={EntityName}.ENTITY_NAME,
+   entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
+   technicalId=UUID.fromString(technicalId),
+   entity=data
+   )
+   
+4. DELETE:
+   CompletableFuture<UUID> deletedId = entityService.deleteItem(
+   entityModel={EntityName}.ENTITY_NAME,
+   entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
+   technicalId=UUID.fromString(technicalId)
+   )
 CompletableFuture<ArrayNode> itemsFuture = entityService.getItems(
 entityModel={EntityName}.ENTITY_NAME,
 entityVersion=String.valueOf({EntityName}.ENTITY_VERSION)
@@ -50,7 +63,6 @@ entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
 condition=condition,
 inMemory=true
 )
-
 
 Search Conditions (for simple filtering only):
 Use SearchConditionRequest.group() and Condition.of() for basic field-based queries:

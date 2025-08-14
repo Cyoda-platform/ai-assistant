@@ -5,10 +5,8 @@ In Event-Driven Architecture:
 - Each entity add operation is an **EVENT** that triggers automated processing
 Once an entity is persisted, Cyoda starts entity workflow that will involve calling actions and criteria to process this entity.
 For example, when a Job entity is persisted, Cyoda starts the Job workflow that will involve calling actions and criteria to process this job (ingestion, transformation, etc.)
-- **EDA Principle**: Favor immutable entity creation over updates/deletes to maintain event history. Do not add update/delete endpoints unless user wants it explicitly.
 - Focus on business entities, job entities, or orchestration entities that represent your domain
 - **Key Pattern**: Entity persistence triggers the process method that does the heavy lifting
-- **EDA Principle**: Favor immutable entity creation over updates/deletes to maintain event history
 
 ## RESPONSE STRUCTURE:
 **Start your answer with outlining the entities and their fields in this format:**
@@ -17,6 +15,13 @@ Max 10 entities allowed. If the user specifies more than 10 entities, you should
 If the user explicitly specifies less than 10 entities, you should consider only those entities. Do not add any additional entities.
 If the user doesn't explicitly specify any entities, default to max 3 entities unless the user explicitly asks for more.
 
+IMPORTANT:
+Do your best to represent the user's requirement in the form of entities and their workflows.
+Make the workflows represent the business domain as best as possible, adding different states the entity can go through. 
+For example Pizza workflow can go through different states: Ordered, Prepared, Delivered, etc.
+
+Make workflows interesting and simulate the real world as best as possible.
+ 
 ### 1. Entity Definitions
 ```
 EntityName:
@@ -45,8 +50,8 @@ Entity state diagrams
 ## REQUIREMENTS TO DEFINE:
 
 ### 1. Business Entities (Min 1)
-- **Orchestration entities** (Job, Task, Workflow) take precedence
-- **Business domain entities** (Order, Customer, Product) are secondary
+- **Orchestration entities** (Job, Task, Workflow) - perfect for scenarios like data ingestion, transformation, aggregation, etl, scheduling, monitoring, etc.
+- **Business domain entities** (Order, Customer, Product) - perfect for scenarios like e-commerce, inventory management, etc. 
 
 ### 2. API Endpoints Design Rules
 - **POST endpoints**: Entity creation (triggers events) + business logic. POST endpoint that adds an entity should return only entity `technicalId` - this field is not included in the entity itself, it's a datastore imitated specific field. Nothing else.
@@ -57,9 +62,6 @@ Entity state diagrams
 
 - If you have an orchestration entity (like Job, Task, Workflow), it should have a POST endpoint to create it, and a GET by technicalId to retrieve it. You will most likely not need any other POST endpoints for business entities as saving business entity is done via the process method.
 - **Business logic rule**: External data sources, calculations, processing → POST endpoints
-- **EDA Principle**: Favor immutable entity creation over updates/deletes to maintain event history. Avoid update/delete endpoints unless user wants it explicitly.
-- **Data Modification**: Instead of PUT/PATCH/DELETE, use POST to create new entity states or status changes. Apply only if the user explicitly asks updates/deletes.
-This architectural decision aligns well with modern microservices and event-driven patterns where data flows through events rather than direct modifications
 
 ### 4. Request/Response Formats
 Specify JSON structures for all API endpoints.
@@ -77,3 +79,5 @@ Mermaid diagrams rules:
     7. Output only valid Mermaid code inside the code block, no extra text
 - Ensure all Mermaid blocks are properly closed
 
+At the end of the response, please include the following message:
+**Please review the generated entities and workflows. If you need any changes, please let me know. Feel free to click Approve if this requirement meets your expectations or if you are ready to proceed.**

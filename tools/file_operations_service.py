@@ -80,7 +80,7 @@ class FileOperationsService(BaseWorkflowService):
                     await new_file.write(updated_content)
 
                 await _git_push(git_branch_id=technical_id,
-                                file_paths=[file_name],
+                                file_paths=[params.get("filename")],
                                 commit_message="Added env file template",
                                 repository_name=repository_name)
             return "🧩.env.template file saved successfully. Proceeding to the next step⏳...You will see a notification soon!"

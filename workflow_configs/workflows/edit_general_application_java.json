@@ -1,21 +1,15 @@
 {
   "version": "1.0",
-  "name": "chat_entity",
-  "desc": "Migrated from chat_entity",
+  "name": "Functional Requirements to Prototype Workflow",
+  "desc": "Complete workflow to transform functional requirements into a working application",
   "initialState": "initial_state",
   "active": true,
-  "criterion": {
-    "type": "simple",
-    "jsonPath": "$.workflow_name",
-    "operation": "EQUALS",
-    "value": "chat_entity"
-  },
   "states": {
     "initial_state": {
       "transitions": [
         {
-          "name": "initialize_chat",
-          "next": "initialized_chat",
+          "name": "start_edit_application",
+          "next": "edit_application_requested",
           "manual": false
         },
         {
@@ -51,166 +45,181 @@
         }
       ]
     },
-    "initialized_chat": {
+    "process_user_input": {
       "transitions": [
         {
           "name": "submit_answer",
-          "next": "submitted_workflow_question",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.submit_answer_4a45",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "initialized_chat",
+          "next": "edit_application_requested",
           "manual": true
         },
-        {
-          "name": "fail_initialized_chat",
-          "next": "locked_initialized_chat",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_initialized_chat": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "initialized_chat",
-          "manual": true
-        }
-      ]
-    },
-    "submitted_workflow_question": {
-      "transitions": [
-        {
-          "name": "submit_answer",
-          "next": "processed_question",
-          "manual": true,
-          "processors": [
-            {
-              "name": "AgentProcessor.submit_answer_4a45",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
-        },
-        {
-          "name": "lock_chat",
-          "next": "locked_chat",
-          "manual": false,
-          "criterion": {
-            "type": "function",
-            "function": {
-              "name": "FunctionProcessor.is_chat_locked_5b22",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          }
-        },
-        {
-          "name": "retry",
-          "next": "submitted_workflow_question",
-          "manual": true
-        },
-        {
-          "name": "fail_submitted_workflow_question",
-          "next": "locked_submitted_workflow_question",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_submitted_workflow_question": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "submitted_workflow_question",
-          "manual": true
-        }
-      ]
-    },
-    "processed_question": {
-      "transitions": [
         {
           "name": "rollback",
-          "next": "locked_chat",
+          "next": "edit_application_requested",
           "manual": true
         },
+        {
+          "name": "retry",
+          "next": "process_user_input",
+          "manual": true
+        },
+        {
+          "name": "fail_process_user_input",
+          "next": "locked_process_user_input",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_process_user_input": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "process_user_input",
+          "manual": true
+        }
+      ]
+    },
+    "edit_application_requested": {
+      "transitions": [
+        {
+          "name": "process_user_input",
+          "next": "edit_application_requested_processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_user_input_2185",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "edit_application_requested",
+          "manual": true
+        },
+        {
+          "name": "fail_edit_application_requested",
+          "next": "locked_edit_application_requested",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_edit_application_requested": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "edit_application_requested",
+          "manual": true
+        }
+      ]
+    },
+    "edit_application_requested_processing": {
+      "transitions": [
+        {
+          "name": "edit_application_requested_processing",
+          "next": "process_user_input",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.not_stage_completed_6044",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          }
+        },
+        {
+          "name": "process_migration_confirmation_success",
+          "next": "lock_chat",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.is_stage_completed_c00a",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          }
+        },
+        {
+          "name": "retry",
+          "next": "edit_application_requested_processing",
+          "manual": true
+        },
+        {
+          "name": "fail_edit_application_requested_processing",
+          "next": "locked_edit_application_requested_processing",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_edit_application_requested_processing": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "edit_application_requested_processing",
+          "manual": true
+        }
+      ]
+    },
+    "lock_chat": {
+      "transitions": [
         {
           "name": "lock_chat",
           "next": "locked_chat",
-          "manual": false,
-          "criterion": {
-            "type": "function",
-            "function": {
-              "name": "FunctionProcessor.is_chat_locked_5b22",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          }
-        },
-        {
-          "name": "unlock_chat",
-          "next": "submitted_workflow_question",
-          "manual": false,
-          "criterion": {
-            "type": "function",
-            "function": {
-              "name": "FunctionProcessor.is_chat_unlocked_f77c",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          }
+          "manual": false
         },
         {
           "name": "retry",
-          "next": "processed_question",
+          "next": "lock_chat",
           "manual": true
         },
         {
-          "name": "fail_processed_question",
-          "next": "locked_processed_question",
+          "name": "fail_lock_chat",
+          "next": "locked_lock_chat",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -227,51 +236,11 @@
         }
       ]
     },
-    "locked_processed_question": {
+    "locked_lock_chat": {
       "transitions": [
         {
           "name": "unlock",
-          "next": "processed_question",
-          "manual": true
-        }
-      ]
-    },
-    "locked_chat": {
-      "transitions": [
-        {
-          "name": "unlock_chat",
-          "next": "submitted_workflow_question",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_chat",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_chat",
-          "next": "locked_locked_chat",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_chat": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_chat",
+          "next": "lock_chat",
           "manual": true
         }
       ]

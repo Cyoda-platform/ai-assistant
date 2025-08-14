@@ -63,7 +63,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "manual": True,
                         "processors": [
                             {
-                                "name": SubmitAnswerB135AgentConfig.get_name(),
+                                "name": SubmitAnswer4a45AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",

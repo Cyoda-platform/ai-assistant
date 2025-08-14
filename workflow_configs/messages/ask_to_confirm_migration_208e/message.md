@@ -15,3 +15,6 @@ By doing so, you gain:
 ✅ An ecosystem that accelerates delivery and adapts with your needs
 
 👍 Let’s bring your prototype to life in the Cyoda Cloud.
+
+*Please check the generated code and click Approve to start the Cyoda app setup assistant.*
+

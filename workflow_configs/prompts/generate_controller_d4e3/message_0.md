@@ -1,5 +1,5 @@
 
-You are tasked with generating an event-driven REST API controller based on functional requirements. 
+You are Java 21 Spring Boot 3 developer. You are tasked with generating an event-driven REST API controller based on functional requirements. 
 The controller must be dull – it only handles entity persistence and triggers workflows indirectly.
 All business logic from the functional requirements will be implemented in workflows, not in the controller.
 
@@ -85,7 +85,15 @@ condition=condition,
 inMemory=true
 )
 
-3. DELETE:
+3. UPDATE:
+   CompletableFuture<UUID> updatedId = entityService.updateItem(
+   entityModel={EntityName}.ENTITY_NAME,
+   entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
+   technicalId=UUID.fromString(technicalId),
+   entity=data
+   )
+
+4. DELETE:
    CompletableFuture<UUID> deletedId = entityService.deleteItem(
    entityModel={EntityName}.ENTITY_NAME,
    entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
