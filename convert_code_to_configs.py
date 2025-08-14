@@ -253,48 +253,121 @@ class CodeToConfigConverter:
     def convert_workflows(self):
         """Convert workflow Python code back to JSON configs"""
         print("\n🔄 Converting workflows...")
-        
+
         workflows_source_dir = self.source_dir / "workflows"
         workflows_target_dir = self.target_dir / "workflows"
         workflows_target_dir.mkdir(exist_ok=True)
-        
+
         if not workflows_source_dir.exists():
             return
-            
+
         for workflow_dir in workflows_source_dir.iterdir():
             if workflow_dir.is_dir() and (workflow_dir / "workflow.py").exists():
                 try:
                     workflow_name = workflow_dir.name
-                    
+
                     # Import the workflow class
                     module_name = f"workflows.{workflow_name}.workflow"
                     spec = importlib.util.spec_from_file_location(module_name, workflow_dir / "workflow.py")
                     module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(module)
-                    
+
                     # Find the workflow config class
                     workflow_class = None
                     for attr_name in dir(module):
                         attr = getattr(module, attr_name)
-                        if (hasattr(attr, 'get_config') and hasattr(attr, 'get_name') and 
+                        if (hasattr(attr, 'get_config') and hasattr(attr, 'get_name') and
                             callable(attr.get_config)):
                             workflow_class = attr
                             break
-                    
+
                     if workflow_class:
                         # Get configuration
                         config = workflow_class.get_config()
-                        
+
+                        # Enhance workflow with retry and fail transitions
+                        enhanced_config = self._enhance_workflow_with_transitions(config)
+
                         # Save JSON directly in workflows directory
                         with open(workflows_target_dir / f"{workflow_name}.json", 'w') as f:
-                            json.dump(config, f, indent=2)
-                        
-                        print(f"  ✅ {workflow_name}")
+                            json.dump(enhanced_config, f, indent=2)
+
+                        print(f"  ✅ {workflow_name} (enhanced with retry/fail transitions)")
                     else:
                         print(f"  ❌ No workflow class found in {workflow_name}")
-                        
+
                 except Exception as e:
                     print(f"  ❌ Failed to convert {workflow_dir.name}: {e}")
+
+    def _create_retry_transition(self, state_name):
+        """Create a retry transition for a given state"""
+        return {
+            "name": 'retry',
+            "next": state_name,
+            "manual": True
+        }
+
+    def _create_fail_transition(self, state_name):
+        """Create a fail transition for a given state"""
+        return {
+            "name": f'fail_{state_name}',
+            "next": f'locked_{state_name}',
+            "manual": False,
+            "criterion": {
+                "type": "group",
+                "operator": "AND",
+                "conditions": [
+                    {
+                        "type": "simple",
+                        "jsonPath": "$.failed",
+                        "operation": "EQUALS",
+                        "value": True
+                    }
+                ]
+            }
+        }
+
+    def _enhance_workflow_with_transitions(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhance workflow configuration with retry and fail transitions for each state"""
+        if 'states' not in config:
+            return config
+
+        enhanced_config = config.copy()
+        enhanced_states = {}
+
+        # Process each existing state
+        for state_name, state_config in config['states'].items():
+            # Copy the original state
+            enhanced_state = state_config.copy()
+
+            # Get existing transitions or create empty list
+            existing_transitions = enhanced_state.get('transitions', [])
+
+            # Add retry and fail transitions
+            retry_transition = self._create_retry_transition(state_name)
+            fail_transition = self._create_fail_transition(state_name)
+
+            # Combine all transitions
+            enhanced_transitions = existing_transitions + [retry_transition, fail_transition]
+            enhanced_state['transitions'] = enhanced_transitions
+
+            enhanced_states[state_name] = enhanced_state
+
+            # Create locked state if it doesn't exist
+            locked_state_name = f'locked_{state_name}'
+            if locked_state_name not in config['states']:
+                enhanced_states[locked_state_name] = {
+                    "transitions": [
+                        {
+                            "name": "unlock",
+                            "next": state_name,
+                            "manual": True
+                        }
+                    ]
+                }
+
+        enhanced_config['states'] = enhanced_states
+        return enhanced_config
 
 
 if __name__ == "__main__":

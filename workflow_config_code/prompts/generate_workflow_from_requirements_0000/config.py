@@ -100,5 +100,6 @@ Output Rules:
 - Save each workflow JSON to 'src/main/java/com/java_template/application/workflow/{EntityName}.json' using 'add_application_resource'.
 - Generate valid JSON only. No extra text or markdown.
 - Ensure no file named 'EntityName.json' is ever created unless there is literally an entity with that name.
+- Avoid putting criterion and processors in the same transition if possible. Ideally, each transition has either a criterion or a processor, but not both.
 """
 

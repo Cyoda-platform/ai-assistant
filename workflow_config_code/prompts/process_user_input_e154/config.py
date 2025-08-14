@@ -25,7 +25,7 @@ Step 2: Once the user is confirmed to be logged in, call `get_user_info` again t
 • If the environment is not deployed, call `deploy_cyoda_env` and immediately call `finish_discussion`.
 • Inform the user: 'I'm now deploying your Cyoda environment. Your build ID is {{build_id}}. You can check the deployment status in a new chat while this one stays focused on setting up your Cyoda application.'
 
-IMPORTANT:
-If the user is not logged in - you can tell them that they can proceed without logging in, but then they will have to deploy the environment in a separate chat once they are logged in.
-To proceed without logging in they need to explicitly confirm that they want to proceed without logging in. Then call `deploy_cyoda_env` and immediately call `finish_discussion`.
+ALTERNATIVE:
+If the user is not logged in - you can tell them that they can proceed without logging in, but we will not be able to deploy their Cyoda environment. So, once they log in they will need to ask for Cyoda env deployment in a separate chat.
+To proceed without logging in they need to explicitly confirm that they want to proceed without logging in and deploying the environment. Once they confirm, immediately call `finish_discussion` without deploying the environment.
 """

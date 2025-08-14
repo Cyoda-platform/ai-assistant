@@ -79,10 +79,10 @@ public class {ProcessorClassName} implements CyodaProcessor {
         EntityProcessorCalculationRequest request = context.getEvent();
         logger.info("Processing {EntityName} for request: {}", request.getId());
 
-        return serializer.withRequest(request)
+        return serializer.withRequest(request) //always use this method name to request EntityProcessorCalculationResponse
             .toEntity({EntityName}.class)
             .validate(this::isValidEntity, "Invalid entity state")
-            .map(this::processEntityLogic)
+            .map(this::processEntityLogic) // Implement business logic here
             .complete();
     }
 
@@ -140,7 +140,7 @@ public class CriterionClassName implements CyodaCriterion {
     public EntityCriteriaCalculationResponse check(CyodaEventContext<EntityCriteriaCalculationRequest> context) {
         EntityCriteriaCalculationRequest request = context.getEvent();
         // This is a predefined chain. Just write the business logic in processEntityLogic method.
-        return serializer.withRequest(request)
+        return serializer.withRequest(request) //always use this method name to request EntityCriteriaCalculationResponse
             .evaluateEntity(EntityName.class, this::validateEntity)
             .withReasonAttachment(ReasonAttachmentStrategy.toWarnings())
             .complete();

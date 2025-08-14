@@ -1,9 +1,8 @@
 ✅ **Entity POJOs** and **workflow configurations** have been added to your application.
 
-Entities can be found in the file 'src/main/java/com/java_template/application/entity/entityName/version_1/EntityName.java'.
-Workflows can be found in the file 'src/main/resources/workflow/entityName/version_1/EntityName.json'.
-
-This event‑driven approach allows complex business logic to be defined declaratively and evolve through configuration instead of code changes.
+   📂 src/
+    ├─ main/java/com/java_template/application/entity/entityName/version_1    ← Entities
+    └─ main/resources/workflow/entityName/version_1                           ← Workflows
  
 For a detailed reference on workflow configuration, see the **[Cyoda Workflow Configuration Guide](https://docs.cyoda.net/#guides/workflow-config-guide)**. It explains:
 
@@ -14,8 +13,38 @@ For a detailed reference on workflow configuration, see the **[Cyoda Workflow Co
 
 You can preview workflows visually in the **“Open canvas”** view (upper-right corner of the UI).
 
-Please review the generated entities and workflows in your `{git_branch}`.
+Please review the generated entities and workflows in your `{git_branch}` branch.
 
 🔗 [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch})
 
-You can edit them directly in the code and we’ll assist with any changes or questions. 🚀
+I can assist with any changes or questions.
+ 
+Alternatively, you can edit configs directly in the code.
+
+If you need to push changes to your branch, ask me here for access. I'll need your GitHub username to add you as a collaborator. If you'd like to be a Cyoda contributor instead of a contributor and enjoy more privileges, please let us know via [Discord](https://discord.gg/95rdAyBZr2).
+
+You can evolve the workflows and entities in your IDE with your own IDE assistant.
+
+**Prompt for your IDE:**
+
+```markdown
+This project is a **Cyoda client application**.
+
+ * **Entities** (POJOs) are in `src/main/java/com/java_template/application/entity/entityName/version_1/`
+ * **Workflows** (YAML/JSON configs) are in `src/main/resources/workflow/entityName/version_1/`
+ * **Original user requirements** are in `src/main/java/com/java_template/prototype/user_requirement.md`
+ * **Functional requirements** are in `src/main/java/com/java_template/prototype/functional_requirement.md`
+
+ The system is **event-driven** — workflows define states, transitions, and criteria declaratively, without code changes.
+
+ **Key rules:**
+
+ 1. Always review and learn from the original and functional requirement documents to fully understand the user requirements.
+ 2. If you update any entity or workflow, you must also update the functional requirement document.
+
+ For detailed instructions, see `README.md` in the project root.
+ The most up-to-date configuration and reference material can be loaded from the **doc server** at https://docs.cyoda.net.
+ Assist in locating, editing, and creating entities and workflows, explaining configuration concepts, and applying best practices from the Cyoda Workflow Configuration Guide.
+```
+
+If you make any changes, please share them with me in the chat or just push them to your branch and ask me to review them or just click "Approve".

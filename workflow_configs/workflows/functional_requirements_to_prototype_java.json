@@ -11,6 +11,37 @@
           "name": "start_save_functional_requirements",
           "next": "save_functional_requirements",
           "manual": false
+        },
+        {
+          "name": "retry",
+          "next": "initial_state",
+          "manual": true
+        },
+        {
+          "name": "fail_initial_state",
+          "next": "locked_initial_state",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_initial_state": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "initial_state",
+          "manual": true
         }
       ]
     },
@@ -30,6 +61,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "save_functional_requirements",
+          "manual": true
+        },
+        {
+          "name": "fail_save_functional_requirements",
+          "next": "locked_save_functional_requirements",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_save_functional_requirements": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "save_functional_requirements",
+          "manual": true
         }
       ]
     },
@@ -48,6 +110,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "notify_saved_requirements",
+          "manual": true
+        },
+        {
+          "name": "fail_notify_saved_requirements",
+          "next": "locked_notify_saved_requirements",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_notify_saved_requirements": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "notify_saved_requirements",
+          "manual": true
         }
       ]
     },
@@ -67,6 +160,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "generate_controller",
+          "manual": true
+        },
+        {
+          "name": "fail_generate_controller",
+          "next": "locked_generate_controller",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_generate_controller": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "generate_controller",
+          "manual": true
         }
       ]
     },
@@ -85,6 +209,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "notify_controller_generated",
+          "manual": true
+        },
+        {
+          "name": "fail_notify_controller_generated",
+          "next": "locked_notify_controller_generated",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_notify_controller_generated": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "notify_controller_generated",
+          "manual": true
         }
       ]
     },
@@ -104,6 +259,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "generate_processors_and_criteria",
+          "manual": true
+        },
+        {
+          "name": "fail_generate_processors_and_criteria",
+          "next": "locked_generate_processors_and_criteria",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_generate_processors_and_criteria": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "generate_processors_and_criteria",
+          "manual": true
         }
       ]
     },
@@ -122,6 +308,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "notify_processors_generated",
+          "manual": true
+        },
+        {
+          "name": "fail_notify_processors_generated",
+          "next": "locked_notify_processors_generated",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_notify_processors_generated": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "notify_processors_generated",
+          "manual": true
         }
       ]
     },
@@ -141,6 +358,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "enhance_processors",
+          "manual": true
+        },
+        {
+          "name": "fail_enhance_processors",
+          "next": "locked_enhance_processors",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_enhance_processors": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "enhance_processors",
+          "manual": true
         }
       ]
     },
@@ -160,6 +408,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "implement_business_logic",
+          "manual": true
+        },
+        {
+          "name": "fail_implement_business_logic",
+          "next": "locked_implement_business_logic",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_implement_business_logic": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "implement_business_logic",
+          "manual": true
         }
       ]
     },
@@ -178,6 +457,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "notify_processors_enhanced",
+          "manual": true
+        },
+        {
+          "name": "fail_notify_processors_enhanced",
+          "next": "locked_notify_processors_enhanced",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_notify_processors_enhanced": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "notify_processors_enhanced",
+          "manual": true
         }
       ]
     },
@@ -197,6 +507,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "run_compilation",
+          "manual": true
+        },
+        {
+          "name": "fail_run_compilation",
+          "next": "locked_run_compilation",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_run_compilation": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "run_compilation",
+          "manual": true
         }
       ]
     },
@@ -215,6 +556,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "notify_compilation_started",
+          "manual": true
+        },
+        {
+          "name": "fail_notify_compilation_started",
+          "next": "locked_notify_compilation_started",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_notify_compilation_started": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "notify_compilation_started",
+          "manual": true
         }
       ]
     },
@@ -234,6 +606,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "process_compilation_results",
+          "manual": true
+        },
+        {
+          "name": "fail_process_compilation_results",
+          "next": "locked_process_compilation_results",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_process_compilation_results": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "process_compilation_results",
+          "manual": true
         }
       ]
     },
@@ -252,6 +655,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "notify_prototype_compiled",
+          "manual": true
+        },
+        {
+          "name": "fail_notify_prototype_compiled",
+          "next": "locked_notify_prototype_compiled",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_notify_prototype_compiled": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "notify_prototype_compiled",
+          "manual": true
         }
       ]
     },
@@ -264,12 +698,43 @@
         },
         {
           "name": "manual_approve",
-          "next": "launch_init_setup_workflow",
+          "next": "prototype_discussion_completed",
           "manual": true
         },
         {
           "name": "rollback",
           "next": "prototype_discussion_requested_submitted_answer",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "notified_prototype_compiled",
+          "manual": true
+        },
+        {
+          "name": "fail_notified_prototype_compiled",
+          "next": "locked_notified_prototype_compiled",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_notified_prototype_compiled": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "notified_prototype_compiled",
           "manual": true
         }
       ]
@@ -290,6 +755,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "prototype_discussion_requested_submitted_answer",
+          "manual": true
+        },
+        {
+          "name": "fail_prototype_discussion_requested_submitted_answer",
+          "next": "locked_prototype_discussion_requested_submitted_answer",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_prototype_discussion_requested_submitted_answer": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "prototype_discussion_requested_submitted_answer",
+          "manual": true
         }
       ]
     },
@@ -312,7 +808,7 @@
         },
         {
           "name": "prototype_configs_discussion_success",
-          "next": "launch_init_setup_workflow",
+          "next": "prototype_discussion_completed",
           "manual": false,
           "criterion": {
             "type": "function",
@@ -324,10 +820,356 @@
               }
             }
           }
+        },
+        {
+          "name": "retry",
+          "next": "prototype_discussion_requested_processing",
+          "manual": true
+        },
+        {
+          "name": "fail_prototype_discussion_requested_processing",
+          "next": "locked_prototype_discussion_requested_processing",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
         }
       ]
     },
-    "launch_init_setup_workflow": {
+    "locked_prototype_discussion_requested_processing": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "prototype_discussion_requested_processing",
+          "manual": true
+        }
+      ]
+    },
+    "prototype_discussion_completed": {
+      "transitions": [
+        {
+          "name": "ask_to_confirm_migration",
+          "next": "migration_confirmation_requested",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.ask_to_confirm_migration_208e",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "prototype_discussion_completed",
+          "manual": true
+        },
+        {
+          "name": "fail_prototype_discussion_completed",
+          "next": "locked_prototype_discussion_completed",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_prototype_discussion_completed": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "prototype_discussion_completed",
+          "manual": true
+        }
+      ]
+    },
+    "migration_confirmation_requested": {
+      "transitions": [
+        {
+          "name": "submit_answer",
+          "next": "migration_confirmation_requested_submitted_answer",
+          "manual": true
+        },
+        {
+          "name": "manual_approve",
+          "next": "save_env_file",
+          "manual": true
+        },
+        {
+          "name": "rollback",
+          "next": "migration_confirmation_requested_submitted_answer",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "migration_confirmation_requested",
+          "manual": true
+        },
+        {
+          "name": "fail_migration_confirmation_requested",
+          "next": "locked_migration_confirmation_requested",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_migration_confirmation_requested": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "migration_confirmation_requested",
+          "manual": true
+        }
+      ]
+    },
+    "migration_confirmation_requested_submitted_answer": {
+      "transitions": [
+        {
+          "name": "process_user_input",
+          "next": "migration_confirmation_requested_processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_user_input_2185",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "migration_confirmation_requested_submitted_answer",
+          "manual": true
+        },
+        {
+          "name": "fail_migration_confirmation_requested_submitted_answer",
+          "next": "locked_migration_confirmation_requested_submitted_answer",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_migration_confirmation_requested_submitted_answer": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "migration_confirmation_requested_submitted_answer",
+          "manual": true
+        }
+      ]
+    },
+    "migration_confirmation_requested_processing": {
+      "transitions": [
+        {
+          "name": "process_migration_confirmation_processing",
+          "next": "migration_confirmation_requested",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.not_stage_completed_6044",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          }
+        },
+        {
+          "name": "process_migration_confirmation_success",
+          "next": "save_env_file",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.is_stage_completed_c00a",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          }
+        },
+        {
+          "name": "retry",
+          "next": "migration_confirmation_requested_processing",
+          "manual": true
+        },
+        {
+          "name": "fail_migration_confirmation_requested_processing",
+          "next": "locked_migration_confirmation_requested_processing",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_migration_confirmation_requested_processing": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "migration_confirmation_requested_processing",
+          "manual": true
+        }
+      ]
+    },
+    "save_env_file": {
+      "transitions": [
+        {
+          "name": "save_env_file",
+          "next": "delete_files",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.save_env_file_d2aa",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "save_env_file",
+          "manual": true
+        },
+        {
+          "name": "fail_save_env_file",
+          "next": "locked_save_env_file",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_save_env_file": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "save_env_file",
+          "manual": true
+        }
+      ]
+    },
+    "delete_files": {
+      "transitions": [
+        {
+          "name": "delete_files",
+          "next": "launch_setup_assistant",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.delete_files_6818",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "delete_files",
+          "manual": true
+        },
+        {
+          "name": "fail_delete_files",
+          "next": "locked_delete_files",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_delete_files": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "delete_files",
+          "manual": true
+        }
+      ]
+    },
+    "launch_setup_assistant": {
       "transitions": [
         {
           "name": "launch_setup_assistant",
@@ -343,6 +1185,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "launch_setup_assistant",
+          "manual": true
+        },
+        {
+          "name": "fail_launch_setup_assistant",
+          "next": "locked_launch_setup_assistant",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_launch_setup_assistant": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "launch_setup_assistant",
+          "manual": true
         }
       ]
     },
@@ -352,6 +1225,37 @@
           "name": "lock_chat",
           "next": "locked_chat",
           "manual": false
+        },
+        {
+          "name": "retry",
+          "next": "launched_setup_assistant",
+          "manual": true
+        },
+        {
+          "name": "fail_launched_setup_assistant",
+          "next": "locked_launched_setup_assistant",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_launched_setup_assistant": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "launched_setup_assistant",
+          "manual": true
         }
       ]
     }

@@ -70,7 +70,7 @@ class GitHubOperationsService(BaseWorkflowService):
                 # 201: Invitation sent (user not yet a collaborator)
                 # 204: User added as collaborator (user already has access)
                 if response is not None:
-                    success_msg = f"Success: Invited user '{username}' to repository '{owner}/{repo}' with '{permission}' permission."
+                    success_msg = f"Success: Invited user '{username}' to repository '{owner}/{repo}' with '{permission}' permission. Please check your email to accept the invitation."
                     self.logger.info(success_msg)
                     success_msgs.append(success_msg)
                 else:

@@ -10,5 +10,5 @@ Rules:
 - Avoid discussing non-functional requirements.
 - Do not ask about frameworks, databases, or infrastructure. Assume Java Spring Boot on Cyoda platform.
 - Provide an "Example Ready-to-Copy User Response" in Markdown to make it easy for the user to confirm or adjust.
-
+- Max 10 entities allowed.
 Here is the user request:

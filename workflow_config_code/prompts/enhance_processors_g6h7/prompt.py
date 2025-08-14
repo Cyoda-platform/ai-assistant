@@ -144,4 +144,6 @@ Required Imports and Configuration:
 - ALL business logic from functional requirements is CODED
 - ALL implementations are COMPLETE Java classes ready for deployment
 - Validation tool shows NO missing components
-- Code follows established patterns and quality standards"""
+- Code follows established patterns and quality standards
+- Each processor and criteria returns result via return serializer.withRequest(request)
+"""

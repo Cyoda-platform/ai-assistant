@@ -2,6 +2,7 @@
   "name": "process_prototype_discussion_0000",
   "type": "agent",
   "publish": true,
+  "approve": true,
   "allow_anonymous_users": true,
   "model": {},
   "memory_tags": [
@@ -22,6 +23,9 @@
     },
     {
       "name": "finish_prototype_discussion_0000"
+    },
+    {
+      "name": "add_collaborator_to_default_repos_ffe7"
     }
   ],
   "messages": [
@@ -31,6 +35,5 @@
     }
   ],
   "tool_choice": "auto",
-  "max_iteration": 30,
-  "approve": false
+  "max_iteration": 30
 }

@@ -16,14 +16,19 @@ I’ll generate the initial **Entity POJOs** and **Workflow Configurations** for
 * **Processors**: Custom logic that runs during a transition, such as sending notifications.
 
 Your new workflow files will be available here:
-`src/main/java/com/java_template/application/workflow`
+`src/main/resources/workflows`
 
 ---
 
-### **Cyoda Handles the Boilerplate**
+### **Cyoda Enhances the Development Experience**
 
-Cyoda takes care of all the state changes, triggers, queries, and history tracking for you. This frees you from boilerplate code and lets you focus entirely on your business logic.
+Cyoda takes care of all the state changes, triggers, queries, and history tracking for you. 
 
+Cyoda enterprise-grade platform lets you build faster by focusing only on what matters.
+
+We handle the infrastructure – orchestration, state, persistence, scalability — all built-in.
+
+You focus on business logic – no boilerplate, no framework stitching.
 ---
 
 ### **Learn More**

@@ -17,6 +17,37 @@
           "name": "initialize_chat",
           "next": "initialized_chat",
           "manual": false
+        },
+        {
+          "name": "retry",
+          "next": "initial_state",
+          "manual": true
+        },
+        {
+          "name": "fail_initial_state",
+          "next": "locked_initial_state",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_initial_state": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "initial_state",
+          "manual": true
         }
       ]
     },
@@ -30,6 +61,37 @@
         {
           "name": "delete",
           "next": "deleted",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "initialized_chat",
+          "manual": true
+        },
+        {
+          "name": "fail_initialized_chat",
+          "next": "locked_initialized_chat",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_initialized_chat": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "initialized_chat",
           "manual": true
         }
       ]

@@ -21,6 +21,11 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "memory_tags": [
             "requirements_generation"
         ],
+        "input": {
+            "local_fs": [
+                "src/main/java/com/java_template/prototype/user_requirement.md"
+            ]
+        },
         "messages": [
             {
                 "role": "user",

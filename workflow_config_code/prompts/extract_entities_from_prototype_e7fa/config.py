@@ -15,7 +15,7 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
 
 Your task:
 - Identify entities from the requirements document.
-- Min 1 entity, Max 3 entities unless explicitly asked for more:
+- Min 1 entity, Max 10 entities:
   - Orchestration entities (e.g. 'Job', 'Task') take precedence.
   - After orchestration entities, identify business domain entities.
   - There can only be one orchestration entity.

@@ -231,7 +231,7 @@ FILES_NOTIFICATIONS = {
     },
 }
 
-BRANCH_READY_NOTIFICATION = "🎉 **Your branch `{git_branch}` is ready!**\n\nI’ve added a GitHub branch in our public repository where I’ll be posting updates.\n\nYou can check it out now or come back to it anytime:\n\n🔗 [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch}) 👀 \n"
+BRANCH_READY_NOTIFICATION = "🎉 **Your branch `{git_branch}` is ready!**\n\nI’ve added a GitHub branch in our public repository where I’ll be posting updates. You can check it out now or come back to it anytime: 🔗 [Cyoda GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch}) 👀 \n"
 
 # === Miscellaneous design strings ===
 LOGIC_CODE_DESIGN_STR = "Additional logic code design"
@@ -257,16 +257,23 @@ SCHEDULER_STATUS_WAITING = "waiting"
 UI_FUNCTION_PREFIX = "ui_function"
 
 CYODA_WELCOME_MESSAGE = """\
-Hi there! I'm Cyoda ai-assistant 🧚, and I'll be your guide.
+**Hello!** I’m **Cyoda’s AI Assistant** 🧚 — your guide through our adventure 🧭
 
-Welcome to our alpha! We’re an early-stage product, so we might run into a few bumps. Don't worry—if you need help, just reach out on [Discord](https://discord.gg/95rdAyBZr2)💬
 
-Cyoda is entity-based, meaning each entity follows its own unique workflow. I’m also Cyoda workflow-driven. To track progress, troubleshoot issues, or simply watch things in action, open the Entities Data window.
+We’re still growing🌱, so you might notice the occasional hiccup. For assistance, join us on [Discord](https://discord.gg/95rdAyBZr2) 🛎️ We’re here to help and we’d love to hear from you!
 
-I'll save entities for you and kick off new workflows as we go. You'll see them appear in the Entities Data window and progress through different states 📊. Once a workflow reaches the locked state, it’s done and dusted ✅.
 
-Curious about what else I can do? Just ask: "Show me your agent tools.🛠️✨
+Cyoda is **entity-based** — each entity follows its own unique workflow.
 
-Have fun exploring!
+I’m a Cyoda client application myself - I’ll save entities for you and follow their workflows.
+ 
+🗂️ You can track our progress in the **Entities Data** window.
+
+✅ When a workflow reaches the **locked** state, it’s complete 🔒.
+
+
+🧐Curious about my capabilities? Just say: **“Show me your agent tools”** 🛠✨
+
+Enjoy exploring! 🎏
 """
 

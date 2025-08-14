@@ -19,5 +19,5 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "filename": ".env.template"
                 }
         },
-        "publish": False
+        "publish": True
 }

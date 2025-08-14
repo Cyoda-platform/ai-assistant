@@ -80,7 +80,7 @@ class FileOperationsService(BaseWorkflowService):
                     await new_file.write(updated_content)
 
                 await _git_push(technical_id, [file_name], "Added env file template", repository_name=repository_name)
-            return "Environment file saved successfully"
+            return "🧩.env.template file saved successfully. Proceeding to the next step⏳...You will see a notification soon!"
             
         except Exception as e:
             self.logger.exception("Error saving environment file: %s", str(e))

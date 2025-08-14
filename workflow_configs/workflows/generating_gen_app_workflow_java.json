@@ -17,6 +17,37 @@
           "name": "start_workflow_generation",
           "next": "started_workflow_generation",
           "manual": false
+        },
+        {
+          "name": "retry",
+          "next": "initial_state",
+          "manual": true
+        },
+        {
+          "name": "fail_initial_state",
+          "next": "locked_initial_state",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_initial_state": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "initial_state",
+          "manual": true
         }
       ]
     },
@@ -36,6 +67,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "started_workflow_generation",
+          "manual": true
+        },
+        {
+          "name": "fail_started_workflow_generation",
+          "next": "locked_started_workflow_generation",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_started_workflow_generation": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "started_workflow_generation",
+          "manual": true
         }
       ]
     },
@@ -55,6 +117,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "formatted_workflow_json",
+          "manual": true
+        },
+        {
+          "name": "fail_formatted_workflow_json",
+          "next": "locked_formatted_workflow_json",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_formatted_workflow_json": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "formatted_workflow_json",
+          "manual": true
         }
       ]
     },
@@ -74,6 +167,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "converted_workflow_to_cyoda_dto",
+          "manual": true
+        },
+        {
+          "name": "fail_converted_workflow_to_cyoda_dto",
+          "next": "locked_converted_workflow_to_cyoda_dto",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_converted_workflow_to_cyoda_dto": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "converted_workflow_to_cyoda_dto",
+          "manual": true
         }
       ]
     },
@@ -93,6 +217,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "retry",
+          "next": "processors_generated",
+          "manual": true
+        },
+        {
+          "name": "fail_processors_generated",
+          "next": "locked_processors_generated",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_processors_generated": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "processors_generated",
+          "manual": true
         }
       ]
     },
@@ -102,6 +257,37 @@
           "name": "lock_chat",
           "next": "locked_chat",
           "manual": false
+        },
+        {
+          "name": "retry",
+          "next": "criteria_generated",
+          "manual": true
+        },
+        {
+          "name": "fail_criteria_generated",
+          "next": "locked_criteria_generated",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_criteria_generated": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "criteria_generated",
+          "manual": true
         }
       ]
     }

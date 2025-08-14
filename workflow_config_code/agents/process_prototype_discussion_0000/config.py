@@ -29,6 +29,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "name": "process_prototype_discussion_0000",
         "type": "agent",
         "publish": True,
+        "approve": True,
         "allow_anonymous_users": True,
         "model": {},
         "memory_tags": [
@@ -49,6 +50,9 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             },
             {
                 "name": FinishPrototypeDiscussion0000ToolConfig.get_tool_name()
+            },
+            {
+                "name": AddCollaboratorToDefaultReposFfe7ToolConfig.get_tool_name()
             }
         ],
         "messages": [
@@ -58,6 +62,5 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             }
         ],
         "tool_choice": "auto",
-        "max_iteration": 30,
-        "approve": False
+        "max_iteration": 30
     }
