@@ -1,16 +1,32 @@
 {
   "version": "1.0",
-  "name": "Functional Requirements to Prototype Workflow",
+  "name": "edit_general_application_java",
   "desc": "Complete workflow to transform functional requirements into a working application",
   "initialState": "initial_state",
   "active": true,
+  "criterion": {
+    "type": "simple",
+    "jsonPath": "$.workflow_name",
+    "operation": "EQUALS",
+    "value": "edit_general_application_java"
+  },
   "states": {
     "initial_state": {
       "transitions": [
         {
           "name": "start_edit_application",
           "next": "edit_application_requested",
-          "manual": false
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_editing_started",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
         },
         {
           "name": "retry",
@@ -45,7 +61,7 @@
         }
       ]
     },
-    "process_user_input": {
+    "processing_user_input": {
       "transitions": [
         {
           "name": "submit_answer",
@@ -58,13 +74,18 @@
           "manual": true
         },
         {
-          "name": "retry",
-          "next": "process_user_input",
+          "name": "manual_approve",
+          "next": "edit_application_requested",
           "manual": true
         },
         {
-          "name": "fail_process_user_input",
-          "next": "locked_process_user_input",
+          "name": "retry",
+          "next": "processing_user_input",
+          "manual": true
+        },
+        {
+          "name": "fail_processing_user_input",
+          "next": "locked_processing_user_input",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -81,11 +102,11 @@
         }
       ]
     },
-    "locked_process_user_input": {
+    "locked_processing_user_input": {
       "transitions": [
         {
           "name": "unlock",
-          "next": "process_user_input",
+          "next": "processing_user_input",
           "manual": true
         }
       ]
@@ -93,16 +114,24 @@
     "edit_application_requested": {
       "transitions": [
         {
-          "name": "process_user_input",
-          "next": "edit_application_requested_processing",
+          "name": "edit_application_requested_processing",
+          "next": "processing_user_input",
           "manual": false,
           "processors": [
+            {
+              "name": "MessageProcessor.notify_editing_started",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            },
             {
               "name": "AgentProcessor.process_user_input_2185",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -136,111 +165,6 @@
         {
           "name": "unlock",
           "next": "edit_application_requested",
-          "manual": true
-        }
-      ]
-    },
-    "edit_application_requested_processing": {
-      "transitions": [
-        {
-          "name": "edit_application_requested_processing",
-          "next": "process_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "function",
-            "function": {
-              "name": "FunctionProcessor.not_stage_completed_6044",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          }
-        },
-        {
-          "name": "process_migration_confirmation_success",
-          "next": "lock_chat",
-          "manual": false,
-          "criterion": {
-            "type": "function",
-            "function": {
-              "name": "FunctionProcessor.is_stage_completed_c00a",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          }
-        },
-        {
-          "name": "retry",
-          "next": "edit_application_requested_processing",
-          "manual": true
-        },
-        {
-          "name": "fail_edit_application_requested_processing",
-          "next": "locked_edit_application_requested_processing",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_edit_application_requested_processing": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "edit_application_requested_processing",
-          "manual": true
-        }
-      ]
-    },
-    "lock_chat": {
-      "transitions": [
-        {
-          "name": "lock_chat",
-          "next": "locked_chat",
-          "manual": false
-        },
-        {
-          "name": "retry",
-          "next": "lock_chat",
-          "manual": true
-        },
-        {
-          "name": "fail_lock_chat",
-          "next": "locked_lock_chat",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_lock_chat": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "lock_chat",
           "manual": true
         }
       ]

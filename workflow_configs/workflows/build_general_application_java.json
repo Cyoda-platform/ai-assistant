@@ -224,7 +224,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -274,7 +274,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -324,7 +324,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -374,7 +374,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -424,7 +424,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -474,7 +474,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -574,7 +574,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -624,7 +624,7 @@
               "name": "FunctionProcessor.not_stage_completed_f57d",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           }
@@ -639,7 +639,7 @@
               "name": "FunctionProcessor.is_stage_completed_e7bf",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           }
@@ -689,7 +689,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -739,7 +739,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -789,7 +789,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -889,7 +889,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -939,7 +939,7 @@
               "name": "FunctionProcessor.not_stage_completed_5e0e",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           }
@@ -954,7 +954,7 @@
               "name": "FunctionProcessor.is_stage_completed_8a02",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           }
@@ -1049,7 +1049,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1099,7 +1099,7 @@
               "name": "FunctionProcessor.not_stage_completed_f259",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           }
@@ -1114,7 +1114,7 @@
               "name": "FunctionProcessor.is_stage_completed_b809",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           }
@@ -1169,7 +1169,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1219,7 +1219,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1269,7 +1269,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1319,7 +1319,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1369,7 +1369,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1419,7 +1419,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1469,7 +1469,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1519,7 +1519,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1569,7 +1569,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1669,7 +1669,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1719,7 +1719,7 @@
               "name": "FunctionProcessor.not_stage_completed_discuss_configs_0000",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           }
@@ -1734,7 +1734,7 @@
               "name": "FunctionProcessor.is_stage_completed_discuss_configs_0000",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           }
@@ -1784,7 +1784,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1834,7 +1834,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]

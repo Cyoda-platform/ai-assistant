@@ -81,8 +81,6 @@ The method should have simulations for each Processor and Criteria (Conditions).
 If the entity has a processor call run{ProcessorName}() method, same for criteria.
 For example:
 
-  
-
 ```java
 private void process{EntityName}(String technicalId, EntityName entity) {
 

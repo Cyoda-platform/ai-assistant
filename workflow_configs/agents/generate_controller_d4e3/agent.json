@@ -4,10 +4,13 @@
   "model": {},
   "tools": [
     {
-      "name": "list_directory_files_1161"
+      "name": "list_directory_files_1ab7"
     },
     {
       "name": "read_file_2766"
+    },
+    {
+      "name": "add_application_resource_3d0b"
     }
   ],
   "memory_tags": [
@@ -16,11 +19,6 @@
   "input": {
     "local_fs": [
       "src/main/java/com/java_template/prototype/functional_requirement.md"
-    ]
-  },
-  "output": {
-    "local_fs": [
-      "src/main/java/com/java_template/application/controller/Controller.java"
     ]
   },
   "messages": [

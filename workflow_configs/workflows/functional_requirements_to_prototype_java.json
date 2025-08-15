@@ -1,9 +1,15 @@
 {
   "version": "1.0",
-  "name": "Functional Requirements to Prototype Workflow",
+  "name": "functional_requirements_to_prototype_java",
   "desc": "Complete workflow to transform functional requirements into a working application",
   "initialState": "initial_state",
   "active": true,
+  "criterion": {
+    "type": "simple",
+    "jsonPath": "$.workflow_name",
+    "operation": "EQUALS",
+    "value": "functional_requirements_to_prototype_java"
+  },
   "states": {
     "initial_state": {
       "transitions": [
@@ -57,7 +63,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -156,7 +162,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -255,7 +261,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -354,7 +360,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -396,7 +402,7 @@
       "transitions": [
         {
           "name": "implement_business_logic",
-          "next": "notify_processors_enhanced",
+          "next": "generate_tests_for_processors",
           "manual": false,
           "processors": [
             {
@@ -404,7 +410,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -438,6 +444,56 @@
         {
           "name": "unlock",
           "next": "implement_business_logic",
+          "manual": true
+        }
+      ]
+    },
+    "generate_tests_for_processors": {
+      "transitions": [
+        {
+          "name": "generate_tests_for_processors",
+          "next": "notify_processors_enhanced",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.generate_tests_for_processors",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "generate_tests_for_processors",
+          "manual": true
+        },
+        {
+          "name": "fail_generate_tests_for_processors",
+          "next": "locked_generate_tests_for_processors",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_generate_tests_for_processors": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "generate_tests_for_processors",
           "manual": true
         }
       ]
@@ -499,11 +555,11 @@
           "manual": false,
           "processors": [
             {
-              "name": "FunctionProcessor.run_compilation_h8i9",
+              "name": "AgentProcessor.compile_project_f6g5",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -602,7 +658,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -751,7 +807,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -801,7 +857,7 @@
               "name": "FunctionProcessor.not_stage_completed_discuss_prototype_0000",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           }
@@ -816,7 +872,7 @@
               "name": "FunctionProcessor.is_stage_completed_discuss_prototype_0000",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           }
@@ -866,7 +922,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -966,7 +1022,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1016,7 +1072,7 @@
               "name": "FunctionProcessor.not_stage_completed_6044",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           }
@@ -1031,7 +1087,7 @@
               "name": "FunctionProcessor.is_stage_completed_c00a",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           }
@@ -1081,7 +1137,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1131,7 +1187,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -1181,7 +1237,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
+                "responseTimeoutMs": 900000
               }
             }
           ]

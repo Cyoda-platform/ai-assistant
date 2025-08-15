@@ -11,8 +11,12 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get prompt configuration factory"""
     return lambda params=None: """
 You are Java 21 Spring Boot 3 developer. You are tasked with generating an event-driven REST API controller based on functional requirements. 
-The controller must be dull – it only handles entity persistence and triggers workflows indirectly.
-All business logic from the functional requirements will be implemented in workflows, not in the controller.
+The controller must be dull – it is just a proxy to the entity service.
+Add a controller to 'src/main/java/com/java_template/application/controller/{EntityName}Controller.java' for each entity identified in the functional requirements.
+You can use 'list_directory_files' to list all files in a directory and 'read_file' to read the content of a file.
+Entity classes are located in 'src/main/java/com/java_template/application/entity'.
+
+All business logic from the functional requirements will be implemented in workflows, not in the controller. So just proxy the requests to the entity service.
 
 1. DISCOVERY PHASE (MANDATORY)
    You must use the following tools:
@@ -27,12 +31,15 @@ Optional:
 5. Understand entity structure and fields from the entity class files
 6. Plan event-driven endpoints following the EDA pattern
 
-Event-Driven Flow Pattern (EDA-Compliant):
+🔍 **PHASE 3: IMPLEMENTATION**
 
-1. POST /entityName → Create entity → Save with entityService.addItem → Return response. If you have an orchestration entity (like Job, Task, Workflow), it should have a POST endpoint to create it, and a GET by technicalId to retrieve it. You will most likely not need any other POST endpoints for business entities as saving business entity is done via the process method.
-2. GET /entityName/{id} → Retrieve from cache by UUID → Return entity. Each entity should have a GET by technicalId.
-3. Only if the user explicitly asked for update: POST /entityName/{id}/update → Save with entityService.updateItem → Return response
-4. Only if the user explicitly asked for delete/deactivate: POST /entityName/{id}/deactivate → delete with entityService.deleteItem → Return confirmation (still avoid unless necessary)
+📝 **CONTROLLER GENERATION:**
+
+For each entity add a controller to 'src/main/java/com/java_template/application/controller/{EntityName}Controller.java' with the required endpoints:
+ Use add_application_resource with:
+- resource_path: 'src/main/java/com/java_template/application/controller/{EntityName}Controller.java'
+Use camelCase for class names, starting with capital letter
+- file_contents: complete Java code for the controller class
 
 Controller Responsibilities:
 
@@ -43,22 +50,13 @@ Controller Responsibilities:
 * Return appropriate HTTP responses
 * Handle exceptions with ExecutionException unwrapping for cause inspection
 
-Do Not Implement:
-
-* Business rules or logic
-* Complex validations
-* Calculations or transformations
-* External API calls
-* Workflow orchestration
-* Data processing beyond basic entity persistence
+Do Not Implement any business logic in the controller.
 
 Entity Usage:
 
 * Import and reuse existing entity classes from their correct versioned packages under 'src/main/java/com/java_template/application/entity'
 * Do not create static classes for entities
 * Add static classes only for request/response DTOs that represent request/response payloads from the functional requirements
-* Do not create any other classes
-* Do not modify existing entity classes
 * Request/Response DTOs must be created as static classes within the controller and must match the request/response payloads from the functional requirements
 * Request/Response DTOs must be created with io.swagger.v3.oas.annotations.media.Schema annotations
 * Entity classes must be reused as-is
@@ -138,13 +136,6 @@ Exception Handling:
 * For ExecutionException, unwrap the cause: if NoSuchElementException, return HTTP 404; if IllegalArgumentException, return HTTP 400; otherwise return HTTP 500
 * Return HTTP 500 for all other exceptions
 
-Response Format:
-* Respond with only the Java code
-* No markdown formatting or explanations
-* Use regular Java comments only
-* Single Controller class with all endpoints
-* Include a nested static DTO class TechnicalIdResponse with a technicalId property and getter
-
 Swagger Documentation:
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -163,11 +154,4 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 * Include @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = YourResponseDto.class))) for responses
 and any other appropriate Swagger annotations
 
-Remember:
-* Start with the DISCOVERY PHASE using the tools
-* Follow the Event-Driven Flow Pattern
-* Keep the controller simple and dull – all business intelligence goes in workflows
-* Reuse existing entity classes, don’t recreate them
-
-RESPONSE FORMAT: Return Java code only, ready to paste into the file, no comments or explanations or markdown.
 """

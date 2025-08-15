@@ -34,7 +34,7 @@ class WorkflowNameResolver:
             if type == "build":
                 return const.ModelName.GEN_APP_ENTITY_JAVA.value
             if type == "edit":
-                return const.ModelName.EDIT_GEN_APP_ENTITY_JAVA.value
+                return const.ModelName.EDIT_GENERAL_APPLICATION_JAVA.value
         else:
             if type == "build":
                 return const.ModelName.GEN_APP_ENTITY_PYTHON.value

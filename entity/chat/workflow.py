@@ -311,7 +311,8 @@ class ChatWorkflow(Workflow):
             'generate_workflow_orchestrators': self.workflow_orchestrator_service.generate_workflow_orchestrators,
 
             # Prototype Generation
-            'generate_prototype_sketch_2269': self.generate_prototype_sketch_service.generate_prototype_sketch_2269
+            'generate_prototype_sketch_2269': self.generate_prototype_sketch_service.generate_prototype_sketch_2269,
+            'edit_general_application_java': self.application_builder_service.edit_general_application_java,
 
         }
 

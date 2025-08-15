@@ -1,4 +1,5 @@
 import logging
+import asyncio
 import common.config.const as const
 from typing import Tuple
 
@@ -56,32 +57,88 @@ async def trigger_manual_transition(
 
     # last child entity always takes precedence
     # Recursive DFS that only unlocks on the root fallback
+    # IMPROVED VERSION: Handles race conditions and service failures
     async def traverse_and_process(
             entity: ChatEntity,
             technical_id: str,
-            is_root: bool = False
+            is_root: bool = False,
+            max_retries: int = 3,
+            retry_delay: float = 0.1
     ) -> bool:
         # If locked and has children, try them first
         if entity.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) and entity.child_entities:
-            for child_id in reversed(entity.child_entities):
-                child = await entity_service.get_item(
-                    token=cyoda_auth_service,
-                    entity_model=const.ModelName.CHAT_ENTITY.value,
-                    entity_version=config.ENTITY_VERSION,
-                    technical_id=child_id
-                )
+            # Create a stable copy of child_entities to avoid concurrent modification issues
+            child_entities_copy = list(entity.child_entities)
+
+            # Log the traversal for debugging
+            logger.debug(f"Traversing entity {technical_id} with {len(child_entities_copy)} children")
+
+            for child_id in reversed(child_entities_copy):
+                # Retry mechanism for entity retrieval to handle race conditions
+                child = None
+                last_exception = None
+
+                for attempt in range(max_retries):
+                    try:
+                        child = await entity_service.get_item(
+                            token=cyoda_auth_service,
+                            entity_model=const.ModelName.CHAT_ENTITY.value,
+                            entity_version=config.ENTITY_VERSION,
+                            technical_id=child_id
+                        )
+
+                        # Validate that we got a valid entity with required attributes
+                        if child and hasattr(child, 'current_state') and child.current_state is not None:
+                            logger.debug(f"Successfully retrieved child {child_id} with state: {child.current_state}")
+                            break
+                        else:
+                            # Log warning and retry
+                            logger.warning(f"Retrieved invalid child entity {child_id} (missing current_state), attempt {attempt + 1}")
+                            if attempt < max_retries - 1:
+                                await asyncio.sleep(retry_delay)
+
+                    except Exception as e:
+                        last_exception = e
+                        logger.warning(f"Failed to retrieve child entity {child_id}, attempt {attempt + 1}: {e}")
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(retry_delay)
+                        else:
+                            # Log final failure
+                            logger.error(f"Failed to retrieve child entity {child_id} after {max_retries} attempts: {e}")
+
+                # Skip if we couldn't retrieve the child entity
+                if not child or not hasattr(child, 'current_state') or child.current_state is None:
+                    logger.warning(f"Skipping child entity {child_id} - could not retrieve valid entity")
+                    continue
+
+                # Double-check the current state after retrieval (race condition protection)
+                current_state = getattr(child, 'current_state', '')
+                child_entities = getattr(child, 'child_entities', [])
+
+                logger.debug(f"Processing child {child_id} with state: {current_state}, has children: {bool(child_entities)}")
 
                 # Recurse into further-locked nodes
-                if child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) and child.child_entities:
-                    if await traverse_and_process(child, child_id, False):
+                if current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) and child_entities:
+                    logger.debug(f"Recursing into locked child {child_id}")
+                    if await traverse_and_process(child, child_id, False, max_retries, retry_delay):
                         return True
 
                 # If we find an unlocked child, process it and stop
-                if not child.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value):
-                    return await process_entity(child, child_id)
+                if not current_state.startswith(const.TransitionKey.LOCKED_CHAT.value):
+                    logger.info(f"Found unlocked child entity {child_id} with state: {current_state}")
+                    processed = await process_entity(child, child_id)
+                    retry_count = 3
+                    while not processed and retry_count > 0:
+                        logger.exception(f"Failed to process entity {child_id}, retrying...")
+                        processed = await process_entity(child, child_id)
+                        retry_count -= 1
+                    if not processed:
+                        raise Exception(f"Failed to process entity {child_id} after {max_retries} attempts")
+                    return True
 
             # No unlocked descendants—only unlock if this is the root
             if is_root:
+                logger.info(f"No unlocked descendants found, unlocking root entity {technical_id}")
                 entity.locked = False
                 # launch a transition to clear the lock
                 await _launch_transition(
@@ -94,8 +151,11 @@ async def trigger_manual_transition(
                 return await process_entity(entity, technical_id)
             else:
                 # intermediate locked node but nothing to do here
+                logger.debug(f"Intermediate locked node {technical_id} - no action taken")
                 return False
+
         elif entity.current_state.startswith(const.TransitionKey.LOCKED_CHAT.value) and not entity.child_entities:
+            logger.info(f"Unlocking leaf entity {technical_id}")
             entity.locked = False
             # launch a transition to clear the lock
             await _launch_transition(
@@ -106,7 +166,9 @@ async def trigger_manual_transition(
                 transition=const.TransitionKey.UNLOCK_CHAT.value
             )
             return await process_entity(entity, technical_id)
+
         # Otherwise (not locked or no children): process immediately
+        logger.info(f"Processing unlocked entity {technical_id} with state: {entity.current_state}")
         return await process_entity(entity, technical_id)
 
     # Kick off with is_root=True so only chat itself can be unlocked

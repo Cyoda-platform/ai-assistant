@@ -504,7 +504,6 @@ class GitHubOperationsService(BaseWorkflowService):
                     # Always retrieve logs for completed workflows (success or failure)
                     self.logger.info(f"Workflow completed with conclusion '{conclusion}', retrieving logs...")
                     logs_content = await self._download_workflow_logs(owner, repo, run_id)
-
                     if logs_content:
                         self.logger.info(f"Retrieved {len(logs_content)} characters of logs")
                         # Return just the extracted log content as text

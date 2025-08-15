@@ -13,6 +13,7 @@ from workflow_config_code.tools.add_collaborator_to_default_repos_ffe7.tool impo
 from workflow_config_code.tools.add_application_resource_3d0b.tool import AddApplicationResource3d0bToolConfig
 from workflow_config_code.tools.get_cyoda_guidelines_c748.tool import GetCyodaGuidelinesC748ToolConfig
 from workflow_config_code.tools.list_directory_files_1ab7.tool import ListDirectoryFiles1ab7ToolConfig
+from workflow_config_code.tools.run_github_action_ozv1.tool import RunGithubActionOzv1ToolConfig
 from workflow_config_code.tools.web_search_7e4b.tool import WebSearch7e4bToolConfig
 from workflow_config_code.tools.read_link_c472.tool import ReadLinkC472ToolConfig
 from workflow_config_code.tools.web_scrape_bc54.tool import WebScrapeBc54ToolConfig
@@ -50,6 +51,9 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             },
             {
                 "name": AddCollaboratorToDefaultReposFfe7ToolConfig.get_tool_name()
+            },
+            {
+                "name": RunGithubActionOzv1ToolConfig.get_tool_name()
             }
         ],
         "messages": [

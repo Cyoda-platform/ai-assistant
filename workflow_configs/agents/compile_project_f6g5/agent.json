@@ -8,6 +8,12 @@
     },
     {
       "name": "add_application_resource_3d0b"
+    },
+    {
+      "name": "list_directory_files_1161"
+    },
+    {
+      "name": "read_file_2766"
     }
   ],
   "memory_tags": [
@@ -18,5 +24,10 @@
       "role": "user",
       "content_from_file": "compile_project_f6g5"
     }
-  ]
+  ],
+  "output": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/project_compilation.log"
+    ]
+  }
 }

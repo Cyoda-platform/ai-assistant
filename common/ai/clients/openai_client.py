@@ -41,7 +41,7 @@ class AsyncOpenAIClient:
             logger.info(f"Invoking openai client with messages: {json.dumps(messages[-1], default=custom_serializer)}")
         except Exception as e:
             logger.exception(e)
-        if model.model_name in ["o4-mini"]:
+        if model.model_name in ["o4-mini", "gpt-5-mini"]:
             response = await self.client.chat.completions.create(
                 model=model.model_name,
                 max_completion_tokens=model.max_tokens,

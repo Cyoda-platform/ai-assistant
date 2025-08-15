@@ -18,13 +18,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "repository_name": {
-                        "type": "string",
-                        "description": "Repository name (e.g., 'java-client-template')",
-                        "enum": [
-                            "java-client-template"
-                        ]
-                    },
                     "workflow_id": {
                         "type": "string",
                         "description": "Workflow ID or filename (e.g., 'build.yml')",
@@ -39,10 +32,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                             "Cyoda-platform"
                         ]
                     },
-                    "git_branch": {
-                        "type": "string",
-                        "description": "Git reference - branch or tag (optional, defaults to 'main')"
-                    },
                     "option": {
                         "type": "string",
                         "description": "Git option (optional, defaults to 'compile-only')",
@@ -52,10 +41,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 },
                 "required": [
-                    "repository_name",
                     "workflow_id",
                     "owner",
-                    "git_branch",
                     "option"
                 ],
                 "additionalProperties": False
