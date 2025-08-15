@@ -21,15 +21,5 @@ Add a Ready-to-Copy section with an example user response in Markdown format.
 ```markdown
 # Example Ready-to-Copy User Response
 ```
-Please just ask the questions based on the requirement, use tools only if necessary.
-Your response example:
-
-Hello, thank you for your requirement! I will do my best to assist you.
-Could you please help me clarify a few questions?
- Do I understand right that the main data models are: 
- What actions/operations would you like to perform on the data?
- Do you have any particular workflows in mind? (or discuss the provided ones)
-
 User Requirement:
-
  """

@@ -24,20 +24,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "publish": True,
         "allow_anonymous_users": True,
         "model": {},
-        "tools": [
-            {
-                "name": AddCollaboratorToDefaultReposFfe7ToolConfig.get_tool_name()
-            },
-            {
-                "name": WebSearch7e4bToolConfig.get_tool_name()
-            },
-            {
-                "name": ReadLinkC472ToolConfig.get_tool_name()
-            },
-            {
-                "name": WebScrapeBc54ToolConfig.get_tool_name()
-            }
-        ],
         "memory_tags": [
             "process_initial_requirement"
         ],

@@ -466,7 +466,7 @@
       "transitions": [
         {
           "name": "process_initial_question",
-          "next": "app_requirements_requested",
+          "next": "app_requirements_finalized",
           "manual": false,
           "processors": [
             {
@@ -512,65 +512,15 @@
         }
       ]
     },
-    "app_requirements_requested": {
+    "app_requirements_finalized": {
       "transitions": [
         {
           "name": "submit_answer",
-          "next": "app_requirements_requested_submitted_answer",
-          "manual": true
-        },
-        {
-          "name": "manual_approve",
-          "next": "app_requirements_finalized",
-          "manual": true
-        },
-        {
-          "name": "rollback",
-          "next": "app_requirements_requested_submitted_answer",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "app_requirements_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_app_requirements_requested",
-          "next": "locked_app_requirements_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_app_requirements_requested": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "app_requirements_requested",
-          "manual": true
-        }
-      ]
-    },
-    "app_requirements_requested_submitted_answer": {
-      "transitions": [
-        {
-          "name": "process_user_input",
-          "next": "app_requirements_requested_processing",
-          "manual": false,
+          "next": "proceeded_to_functional_requirements",
+          "manual": true,
           "processors": [
             {
-              "name": "AgentProcessor.process_user_input_2c31",
+              "name": "MessageProcessor.ask_about_api_063f",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
@@ -580,109 +530,9 @@
           ]
         },
         {
-          "name": "retry",
-          "next": "app_requirements_requested_submitted_answer",
-          "manual": true
-        },
-        {
-          "name": "fail_app_requirements_requested_submitted_answer",
-          "next": "locked_app_requirements_requested_submitted_answer",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_app_requirements_requested_submitted_answer": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "app_requirements_requested_submitted_answer",
-          "manual": true
-        }
-      ]
-    },
-    "app_requirements_requested_processing": {
-      "transitions": [
-        {
-          "name": "process_application_requirement_processing",
-          "next": "app_requirements_requested",
-          "manual": false,
-          "criterion": {
-            "type": "function",
-            "function": {
-              "name": "FunctionProcessor.not_stage_completed_f57d",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000
-              }
-            }
-          }
-        },
-        {
-          "name": "process_application_requirement_success",
-          "next": "app_requirements_finalized",
-          "manual": false,
-          "criterion": {
-            "type": "function",
-            "function": {
-              "name": "FunctionProcessor.is_stage_completed_e7bf",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000
-              }
-            }
-          }
-        },
-        {
-          "name": "retry",
-          "next": "app_requirements_requested_processing",
-          "manual": true
-        },
-        {
-          "name": "fail_app_requirements_requested_processing",
-          "next": "locked_app_requirements_requested_processing",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_app_requirements_requested_processing": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "app_requirements_requested_processing",
-          "manual": true
-        }
-      ]
-    },
-    "app_requirements_finalized": {
-      "transitions": [
-        {
-          "name": "ask_about_api",
+          "name": "manual_approve",
           "next": "proceeded_to_functional_requirements",
-          "manual": false,
+          "manual": true,
           "processors": [
             {
               "name": "MessageProcessor.ask_about_api_063f",

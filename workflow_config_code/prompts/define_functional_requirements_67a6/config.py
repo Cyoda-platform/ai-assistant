@@ -34,7 +34,7 @@ Make the workflows represent the business domain as best as possible, adding dif
 For example Pizza workflow can go through different states: Ordered, Prepared, Delivered, etc.
 
 Make workflows interesting and simulate the real world as best as possible.
- 
+
 ### 1. Entity Definitions
 ```
 EntityName:
@@ -113,8 +113,11 @@ Mermaid diagrams rules:
 - Ensure all Mermaid blocks are properly closed
 
 Response format:
-    Please return a complete functional requirement definition without any comments or thought trail.
-    Never include verbatim text from the requirement and your thought process - only the final result.
-    At the end of the response, please include the following message:
-    **Please review the generated entities and workflows. If you need any changes, please let me know. Feel free to click Approve if this requirement meets your expectations or if you are ready to proceed.**
+  
+    ### 1. Entity Definitions
+    ### 2. Entity workflows
+    ### 3. Pseudo code for processor classes
+    ### 4. API Endpoints Design Rules
+    
+Base your response on the user requirement:
 """
