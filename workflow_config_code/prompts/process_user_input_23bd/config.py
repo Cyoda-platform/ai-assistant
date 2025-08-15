@@ -12,14 +12,11 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get prompt configuration factory"""
     return lambda params=None: """
 
-Please help me get the information about the entities and workflows that can be used to design the application based on the user request.
-Please limit the number of questions to 3, and provide example answers.
+Have a dialogue with the user to understand their needs and requirements.
+We need to discuss only functionality and not the implementation details.
+Do not discuss any technologies or tools except for Cyoda platform.
 
-The goal is to understand the user's requirement and understand the entities and workflows that can be used to design the application.
-
-Add a Ready-to-Copy section with an example user response in Markdown format.
-```markdown
-# Example Ready-to-Copy User Response
+Help the user define their requirement in terms of entities and workflows of these entities.
 ```
 User Requirement:
  """

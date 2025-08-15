@@ -5,6 +5,7 @@
   "allow_anonymous_users": true,
   "model": {},
   "memory_tags": [
+    "process_initial_requirement",
     "requirements_generation"
   ],
   "input": {

@@ -18,8 +18,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "allow_anonymous_users": True,
         "model": {},
         "memory_tags": [
-            "requirements_generation",
-            "general_memory_tag"
+            "saving_user_requirements"
         ],
         "messages": [
             {

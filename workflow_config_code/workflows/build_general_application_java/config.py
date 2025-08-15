@@ -307,7 +307,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "process_initial_question",
-                        "next": "app_requirements_finalized",
+                        "next": "app_requirements_requested",
                         "manual": False,
                         "processors": [
                             {
@@ -322,15 +322,34 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 ]
             },
-            "app_requirements_finalized": {
+            "app_requirements_requested": {
                 "transitions": [
                     {
                         "name": "submit_answer",
-                        "next": "proceeded_to_functional_requirements",
-                        "manual": True,
+                        "next": "app_requirements_requested_submitted_answer",
+                        "manual": True
+                    },
+                    {
+                        "name": "manual_approve",
+                        "next": "app_requirements_finalized",
+                        "manual": True
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "app_requirements_requested_submitted_answer",
+                        "manual": True
+                    }
+                ]
+            },
+            "app_requirements_requested_submitted_answer": {
+                "transitions": [
+                    {
+                        "name": "process_user_input",
+                        "next": "app_requirements_requested_processing",
+                        "manual": False,
                         "processors": [
                             {
-                                "name": AskAboutApi063fMessageConfig.get_name(),
+                                "name": ProcessUserInput2c31AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",
@@ -338,11 +357,49 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 }
                             }
                         ]
+                    }
+                ]
+            },
+            "app_requirements_requested_processing": {
+                "transitions": [
+                    {
+                        "name": "process_application_requirement_processing",
+                        "next": "app_requirements_requested",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": NotStageCompletedF57dToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        }
                     },
                     {
-                        "name": "manual_approve",
+                        "name": "process_application_requirement_success",
+                        "next": "app_requirements_finalized",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": IsStageCompletedE7bfToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "app_requirements_finalized": {
+                "transitions": [
+                    {
+                        "name": "ask_about_api",
                         "next": "proceeded_to_functional_requirements",
-                        "manual": True,
+                        "manual": False,
                         "processors": [
                             {
                                 "name": AskAboutApi063fMessageConfig.get_name(),
