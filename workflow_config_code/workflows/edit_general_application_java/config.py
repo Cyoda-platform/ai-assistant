@@ -71,14 +71,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "manual": False,
                         "processors": [
                             {
-                                "name": NotifyEditingStartedMessageConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 300000
-                                }
-                            },
-                            {
                                 "name": ProcessUserInput2185AgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {

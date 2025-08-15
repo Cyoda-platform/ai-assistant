@@ -33,7 +33,7 @@ We’re not tackling non-functional requirements yet—this stage is all about g
 
 Let’s make this prototype work smoothly together! 🚀
 
-It’ll be ready in about 5 minutes ⏳. I’ll notify you as soon as it’s done.
+It’ll be ready in about 10 minutes ⏳. I’ll notify you as soon as it’s done.
 
 🚧 Initial prototype is now in progress... 🚀💡
 """

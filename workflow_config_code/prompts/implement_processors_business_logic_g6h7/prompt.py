@@ -70,7 +70,8 @@ EntityService Operations Available:
    technicalId=UUID.fromString(technicalId),
    entity=data
    )
-   
+NEVER use update operation on this entity. This entity will be persisted automatically by Cyoda based on the workflow. Just change the entity state (data) as needed. 
+You can only update other entities, not this one.
 4. DELETE:
    CompletableFuture<UUID> deletedId = entityService.deleteItem(
    entityModel={EntityName}.ENTITY_NAME,

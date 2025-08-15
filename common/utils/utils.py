@@ -28,6 +28,56 @@ logger = logging.getLogger(__name__)
 _file_operations_lock = asyncio.Lock()
 _git_operations_lock = asyncio.Lock()
 
+# Per-branch locks to allow concurrent operations on different branches
+_branch_locks = {}
+_branch_lock_creation_lock = asyncio.Lock()
+
+# Per-repository semaphores to limit concurrent operations on the same repository
+_repository_semaphores = {}
+_repository_semaphore_creation_lock = asyncio.Lock()
+
+async def get_branch_lock(git_branch_id: str, repository_name: str) -> asyncio.Lock:
+    """Get or create a lock for a specific branch and repository combination."""
+    key = f"{repository_name}:{git_branch_id}"
+    async with _branch_lock_creation_lock:
+        if key not in _branch_locks:
+            _branch_locks[key] = asyncio.Lock()
+        return _branch_locks[key]
+
+async def get_repository_semaphore(repository_name: str, max_concurrent: int = 3) -> asyncio.Semaphore:
+    """
+    Get or create a semaphore for a specific repository to limit concurrent operations.
+    This prevents overwhelming the remote repository and reduces conflicts.
+    """
+    async with _repository_semaphore_creation_lock:
+        if repository_name not in _repository_semaphores:
+            _repository_semaphores[repository_name] = asyncio.Semaphore(max_concurrent)
+        return _repository_semaphores[repository_name]
+
+async def _safe_cleanup_directory(directory_path: str, max_retries: int = 3):
+    """
+    Safely clean up a directory with retry logic to handle concurrent access issues.
+    """
+    for attempt in range(max_retries):
+        try:
+            if os.path.exists(directory_path):
+                await asyncio.to_thread(shutil.rmtree, directory_path)
+                logger.info(f"Successfully cleaned up directory: {directory_path}")
+                return
+        except PermissionError as e:
+            if attempt < max_retries - 1:
+                logger.warning(f"Permission error cleaning up {directory_path}, retrying in {attempt + 1}s: {e}")
+                await asyncio.sleep(attempt + 1)
+                continue
+            else:
+                logger.error(f"Failed to clean up directory {directory_path} after {max_retries} attempts: {e}")
+        except Exception as e:
+            logger.warning(f"Failed to clean up directory {directory_path} on attempt {attempt + 1}: {e}")
+            if attempt == max_retries - 1:
+                logger.error(f"Final cleanup failure for {directory_path}: {e}")
+                break
+            await asyncio.sleep(0.5)
+
 
 class ValidationErrorException(Exception):
     """Custom exception for validation errors."""
@@ -705,81 +755,171 @@ def format_json_if_needed(data, key):
         print(f"Data at {key} is not a valid JSON object: {value}")  # Optionally log this or handle it
     return data
 
-async def clone_repo(git_branch_id: str, repository_name: str):
+async def clone_repo(git_branch_id: str, repository_name: str, operation_id: str = None):
     """
-    Clone the GitHub repository to the target directory.
-    If the repository should not be copied, it ensures the target directory exists.
+    Clone the GitHub repository to a unique target directory per operation.
+    Ensures safe concurrent operations by using unique directories, per-branch locking,
+    and repository-level semaphores to prevent overwhelming the remote repository.
     """
-    async with _git_operations_lock:
-        repository_url = config.REPOSITORY_URL.format(repository_name=repository_name)
-        clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
+    if operation_id is None:
+        operation_id = str(generate_uuid())
 
-        if await repo_exists(clone_dir):
-            await _git_pull_internal(git_branch_id=git_branch_id, repository_name=repository_name)
-            return
+    # Use repository semaphore to limit concurrent operations on the same repository
+    repo_semaphore = await get_repository_semaphore(repository_name, max_concurrent=3)
 
-        if config.CLONE_REPO != "true":
-            # Create the directory asynchronously using asyncio.to_thread
-            await asyncio.to_thread(os.makedirs, clone_dir, exist_ok=True)
-            logger.info(f"Target directory '{clone_dir}' is created.")
-            return
+    async with repo_semaphore:  # Limit concurrent operations per repository
+        # Use per-branch lock for clone operations to prevent conflicts
+        branch_lock = await get_branch_lock(git_branch_id, repository_name)
 
-        # Asynchronously clone the repository using subprocess
+        async with branch_lock:
+            repository_url = config.REPOSITORY_URL.format(repository_name=repository_name)
+            # Use unique directory per operation to prevent concurrent operations from interfering
+            clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}_{operation_id}"
 
-        clone_process = await asyncio.create_subprocess_exec(
-            'git', 'clone', repository_url, clone_dir,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        stdout, stderr = await clone_process.communicate()
+            if await repo_exists(clone_dir):
+                logger.info(f"Clone directory already exists: {clone_dir}")
+                # Ensure we have the latest changes
+                pull_result = await _git_pull_internal(git_branch_id=git_branch_id, repository_name=repository_name, clone_dir=clone_dir)
+                if pull_result is None:
+                    logger.error(f"Failed to pull latest changes for existing clone: {clone_dir}")
+                    return None
+                return clone_dir
 
-        if clone_process.returncode != 0:
-            logger.error(f"Error during git clone: {stderr.decode()}")
-            return
+            if config.CLONE_REPO != "true":
+                # Create the directory asynchronously using asyncio.to_thread
+                await asyncio.to_thread(os.makedirs, clone_dir, exist_ok=True)
+                logger.info(f"Target directory '{clone_dir}' is created.")
+                return clone_dir
 
-        # Asynchronously checkout the branch using subprocess
-        checkout_process = await asyncio.create_subprocess_exec(
-            'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'checkout', '-b', str(git_branch_id),
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        stdout, stderr = await checkout_process.communicate()
+            logger.info(f"Cloning repository {repository_name} to {clone_dir}")
 
-        if checkout_process.returncode != 0:
-            logger.error(f"Error during git checkout: {stderr.decode()}")
-            return
+            # Asynchronously clone the repository using subprocess
+            clone_process = await asyncio.create_subprocess_exec(
+                'git', 'clone', repository_url, clone_dir,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await clone_process.communicate()
 
-        logger.info(f"Repository cloned to {clone_dir}")
+            if clone_process.returncode != 0:
+                error_msg = stderr.decode()
+                logger.error(f"Error during git clone: {error_msg}")
+                # Clean up failed clone directory
+                try:
+                    if await repo_exists(clone_dir):
+                        await asyncio.to_thread(shutil.rmtree, clone_dir)
+                except Exception as cleanup_error:
+                    logger.warning(f"Failed to clean up failed clone directory: {cleanup_error}")
+                return None
 
-        os.chdir(clone_dir)
-        await set_upstream_tracking(git_branch_id=git_branch_id)
-        await run_git_config_command()
-        await _git_pull_internal(git_branch_id=git_branch_id, repository_name=repository_name)
+            # Check if branch exists remotely, if not create it
+            branch_check_process = await asyncio.create_subprocess_exec(
+                'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+                'ls-remote', '--heads', 'origin', str(git_branch_id),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            branch_stdout, branch_stderr = await branch_check_process.communicate()
+
+            if branch_stdout.decode().strip():
+                # Branch exists remotely, checkout existing branch
+                checkout_process = await asyncio.create_subprocess_exec(
+                    'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+                    'checkout', str(git_branch_id),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+            )
+            else:
+                # Branch doesn't exist remotely, create new branch
+                checkout_process = await asyncio.create_subprocess_exec(
+                    'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+                    'checkout', '-b', str(git_branch_id),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+
+            stdout, stderr = await checkout_process.communicate()
+
+            if checkout_process.returncode != 0:
+                error_msg = stderr.decode()
+                logger.error(f"Error during git checkout: {error_msg}")
+                # Clean up failed clone directory
+                try:
+                    await asyncio.to_thread(shutil.rmtree, clone_dir)
+                except Exception as cleanup_error:
+                    logger.warning(f"Failed to clean up failed clone directory: {cleanup_error}")
+                return None
+
+            logger.info(f"Repository cloned successfully to {clone_dir}")
+
+            # Configure git settings locally for this clone to avoid conflicts
+            try:
+                # Set local git config to avoid conflicts with other operations
+                await asyncio.create_subprocess_exec(
+                    'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+                    'config', 'pull.rebase', 'false',
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+
+                # Set upstream tracking if branch exists remotely
+                if branch_stdout.decode().strip():
+                    await asyncio.create_subprocess_exec(
+                        'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+                        'branch', '--set-upstream-to', f'origin/{git_branch_id}', str(git_branch_id),
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE
+                    )
+
+                    # Pull latest changes
+                    pull_result = await _git_pull_internal(git_branch_id=git_branch_id, repository_name=repository_name, clone_dir=clone_dir)
+                    if pull_result is None:
+                        logger.warning(f"Failed to pull latest changes after clone, but continuing")
+
+            except Exception as config_error:
+                logger.error(f"Error during git configuration: {config_error}")
+                return None
+
+            return clone_dir
 
 
-async def get_project_file_name(git_branch_id, file_name, repository_name: str, folder_name=None):
+async def get_project_file_name(git_branch_id, file_name, repository_name: str, folder_name=None, operation_id: str = None):
+    if operation_id is None:
+        operation_id = str(generate_uuid())
+
+    clone_dir = await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name, operation_id=operation_id)
+    if clone_dir is None:
+        return None
+
     if folder_name:
-        project_file_name = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}/{folder_name}/{file_name}"
+        project_file_name = f"{clone_dir}/{folder_name}/{file_name}"
     else:
-        project_file_name = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}/{file_name}"
-    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
+        project_file_name = f"{clone_dir}/{file_name}"
     return project_file_name
 
 
-async def get_project_file_name_path(technical_id, git_branch_id, file_name, repository_name: str):
-    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
-    target_dir = os.path.join(f"{config.PROJECT_DIR}/{technical_id}/{repository_name}", "")
-    file_path = os.path.join(target_dir, file_name)
+async def get_project_file_name_path(technical_id, git_branch_id, file_name, repository_name: str, operation_id: str = None):
+    if operation_id is None:
+        operation_id = str(generate_uuid())
+
+    clone_dir = await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name, operation_id=operation_id)
+    if clone_dir is None:
+        return None
+
+    file_path = os.path.join(clone_dir, file_name)
     return file_path
 
 async def _save_file(_data, item, git_branch_id, repository_name: str, folder_name = None) -> str:
     """
-    Save a file (text or binary) inside a specific directory.
+    Save a file (text or binary) inside a unique directory per operation.
     Handles FileStorage objects directly.
     """
-    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
-    target_dir = os.path.join(f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}", folder_name or "")
+    operation_id = str(generate_uuid())
+    clone_dir = await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name, operation_id=operation_id)
+    if clone_dir is None:
+        raise RuntimeError(f"Failed to clone repository {repository_name} for branch {git_branch_id}")
+
+    target_dir = os.path.join(clone_dir, folder_name or "")
     file_path = os.path.join(target_dir, item)
     logger.info(f"Saving to {file_path}")
 
@@ -833,23 +973,35 @@ async def _save_file(_data, item, git_branch_id, repository_name: str, folder_na
             file_paths_to_commit.append(init_file)
 
     if config.CLONE_REPO == "true":
-        await _git_push(git_branch_id=git_branch_id,
-                        file_paths=file_paths_to_commit,
-                        commit_message=f"saved {item}",
-                        repository_name=repository_name)
+        push_success = await _git_push(git_branch_id=git_branch_id,
+                                     file_paths=file_paths_to_commit,
+                                     commit_message=f"saved {item}",
+                                     repository_name=repository_name,
+                                     clone_dir=clone_dir)
 
-    logger.info(f"pushed to git")
+        if push_success:
+            logger.info(f"Successfully pushed to git")
+        else:
+            logger.error(f"Failed to push to git after retries")
+            # Don't raise exception, just log the error
+
+    # Clean up the temporary clone directory after operation
+    await _safe_cleanup_directory(clone_dir)
 
     return str(file_path)
 
 
 async def delete_file(_data, item, git_branch_id, repository_name: str, folder_name=None) -> str:
     """
-    Delete a file inside a specific directory in a cloned repository.
+    Delete a file inside a unique directory per operation in a cloned repository.
     If config.CLONE_REPO is true, pushes the deletion to the repository.
     """
-    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
-    target_dir = os.path.join(f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}", folder_name or "")
+    operation_id = str(generate_uuid())
+    clone_dir = await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name, operation_id=operation_id)
+    if clone_dir is None:
+        raise RuntimeError(f"Failed to clone repository {repository_name} for branch {git_branch_id}")
+
+    target_dir = os.path.join(clone_dir, folder_name or "")
     file_path = os.path.join(target_dir, item)
 
     logger.info(f"Attempting to delete: {file_path}")
@@ -866,22 +1018,34 @@ async def delete_file(_data, item, git_branch_id, repository_name: str, folder_n
 
     # Push changes to Git if cloning is enabled
     if config.CLONE_REPO == "true":
-        await _git_push(git_branch_id=git_branch_id,
-                        file_paths=[item],
-                        commit_message=f"deleted {item}",
-                        repository_name=repository_name)
-        logger.info("Pushed deletion to git")
+        push_success = await _git_push(git_branch_id=git_branch_id,
+                                     file_paths=[item],
+                                     commit_message=f"deleted {item}",
+                                     repository_name=repository_name,
+                                     clone_dir=clone_dir)
+
+        if push_success:
+            logger.info("Successfully pushed deletion to git")
+        else:
+            logger.error("Failed to push deletion to git after retries")
+
+    # Clean up the temporary clone directory
+    await _safe_cleanup_directory(clone_dir)
 
     return str(file_path)
 
 
 async def delete_directory(_data, item, git_branch_id, repository_name: str, folder_name=None) -> str:
     """
-    Delete a directory and all its contents inside a specific directory in a cloned repository.
+    Delete a directory and all its contents inside a unique directory per operation in a cloned repository.
     If config.CLONE_REPO is true, pushes the deletion to the repository.
     """
-    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
-    target_dir = os.path.join(f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}", folder_name or "")
+    operation_id = str(generate_uuid())
+    clone_dir = await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name, operation_id=operation_id)
+    if clone_dir is None:
+        raise RuntimeError(f"Failed to clone repository {repository_name} for branch {git_branch_id}")
+
+    target_dir = os.path.join(clone_dir, folder_name or "")
     directory_path = os.path.join(target_dir, item)
 
     logger.info(f"Attempting to delete directory: {directory_path}")
@@ -895,18 +1059,27 @@ async def delete_directory(_data, item, git_branch_id, repository_name: str, fol
 
     # Push changes to Git if cloning is enabled
     if config.CLONE_REPO == "true":
-        await _git_push(git_branch_id=git_branch_id,
-                        file_paths=[item],
-                        commit_message=f"deleted directory {item}",
-                        repository_name=repository_name)
-        logger.info("Pushed directory deletion to git")
+        push_success = await _git_push(git_branch_id=git_branch_id,
+                                     file_paths=[item],
+                                     commit_message=f"deleted directory {item}",
+                                     repository_name=repository_name,
+                                     clone_dir=clone_dir)
+
+        if push_success:
+            logger.info("Successfully pushed directory deletion to git")
+        else:
+            logger.error("Failed to push directory deletion to git after retries")
+
+    # Clean up the temporary clone directory
+    await _safe_cleanup_directory(clone_dir)
 
     return str(directory_path)
 
 
-async def _git_pull_internal(git_branch_id, repository_name: str, merge_strategy="recursive"):
+async def _git_pull_internal(git_branch_id, repository_name: str, merge_strategy="recursive", clone_dir: str = None):
     """Internal git pull function without locks - assumes caller has acquired lock."""
-    clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
+    if clone_dir is None:
+        clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
 
     try:
         # Start the `git checkout` command asynchronously
@@ -981,73 +1154,164 @@ async def _git_pull_internal(git_branch_id, repository_name: str, merge_strategy
 
 
 async def git_pull(git_branch_id, repository_name: str, merge_strategy="recursive"):
-    """Public git pull function with lock protection."""
-    async with _git_operations_lock:
-        return await _git_pull_internal(git_branch_id, repository_name, merge_strategy)
+    """Public git pull function with repository semaphore and per-branch lock protection."""
+    # Use repository semaphore to limit concurrent operations on the same repository
+    repo_semaphore = await get_repository_semaphore(repository_name, max_concurrent=3)
+
+    async with repo_semaphore:  # Limit concurrent operations per repository
+        branch_lock = await get_branch_lock(git_branch_id, repository_name)
+        async with branch_lock:
+            return await _git_pull_internal(git_branch_id, repository_name, merge_strategy)
 
 
-# todo git push in case of interim changes will throw an error
-async def _git_push(git_branch_id, file_paths: list, commit_message: str, repository_name: str):
-    async with _git_operations_lock:
-        await _git_pull_internal(git_branch_id=git_branch_id, repository_name=repository_name)
+# Fixed: git push with comprehensive safety for concurrent operations
+async def _git_push(git_branch_id, file_paths: list, commit_message: str, repository_name: str, clone_dir: str, max_retries: int = 5):
+    """
+    Push changes to git with comprehensive safety for concurrent operations.
+    Uses repository semaphores to limit concurrent operations per repository,
+    per-branch locking for same-branch serialization, and robust conflict resolution.
+    """
+    # Use repository semaphore to limit concurrent operations on the same repository
+    repo_semaphore = await get_repository_semaphore(repository_name, max_concurrent=3)
 
-        clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
+    async with repo_semaphore:  # Limit concurrent operations per repository
+        branch_lock = await get_branch_lock(git_branch_id, repository_name)
 
-        try:
-            # Create a new branch with the name git_branch_id
-            checkout_process = await asyncio.create_subprocess_exec(
-                'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-                'checkout', str(git_branch_id),
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
-            stdout, stderr = await checkout_process.communicate()
-            if checkout_process.returncode != 0:
-                logger.error(f"Error during git checkout: {stderr.decode()}")
-                return
+        async with branch_lock:  # Serialize all operations on the same branch
+            for attempt in range(max_retries):
+                try:
+                    logger.info(f"Git push attempt {attempt + 1}/{max_retries} for branch {git_branch_id}")
 
-            # Add files to the commit
-            for file_path in file_paths:
-                add_process = await asyncio.create_subprocess_exec(
-                    'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-                    'add', file_path,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
-                )
-                stdout, stderr = await add_process.communicate()
-                if add_process.returncode != 0:
-                    logger.error(f"Error during git add {file_path}: {stderr.decode()}")
-                    return
+                    # CRITICAL: Always pull the absolute latest changes before any operation
+                    pull_result = await _git_pull_internal(git_branch_id=git_branch_id, repository_name=repository_name, clone_dir=clone_dir)
+                    if pull_result is None:
+                        logger.error(f"Failed to pull latest changes on attempt {attempt + 1}")
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                            continue
+                        return False
 
-            # Commit the changes
-            commit_process = await asyncio.create_subprocess_exec(
-                'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-                'commit', '-m', f"{commit_message}: {git_branch_id}",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
-            stdout, stderr = await commit_process.communicate()
-            if commit_process.returncode != 0:
-                logger.error(f"Error during git commit: {stderr.decode()}")
-                return
+                    # Ensure we're on the correct branch
+                    checkout_process = await asyncio.create_subprocess_exec(
+                        'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+                        'checkout', str(git_branch_id),
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE
+                    )
+                    stdout, stderr = await checkout_process.communicate()
+                    if checkout_process.returncode != 0:
+                        logger.error(f"Error during git checkout: {stderr.decode()}")
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(2 ** attempt)
+                            continue
+                        return False
 
-            # Push the new branch to the remote repository
-            push_process = await asyncio.create_subprocess_exec(
-                'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-                'push', '-u', 'origin', str(git_branch_id),
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
-            stdout, stderr = await push_process.communicate()
-            if push_process.returncode != 0:
-                logger.error(f"Error during git push: {stderr.decode()}")
-                return
+                    # Convert file paths to be relative to clone_dir for git add
+                    relative_file_paths = []
+                    for file_path in file_paths:
+                        if os.path.isabs(file_path):
+                            # Convert absolute path to relative path from clone_dir
+                            try:
+                                rel_path = os.path.relpath(file_path, clone_dir)
+                                relative_file_paths.append(rel_path)
+                            except ValueError:
+                                # If file is outside clone_dir, use basename
+                                relative_file_paths.append(os.path.basename(file_path))
+                        else:
+                            relative_file_paths.append(file_path)
 
-            logger.info("Git push successful!")
+                    # Add files to the commit with proper error handling
+                    files_added = False
+                    for file_path in relative_file_paths:
+                        add_process = await asyncio.create_subprocess_exec(
+                            'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+                            'add', file_path,
+                            stdout=asyncio.subprocess.PIPE,
+                            stderr=asyncio.subprocess.PIPE
+                        )
+                        stdout, stderr = await add_process.communicate()
+                        if add_process.returncode == 0:
+                            files_added = True
+                            logger.debug(f"Successfully added {file_path} to git")
+                        else:
+                            logger.warning(f"Failed to add {file_path} to git: {stderr.decode()}")
 
-        except Exception as e:
-            logger.error(f"Unexpected error during git push: {e}")
-            logger.exception(e)
+                    if not files_added:
+                        logger.warning("No files were successfully added to git")
+                        return False
+
+                    # Check if there are any changes to commit
+                    status_process = await asyncio.create_subprocess_exec(
+                        'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+                        'status', '--porcelain',
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE
+                    )
+                    status_stdout, status_stderr = await status_process.communicate()
+
+                    if not status_stdout.decode().strip():
+                        logger.info("No changes to commit after git add, operation completed successfully")
+                        return True
+
+                    # Create a unique commit message to avoid conflicts
+                    unique_commit_message = f"{commit_message}: {git_branch_id} (op-{str(generate_uuid())[:8]})"
+
+                    # Commit the changes
+                    commit_process = await asyncio.create_subprocess_exec(
+                        'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+                        'commit', '-m', unique_commit_message,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE
+                    )
+                    stdout, stderr = await commit_process.communicate()
+                    if commit_process.returncode != 0:
+                        commit_error = stderr.decode()
+                        logger.error(f"Error during git commit: {commit_error}")
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(2 ** attempt)
+                            continue
+                        return False
+
+                    # CRITICAL: Pull again right before push to catch any last-second changes
+                    logger.info("Performing final pull before push to ensure no conflicts")
+                    final_pull_result = await _git_pull_internal(git_branch_id=git_branch_id, repository_name=repository_name, clone_dir=clone_dir)
+
+                    # Push the changes to the remote repository
+                    push_process = await asyncio.create_subprocess_exec(
+                        'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+                        'push', 'origin', str(git_branch_id),
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE
+                    )
+                    stdout, stderr = await push_process.communicate()
+
+                    if push_process.returncode == 0:
+                        logger.info(f"Git push successful on attempt {attempt + 1} for branch {git_branch_id}")
+                        return True
+                    else:
+                        error_msg = stderr.decode()
+                        logger.warning(f"Git push failed on attempt {attempt + 1}: {error_msg}")
+
+                        # Check if it's a conflict that can be retried
+                        if attempt < max_retries - 1 and any(keyword in error_msg.lower() for keyword in
+                                                            ["rejected", "non-fast-forward", "conflict", "merge"]):
+                            backoff_time = 2 ** attempt
+                            logger.info(f"Retrying push after conflict (attempt {attempt + 2}/{max_retries}) with {backoff_time}s backoff")
+                            await asyncio.sleep(backoff_time)
+                            continue
+                        else:
+                            logger.error(f"Git push failed after {max_retries} attempts: {error_msg}")
+                            return False
+
+                except Exception as e:
+                    logger.error(f"Unexpected error during git push attempt {attempt + 1}: {e}")
+                    if attempt == max_retries - 1:
+                        logger.exception(e)
+                        return False
+                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
+
+        logger.error(f"Git push failed after all {max_retries} attempts for branch {git_branch_id}")
+        return False
 
 
 async def repo_exists(path: str) -> bool:
@@ -1126,9 +1390,12 @@ def parse_entity(model_cls, resp: Any) -> Any:
 
 async def read_file_util(filename, technical_id, repository_name: str, git_branch_id: str=None):
     technical_id = git_branch_id or technical_id
-    await git_pull(git_branch_id=technical_id, repository_name=repository_name)
-    target_dir = os.path.join(f"{config.PROJECT_DIR}/{technical_id}/{repository_name}", "")
-    file_path = os.path.join(target_dir, filename)
+    operation_id = str(generate_uuid())
+    clone_dir = await clone_repo(git_branch_id=technical_id, repository_name=repository_name, operation_id=operation_id)
+    if clone_dir is None:
+        return f"Error: Failed to clone repository {repository_name} for branch {technical_id}"
+
+    file_path = os.path.join(clone_dir, filename)
     try:
         async with aiofiles.open(file_path, 'r') as file:
             content = await file.read()
@@ -1138,6 +1405,9 @@ async def read_file_util(filename, technical_id, repository_name: str, git_branc
     except Exception as e:
         logger.exception("Error during reading file")
         return f"Error during reading file: {e}"
+    finally:
+        # Clean up the temporary clone directory
+        await _safe_cleanup_directory(clone_dir)
 
 
 def wrap_response_by_extension(filename: str, response: str) -> str:

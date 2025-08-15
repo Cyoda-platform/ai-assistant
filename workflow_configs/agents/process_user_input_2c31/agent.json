@@ -2,7 +2,9 @@
   "type": "agent",
   "publish": true,
   "allow_anonymous_users": true,
-  "model": {},
+  "model": {
+    "model_name": "gpt-4.1-mini"
+  },
   "memory_tags": [
     "requirements_generation"
   ],

@@ -119,14 +119,6 @@
           "manual": false,
           "processors": [
             {
-              "name": "MessageProcessor.notify_editing_started",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            },
-            {
               "name": "AgentProcessor.process_user_input_2185",
               "executionMode": "ASYNC_NEW_TX",
               "config": {

@@ -22,7 +22,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "type": "agent",
         "publish": True,
         "allow_anonymous_users": True,
-        "model": {},
+        "model": {"model_name": "gpt-4.1-mini"},
         "memory_tags": [
             "requirements_generation"
         ],
