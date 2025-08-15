@@ -20,7 +20,7 @@ class GenerateTestsForProcessorsPromptConfig:
         """Get the prompt configuration"""
         return """You are a senior Java 21 Spring Boot 3 developer.
         
-Please implement unit tests for each processor in the 'src/main/java/com/java_template/application/processor' directory.
+Please implement basic unit tests for each processor in the 'src/main/java/com/java_template/application/processor' directory.
 Tools Available:
 - list_directory_files: List all files in a directory
 Resource Path: src/main/java/com/java_template/application/processor - to list all processors
@@ -32,13 +32,14 @@ Resource Path: src/main/java/com/java_template/application/entity - to list all 
 
 
 There should be exactly one test class for each processor. 
-In each test class, there should be exactly one test method for each transition in the processor that covers basic successful scenario.
+In each test class, there should be exactly one test method that tests the processor covering the basic successful scenario.
 Keep it as simple as possible.
 
 Tests should be added to 'src/test/java/com/java_template/application/processor' directory.
 For each generated test class, use the `add_application_resource` tool to add the test class to the project.
 Call 'add_application_resource' with the following parameters:
-    - resource_path: "src/test/java/com/java_template/application/processor/{TestClassName}.java"
+    - resource_path: "src/test/java/com/java_template/application/processor/{ProcessorName}Test.java"
     - file_contents: Full Java class with complete test implementation
 
+Make sure you call `add_application_resource` tool for each test class.
 """

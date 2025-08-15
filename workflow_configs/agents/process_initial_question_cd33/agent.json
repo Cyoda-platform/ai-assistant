@@ -17,7 +17,6 @@
       "src/main/java/com/java_template/prototype/user_requirement.md"
     ]
   },
-  "tool_choice": "auto",
   "max_iteration": 30,
   "approve": true
 }

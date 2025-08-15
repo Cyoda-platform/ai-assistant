@@ -38,7 +38,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "src/main/java/com/java_template/prototype/user_requirement.md"
             ]
         },
-        "tool_choice": "auto",
         "max_iteration": 30,
         "approve": True
     }
