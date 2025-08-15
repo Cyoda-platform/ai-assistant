@@ -31,5 +31,8 @@ End with a Ready-to-Copy Example User Response in Markdown that only contains:
 Entities and their data fields.
 Workflows for each entity.
 APIs to manage them.
-
+The Example Ready-to-Copy User Response should be in the following format:
+```markdown
+{response text}
+```
 Let the user know they can paste it if they have no preference, and click Approve if ready to proceed.

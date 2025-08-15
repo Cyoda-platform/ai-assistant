@@ -26,7 +26,7 @@
   "messages": [
     {
       "role": "user",
-      "content_from_file": "implement_processors_business_logic_g6h7"
+      "content_from_file": "generate_tests_for_processors"
     }
   ],
   "tool_choice": "auto",
