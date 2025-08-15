@@ -32,7 +32,9 @@ EntityName:
 
 ### 2. Entity workflows
 **Continue with explaining the basic flow of each entity:**
-
+The transitions can be of 2 types: manual and automatic.
+Manual transitions require human intervention and are triggered by a user.
+Automatic transitions are triggered by the system.
 **Example:**
 ```
 Job workflow:
@@ -45,7 +47,26 @@ Job workflow:
 For each entity, include a state diagram:
 ```mermaid
 Entity state diagrams
+
+Example:
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING
+    PENDING --> IN_PROGRESS : StartAnalysisProcessor, *manual*
+    state if_state <<choice>>
+    IN_PROGRESS --> CheckCompleteCriterion
+    CheckCompleteCriterion --> if_state
+    if_state --> FAILED: if not entity.complete
+    if_state --> COMPLETED : if entity.complete
+    COMPLETED --> USERS_NOTIFIED : NotifyUsersProcessor
+    USERS_NOTIFIED --> [*]
+    FAILED --> [*]
 ```
+
+Each state can have multiple transitions. Each transition can have a condition and a processor. These represent Java criterion and processor classes that need to be implemented.
+Briefly specify after the workflow for each entity, what criterion and processor classes are needed, you can also provide pseudo code for the processor classes.
+Do not use escape characters in the mermaid diagrams. Do not use quotes in the mermaid diagrams. Use only allowed characters.
 
 ## REQUIREMENTS TO DEFINE:
 

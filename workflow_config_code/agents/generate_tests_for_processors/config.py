@@ -6,6 +6,7 @@ Configuration data for the enhance processors agent.
 
 from typing import Any, Dict, Callable
 
+from workflow_config_code.prompts.generate_tests_for_processors.prompt import GenerateTestsForProcessorsPromptConfig
 from workflow_config_code.prompts.implement_processors_business_logic_g6h7.prompt import \
     ImplementProcessorsBusinessLogicG6h7PromptConfig
 from workflow_config_code.tools.list_directory_files_1ab7.tool import ListDirectoryFiles1ab7ToolConfig
@@ -39,7 +40,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "messages": [
             {
                 "role": "user",
-                "content_from_file": ImplementProcessorsBusinessLogicG6h7PromptConfig.get_name()
+                "content_from_file": GenerateTestsForProcessorsPromptConfig.get_name()
             }
         ],
         "tool_choice": "auto",

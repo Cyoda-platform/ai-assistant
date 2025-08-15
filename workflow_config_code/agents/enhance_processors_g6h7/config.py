@@ -32,7 +32,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "input": {
             "local_fs": [
                 "src/main/java/com/java_template/application/processor",
-                "src/main/resources/entity",
+                "src/main/java/com/java_template/application/entity",
                 "src/main/java/com/java_template/prototype/functional_requirement.md",
                 "src/main/java/com/java_template/prototype/user_requirement.md"
             ]

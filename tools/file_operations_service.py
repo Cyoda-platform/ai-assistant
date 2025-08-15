@@ -59,9 +59,10 @@ class FileOperationsService(BaseWorkflowService):
         try:
             # Use repository resolver to determine repository name
             repository_name = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM, technical_id)
+            git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
             file_name = await get_project_file_name(
                 file_name=params.get("filename"),
-                git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                git_branch_id=git_branch_id,
                 repository_name=repository_name
             )
             
@@ -79,8 +80,8 @@ class FileOperationsService(BaseWorkflowService):
                 async with aiofiles.open(file_name, 'w') as new_file:
                     await new_file.write(updated_content)
 
-                await _git_push(git_branch_id=technical_id,
-                                file_paths=[params.get("filename")],
+                await _git_push(git_branch_id=git_branch_id,
+                                file_paths=[file_name],
                                 commit_message="Added env file template",
                                 repository_name=repository_name)
             return "🧩.env.template file saved successfully. Proceeding to the next step⏳...You will see a notification soon!"

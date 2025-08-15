@@ -67,7 +67,6 @@ Workflow JSON Example:
           "processors": [
             {
               "name": "ProcessorClassName", -- CamelCase the processor class name
-              "executionMode": "SYNC",
               "config": {
                 "calculationNodesTags": "cyoda_application"
               }
@@ -102,5 +101,299 @@ Output Rules:
 - Generate valid JSON only. No extra text or markdown.
 - Ensure no file named 'EntityName.json' is ever created unless there is literally an entity with that name.
 - Avoid putting criterion and processors in the same transition if possible. Ideally, each transition has either a criterion or a processor, but not both.
+
+"response_format": {
+    "name": "workflow_design_schema",
+    "description": "workflow design schema",
+    "schema": {
+        "type": "object",
+        "required": [
+            "version",
+            "name",
+            "initialState",
+            "states"
+        ],
+        "properties": {
+            "version": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "desc": {
+                "type": "string"
+            },
+            "initialState": {
+                "type": "string",
+                "enum": [
+                    "none"
+                ]
+            },
+            "active": {
+                "type": "boolean"
+            },
+            "states": {
+                "type": "object",
+                "additionalProperties": {
+                    "type": "object",
+                    "required": [
+                        "transitions"
+                    ],
+                    "properties": {
+                        "transitions": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "required": [
+                                    "name",
+                                    "next",
+                                    "manual"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "next": {
+                                        "type": "string"
+                                    },
+                                    "manual": {
+                                        "type": "boolean"
+                                    },
+                                    "processors": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "required": [
+                                                "name",
+                                                "config"
+                                            ],
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "executionMode": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "SYNC",
+                                                        "ASYNC_NEW_TX",
+                                                        "ASYNC_SAME_TX"
+                                                    ]
+                                                },
+                                                "config": {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "calculationNodesTags"
+                                                    ],
+                                                    "properties": {
+                                                        "attachEntity": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "calculationNodesTags": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "cyoda_application"
+                                                            ]
+                                                        },
+                                                        "responseTimeoutMs": {
+                                                            "type": "integer"
+                                                        },
+                                                        "retryPolicy": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "FIXED",
+                                                                "EXPONENTIAL",
+                                                                "LINEAR"
+                                                            ]
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "criterion": {
+                                        "type": "object",
+                                        "required": [
+                                            "type"
+                                        ],
+                                        "properties": {
+                                            "type": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "function",
+                                                    "group",
+                                                    "simple"
+                                                ]
+                                            },
+                                            "function": {
+                                                "type": "object",
+                                                "required": [
+                                                    "name",
+                                                    "config"
+                                                ],
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "config": {
+                                                        "type": "object",
+                                                        "required": [
+                                                            "calculationNodesTags"
+                                                        ],
+                                                        "properties": {
+                                                            "attachEntity": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "calculationNodesTags": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "cyoda_application"
+                                                                ]
+                                                            },
+                                                            "responseTimeoutMs": {
+                                                                "type": "integer"
+                                                            },
+                                                            "retryPolicy": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "FIXED",
+                                                                    "EXPONENTIAL",
+                                                                    "LINEAR"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "criterion": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "simple",
+                                                                    "group"
+                                                                ]
+                                                            },
+                                                            "jsonPath": {
+                                                                "type": "string"
+                                                            },
+                                                            "operation": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "EQUALS",
+                                                                    "GREATER_THAN",
+                                                                    "GREATER_OR_EQUAL",
+                                                                    "LESS_THAN",
+                                                                    "LESS_OR_EQUAL",
+                                                                    "NOT_EQUALS"
+                                                                ]
+                                                            },
+                                                            "value": {
+                                                                "oneOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "type": "number"
+                                                                    },
+                                                                    {
+                                                                        "type": "boolean"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "jsonPath": {
+                                                "type": "string"
+                                            },
+                                            "operation": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "EQUALS",
+                                                    "GREATER_THAN",
+                                                    "GREATER_OR_EQUAL",
+                                                    "LESS_THAN",
+                                                    "LESS_OR_EQUAL",
+                                                    "NOT_EQUALS"
+                                                ]
+                                            },
+                                            "value": {
+                                                "oneOf": [
+                                                    {
+                                                        "type": "string"
+                                                    },
+                                                    {
+                                                        "type": "number"
+                                                    },
+                                                    {
+                                                        "type": "boolean"
+                                                    }
+                                                ]
+                                            },
+                                            "operator": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "AND",
+                                                    "OR"
+                                                ]
+                                            },
+                                            "conditions": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "type",
+                                                        "jsonPath",
+                                                        "operation",
+                                                        "value"
+                                                    ],
+                                                    "properties": {
+                                                        "type": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "simple"
+                                                            ]
+                                                        },
+                                                        "jsonPath": {
+                                                            "type": "string"
+                                                        },
+                                                        "operation": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "EQUALS",
+                                                                "GREATER_THAN",
+                                                                "GREATER_OR_EQUAL",
+                                                                "LESS_THAN",
+                                                                "LESS_OR_EQUAL",
+                                                                "NOT_EQUALS"
+                                                            ]
+                                                        },
+                                                        "value": {
+                                                            "oneOf": [
+                                                                {
+                                                                    "type": "string"
+                                                                },
+                                                                {
+                                                                    "type": "number"
+                                                                },
+                                                                {
+                                                                    "type": "boolean"
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 """
 

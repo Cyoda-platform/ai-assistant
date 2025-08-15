@@ -257,7 +257,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "compilation_started",
-                        "next": "notify_compilation_started",
+                        "next": "notify_prototype_compiled",
                         "manual": False,
                         "processors": [
                             {
@@ -272,48 +272,11 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 ]
             },
-            "notify_compilation_started": {
-                "transitions": [
-                    {
-                        "name": "proceed_to_process_compilation_results",
-                        "next": "process_compilation_results",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": NotifyCompilationStartedH8i9MessageConfig.get_name(),
-                                "executionMode": "SYNC",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant"
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "process_compilation_results": {
-                "transitions": [
-                    {
-                        "name": "project_compiled",
-                        "next": "notify_prototype_compiled",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": ProcessCompilationResultsI9j0AgentConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
             "notify_prototype_compiled": {
                 "transitions": [
                     {
                         "name": "workflow_completed",
-                        "next": "notified_prototype_compiled",
+                        "next": "waiting_prototype_discussion_requested",
                         "manual": False,
                         "processors": [
                             {
@@ -327,7 +290,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 ]
             },
-            "notified_prototype_compiled": {
+            "waiting_prototype_discussion_requested": {
                 "transitions": [
                     {
                         "name": "submit_answer",
@@ -369,7 +332,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "process_configs_discussion_processing",
-                        "next": "notified_prototype_compiled",
+                        "next": "waiting_prototype_discussion_requested",
                         "manual": False,
                         "criterion": {
                             "type": "function",
