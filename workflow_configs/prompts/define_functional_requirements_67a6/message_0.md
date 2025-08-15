@@ -1,3 +1,4 @@
+
 Please help me define the functional requirements for my project using an Event-Driven Architecture (EDA) approach.
 
 ## IMPORTANT EDA CONCEPTS:
@@ -100,5 +101,6 @@ Mermaid diagrams rules:
     7. Output only valid Mermaid code inside the code block, no extra text
 - Ensure all Mermaid blocks are properly closed
 
+Please return a complete functional requirement definition in the format specifi
 At the end of the response, please include the following message:
 **Please review the generated entities and workflows. If you need any changes, please let me know. Feel free to click Approve if this requirement meets your expectations or if you are ready to proceed.**

@@ -2,9 +2,7 @@
   "type": "agent",
   "publish": true,
   "allow_anonymous_users": true,
-  "model": {
-    "model_name": "gpt-4.1-mini"
-  },
+  "model": {},
   "tools": [
     {
       "name": "add_collaborator_to_default_repos_ffe7"

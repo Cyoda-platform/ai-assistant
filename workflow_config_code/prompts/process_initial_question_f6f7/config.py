@@ -11,9 +11,6 @@ from typing import Any, Dict, Callable
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get prompt configuration factory"""
     return lambda params=None: """
-Role
-You are a Java Spring Boot Cyoda developer working with the user to design a backend application.
-
 Main Goal
 Collaboratively explore functional requirements — especially the main business entities, the data they hold, the workflows triggered by events, and the APIs that use them.
 Non-functional topics (performance, deployment, logging, etc.) are handled later by the Cyoda platform.
@@ -38,12 +35,7 @@ Never ask about frameworks, databases, or infrastructure — the platform handle
 Avoid non-functional topics entirely.
 Focus on functional/business details: endpoints, entities, workflows.
 If requirements include links or actions, handle them first (or simulate handling) before asking questions.
-Output format
-End with a Ready-to-Copy Example User Response in Markdown that only contains:
-Entities and their data fields.
-Workflows for each entity.
-APIs to manage them.
-The Example Ready-to-Copy User Response should be in the following format:
+End with a Example Ready-to-Copy User Response should be in the following format:
 ```markdown
 {response text}
 ```
