@@ -112,7 +112,9 @@ Mermaid diagrams rules:
     7. Output only valid Mermaid code inside the code block, no extra text
 - Ensure all Mermaid blocks are properly closed
 
-Please return a well formatted complete functional requirement definition without any comments or thought trail.
-At the end of the response, please include the following message:
-**Please review the generated entities and workflows. If you need any changes, please let me know. Feel free to click Approve if this requirement meets your expectations or if you are ready to proceed.**
+Response format:
+    Please return a complete functional requirement definition without any comments or thought trail.
+    Never include verbatim text from the requirement and your thought process - only the final result.
+    At the end of the response, please include the following message:
+    **Please review the generated entities and workflows. If you need any changes, please let me know. Feel free to click Approve if this requirement meets your expectations or if you are ready to proceed.**
 """

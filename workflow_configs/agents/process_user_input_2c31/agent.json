@@ -2,11 +2,9 @@
   "type": "agent",
   "publish": true,
   "allow_anonymous_users": true,
-  "model": {
-    "model_name": "gpt-4.1-mini"
-  },
+  "model": {},
   "memory_tags": [
-    "requirements_generation"
+    "process_initial_requirement"
   ],
   "tools": [
     {
@@ -34,6 +32,11 @@
       "content_from_file": "process_user_input_23bd"
     }
   ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/user_requirement.md"
+    ]
+  },
   "tool_choice": "auto",
   "max_iteration": 30,
   "approve": true

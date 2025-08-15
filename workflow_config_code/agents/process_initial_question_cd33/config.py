@@ -6,6 +6,8 @@ Configuration data for the agent.
 """
 
 from typing import Any, Dict, Callable
+
+from workflow_config_code.prompts.process_user_input_23bd.prompt import ProcessUserInput23bdPromptConfig
 from workflow_config_code.tools.add_collaborator_to_default_repos_ffe7.tool import \
     AddCollaboratorToDefaultReposFfe7ToolConfig
 from workflow_config_code.tools.get_cyoda_guidelines_c748.tool import GetCyodaGuidelinesC748ToolConfig
@@ -27,9 +29,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "name": AddCollaboratorToDefaultReposFfe7ToolConfig.get_tool_name()
             },
             {
-                "name": GetCyodaGuidelinesC748ToolConfig.get_tool_name()
-            },
-            {
                 "name": WebSearch7e4bToolConfig.get_tool_name()
             },
             {
@@ -40,14 +39,19 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             }
         ],
         "memory_tags": [
-            "requirements_generation"
+            "process_initial_requirement"
         ],
         "messages": [
             {
                 "role": "user",
-                "content_from_file": ProcessInitialQuestionF6f7PromptConfig.get_name()
+                "content_from_file": ProcessUserInput23bdPromptConfig.get_name()
             }
         ],
+        "input": {
+            "local_fs": [
+                "src/main/java/com/java_template/prototype/user_requirement.md"
+            ]
+        },
         "tool_choice": "auto",
         "max_iteration": 30,
         "approve": True

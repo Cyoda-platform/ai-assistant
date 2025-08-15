@@ -5,7 +5,8 @@
   "allow_anonymous_users": true,
   "model": {},
   "memory_tags": [
-    "requirements_generation"
+    "requirements_generation",
+    "process_initial_requirement"
   ],
   "input": {
     "local_fs": [

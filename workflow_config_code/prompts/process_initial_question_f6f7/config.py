@@ -39,5 +39,15 @@ End with a Example Ready-to-Copy User Response should be in the following format
 ```markdown
 {response text}
 ```
+
+Response format:
+- Start your response with a friendly greeting.
+- Ask a maximum of 3 questions or suggestions at a time.
+- Include an "Example Ready-to-Copy User Response" in Markdown ```markdown ``` for the user to paste if they have no specific input.
+Never ask about frameworks, databases, or infrastructure.
+Never ask about non-functional topics.
+Never include verbatim text from the requirement and your thought process.
+
+
 Let the user know they can paste it if they have no preference, and click Approve if ready to proceed.
 """

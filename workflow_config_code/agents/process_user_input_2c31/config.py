@@ -22,9 +22,9 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "type": "agent",
         "publish": True,
         "allow_anonymous_users": True,
-        "model": {"model_name": "gpt-4.1-mini"},
+        "model": {},
         "memory_tags": [
-            "requirements_generation"
+            "process_initial_requirement"
         ],
         "tools": [
             {
@@ -52,6 +52,11 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "content_from_file": ProcessUserInput23bdPromptConfig.get_name()
             }
         ],
+        "input": {
+            "local_fs": [
+                "src/main/java/com/java_template/prototype/user_requirement.md"
+            ]
+        },
         "tool_choice": "auto",
         "max_iteration": 30,
         "approve": True

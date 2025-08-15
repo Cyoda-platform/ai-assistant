@@ -1108,6 +1108,21 @@ async def _git_pull_internal(git_branch_id, repository_name: str, merge_strategy
             logger.error(f"Error during git fetch: {fetch_stderr.decode()}")
             return
 
+        # Determine if remote branch exists
+        ls_remote_process = await asyncio.create_subprocess_exec(
+            'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+            'ls-remote', '--heads', 'origin', str(git_branch_id),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        ls_remote_stdout, ls_remote_stderr = await ls_remote_process.communicate()
+        remote_branch_exists = bool(ls_remote_stdout.decode().strip())
+
+        if not remote_branch_exists:
+            # Remote branch doesn't exist; nothing to pull
+            logger.info(f"Remote branch origin/{git_branch_id} does not exist; skipping pull.")
+            return ""
+
         # Compare the local branch with its remote counterpart explicitly
         diff_process = await asyncio.create_subprocess_exec(
             'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
