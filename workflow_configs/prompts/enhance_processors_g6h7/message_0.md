@@ -32,6 +32,8 @@ Review the validation output to identify:
    - Implement proper validation rules and business constraints
    - Add error handling for edge cases
 
+After you add all the missing processors and criteria with add_application_resource tool, you can call validate_workflow_processors tool again to verify that all the missing components are implemented.
+
 **For Each Existing Processor:**
 1. **Analyze Current Implementation** against functional requirements
 2. **Enhance with Missing Logic** using `add_application_resource`:
@@ -138,7 +140,7 @@ Example:
 * Inject ObjectMapper via constructor for JSON conversion if needed
 * You can inject only EntityService, ObjectMapper, and SerializerFactory via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES. 
 
-🎯 **SUCCESS CRITERIA**
+🎯 **SUCCESS REQUIREMENTS**
 - ALL missing processors and criteria are IMPLEMENTED (not just planned)
 - ALL business logic from functional requirements is CODED
 - ALL implementations are COMPLETE Java classes ready for deployment

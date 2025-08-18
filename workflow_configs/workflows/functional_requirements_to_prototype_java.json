@@ -352,7 +352,7 @@
       "transitions": [
         {
           "name": "processors_enhanced",
-          "next": "implement_business_logic",
+          "next": "notify_processors_enhanced",
           "manual": false,
           "processors": [
             {
