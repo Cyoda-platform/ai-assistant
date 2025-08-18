@@ -1178,9 +1178,11 @@ async def git_pull(git_branch_id, repository_name: str, merge_strategy="recursiv
         async with branch_lock:
             return await _git_pull_internal(git_branch_id, repository_name, merge_strategy)
 
+async def _git_push(git_branch_id, file_paths: list, commit_message: str, repository_name: str, clone_dir: str, max_retries: int = 5):
+    task = asyncio.create_task(_git_push_internal(git_branch_id, file_paths, commit_message, repository_name, clone_dir, max_retries))
 
 # Fixed: git push with comprehensive safety for concurrent operations
-async def _git_push(git_branch_id, file_paths: list, commit_message: str, repository_name: str, clone_dir: str, max_retries: int = 5):
+async def _git_push_internal(git_branch_id, file_paths: list, commit_message: str, repository_name: str, clone_dir: str, max_retries: int = 5):
     """
     Push changes to git with comprehensive safety for concurrent operations.
     Uses repository semaphores to limit concurrent operations per repository,
