@@ -68,6 +68,7 @@ stateDiagram-v2
 Each state can have multiple transitions. Each transition can have a condition and a processor. These represent Java criterion and processor classes that need to be implemented.
 Briefly specify after the workflow for each entity, what criterion and processor classes are needed, you can also provide pseudo code for the processor classes.
 Do not use escape characters in the mermaid diagrams. Do not use quotes in the mermaid diagrams. Use only allowed characters.
+If the user does not specify processors and criteria directy in the requirement, you can make reasonable assumptions about what processors and criteria are needed, trying to keep the number of processors 3-5 per workflow, and criteria 1-3 per workflow. If the user gives you specific names for processors and criteria, use them as many as specified.
 
 ## REQUIREMENTS TO DEFINE:
 

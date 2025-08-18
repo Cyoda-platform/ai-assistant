@@ -67,4 +67,10 @@ Rules:
 - Use String types for foreign key references representing serialized UUIDs.
 - Ensure add_application_resource is called at least once.
 
+Output format (strict):
+- Return ONLY tool calls to `add_application_resource`, one per entity.
+- DO NOT call any tools other than `add_application_resource`.
+- DO NOT include any assistant text outside tool calls.
+- If the API requires a message content, leave it empty.
+
 Requirement:"""

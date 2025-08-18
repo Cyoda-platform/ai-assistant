@@ -886,7 +886,7 @@ async def clone_repo(git_branch_id: str, repository_name: str, operation_id: str
 async def get_project_file_name(git_branch_id, file_name, repository_name: str, folder_name=None, operation_id: str = None):
     if operation_id is None:
         operation_id = str(generate_uuid())
-
+    #clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}_{operation_id}"
     clone_dir = await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name, operation_id=operation_id)
     if clone_dir is None:
         return None
@@ -901,7 +901,7 @@ async def get_project_file_name(git_branch_id, file_name, repository_name: str, 
 async def get_project_file_name_path(technical_id, git_branch_id, file_name, repository_name: str, operation_id: str = None):
     if operation_id is None:
         operation_id = str(generate_uuid())
-
+    #clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}_{operation_id}"
     clone_dir = await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name, operation_id=operation_id)
     if clone_dir is None:
         return None
@@ -909,7 +909,10 @@ async def get_project_file_name_path(technical_id, git_branch_id, file_name, rep
     file_path = os.path.join(clone_dir, file_name)
     return file_path
 
-async def _save_file(_data, item, git_branch_id, repository_name: str, folder_name = None) -> str:
+async def _save_file(_data, item, git_branch_id, repository_name: str, folder_name = None):
+    asyncio.create_task(_save_file_internal(_data, item, git_branch_id, repository_name, folder_name))
+
+async def _save_file_internal(_data, item, git_branch_id, repository_name: str, folder_name = None) -> str:
     """
     Save a file (text or binary) inside a unique directory per operation.
     Handles FileStorage objects directly.
@@ -1178,11 +1181,9 @@ async def git_pull(git_branch_id, repository_name: str, merge_strategy="recursiv
         async with branch_lock:
             return await _git_pull_internal(git_branch_id, repository_name, merge_strategy)
 
-async def _git_push(git_branch_id, file_paths: list, commit_message: str, repository_name: str, clone_dir: str, max_retries: int = 5):
-    task = asyncio.create_task(_git_push_internal(git_branch_id, file_paths, commit_message, repository_name, clone_dir, max_retries))
 
 # Fixed: git push with comprehensive safety for concurrent operations
-async def _git_push_internal(git_branch_id, file_paths: list, commit_message: str, repository_name: str, clone_dir: str, max_retries: int = 5):
+async def _git_push(git_branch_id, file_paths: list, commit_message: str, repository_name: str, clone_dir: str, max_retries: int = 5):
     """
     Push changes to git with comprehensive safety for concurrent operations.
     Uses repository semaphores to limit concurrent operations per repository,

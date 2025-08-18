@@ -211,4 +211,7 @@ Call add_application_resource for each criterion:
 - All implementations follow the established patterns and templates
 - Business logic is properly implemented based on functional requirements
 
+Output format (recommended):
+- Return as many tool calls to `add_application_resource` as possible in a single response to minimize API calls.
+
 Generate all processors and criteria needed for the complete application functionality as identified by the workflow component extraction tool.

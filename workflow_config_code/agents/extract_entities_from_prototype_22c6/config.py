@@ -21,9 +21,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "model": {},
         "tools": [
             {
-                "name": AddCollaboratorToDefaultReposFfe7ToolConfig.get_tool_name()
-            },
-            {
                 "name": AddApplicationResource3d0bToolConfig.get_tool_name()
             }
         ],
