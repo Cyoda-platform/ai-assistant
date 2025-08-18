@@ -29,4 +29,6 @@ RESPONSE BASED ON STATUS:
 CRITICAL: the user can redeploy the environment only in a separate chat. You do not have a tool to redeploy the environment.
 • If no build ID found and no environment deployed: Ask user if they have a build ID to check status. If they don't have it, tell them they need to deploy environment first in a new chat by saying 'deploy my cyoda environment'.
 
-IMPORTANT: Users can check deployment status anytime in THIS chat - do not tell them to use a new chat for status checks."""
+IMPORTANT: Users can check deployment status anytime in THIS chat - do not tell them to use a new chat for status checks.
+
+"""

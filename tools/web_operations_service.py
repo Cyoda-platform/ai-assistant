@@ -161,7 +161,7 @@ class WebOperationsService(BaseWorkflowService):
             if not is_valid:
                 return error_msg
                 
-            url = f"{config.DATA_REPOSITORY_URL}/get_cyoda_guidelines/{params.get('workflow_name')}.adoc"
+            url = f"https://docs.cyoda.net/{params.get('workflow_name')}"
             return await self._fetch_data(url=url)
             
         except Exception as e:

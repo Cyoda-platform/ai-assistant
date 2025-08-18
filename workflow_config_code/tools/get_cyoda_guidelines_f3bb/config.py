@@ -22,11 +22,18 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "workflow_name": {
                                         "type": "string",
                                         "enum": [
-                                                "generate_workflow",
-                                                "generate_processors",
-                                                "configure_trino",
-                                                "generate_entity",
-                                                "cyoda_best_practice"
+                                            "#guides/cyoda-design-principles",
+                                            "#guides/provision-environment",
+                                            "#guides/workflow-config-guide",
+                                            "#guides/authentication-authorization",
+                                            "#guides/api-saving-and-getting-data",
+                                            "#guides/sql-and-trino",
+                                            "#concepts/edbms",
+                                            "#concepts/event-driven-architecture",
+                                            "#concepts/cpl-overview",
+                                            "#architecture/cyoda-cloud-architecture",
+                                            "#platform/cyoda-cloud-status",
+                                            "#platform/entitlements"
                                         ]
                                 }
                         },
