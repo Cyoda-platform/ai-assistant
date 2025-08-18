@@ -11,7 +11,7 @@ import json
 
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
-    return lambda params=None: """✅  Saved workflows to `src/main/java/com/java_template/application/workflow/*`. Continuing to generate the first prototype....⏳😌"""
+    return lambda params=None: """✅  Saved workflows to `src/main/java/com/java_template/application/workflow/*`. Configurations are ready. Proceeding to the next step....⏳😌"""
 
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:

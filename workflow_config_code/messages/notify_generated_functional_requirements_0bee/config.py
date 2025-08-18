@@ -11,7 +11,7 @@ import json
 
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
-    return lambda params=None: """✅  Saved functional requirements to `src/main/java/com/java_template/prototype/functional_requirement.md`. Continuing to generate the first prototype....⏳😌"""
+    return lambda params=None: """✅  Saved functional requirements to `src/main/java/com/java_template/prototype/functional_requirement.md`. Proceeding to entities generation....⏳😌"""
 
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
