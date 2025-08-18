@@ -95,7 +95,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "processors": [
                             {
                                 "name": NotifySavedFunReqA1b2MessageConfig.get_name(),
-                                "executionMode": "SYNC",
+                                "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant"
                                 }
@@ -132,7 +132,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "processors": [
                             {
                                 "name": NotifyControllerGeneratedD3e4MessageConfig.get_name(),
-                                "executionMode": "SYNC",
+                                "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant"
                                 }
@@ -169,7 +169,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "processors": [
                             {
                                 "name": NotifyProcessorsGeneratedE4f5MessageConfig.get_name(),
-                                "executionMode": "SYNC",
+                                "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant"
                                 }
@@ -182,7 +182,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "processors_enhanced",
-                        "next": "implement_business_logic",
+                        "next": "notify_processors_enhanced",
                         "manual": False,
                         "processors": [
                             {
@@ -201,7 +201,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "implement_business_logic",
-                        "next": "generate_tests_for_processors",
+                        "next": "notify_processors_enhanced",
                         "manual": False,
                         "processors": [
                             {
@@ -244,7 +244,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "processors": [
                             {
                                 "name": NotifyProcessorsEnhancedG7h8MessageConfig.get_name(),
-                                "executionMode": "SYNC",
+                                "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant"
                                 }
@@ -281,7 +281,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "processors": [
                             {
                                 "name": NotifyProjectCompiledF5g6MessageConfig.get_name(),
-                                "executionMode": "SYNC",
+                                "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant"
                                 }

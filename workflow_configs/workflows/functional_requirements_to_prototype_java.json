@@ -110,7 +110,7 @@
           "processors": [
             {
               "name": "MessageProcessor.notify_saved_fun_req_a1b2",
-              "executionMode": "SYNC",
+              "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant"
               }
@@ -209,7 +209,7 @@
           "processors": [
             {
               "name": "MessageProcessor.notify_controller_generated_d3e4",
-              "executionMode": "SYNC",
+              "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant"
               }
@@ -308,7 +308,7 @@
           "processors": [
             {
               "name": "MessageProcessor.notify_processors_generated_e4f5",
-              "executionMode": "SYNC",
+              "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant"
               }
@@ -402,7 +402,7 @@
       "transitions": [
         {
           "name": "implement_business_logic",
-          "next": "generate_tests_for_processors",
+          "next": "notify_processors_enhanced",
           "manual": false,
           "processors": [
             {
@@ -507,7 +507,7 @@
           "processors": [
             {
               "name": "MessageProcessor.notify_processors_enhanced_g7h8",
-              "executionMode": "SYNC",
+              "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant"
               }
@@ -606,7 +606,7 @@
           "processors": [
             {
               "name": "MessageProcessor.notify_project_compiled_f5g6",
-              "executionMode": "SYNC",
+              "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant"
               }
