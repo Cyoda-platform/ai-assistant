@@ -143,3 +143,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 * Include @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = YourResponseDto.class))) for responses
 and any other appropriate Swagger annotations
 
+Output format (recommended):
+- Return as many tool calls to `add_application_resource` as possible in a single response to minimize API calls.
+
