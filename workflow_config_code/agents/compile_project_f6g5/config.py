@@ -33,7 +33,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             }
         ],
         "memory_tags": [
-            "compile_project"
+            "compile_project", "generate_processors_and_criteria"
         ],
         "messages": [
             {
