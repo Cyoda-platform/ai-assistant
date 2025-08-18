@@ -910,7 +910,7 @@ async def get_project_file_name_path(technical_id, git_branch_id, file_name, rep
     return file_path
 
 async def _save_file(_data, item, git_branch_id, repository_name: str, folder_name = None):
-    asyncio.create_task(_save_file_internal(_data, item, git_branch_id, repository_name, folder_name))
+    return await _save_file_internal(_data, item, git_branch_id, repository_name, folder_name)
 
 async def _save_file_internal(_data, item, git_branch_id, repository_name: str, folder_name = None) -> str:
     """
