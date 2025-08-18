@@ -91,6 +91,8 @@ Entity Usage:
 * Do not create static classes for entities
 * Entity classes must be reused as-is
 
+You can add/update/delete other entities via entity service. 
+You should not do any add update/delete operations on the entity that triggered the workflow. You can only add/update/delete other entities. Just change the current entity state (data) as needed. It will be persisted automatically by Cyoda based on the workflow.
 EntityService Operations Available:
 1. ADD:
    CompletableFuture<UUID> idFuture = entityService.addItem(
@@ -172,6 +174,7 @@ Example:
 - Validation tool shows NO missing components
 - Code follows established patterns and quality standards
 - Each processor and criteria returns result via return serializer.withRequest(request) 
+- All data access is done via entityService, no interaction with database or other data sources including in memory data structures.
 Example for processor:
     @Override
     public EntityProcessorCalculationResponse process(CyodaEventContext<EntityProcessorCalculationRequest> context) {

@@ -226,4 +226,91 @@ Output format (recommended):
 - Return as many tool calls to `add_application_resource` as possible in a single response to minimize API calls.
 
 Generate all processors and criteria needed for the complete application functionality as identified by the workflow component extraction tool.
+
+You can introduce business logic based on the functional requirements and the following business logic rules:
+
+1. **Analyze Current Implementation** against functional requirements
+Entity Usage:
+* Import and reuse existing entity classes from their correct versioned packages under 'src/main/java/com/java_template/application/entity'
+* Do not create static classes for entities
+* Entity classes must be reused as-is
+You can add/update/delete other entities via entity service. 
+You should not do any add update/delete operations on the entity that triggered the workflow. You can only add/update/delete other entities. Just change the current entity state (data) as needed. It will be persisted automatically by Cyoda based on the workflow.
+EntityService Operations Available:
+1. ADD:
+   CompletableFuture<UUID> idFuture = entityService.addItem(
+   entityModel={EntityName}.ENTITY_NAME,
+   entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
+   entity=data
+   )
+
+
+2. READ:
+   CompletableFuture<ObjectNode> itemFuture = entityService.getItem(
+   entityModel={EntityName}.ENTITY_NAME,
+   entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
+   technicalId=UUID.fromString(technicalId)
+   )
+   
+3. UPDATE:
+   CompletableFuture<UUID> updatedId = entityService.updateItem(
+   entityModel={EntityName}.ENTITY_NAME,
+   entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
+   technicalId=UUID.fromString(technicalId),
+   entity=data
+   )
+   
+NEVER use update operation on this entity. This entity will be persisted automatically by Cyoda based on the workflow. Just change the entity state (data) as needed. 
+You can only update other entities, not this one.
+
+4. DELETE:
+   CompletableFuture<UUID> deletedId = entityService.deleteItem(
+   entityModel={EntityName}.ENTITY_NAME,
+   entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
+   technicalId=UUID.fromString(technicalId)
+   )
+   
+CompletableFuture<ArrayNode> itemsFuture = entityService.getItems(
+entityModel={EntityName}.ENTITY_NAME,
+entityVersion=String.valueOf({EntityName}.ENTITY_VERSION)
+)
+
+CompletableFuture<ArrayNode> filteredItemsFuture = entityService.getItemsByCondition(
+entityModel={EntityName}.ENTITY_NAME,
+entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
+condition=condition,
+inMemory=true
+)
+
+
+Search Conditions (for simple filtering only):
+Use SearchConditionRequest.group() and Condition.of() for basic field-based queries:
+SearchConditionRequest.group("AND",
+Condition.of("$.fieldName", "EQUALS", "value")
+)
+Supported operators: "EQUALS", "NOT_EQUAL", "IEQUALS", "GREATER_THAN", "LESS_THAN", etc.
+
+Required Imports and Configuration:
+* import static com.java_template.common.config.Config.*;
+* import com.java_template.common.service.EntityService;
+* import com.java_template.common.util.Condition; //if needed
+* import com.java_template.common.util.SearchConditionRequest;//if needed
+* package com.java_template.application.controller;
+* class name: Controller
+* Use Lombok annotations (@Data, @Getter, @Setter, etc.)
+* Use SLF4J logging: Logger logger = LoggerFactory.getLogger(Controller.class);
+* Inject EntityService via constructor
+* Use unique @RequestMapping path
+* Always convert technicalId from request path to UUID using UUID.fromString()
+Example:
+ This entity technicalId=UUID.fromString(context.request().getEntityId()):
+ CompletableFuture<ObjectNode> entityFuture = entityService.getItem(
+                {EntityName}.ENTITY_NAME,
+                {EntityName}.ENTITY_VERSION,
+                UUID.fromString(context.request().getEntityId())
+            );
+* Inject ObjectMapper via constructor for JSON conversion if needed
+* You can inject only EntityService, ObjectMapper, and SerializerFactory via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES. 
+
+
 """
