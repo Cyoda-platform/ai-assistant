@@ -17,7 +17,8 @@
     }
   ],
   "memory_tags": [
-    "compile_project"
+    "compile_project",
+    "generate_processors_and_criteria"
   ],
   "messages": [
     {

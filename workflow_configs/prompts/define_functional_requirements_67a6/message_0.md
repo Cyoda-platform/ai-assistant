@@ -88,7 +88,7 @@ If the user does not specify processors and criteria directy in the requirement,
 
 ### 4. Request/Response Formats
 Specify JSON structures for all API endpoints.
-Visualize request/response formats using Mermaid diagrams.
+Use ```json ``` markdown for request/response formats.
 
 ## VISUAL REPRESENTATION:
 Mermaid diagrams rules:
