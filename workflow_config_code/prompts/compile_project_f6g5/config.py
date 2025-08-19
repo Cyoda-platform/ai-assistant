@@ -19,7 +19,14 @@ PHASE 1: INITIAL COMPILATION CHECK (CALL run_github_action EXACTLY ONCE)
 2. Call run_github_action with the following parameters. Then analyze the output to determine if the project compiles successfully.
 
 4. If fixes are needed, use available tools to:
-   - Fix compilation errors in Java 21 Spring Boot 3 files
+   - Fix compilation errors in 'src/main/java/com/java_template/application' directory.
+   Directory path to entity POJOs: 'src/main/java/com/java_template/application/entity'
+   Directory path to workflow files: 'src/main/resources/workflows'
+   Directory path to controller: 'src/main/java/com/java_template/application/controller'
+   Directory path to processors: 'src/main/java/com/java_template/application/processor'
+   Directory path to criteria: 'src/main/java/com/java_template/application/criterion'
+   
+   You can fix only files in the above directories. Do not touch any other files.
    
 Once you fix the compilation errors, call run_github_action again to verify the fixes.
 
