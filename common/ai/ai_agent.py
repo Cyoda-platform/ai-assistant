@@ -80,44 +80,25 @@ class OpenAiAgent:
 
             if hasattr(resp, "tool_calls") and resp.tool_calls:
                 adapted_messages.append(resp)
-                # Run non-UI tool calls concurrently for performance, preserving special semantics
-                tasks = []
-                call_index_map = {}
-                for idx, call in enumerate(resp.tool_calls):
+                for call in resp.tool_calls:
                     args = json.loads(call.function.arguments)
-                    # UI-prefixed functions short-circuit and must return immediately
                     if call.function.name.startswith(const.UI_FUNCTION_PREFIX):
                         if isinstance(args, dict):
                             return json.dumps({"type": const.UI_FUNCTION_PREFIX, "function": call.function.name, **args})
                         return json.dumps({"type": const.UI_FUNCTION_PREFIX, "function": call.function.name})
-
-                    # Schedule async tool execution
-                    async def run_tool(c=call, a=args):
-                        try:
-                            return c, await methods_dict[c.function.name](
-                                cls_instance, technical_id=technical_id, entity=entity, **a
-                            )
-                        except Exception as e:
-                            logger.exception("Tool call %s failed: %s", c.function.name, e)
-                            return c, f"ERROR: {e}"
-
-                    tasks.append(asyncio.create_task(run_tool()))
-                    call_index_map[call.id] = idx
-
-                if tasks:
-                    results = await asyncio.gather(*tasks)
-                    # Append tool results in the original order of tool_calls
-                    # Sort by the order of appearance using call_index_map
-                    for call, result in sorted(results, key=lambda cr: call_index_map.get(cr[0].id, 0)):
-                        adapted_messages.append({
-                            "role": "tool",
-                            "tool_call_id": call.id,
-                            "content": str(result)
-                        })
-                        if call.function.name == const.Notifications.EXIT_LOOP_FUNCTION_NAME.value:
-                            content = f'{resp.content} \n {const.Notifications.PROCEED_TO_THE_NEXT_STEP.value}' if resp.content else const.Notifications.PROCEED_TO_THE_NEXT_STEP.value
-                            adapted_messages.append({"role": "assistant", "content": content})
-                            return content
+                    result = await methods_dict[call.function.name](
+                        cls_instance, technical_id=technical_id, entity=entity, **args
+                    )
+                    adapted_messages.append({
+                        "role": "tool",
+                        "tool_call_id": call.id,
+                        "content": str(result)
+                    })
+                    if call.function.name == const.Notifications.EXIT_LOOP_FUNCTION_NAME.value:
+                        content =  f'{resp.content} \n {const.Notifications.PROCEED_TO_THE_NEXT_STEP.value}' if resp.content else const.Notifications.PROCEED_TO_THE_NEXT_STEP.value
+                        adapted_messages.append(
+                            {"role": "assistant", "content": content})
+                        return content
                 continue
 
             content = resp.content

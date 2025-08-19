@@ -561,8 +561,7 @@ class FileOperationsService(BaseWorkflowService):
             return self._handle_error(entity, e, "Error saving entity templates")
 
     async def add_application_resource(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
-        asyncio.create_task(self.add_application_resource_internal(technical_id, entity, **params))
-        return "Added application resource."
+        return await self.add_application_resource_internal(technical_id, entity, **params)
 
     async def add_application_resource_internal(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
 
