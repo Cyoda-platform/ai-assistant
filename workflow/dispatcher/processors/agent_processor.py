@@ -1,7 +1,7 @@
 """AgentProcessor template for AI agent actions."""
 
 from abc import abstractmethod
-from typing import Dict, Any
+from typing import Dict, Any, cast
 from entity.chat.chat import AgenticFlowEntity
 from entity.model import ChatMemory
 from workflow.dispatcher.events.processing_context import ProcessingContext
@@ -34,7 +34,7 @@ class AgentProcessor(Processor):
         # Step 4: Execute agent logic (delegated to child)
         response = await self.execute_agent_logic(
             config=action.config,
-            entity=ctx.event.entity,
+            entity=cast(AgenticFlowEntity, ctx.event.entity),
             memory=chat_memory,
             technical_id=ctx.event.technical_id
         )
