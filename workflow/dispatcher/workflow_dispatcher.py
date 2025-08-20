@@ -79,7 +79,7 @@ class WorkflowDispatcher:
         logger.info(f"WorkflowDispatcher initialized with {len(self.methods_dict)} methods")
 
     async def process_event(self, entity: WorkflowEntity, processor_name: str, payload: Any,
-                           technical_id: str) -> Tuple[WorkflowEntity, str]:
+                           technical_id: str) -> Tuple[WorkflowEntity, Any]:
         """
         Process a workflow event.
         

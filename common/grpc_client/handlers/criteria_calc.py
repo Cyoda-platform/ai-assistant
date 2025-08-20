@@ -44,7 +44,7 @@ class CriteriaCalcRequestHandler(Handler):
             logger.exception("Error processing entity", exc_info=e)
             entity.failed = True
             data['payload']['data'] = model_cls.model_dump(entity)
-            matches = None
+            matches = False
 
         return ResponseSpec(
             response_type=CRITERIA_CALC_RESP_EVENT_TYPE,

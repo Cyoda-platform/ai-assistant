@@ -1,0 +1,5 @@
+"""Dispatchers package for workflow dispatcher."""
+
+from .event_dispatcher import EventDispatcher
+
+__all__ = ['EventDispatcher']
