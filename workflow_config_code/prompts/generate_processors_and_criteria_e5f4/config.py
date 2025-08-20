@@ -312,5 +312,6 @@ Example:
 * Inject ObjectMapper via constructor for JSON conversion if needed
 * You can inject only EntityService, ObjectMapper, and SerializerFactory via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES. 
 
+CRITICAL: You must call `add_application_resource` for each processor and criteria.
 
 """
