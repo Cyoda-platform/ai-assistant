@@ -48,48 +48,6 @@ class GrpcClient:
             )
         return self._facade
 
-    # Properties for backward compatibility
-    @property
-    def router(self):
-        return self._get_facade().router
-
-    @property
-    def builders(self):
-        return self._get_facade().builders
-
-    @property
-    def outbox(self):
-        return self._get_facade().outbox
-
-    @property
-    def middleware(self):
-        return self._get_facade().first_middleware
-
-    @property
-    def facade(self):
-        return self._get_facade()
-
-    @property
-    def _queue(self):
-        return self._get_facade().outbox._queue
-
-    # Auth methods - minimal logic
-    def metadata_callback(self, context, callback):
-        """gRPC metadata provider."""
-        try:
-            token = self.auth.get_access_token()
-        except Exception as e:
-            logger.exception(e)
-            logger.warning("Access‑token fetch failed, invalidating and retrying", exc_info=e)
-            self.auth.invalidate_tokens()
-            token = self.auth.get_access_token()
-        callback([('authorization', f'Bearer {token}')], None)
-
-    def get_grpc_credentials(self) -> grpc.ChannelCredentials:
-        """Create composite credentials."""
-        call_creds = grpc.metadata_call_credentials(self.metadata_callback)
-        ssl_creds = grpc.ssl_channel_credentials()
-        return grpc.composite_channel_credentials(ssl_creds, call_creds)
 
     # Main entry points - simple delegation
     async def grpc_stream(self):
@@ -98,20 +56,6 @@ class GrpcClient:
             await self._get_facade().start()
         except Exception as e:
             logger.exception(e)
-
-    async def start(self):
-        return await self._get_facade().start()
-
-    def stop(self):
-        return self._get_facade().stop()
-
-    def _on_event(self, event: CloudEvent):
-        return self._get_facade()._on_event(event)
-
-    async def consume_stream(self):
-        return await self._get_facade()._consume_stream()
-
-
 
 
 # Re-export constants for backward compatibility

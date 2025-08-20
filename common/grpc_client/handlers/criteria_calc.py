@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class CriteriaCalcRequestHandler(Handler):
     async def handle(self, request: CloudEvent, services=None):
         data = json.loads(request.text_data)
-        processor_name = data.get('criteriaName')
+        criteria_name = data.get('criteriaName')
 
         model_key = data['payload']['meta']['modelKey']['name']
         model_cls = model_registry.get(model_key, WorkflowEntity)
@@ -25,7 +25,7 @@ class CriteriaCalcRequestHandler(Handler):
 
         matches = None
         try:
-            logger.info(f"[PROCESSING] Starting {CRITERIA_CALC_REQ_EVENT_TYPE} - Processor: {processor_name}, EntityId: {data['entityId']}, RequestId: {data.get('requestId')}")
+            logger.info(f"[PROCESSING] Starting {CRITERIA_CALC_REQ_EVENT_TYPE} - Criteria: {criteria_name}, EntityId: {data['entityId']}, RequestId: {data.get('requestId')}")
 
             # Use workflow_dispatcher from services
             workflow_dispatcher = services.workflow_dispatcher if services else None
@@ -34,13 +34,13 @@ class CriteriaCalcRequestHandler(Handler):
 
             entity, matches = await workflow_dispatcher.process_event(
                 entity=entity,
-                processor_name=processor_name,
+                processor_name=criteria_name,
                 payload=data,
                 technical_id=data['entityId'])
             data['payload']['data'] = model_cls.model_dump(entity)
-            logger.info(f"[PROCESSING] Success {CRITERIA_CALC_REQ_EVENT_TYPE} - Processor: {processor_name}, EntityId: {data['entityId']}")
+            logger.info(f"[PROCESSING] Success {CRITERIA_CALC_REQ_EVENT_TYPE} - Criteria: {criteria_name}, EntityId: {data['entityId']}")
         except Exception as e:
-            logger.error(f"[PROCESSING] Error {CRITERIA_CALC_REQ_EVENT_TYPE} - Processor: {processor_name}, EntityId: {data['entityId']}")
+            logger.error(f"[PROCESSING] Error {CRITERIA_CALC_REQ_EVENT_TYPE} - Criteria: {criteria_name}, EntityId: {data['entityId']}")
             logger.exception("Error processing entity", exc_info=e)
             entity.failed = True
             data['payload']['data'] = model_cls.model_dump(entity)
