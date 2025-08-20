@@ -6,7 +6,7 @@ from workflow.dispatcher.actions.function_action import FunctionAction
 from workflow.dispatcher.actions.agent_action import AgentAction
 from workflow.dispatcher.actions.direct_method_action import DirectMethodAction
 from .processor import Processor
-from .agent_processor import AgentProcessor
+from .config_based_agent_processor import ConfigBasedAgentProcessor
 from .function_processor import FunctionProcessor
 from .message_processor import MessageProcessor
 
@@ -18,7 +18,7 @@ class ProcessorSelector:
         self.processors = {
             NotificationAction: MessageProcessor(),
             FunctionAction: FunctionProcessor(),
-            AgentAction: AgentProcessor(),
+            AgentAction: ConfigBasedAgentProcessor(),
             DirectMethodAction: FunctionProcessor(),
         }
     
