@@ -1,1 +1,1 @@
-✅  Saved workflows to `src/main/java/com/java_template/application/workflow/*`. Configurations are ready. Proceeding to the next step....⏳😌
+✅  Saved workflows to `src/main/resources/workflow/*`. Configurations are ready. Proceeding to the next step....⏳😌

@@ -5,7 +5,7 @@ Create a Spring Boot REST controller prototype that demonstrates the API design 
 ### 1. DISCOVERY PHASE (MANDATORY)
 **You must use the following tools:**
 - Use `list_directory_files` to discover all entity classes in 'src/main/java/com/java_template/application/entity'
-- Use `list_directory_files` to discover all workflow files in 'src/main/java/com/java_template/application/workflow'
+- Use `list_directory_files` to discover all workflow files in 'src/main/resources/workflow'
 - Use `read_file` to examine each entity class and understand their fields and structure
 
 ### 2. CONTROLLER STRUCTURE

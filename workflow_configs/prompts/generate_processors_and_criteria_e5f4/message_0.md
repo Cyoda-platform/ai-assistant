@@ -7,7 +7,7 @@ Based on the functional requirements, workflow JSON files, and controller classe
 
 **Step 1: Extract Required Components**
 Use the `extract_workflow_components` tool to identify all processors and criteria needed:
-- workflow_directory: "src/main/java/com/java_template/application/workflow"
+- workflow_directory: "src/main/resources/workflow"
 - output_format: "detailed"
 
 This will provide you with:

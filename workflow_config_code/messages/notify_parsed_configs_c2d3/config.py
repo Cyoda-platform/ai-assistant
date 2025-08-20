@@ -15,7 +15,7 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
 The workflow JSON files have been analyzed and Java workflow orchestrators have been generated with conditional logic.
 
 📁 **Locations:**
-- Workflow JSONs: `src/main/java/com/java_template/application/workflow/`
+- Workflow JSONs: `src/main/resources/workflow`
 - Orchestrators: `src/main/java/com/java_template/application/orchestrator/`
 
 The generated orchestrators include:

@@ -27,7 +27,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "input": {
                 "local_fs": [
                         "src/main/java/com/java_template/application/entity/{EntityName}.java",
-                        "src/main/java/com/java_template/application/workflow/{EntityName}.json",
+                        "src/main/resources/workflow/{EntityName}.json",
                         "src/main/java/com/java_template/prototype/functional_requirement.md"
                 ]
         },

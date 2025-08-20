@@ -16,7 +16,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             "description": "Reads workflow JSON files from a directory path and generates Java workflow orchestrators for each workflow with conditional logic for processors and criteria",
             "strict": True,
             "parameters": {
-                "workflow_directory_path": "src/main/java/com/java_template/application/workflow"
+                "workflow_directory_path": "src/main/resources/workflow"
             }
         }
     }

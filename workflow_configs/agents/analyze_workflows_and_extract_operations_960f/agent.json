@@ -5,7 +5,7 @@
   "input": {
     "local_fs": [
       "src/main/java/com/java_template/application/entity/{EntityName}.java",
-      "src/main/java/com/java_template/application/workflow/{EntityName}.json",
+      "src/main/resources/workflow/{EntityName}.json",
       "src/main/java/com/java_template/application/workflow_prototypes/{EntityName}.txt",
       "src/main/java/com/java_template/prototype/functional_requirement.md"
     ]

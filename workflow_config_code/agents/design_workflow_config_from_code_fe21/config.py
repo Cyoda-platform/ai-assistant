@@ -20,7 +20,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         ],
         "output": {
                 "local_fs": [
-                        "src/main/java/com/java_template/application/workflow/{EntityName}.json"
+                        "src/main/resources/workflow/{EntityName}.json"
                 ]
         },
         "messages": [

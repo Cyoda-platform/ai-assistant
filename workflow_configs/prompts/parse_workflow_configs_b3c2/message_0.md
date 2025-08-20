@@ -10,7 +10,7 @@ Your tasks:
 4. Generate workflow JSON configurations following the standard format
 
 For each workflow, create a JSON file using add_application_resource with:
-- resource_path: 'src/main/java/com/java_template/application/workflow/{EntityName}.json'
+- resource_path: 'src/main/resources/workflow/{EntityName}.json'
 - file_contents: properly formatted workflow JSON
 
 Workflow JSON format:

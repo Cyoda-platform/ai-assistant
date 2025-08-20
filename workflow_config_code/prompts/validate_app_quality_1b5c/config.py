@@ -27,7 +27,7 @@ YOUR VALIDATION TASKS:
 2. Read the current controller using get_file_contents: 'src/main/java/com/java_template/application/controller/Controller.java'
 Notice that process code has been removed from the controller.
 3. Use list_directory_files to examine what workflows, processors, and criteria were created:
-   - 'src/main/java/com/java_template/application/workflow'
+   - 'src/main/resources/workflow'
    - 'src/main/java/com/java_template/application/processor'
    - 'src/main/java/com/java_template/application/criterion'
 5. Read each workflow, processor, and criteria files to understand what business logic was moved

@@ -5,7 +5,7 @@
     "description": "Reads workflow JSON files from a directory path and generates Java workflow orchestrators for each workflow with conditional logic for processors and criteria",
     "strict": true,
     "parameters": {
-      "workflow_directory_path": "src/main/java/com/java_template/application/workflow"
+      "workflow_directory_path": "src/main/resources/workflow"
     }
   }
 }

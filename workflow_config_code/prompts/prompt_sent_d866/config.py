@@ -22,7 +22,7 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
 ./gradlew bootJarWorkflowImport
 java -jar build/libs/java-client-template-1.0-SNAPSHOT-workflow-import.jar
 ```
-Let the user know: the workflows are available in `src/main/java/com/java_template/application/workflow`
+Let the user know: the workflows are available in `src/main/resources/workflow`
 Let the user know: the workflows should appear in their Cyoda UI once the import completes.
 Let the user know: they can view and edit their workflow configurations here in canvas. They need to open canvas in upper right corner and choose workflow tab. There they can view the workflow and also use AI for editing if necessary.
 Max tokens: 300
