@@ -85,7 +85,7 @@
             "initialState": {
               "type": "string",
               "enum": [
-                "none"
+                "initial_state"
               ]
             },
             "active": {
