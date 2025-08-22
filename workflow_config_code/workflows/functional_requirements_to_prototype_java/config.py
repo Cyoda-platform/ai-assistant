@@ -62,45 +62,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "start_save_functional_requirements",
-                        "next": "save_functional_requirements",
-                        "manual": False
-                    }
-                ]
-            },
-            "save_functional_requirements": {
-                "transitions": [
-                    {
-                        "name": "functional_requirements_saved",
-                        "next": "notify_saved_requirements",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": SaveFunctionalRequirementsF2a1AgentConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "notify_saved_requirements": {
-                "transitions": [
-                    {
-                        "name": "proceed_to_generate_orchestrators",
                         "next": "generate_controller",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": NotifySavedFunReqA1b2MessageConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant"
-                                }
-                            }
-                        ]
+                        "manual": False
                     }
                 ]
             },
@@ -108,7 +71,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "controller_generated",
-                        "next": "notify_processors_enhanced",
+                        "next": "run_init_compilation",
                         "manual": False,
                         "processors": [
                             {
@@ -123,55 +86,19 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 ]
             },
-            "notify_controller_generated": {
+            "run_init_compilation": {
                 "transitions": [
                     {
-                        "name": "proceed_to_generate_processors",
-                        "next": "generate_processors_and_criteria",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": NotifyControllerGeneratedD3e4MessageConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant"
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "generate_processors_and_criteria": {
-                "transitions": [
-                    {
-                        "name": "processors_and_criteria_generated",
-                        "next": "notify_processors_generated",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": GenerateProcessorsAndCriteriaE5f4AgentConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "notify_processors_generated": {
-                "transitions": [
-                    {
-                        "name": "proceed_to_enhance_processors",
+                        "name": "compilation_started",
                         "next": "enhance_processors",
                         "manual": False,
                         "processors": [
                             {
-                                "name": NotifyProcessorsGeneratedE4f5MessageConfig.get_name(),
+                                "name": RunCompilationH8i9ToolConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
-                                    "calculationNodesTags": "ai_assistant"
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 1500000
                                 }
                             }
                         ]
@@ -187,44 +114,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "processors": [
                             {
                                 "name": EnhanceProcessorsG6h7AgentConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "implement_business_logic": {
-                "transitions": [
-                    {
-                        "name": "implement_business_logic",
-                        "next": "notify_processors_enhanced",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": ImplementProcessorsBusinessLogicG6h7AgentConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "generate_tests_for_processors": {
-                "transitions": [
-                    {
-                        "name": "generate_tests_for_processors",
-                        "next": "notify_processors_enhanced",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": GenerateTestsForProcessorsAgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",

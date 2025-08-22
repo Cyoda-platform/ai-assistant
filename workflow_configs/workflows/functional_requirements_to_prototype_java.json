@@ -15,7 +15,7 @@
       "transitions": [
         {
           "name": "start_save_functional_requirements",
-          "next": "save_functional_requirements",
+          "next": "generate_controller",
           "manual": false
         },
         {
@@ -51,110 +51,11 @@
         }
       ]
     },
-    "save_functional_requirements": {
-      "transitions": [
-        {
-          "name": "functional_requirements_saved",
-          "next": "notify_saved_requirements",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.save_functional_requirements_f2a1",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "save_functional_requirements",
-          "manual": true
-        },
-        {
-          "name": "fail_save_functional_requirements",
-          "next": "locked_save_functional_requirements",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_save_functional_requirements": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "save_functional_requirements",
-          "manual": true
-        }
-      ]
-    },
-    "notify_saved_requirements": {
-      "transitions": [
-        {
-          "name": "proceed_to_generate_orchestrators",
-          "next": "generate_controller",
-          "manual": false,
-          "processors": [
-            {
-              "name": "MessageProcessor.notify_saved_fun_req_a1b2",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant"
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "notify_saved_requirements",
-          "manual": true
-        },
-        {
-          "name": "fail_notify_saved_requirements",
-          "next": "locked_notify_saved_requirements",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_notify_saved_requirements": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "notify_saved_requirements",
-          "manual": true
-        }
-      ]
-    },
     "generate_controller": {
       "transitions": [
         {
           "name": "controller_generated",
-          "next": "notify_processors_enhanced",
+          "next": "run_init_compilation",
           "manual": false,
           "processors": [
             {
@@ -200,129 +101,31 @@
         }
       ]
     },
-    "notify_controller_generated": {
+    "run_init_compilation": {
       "transitions": [
         {
-          "name": "proceed_to_generate_processors",
-          "next": "generate_processors_and_criteria",
-          "manual": false,
-          "processors": [
-            {
-              "name": "MessageProcessor.notify_controller_generated_d3e4",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant"
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "notify_controller_generated",
-          "manual": true
-        },
-        {
-          "name": "fail_notify_controller_generated",
-          "next": "locked_notify_controller_generated",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_notify_controller_generated": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "notify_controller_generated",
-          "manual": true
-        }
-      ]
-    },
-    "generate_processors_and_criteria": {
-      "transitions": [
-        {
-          "name": "processors_and_criteria_generated",
-          "next": "notify_processors_generated",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.generate_processors_and_criteria_e5f4",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "generate_processors_and_criteria",
-          "manual": true
-        },
-        {
-          "name": "fail_generate_processors_and_criteria",
-          "next": "locked_generate_processors_and_criteria",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_generate_processors_and_criteria": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "generate_processors_and_criteria",
-          "manual": true
-        }
-      ]
-    },
-    "notify_processors_generated": {
-      "transitions": [
-        {
-          "name": "proceed_to_enhance_processors",
+          "name": "compilation_started",
           "next": "enhance_processors",
           "manual": false,
           "processors": [
             {
-              "name": "MessageProcessor.notify_processors_generated_e4f5",
+              "name": "FunctionProcessor.run_compilation_h8i9",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
-                "calculationNodesTags": "ai_assistant"
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 1500000
               }
             }
           ]
         },
         {
           "name": "retry",
-          "next": "notify_processors_generated",
+          "next": "run_init_compilation",
           "manual": true
         },
         {
-          "name": "fail_notify_processors_generated",
-          "next": "locked_notify_processors_generated",
+          "name": "fail_run_init_compilation",
+          "next": "locked_run_init_compilation",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -339,11 +142,11 @@
         }
       ]
     },
-    "locked_notify_processors_generated": {
+    "locked_run_init_compilation": {
       "transitions": [
         {
           "name": "unlock",
-          "next": "notify_processors_generated",
+          "next": "run_init_compilation",
           "manual": true
         }
       ]
@@ -394,106 +197,6 @@
         {
           "name": "unlock",
           "next": "enhance_processors",
-          "manual": true
-        }
-      ]
-    },
-    "implement_business_logic": {
-      "transitions": [
-        {
-          "name": "implement_business_logic",
-          "next": "notify_processors_enhanced",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.implement_processors_business_logic_g6h7",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "implement_business_logic",
-          "manual": true
-        },
-        {
-          "name": "fail_implement_business_logic",
-          "next": "locked_implement_business_logic",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_implement_business_logic": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "implement_business_logic",
-          "manual": true
-        }
-      ]
-    },
-    "generate_tests_for_processors": {
-      "transitions": [
-        {
-          "name": "generate_tests_for_processors",
-          "next": "notify_processors_enhanced",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.generate_tests_for_processors",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "generate_tests_for_processors",
-          "manual": true
-        },
-        {
-          "name": "fail_generate_tests_for_processors",
-          "next": "locked_generate_tests_for_processors",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_generate_tests_for_processors": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "generate_tests_for_processors",
           "manual": true
         }
       ]

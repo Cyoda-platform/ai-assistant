@@ -101,7 +101,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                             "initialState": {
                                 "type": "string",
                                 "enum": [
-                                    "none"
+                                    "initial_state"
                                 ]
                             },
                             "active": {

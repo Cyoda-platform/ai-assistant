@@ -62,10 +62,6 @@ class FileOperationsService(BaseWorkflowService):
             # Use repository resolver to determine repository name
             repository_name = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM, technical_id)
             git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
-
-            # Generate unique operation ID for safe concurrent operations
-            operation_id = str(generate_uuid())
-
             # Get unique project file path for this operation
             file_name = await get_project_file_name(
                 file_name=params.get("filename"),
@@ -85,32 +81,15 @@ class FileOperationsService(BaseWorkflowService):
             updated_content = (content.replace('CHAT_ID_VAR', technical_id)
                                .replace('YOUR_ENV_NAME_VAR', env_name))
 
-            # Save the updated content to the file (no local lock needed - utils.py handles safety)
-            async with aiofiles.open(file_name, 'w') as new_file:
-                await new_file.write(updated_content)
-
-            # Use the safe git push with clone_dir (utils.py handles all safety)
-            clone_dir = os.path.dirname(file_name)
-            while not clone_dir.endswith(f"{repository_name}_{operation_id}"):
-                clone_dir = os.path.dirname(clone_dir)
-                if clone_dir == "/" or clone_dir == "":
-                    return "Error: Could not determine clone directory"
-
-            # Get relative file path for git operations
-            relative_file_path = os.path.relpath(file_name, clone_dir)
-
-            push_success = await _git_push(
-                git_branch_id=git_branch_id,
-                file_paths=[relative_file_path],
-                commit_message="Added env file template",
-                repository_name=repository_name,
-                clone_dir=clone_dir
+            await _save_file(
+                _data=updated_content,
+                item=params.get("filename"),
+                git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
+                repository_name=repository_name
             )
 
-            if push_success:
-                return "🧩.env.template file saved successfully. Proceeding to the next step⏳...You will see a notification soon!"
-            else:
-                return "Error: Failed to push env file template to repository"
+            return "🧩.env.template file saved successfully. Proceeding to the next step⏳...You will see a notification soon!"
+
             
         except Exception as e:
             self.logger.exception("Error saving environment file: %s", str(e))

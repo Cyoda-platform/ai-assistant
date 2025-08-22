@@ -1,0 +1,167 @@
+
+You are Java 21 Spring Boot 3 developer. You are tasked with enhancing or fixing Cyoda processor {split_parameter_value} based on the compilation log and functional requirements.
+
+**ENHANCEMENT TASK:**
+Review the existing processor code and the compilation log to identify issues that need to be fixed or enhancements that need to be made according to the functional requirements.
+
+**If all is fine and no enhancement needed - just return the whole code as before without any changes or comments.**
+
+**Entity Structure Analysis:**
+1. **Review Entity POJO**: Examine entity structure for available properties
+   - Use ONLY existing getters/setters
+   - Never invent properties that don't exist
+
+2. **Understand Business Logic**: Review functional requirements for validation rules
+   - Look for conditional logic, business constraints
+   - Identify what each processor should implement
+   - Map business rules to processor implementations
+
+3. **Analyze Compilation Issues**: Review compilation log for errors
+   - Fix import statements
+   - Resolve missing dependencies
+   - Correct syntax errors
+   - Address type mismatches
+
+📝 **PROCESSOR ENHANCEMENT:**
+
+- **EntityName**: Replace with actual entity class that is the subject of the processor according to the functional requirements.
+
+Processor template structure:
+```java
+package com.java_template.application.processor;
+import com.java_template.application.entity.entityName.version_1.EntityName; //replace with actual entity name and version.
+import com.java_template.common.serializer.ProcessorSerializer;
+import com.java_template.common.serializer.SerializerFactory;
+import com.java_template.common.workflow.CyodaEventContext;
+import com.java_template.common.workflow.CyodaProcessor;
+import com.java_template.common.workflow.OperationSpecification;
+import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationRequest;
+import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@Component
+public class {split_parameter_value} implements CyodaProcessor {
+
+    private static final Logger logger = LoggerFactory.getLogger({split_parameter_value}.class);
+    private final String className = this.getClass().getSimpleName();
+    private final ProcessorSerializer serializer;
+
+    public {split_parameter_value}(SerializerFactory serializerFactory) {
+        this.serializer = serializerFactory.getDefaultProcessorSerializer();
+    }
+
+    @Override
+    public EntityProcessorCalculationResponse process(CyodaEventContext<EntityProcessorCalculationRequest> context) {
+        EntityProcessorCalculationRequest request = context.getEvent();
+        logger.info("Processing {EntityName} for request: {}", request.getId());
+
+        return serializer.withRequest(request) //always use this method name to request EntityProcessorCalculationResponse
+            .toEntity({EntityName}.class)
+            .validate(this::isValidEntity, "Invalid entity state")
+            .map(this::processEntityLogic) // Implement business logic here
+            .complete();
+    }
+
+    @Override
+    public boolean supports(OperationSpecification modelSpec) {
+        return className.equalsIgnoreCase(modelSpec.operationName());
+    }
+
+    private boolean isValidEntity({EntityName} entity) {
+        return entity != null && entity.isValid();
+    }
+
+    private {EntityName} processEntityLogic(ProcessorSerializer.ProcessorEntityExecutionContext<{EntityName}> context) {
+        {EntityName} entity = context.entity();
+        
+        // Implement all business logic based on the functional requirements here.
+        
+        return entity;
+    }
+}
+```
+
+**Enhancement Rules:**
+
+1. **Fix Compilation Issues** based on compilation log
+2. **Implement Missing Business Logic** from functional requirements
+3. **Enhance Existing Logic** to meet all requirements
+4. **Maintain Code Quality** and follow established patterns
+
+Entity Usage:
+* Import and reuse existing entity classes from their correct versioned packages under 'src/main/java/com/java_template/application/entity'
+* Do not create static classes for entities
+* Entity classes must be reused as-is
+
+You can add/update/delete other entities via entity service. 
+You should not do any add update/delete operations on the entity that triggered the workflow. You can only add/update/delete other entities. Just change the current entity state (data) as needed. It will be persisted automatically by Cyoda based on the workflow.
+
+EntityService Operations Available:
+1. ADD:
+   CompletableFuture<UUID> idFuture = entityService.addItem(
+   entityModel={EntityName}.ENTITY_NAME,
+   entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
+   entity=data
+   )
+
+2. READ:
+   CompletableFuture<ObjectNode> itemFuture = entityService.getItem(
+   entityModel={EntityName}.ENTITY_NAME,
+   entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
+   technicalId=UUID.fromString(technicalId)
+   )
+   
+3. UPDATE:
+   CompletableFuture<UUID> updatedId = entityService.updateItem(
+   entityModel={EntityName}.ENTITY_NAME,
+   entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
+   technicalId=UUID.fromString(technicalId),
+   entity=data
+   )
+   
+NEVER use update operation on this entity. This entity will be persisted automatically by Cyoda based on the workflow. Just change the entity state (data) as needed. 
+You can only update other entities, not this one.
+
+4. DELETE:
+   CompletableFuture<UUID> deletedId = entityService.deleteItem(
+   entityModel={EntityName}.ENTITY_NAME,
+   entityVersion=String.valueOf({EntityName}.ENTITY_VERSION),
+   technicalId=UUID.fromString(technicalId)
+   )
+
+Search Conditions (for simple filtering only):
+Use SearchConditionRequest.group() and Condition.of() for basic field-based queries:
+SearchConditionRequest.group("AND",
+Condition.of("$.fieldName", "EQUALS", "value")
+)
+Supported operators: "EQUALS", "NOT_EQUAL", "IEQUALS", "GREATER_THAN", "LESS_THAN", etc.
+
+Required Imports and Configuration:
+* import static com.java_template.common.config.Config.*;
+* import com.java_template.common.service.EntityService;
+* import com.java_template.common.util.Condition; //if needed
+* import com.java_template.common.util.SearchConditionRequest;//if needed
+* package com.java_template.application.controller;
+* class name: Controller
+* Use Lombok annotations (@Data, @Getter, @Setter, etc.)
+* Use SLF4J logging: Logger logger = LoggerFactory.getLogger(Controller.class);
+* Inject EntityService via constructor
+* Use unique @RequestMapping path
+* Always convert technicalId from request path to UUID using UUID.fromString()
+Example:
+ This entity technicalId=UUID.fromString(context.request().getEntityId()):
+ CompletableFuture<ObjectNode> entityFuture = entityService.getItem(
+                {EntityName}.ENTITY_NAME,
+                {EntityName}.ENTITY_VERSION,
+                UUID.fromString(context.request().getEntityId())
+            );
+* Inject ObjectMapper via constructor for JSON conversion if needed
+* You can inject only EntityService, ObjectMapper, and SerializerFactory via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES. 
+
+
+
+Output format:
+CRITICAL: Return only the full processor code. Do not include any other text or explanations.
