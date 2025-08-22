@@ -11,20 +11,9 @@ from typing import Any, Dict, Callable
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get prompt configuration factory"""
     return lambda params=None: \
-        """Get the list of entities with 'list_directory_files' tool.
-
+"""
 For each entity:
 1. Design a workflow based on the functional requirements. 
-2. Call 'add_application_resource' with:
-   - resource_path = 'src/main/resources/workflow/{entityName}/version_1/{EntityName}.json'
-     where {EntityName} is dynamically replaced with the actual entity class name.
-     replace entityName with the actual entity name in lower case. Replace {EntityName} with the actual entity name in CamelCase.
-   - file_contents = workflow JSON.
-
-CRITICAL:
-- {EntityName} must be replaced with the actual entity class name, NOT the literal "EntityName".
-- Do NOT create a workflow for "EntityName" placeholder.
-
 Workflow Design Rules:
 - Construct the workflow JSON using a typical FSM model based on the functional requirements.
 - Avoid loops in the state transitions.
@@ -44,8 +33,8 @@ Processors represent business logic execution (e.g. validation, data processing,
 Workflow JSON Example:
 {
   "version": "1.0",
-  "name": "{EntityName} Workflow",
-  "desc": "Description of the workflow for {EntityName}",
+  "name": "{split_parameter_value} Workflow",
+  "desc": "Description of the workflow for {split_parameter_value}",
   "initialState": "initial_state",
   "active": true,
   "states": {
@@ -96,11 +85,7 @@ Workflow JSON Example:
   }
 }
 
-Output Rules:
-- Save each workflow JSON to 'src/main/resources/workflow/{EntityName}.json' using 'add_application_resource'.
-- Generate valid JSON only. No extra text or markdown.
-- Ensure no file named 'EntityName.json' is ever created unless there is literally an entity with that name.
-- Avoid putting criterion and processors in the same transition if possible. Ideally, each transition has either a criterion or a processor, but not both.
+CRITICAL: Avoid putting criterion and processors in the same transition if possible. Ideally, each transition has either a criterion or a processor, but not both.
 
 "response_format": {
     "name": "workflow_design_schema",
@@ -395,5 +380,8 @@ Output Rules:
         }
     }
 }
+
+Output Rules:
+CRITICAL:Return valid JSON ready for copy/paste only. No extra text or markdown.
 """
 

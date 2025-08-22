@@ -70,8 +70,7 @@ class FileOperationsService(BaseWorkflowService):
             file_name = await get_project_file_name(
                 file_name=params.get("filename"),
                 git_branch_id=git_branch_id,
-                repository_name=repository_name,
-                operation_id=operation_id
+                repository_name=repository_name
             )
 
             if file_name is None:
@@ -218,8 +217,7 @@ class FileOperationsService(BaseWorkflowService):
             full_directory_path = await get_project_file_name(
                 file_name=directory_path,
                 git_branch_id=git_branch_id,
-                repository_name=repository_name,
-                operation_id=operation_id
+                repository_name=repository_name
             )
 
             if full_directory_path is None:
@@ -427,8 +425,6 @@ class FileOperationsService(BaseWorkflowService):
 
             # Use safe clone and file operations (utils.py handles all concurrency safety)
             clone_result = await clone_repo(git_branch_id=technical_id, repository_name=repository_name)
-            if clone_result is None:
-                return "Error: Failed to clone repository"
 
             # Call the async _save_file function (handles its own safety)
             await _save_file(
@@ -520,8 +516,7 @@ class FileOperationsService(BaseWorkflowService):
             file_path = await get_project_file_name(
                 file_name="entity/entities_data_design.json",
                 git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
-                repository_name=repository_name,
-                operation_id=operation_id
+                repository_name=repository_name
             )
 
             if file_path is None:

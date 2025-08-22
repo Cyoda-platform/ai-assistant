@@ -8,6 +8,7 @@ from typing import Any, Dict, Callable
 from workflow_config_code.tools.add_application_resource_3d0b.tool import AddApplicationResource3d0bToolConfig
 from workflow_config_code.tools.extract_workflow_components_k2l3.tool import ExtractWorkflowComponentsK2l3ToolConfig
 from workflow_config_code.prompts.generate_processors_and_criteria_e5f4.prompt import GenerateProcessorsAndCriteriaE5f4PromptConfig
+from workflow_config_code.tools.validate_workflow_processors.tool import ValidateWorkflowProcessorsToolConfig
 
 
 def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
@@ -19,6 +20,9 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "tools": [
             {
                 "name": AddApplicationResource3d0bToolConfig.get_tool_name()
+            },
+            {
+                "name": ValidateWorkflowProcessorsToolConfig.get_tool_name()
             },
             {
                 "name": ExtractWorkflowComponentsK2l3ToolConfig.get_tool_name()

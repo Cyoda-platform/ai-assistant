@@ -108,7 +108,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "controller_generated",
-                        "next": "notify_controller_generated",
+                        "next": "notify_processors_enhanced",
                         "manual": False,
                         "processors": [
                             {
@@ -265,7 +265,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
+                                    "responseTimeoutMs": 1500000
                                 }
                             }
                         ]

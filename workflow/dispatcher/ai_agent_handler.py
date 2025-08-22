@@ -5,6 +5,8 @@ from common.config.config import config as env_config
 from common.utils.chat_util_functions import enrich_config_message
 from common.utils.utils import get_current_timestamp_num
 from entity.model import AgenticFlowEntity, ChatMemory, ModelConfig, FlowEdgeMessage, AIMessage
+from workflow.config_builder import ConfigBuilder
+from workflow.dispatcher.jobs_processor import JobsProcessor
 
 # Conditional import to avoid dependency issues during testing
 try:
@@ -22,7 +24,7 @@ class AIAgentHandler:
     Handles AI agent interactions, including running agents and processing responses.
     """
 
-    def __init__(self, ai_agent, method_registry, memory_manager, cls_instance, entity_service, cyoda_auth_service):
+    def __init__(self, ai_agent, method_registry, memory_manager, cls_instance, entity_service, cyoda_auth_service, config_builder=None):
         """
         Initialize the AI agent handler.
 
@@ -33,6 +35,7 @@ class AIAgentHandler:
             cls_instance: Class instance for AI agent function calling
             entity_service: Entity service for edge message handling
             cyoda_auth_service: Cyoda auth service
+            config_builder: Optional ConfigBuilder instance for message resolution
         """
         self.ai_agent = ai_agent
         self.method_registry = method_registry
@@ -40,6 +43,18 @@ class AIAgentHandler:
         self.cls_instance = cls_instance
         self.entity_service = entity_service
         self.cyoda_auth_service = cyoda_auth_service
+        self.config_builder = config_builder or ConfigBuilder()
+
+        # Initialize jobs processor
+        self.jobs_processor = JobsProcessor(
+            ai_agent=ai_agent,
+            method_registry=method_registry,
+            memory_manager=memory_manager,
+            cls_instance=cls_instance,
+            entity_service=entity_service,
+            cyoda_auth_service=cyoda_auth_service,
+            config_builder=self.config_builder
+        )
     
     async def run_ai_agent(self, config: Dict[str, Any], entity: AgenticFlowEntity,
                           memory: ChatMemory, technical_id: str) -> str:
@@ -66,30 +81,32 @@ class AIAgentHandler:
 
             # Append configured messages to memory if present
             finished_flow = entity.chat_flow.finished_flow
-            await self._append_messages(entity=entity, memory=memory, config=config, finished_flow=finished_flow)
 
-            # Get memory messages including input data
-            memory_tags = config.get("memory_tags", [env_config.GENERAL_MEMORY_TAG])
-            messages = await self._get_ai_memory(entity=entity, config=config, memory=memory, technical_id=technical_id)
+            if not config.get("jobs"):
+                await self._append_messages(entity=entity, memory=memory, config=config, finished_flow=finished_flow)
+                # Get memory messages including input data
+                memory_tags = config.get("memory_tags", [env_config.GENERAL_MEMORY_TAG])
+                messages = await self._get_ai_memory(entity=entity, config=config, memory=memory, technical_id=technical_id)
+                # Extract model configuration
+                model = ModelConfig.model_validate(config.get("model", {}))
 
-            # Extract model configuration
-            model = ModelConfig.model_validate(config.get("model", {}))
+                # Run the AI agent with correct signature
+                response = await self.ai_agent.run_agent(
+                    methods_dict=self.method_registry.methods_dict,
+                    technical_id=technical_id,
+                    cls_instance=self.cls_instance,
+                    entity=entity,
+                    tools=config.get("tools"),
+                    model=model,
+                    messages=messages,
+                    tool_choice=config.get("tool_choice"),
+                    response_format=config.get("response_format")
+                )
+                await self.memory_manager.store_ai_response(response=response, memory=memory, memory_tags=memory_tags)
 
-            # Run the AI agent with correct signature
-            response = await self.ai_agent.run_agent(
-                methods_dict=self.method_registry.methods_dict,
-                technical_id=technical_id,
-                cls_instance=self.cls_instance,
-                entity=entity,
-                tools=config.get("tools"),
-                model=model,
-                messages=messages,
-                tool_choice=config.get("tool_choice"),
-                response_format=config.get("response_format")
-            )
-
-            # Store the response in memory
-            await self.memory_manager.store_ai_response(response=response, memory=memory, memory_tags=memory_tags)
+            else:
+                # Handle jobs processing using dedicated processor
+                response = await self.jobs_processor.process_jobs(config, entity, memory, technical_id)
 
             return response
             
@@ -387,6 +404,7 @@ class AIAgentHandler:
         """
         from common.utils.utils import get_repository_name
         return get_repository_name(entity)
+
     
     async def _handle_batch_processing(self, config: Dict[str, Any]) -> str:
         """

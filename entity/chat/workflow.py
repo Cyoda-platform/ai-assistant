@@ -283,6 +283,8 @@ class ChatWorkflow(Workflow):
             # Workflow Validation
             'validate_workflow_implementation': self.workflow_validation_service.validate_workflow_implementation,
             'validate_workflow_processors': self.workflow_processor_validation_service.validate_workflow_processors,
+            'validate_workflow_criteria': self.workflow_processor_validation_service.validate_workflow_criteria,
+
             'extract_workflow_components': self.workflow_component_extraction_service.extract_workflow_components,
 
             # Utility Functions
@@ -293,6 +295,7 @@ class ChatWorkflow(Workflow):
             'fail_workflow': self.utility_service.fail_workflow,
             'check_scheduled_entity_status': self.utility_service.check_scheduled_entity_status,
             'trigger_parent_entity': self.utility_service.trigger_parent_entity,
+            'get_entity_names_from_entities_requirement': self.utility_service.get_entity_names_from_entities_requirement,
 
             # Build ID Retrieval
             'get_build_id_from_context': self.build_id_retrieval_service.get_build_id_from_context,

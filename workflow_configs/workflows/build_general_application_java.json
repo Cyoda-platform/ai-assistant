@@ -1310,12 +1310,12 @@
     "generated_functional_requirements": {
       "transitions": [
         {
-          "name": "notify_generated_functional_requirements",
-          "next": "notified_generated_functional_requirements",
+          "name": "generate_entities_requirements",
+          "next": "generated_entities_requirements",
           "manual": false,
           "processors": [
             {
-              "name": "MessageProcessor.notify_generated_functional_requirements_0bee",
+              "name": "AgentProcessor.generate_entities_requirements_accc",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
@@ -1357,11 +1357,61 @@
         }
       ]
     },
+    "generated_entities_requirements": {
+      "transitions": [
+        {
+          "name": "notify_generated_functional_requirements",
+          "next": "notified_generated_functional_requirements",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_generated_functional_requirements_0bee",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "generated_entities_requirements",
+          "manual": true
+        },
+        {
+          "name": "fail_generated_entities_requirements",
+          "next": "locked_generated_entities_requirements",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_generated_entities_requirements": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "generated_entities_requirements",
+          "manual": true
+        }
+      ]
+    },
     "notified_generated_functional_requirements": {
       "transitions": [
         {
           "name": "extract_entities_from_prototype",
-          "next": "entities_extracted",
+          "next": "notify_generated_entities_n_workflows",
           "manual": false,
           "processors": [
             {
@@ -1407,157 +1457,7 @@
         }
       ]
     },
-    "entities_extracted": {
-      "transitions": [
-        {
-          "name": "notify_entities_extracted",
-          "next": "notified_entities_extracted",
-          "manual": false,
-          "processors": [
-            {
-              "name": "MessageProcessor.notify_entities_extracted_ede4",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "entities_extracted",
-          "manual": true
-        },
-        {
-          "name": "fail_entities_extracted",
-          "next": "locked_entities_extracted",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_entities_extracted": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "entities_extracted",
-          "manual": true
-        }
-      ]
-    },
-    "notified_entities_extracted": {
-      "transitions": [
-        {
-          "name": "generate_workflows",
-          "next": "generated_workflows",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.generate_workflow_from_requirements_0000",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "notified_entities_extracted",
-          "manual": true
-        },
-        {
-          "name": "fail_notified_entities_extracted",
-          "next": "locked_notified_entities_extracted",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_notified_entities_extracted": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "notified_entities_extracted",
-          "manual": true
-        }
-      ]
-    },
-    "generated_workflows": {
-      "transitions": [
-        {
-          "name": "notify_generated_workflows",
-          "next": "notified_generated_workflows",
-          "manual": false,
-          "processors": [
-            {
-              "name": "MessageProcessor.notify_workflows_extracted_0000",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "generated_workflows",
-          "manual": true
-        },
-        {
-          "name": "fail_generated_workflows",
-          "next": "locked_generated_workflows",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_generated_workflows": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "generated_workflows",
-          "manual": true
-        }
-      ]
-    },
-    "notified_generated_workflows": {
+    "notify_generated_entities_n_workflows": {
       "transitions": [
         {
           "name": "ask_to_discuss_configs",
@@ -1576,12 +1476,12 @@
         },
         {
           "name": "retry",
-          "next": "notified_generated_workflows",
+          "next": "notify_generated_entities_n_workflows",
           "manual": true
         },
         {
-          "name": "fail_notified_generated_workflows",
-          "next": "locked_notified_generated_workflows",
+          "name": "fail_notify_generated_entities_n_workflows",
+          "next": "locked_notify_generated_entities_n_workflows",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -1598,11 +1498,11 @@
         }
       ]
     },
-    "locked_notified_generated_workflows": {
+    "locked_notify_generated_entities_n_workflows": {
       "transitions": [
         {
           "name": "unlock",
-          "next": "notified_generated_workflows",
+          "next": "notify_generated_entities_n_workflows",
           "manual": true
         }
       ]

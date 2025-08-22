@@ -7,6 +7,8 @@ Configuration data for the workflow.
 
 from typing import Any, Dict, Callable
 
+from workflow_config_code.agents.generate_entities_requirements_accc.agent import \
+    GenerateEntitiesRequirementsAcccAgentConfig
 from workflow_config_code.messages.notify_prototype_generation_0000.message import \
     NotifyPrototypeGeneration0000MessageConfig
 from workflow_config_code.tools.generate_prototype_sketch_2269 import GeneratePrototypeSketch2269FunctionConfig
@@ -655,6 +657,25 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             "generated_functional_requirements": {
                 "transitions": [
                     {
+                        "name": "generate_entities_requirements",
+                        "next": "generated_entities_requirements",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": GenerateEntitiesRequirementsAcccAgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 900000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "generated_entities_requirements": {
+                "transitions": [
+                    {
                         "name": "notify_generated_functional_requirements",
                         "next": "notified_generated_functional_requirements",
                         "manual": False,
@@ -675,7 +696,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "extract_entities_from_prototype",
-                        "next": "entities_extracted",
+                        "next": "notify_generated_entities_n_workflows",
                         "manual": False,
                         "processors": [
                             {
@@ -690,64 +711,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 ]
             },
-            "entities_extracted": {
-                "transitions": [
-                    {
-                        "name": "notify_entities_extracted",
-                        "next": "notified_entities_extracted",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": NotifyEntitiesExtractedEde4MessageConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "notified_entities_extracted": {
-                "transitions": [
-                    {
-                        "name": "generate_workflows",
-                        "next": "generated_workflows",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": GenerateWorkflowFromRequirements0000AgentConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "generated_workflows": {
-                "transitions": [
-                    {
-                        "name": "notify_generated_workflows",
-                        "next": "notified_generated_workflows",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": NotifyWorkflowsExtracted0000MessageConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "notified_generated_workflows": {
+            "notify_generated_entities_n_workflows": {
                 "transitions": [
                     {
                         "name": "ask_to_discuss_configs",
