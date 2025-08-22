@@ -1,6 +1,7 @@
 import json
+import os
 import aiofiles
-from typing import Any
+from typing import Any, List
 
 import common.config.const as const
 from common.config.config import config
@@ -8,7 +9,7 @@ from common.utils.batch_converter import convert_state_diagram_to_jsonl_dataset
 from common.utils.batch_parallel_code import build_workflow_from_jsonl
 from common.utils.function_extractor import extract_function
 from common.utils.result_validator import validate_ai_result
-from common.utils.utils import get_project_file_name, _save_file, get_repository_name
+from common.utils.utils import get_project_file_name, _save_file, get_repository_name, save_all, read_json_file
 from common.workflow.workflow_to_state_diagram_converter import convert_to_mermaid
 from entity.chat.chat import ChatEntity
 from entity.model import AgenticFlowEntity
@@ -445,75 +446,124 @@ class WorkflowManagementService(BaseWorkflowService):
 
     async def convert_workflow_to_dto(self, technical_id: str, entity: AgenticFlowEntity, **params: Any) -> str:
         """
-        Convert workflow configuration to Cyoda DTO format.
+        Recursively process all JSON files in input path and order FSM states.
 
         Args:
             technical_id: Technical identifier
             entity: Agentic flow entity
-            **params: Parameters including workflow_file_name, output_file_name, entity_version
+            **params: Parameters including input_path
 
         Returns:
             Success or error message
         """
-        success_msg = "Successfully converted workflow config to cyoda dto"
-        error_msg = "Error while converting workflow"
+        success_msg = "Successfully processed and ordered FSM states for all workflow files"
+        error_msg = "Error while processing workflow files"
 
         try:
-            # Extract & validate parameters
-            entity_name = entity.workflow_cache.get("entity_name", params.get("entity_name"))
-            git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, params.get(const.GIT_BRANCH_PARAM))
+            # Validate required parameters
+            is_valid, error_msg_validation = await self._validate_required_params(params, ["input_path"])
+            if not is_valid:
+                return error_msg_validation
 
-            if not (entity_name or git_branch_id):
-                raise ValueError("Missing entity_name in workflow_cache")
-
-            workflow_file_tmpl = params.get("workflow_file_name")
-            output_file_tmpl = params.get("output_file_name")
-            if not (workflow_file_tmpl and output_file_tmpl):
-                raise ValueError("Both workflow_file_name and output_file_name are required")
-
-            entity_version = params.get("entity_version", config.CLIENT_ENTITY_VERSION)
+            input_path = params.get("input_path")
+            git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
             repo_name = get_repository_name(entity)
 
-            # Compute file names
-            workflow_filename = workflow_file_tmpl.format(EntityName=entity_name)
-            #output_filename = output_file_tmpl.format(EntityName=entity_name)
-
-            # Load, transform, persist original workflow
-            project_path = await get_project_file_name(
+            # Get full directory path
+            full_input_path = await get_project_file_name(
                 git_branch_id=git_branch_id,
-                file_name=workflow_filename,
+                file_name=input_path,
                 repository_name=repo_name,
             )
-            workflow = await self.workflow_helper_service.read_json(project_path)
 
-            ordered_fsm = await self.workflow_helper_service.order_states_in_fsm(workflow)
+            if not full_input_path or not os.path.exists(full_input_path):
+                return f"{error_msg}: Input path does not exist"
 
-            # # Convert to DTO
-            # dto = await self.workflow_converter_service.convert_workflow(
-            #     workflow_contents=workflow,
-            #     entity_name=entity_name,
-            #     entity_version=entity_version,
-            #     technical_id=git_branch_id,
-            # )
+            # Recursively find all JSON files
+            json_files = await self._find_json_files_recursively(full_input_path)
 
-            # Persist both JSON blobs
-            to_save = [
-                (workflow_filename, ordered_fsm),
-                #(output_filename, dto),
-            ]
-            for path_or_item, data in to_save:
-                await self.workflow_helper_service.persist_json(
-                    path_or_item=path_or_item,
-                    data=data,
-                    git_branch_id=git_branch_id,
-                    repository_name=repo_name,
-                )
+            if not json_files:
+                return f"{error_msg}: No JSON files found in the specified path"
 
-            return success_msg
+            # Process all JSON files and prepare for batch save
+            responses = []
+            processed_count = 0
+
+            for json_file_path in json_files:
+                try:
+                    # Read JSON file
+                    workflow_data = await read_json_file(json_file_path)
+
+                    # Order states in FSM
+                    ordered_fsm = await self.workflow_helper_service.order_states_in_fsm(workflow_data)
+
+                    # Calculate relative path from the input directory
+                    relative_path = os.path.relpath(json_file_path, full_input_path)
+                    output_path = os.path.join(input_path, relative_path)
+
+                    # Add to responses for batch save
+                    responses.append({
+                        "output_path": output_path,
+                        "data": ordered_fsm
+                    })
+
+                    processed_count += 1
+                    self.logger.info(f"Processed workflow file: {relative_path}")
+
+                except Exception as e:
+                    self.logger.error(f"Failed to process file {json_file_path}: {e}")
+                    continue
+
+            if not responses:
+                return f"{error_msg}: No files were successfully processed"
+
+            # Save all files at once using common utils save_all
+            commit_message = f"Order FSM states for {processed_count} workflow files"
+            save_success = await save_all(
+                responses=responses,
+                git_branch_id=git_branch_id,
+                repository_name=repo_name,
+                commit_message=commit_message
+            )
+
+            if save_success:
+                return f"{success_msg}. Processed {processed_count} files."
+            else:
+                return f"{error_msg}: Failed to save processed files"
 
         except Exception as e:
-            self.logger.exception(f"Failed to convert workflow for {technical_id}: {e}")
-            return f"{error_msg}: No action required."
+            self.logger.exception(f"Failed to process workflow files for {technical_id}: {e}")
+            return f"{error_msg}: {str(e)}"
+
+    async def _find_json_files_recursively(self, directory_path: str) -> List[str]:
+        """
+        Recursively find all JSON files in directory and subdirectories.
+
+        Args:
+            directory_path: Path to search for JSON files
+
+        Returns:
+            List of full paths to JSON files
+        """
+        json_files = []
+
+        try:
+            for root, dirs, files in os.walk(directory_path):
+                # Filter out hidden directories
+                dirs[:] = [d for d in dirs if not d.startswith('.')]
+
+                for file_name in files:
+                    # Skip hidden files and check for .json extension
+                    if file_name.startswith('.') or not file_name.lower().endswith('.json'):
+                        continue
+
+                    full_file_path = os.path.join(root, file_name)
+                    json_files.append(full_file_path)
+
+        except Exception as e:
+            self.logger.error(f"Error walking directory {directory_path}: {e}")
+
+        return json_files
 
     async def _get_entity_names_from_directory(self, dir_name: str, technical_id: str, entity: AgenticFlowEntity) -> list:
         """

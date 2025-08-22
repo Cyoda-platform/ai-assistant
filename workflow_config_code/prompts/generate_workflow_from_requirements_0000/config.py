@@ -39,10 +39,10 @@ Workflow JSON Example:
   "version": "1.0",
   "name": "{split_parameter_value} Workflow",
   "desc": "Description of the workflow for {split_parameter_value}",
-  "initialState": "initial_state",
+  "initialState": "initial_state", -- should always equal 'initial_state'
   "active": true,
   "states": {
-    "initial_state": {
+    "initial_state": { -- should always be the first state
       "transitions": [
         {
           "name": "transition_to_01",
@@ -115,7 +115,7 @@ CRITICAL: Avoid putting criterion and processors in the same transition if possi
             "initialState": {
                 "type": "string",
                 "enum": [
-                    "none"
+                    "initial_state"
                 ]
             },
             "active": {
