@@ -1,6 +1,10 @@
 
-For each entity:
-1. Design a workflow based on the functional requirements. 
+For {split_parameter_value} entity find workflow design in the functional requirements. 
+
+IMPORTANT:
+Find the workflow design in the functional requirements only for {split_parameter_value} entity. 
+
+1. Design a workflow for {split_parameter_value} entity based on the functional requirements. 
 Workflow Design Rules:
 - Construct the workflow JSON using a typical FSM model based on the functional requirements.
 - Avoid loops in the state transitions.

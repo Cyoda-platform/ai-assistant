@@ -56,7 +56,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "name": "generate_workflow_from_requirements_0000",
                 "model": {},
                 "memory_tags": [
-                    "generate_workflow_from_requirements_0000"
+                    "GenerateWorkflowFromRequirements0000PromptConfig"
                 ],
                 "split_function": {"name": "get_entity_names_from_entities_requirement",
                                    "split_parameter": "EntityName",
