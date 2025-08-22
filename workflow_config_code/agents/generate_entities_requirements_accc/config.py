@@ -18,8 +18,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "allow_anonymous_users": True,
         "model": {},
         "memory_tags": [
-            "requirements_generation",
-            "configs_generation"
+            "GenerateEntitiesRequirements1641PromptConfig",
         ],
         "messages": [
             {
@@ -27,7 +26,11 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "content_from_file": GenerateEntitiesRequirements1641PromptConfig.get_name()
             }
         ],
-        "input": {},
+        "input": {
+            "local_fs": [
+                "src/main/java/com/java_template/prototype/functional_requirement.md"
+            ]
+        },
         "output": {
             "local_fs": [
                 "src/main/java/com/java_template/prototype/entities_requirement.json"
