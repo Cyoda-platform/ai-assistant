@@ -316,7 +316,7 @@
       "transitions": [
         {
           "name": "init_chats",
-          "next": "chats_initialized",
+          "next": "generated_original_requirements",
           "manual": false,
           "processors": [
             {
@@ -358,56 +358,6 @@
         {
           "name": "unlock",
           "next": "repository_cloned",
-          "manual": true
-        }
-      ]
-    },
-    "chats_initialized": {
-      "transitions": [
-        {
-          "name": "generate_original_requirements",
-          "next": "generated_original_requirements",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.generate_original_requirements_c87e",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "chats_initialized",
-          "manual": true
-        },
-        {
-          "name": "fail_chats_initialized",
-          "next": "locked_chats_initialized",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_chats_initialized": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "chats_initialized",
           "manual": true
         }
       ]

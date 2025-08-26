@@ -107,8 +107,8 @@ class UtilityService(BaseWorkflowService):
             entity: Chat entity
             **params: Additional parameters (unused)
         """
-        if config.MOCK_AI == "true":
-            return
+
+        return entity.workflow_cache['user_request']
         # Implementation would go here for non-mock mode
 
     async def fail_workflow(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:

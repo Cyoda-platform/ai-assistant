@@ -4,5 +4,10 @@
     "name": "init_chats",
     "description": "Initialises ai service"
   },
-  "allow_anonymous_users": true
+  "allow_anonymous_users": true,
+  "output": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/user_requirement.md"
+    ]
+  }
 }

@@ -14,7 +14,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "type": "function",
         "function": {
                 "name": "build_general_application",
-                "description": "Launches workflow that is necessary to build a new application. Do not use for editing existing applications. Do not ask user any additional information. Only Python with Cyoda framework are available.",
+                "description": "Launches workflow that is necessary to build a new application. Do not use for editing existing applications. Do not ask user any additional information. Only Python with Cyoda framework are available. Pass the full user request without missing any details.",
                 "strict": True,
                 "parameters": {
                         "type": "object",

@@ -252,7 +252,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "init_chats",
-                        "next": "chats_initialized",
+                        "next": "generated_original_requirements",
                         "manual": False,
                         "processors": [
                             {
@@ -267,25 +267,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     }
                 ]
             },
-            "chats_initialized": {
-                "transitions": [
-                    {
-                        "name": "generate_original_requirements",
-                        "next": "generated_original_requirements",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": GenerateOriginalRequirementsC87eAgentConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
+
             "generated_original_requirements": {
                 "transitions": [
                     {
