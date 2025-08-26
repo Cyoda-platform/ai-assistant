@@ -1,6 +1,6 @@
 {
   "type": "agent",
-  "publish": true,
+  "publish": false,
   "model": {},
   "tools": [],
   "memory_tags": [

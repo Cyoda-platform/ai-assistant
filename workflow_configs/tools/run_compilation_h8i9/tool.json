@@ -1,5 +1,6 @@
 {
   "type": "function",
+  "publish": false,
   "function": {
     "name": "run_github_action",
     "description": "Triggers GitHub Actions compilation workflow for the Java project",
