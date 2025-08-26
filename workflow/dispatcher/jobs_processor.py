@@ -71,6 +71,8 @@ class JobsProcessor:
                 values = await self.method_registry.methods_dict[split_function_name](
                     self.cls_instance, technical_id=technical_id, entity=entity, params=split_function
                 )
+                if not isinstance(values, list):
+                    raise ValueError(f"Split function {split_function_name} did not return a list")
                 if not values:
                     logger.warning(f"No values returned from split function: {split_function_name}")
                     continue  # Skip this job if no values returned
@@ -147,8 +149,11 @@ class JobsProcessor:
             # Replace all possible parameter variations in the output path
             format_params = {
                 split_parameter: entity_value,  # Original parameter (e.g., EntityName -> User)
-                split_parameter.lower(): entity_value.lower()     # Backwards compatibility for EntityName   # All lowercase for entityname
+                     # Backwards compatibility for EntityName   # All lowercase for entityname
             }
+
+            if split_parameter != split_parameter.lower():
+                format_params[split_parameter.lower()] = entity_value.lower()
 
             output_path = output_path.format(**format_params)
 
@@ -199,11 +204,26 @@ class JobsProcessor:
         local_fs_files = input_config.get("local_fs", [])
 
         if local_fs_files:
-            input_contents, actual_files = await self._read_input_files_with_paths(local_fs_files, entity)
+            # Replace split parameter in input file paths
+            processed_files = []
+            for file_path in local_fs_files:
+                # Replace split parameter placeholders in file paths
+                processed_path = file_path
+                if split_parameter and entity_value:
+                    # Replace {split_parameter} with entity_value (e.g., {file_path} -> actual_file_path)
+                    processed_path = processed_path.replace(f"{{{split_parameter}}}", entity_value)
+                    # Also handle variations like {EntityName} -> User
+                    processed_path = processed_path.replace(f"{{{split_parameter.lower()}}}", entity_value.lower())
+                    processed_path = processed_path.replace(f"{{{split_parameter.upper()}}}", entity_value.upper())
+                processed_files.append(processed_path)
+
+            input_contents, actual_files = await self._read_input_files_with_paths(processed_files, entity)
             if input_contents:
                 # Show both the specified paths and actual files read
                 paths_info = f"Specified paths: {', '.join(local_fs_files)}"
-                if actual_files != local_fs_files:
+                if processed_files != local_fs_files:
+                    paths_info += f"\nProcessed paths: {', '.join(processed_files)}"
+                if actual_files != processed_files:
                     paths_info += f"\nActual files read: {', '.join(actual_files)}"
 
                 # Append input file contents as a system message with file paths included

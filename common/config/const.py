@@ -279,3 +279,4 @@ I’m a Cyoda client application myself - I’ll save entities for you and follo
 Enjoy exploring! 🎏
 """
 
+GITHUB_ACTION_COMPILED = "github_action_compiled"

@@ -402,6 +402,7 @@ class GitHubOperationsService(BaseWorkflowService):
             JSON string with final workflow result, or error/timeout message
         """
         try:
+            entity.workflow_cache[const.GITHUB_ACTION_COMPILED] = "false"
             # Validate required parameters
             is_valid, error_msg = await self._validate_required_params(
                 params, ["workflow_id"]
@@ -486,20 +487,20 @@ class GitHubOperationsService(BaseWorkflowService):
                     conclusion = final_data.get("conclusion", "unknown")
 
                     # Prepare comprehensive result
-                    result = {
-                        "status": "completed",
-                        "conclusion": conclusion,
-                        "success": conclusion == "success",
-                        "run_id": run_id,
-                        "tracker_id": tracker_id,
-                        "elapsed_time_seconds": int(elapsed_time),
-                        "html_url": final_data.get("html_url"),
-                        "workflow_name": final_data.get("workflow_name"),
-                        "repository": final_data.get("repository"),
-                        "head_branch": final_data.get("head_branch"),
-                        "created_at": final_data.get("created_at"),
-                        "updated_at": final_data.get("updated_at")
-                    }
+                    # result = {
+                    #     "status": "completed",
+                    #     "conclusion": conclusion,
+                    #     "success": conclusion == "success",
+                    #     "run_id": run_id,
+                    #     "tracker_id": tracker_id,
+                    #     "elapsed_time_seconds": int(elapsed_time),
+                    #     "html_url": final_data.get("html_url"),
+                    #     "workflow_name": final_data.get("workflow_name"),
+                    #     "repository": final_data.get("repository"),
+                    #     "head_branch": final_data.get("head_branch"),
+                    #     "created_at": final_data.get("created_at"),
+                    #     "updated_at": final_data.get("updated_at")
+                    # }
 
                     # Always retrieve logs for completed workflows (success or failure)
                     self.logger.info(f"Workflow completed with conclusion '{conclusion}', retrieving logs...")
@@ -507,6 +508,8 @@ class GitHubOperationsService(BaseWorkflowService):
                     if logs_content:
                         self.logger.info(f"Retrieved {len(logs_content)} characters of logs")
                         # Return just the extracted log content as text
+                        if conclusion == "success":
+                            entity.workflow_cache[const.GITHUB_ACTION_COMPILED] = "true"
                         return logs_content
                     else:
                         self.logger.warning("Failed to retrieve workflow logs")

@@ -1,5 +1,6 @@
 import logging
 from entity.workflow import Workflow
+from tools.compilation_error_split_service import CompilationErrorSplitService
 
 from tools.file_operations_service import FileOperationsService
 from tools.web_operations_service import WebOperationsService
@@ -205,6 +206,17 @@ class ChatWorkflow(Workflow):
             mock=mock
         )
 
+        self.compilation_error_split_service = CompilationErrorSplitService(
+            workflow_helper_service=workflow_helper_service,
+            entity_service=entity_service,
+            cyoda_auth_service=cyoda_auth_service,
+            workflow_converter_service=workflow_converter_service,
+            scheduler_service=scheduler_service,
+            data_service=data_service,
+            dataset=dataset,
+            mock=mock
+        )
+
         # Initialize function registry
         self._function_registry = self._build_function_registry()
 
@@ -316,7 +328,7 @@ class ChatWorkflow(Workflow):
             # Prototype Generation
             'generate_prototype_sketch_2269': self.generate_prototype_sketch_service.generate_prototype_sketch_2269,
             'edit_general_application_java': self.application_builder_service.edit_general_application_java,
-
+            'get_files_with_compilation_errors': self.compilation_error_split_service.get_files_with_compilation_errors
         }
 
     def __getattr__(self, name):

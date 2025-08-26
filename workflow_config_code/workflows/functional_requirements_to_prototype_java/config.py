@@ -6,39 +6,23 @@ Configuration data for the functional requirements to application workflow.
 
 from typing import Any, Dict, Callable
 
+from common.config import const
 from workflow_config_code.agents.compile_project_f6g5.agent import CompileProjectF6g5AgentConfig
-from workflow_config_code.agents.generate_tests_for_processors.agent import GenerateTestsForProcessorsAgentConfig
-from workflow_config_code.agents.implement_processors_business_logic_g6h7.agent import \
-    ImplementProcessorsBusinessLogicG6h7AgentConfig
+from workflow_config_code.agents.fix_compilation_errors_i1j2.agent import FixCompilationErrorsI1j2AgentConfig
 from workflow_config_code.agents.process_prototype_discussion_0000.agent import \
     ProcessPrototypeDiscussion0000AgentConfig
-from workflow_config_code.agents.process_user_input_2185.agent import ProcessUserInput2185AgentConfig
-from workflow_config_code.agents.save_functional_requirements_f2a1.agent import \
-    SaveFunctionalRequirementsF2a1AgentConfig
 from workflow_config_code.messages.ask_to_confirm_migration_208e.message import AskToConfirmMigration208eMessageConfig
-from workflow_config_code.messages.notify_saved_fun_req_a1b2.message import NotifySavedFunReqA1b2MessageConfig
 from workflow_config_code.agents.generate_controller_d4e3.agent import GenerateControllerD4e3AgentConfig
-from workflow_config_code.messages.notify_controller_generated_d3e4.message import \
-    NotifyControllerGeneratedD3e4MessageConfig
-from workflow_config_code.agents.generate_processors_and_criteria_e5f4.agent import \
-    GenerateProcessorsAndCriteriaE5f4AgentConfig
-from workflow_config_code.messages.notify_processors_generated_e4f5.message import \
-    NotifyProcessorsGeneratedE4f5MessageConfig
 from workflow_config_code.agents.enhance_processors_g6h7.agent import EnhanceProcessorsG6h7AgentConfig
 from workflow_config_code.messages.notify_processors_enhanced_g7h8.message import \
     NotifyProcessorsEnhancedG7h8MessageConfig
 from workflow_config_code.tools.delete_files_6818.tool import DeleteFiles6818ToolConfig
 from workflow_config_code.tools.init_setup_workflow_5f06.tool import InitSetupWorkflow5f06ToolConfig
-from workflow_config_code.tools.is_stage_completed_c00a.tool import IsStageCompletedC00aToolConfig
 from workflow_config_code.tools.is_stage_completed_discuss_prototype_0000.tool import \
     IsStageCompletedDiscussPrototype0000ToolConfig
-from workflow_config_code.tools.not_stage_completed_6044.tool import NotStageCompleted6044ToolConfig
 from workflow_config_code.tools.not_stage_completed_discuss_prototype_0000.tool import \
     NotStageCompletedDiscussPrototype0000ToolConfig
 from workflow_config_code.tools.run_compilation_h8i9.tool import RunCompilationH8i9ToolConfig
-from workflow_config_code.agents.process_compilation_results_i9j0.agent import ProcessCompilationResultsI9j0AgentConfig
-from workflow_config_code.messages.notify_compilation_started_h8i9.message import \
-    NotifyCompilationStartedH8i9MessageConfig
 from workflow_config_code.messages.notify_project_compiled_f5g6.message import NotifyProjectCompiledF5g6MessageConfig
 from workflow_config_code.tools.save_env_file_d2aa.tool import SaveEnvFileD2aaToolConfig
 
@@ -146,7 +130,26 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "compilation_started",
-                        "next": "notify_prototype_compiled",
+                        "next": "process_compilation",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": RunCompilationH8i9ToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 1500000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "process_compilation": {
+                "transitions": [
+                    {
+                        "name": "compilation_started",
+                        "next": "fix_compilation_errors",
                         "manual": False,
                         "processors": [
                             {
@@ -157,7 +160,265 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                     "responseTimeoutMs": 1500000
                                 }
                             }
+                        ],
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
+                                {
+                                    "type": "simple",
+                                    "jsonPath": f"$.workflow_cache.{const.GITHUB_ACTION_COMPILED}",
+                                    "operation": "IEQUALS",
+                                    "value": "false"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "notify_prototype_compiled",
+                        "next": "notify_prototype_compiled",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
+                                {
+                                    "type": "simple",
+                                    "jsonPath": f"$.workflow_cache.{const.GITHUB_ACTION_COMPILED}",
+                                    "operation": "IEQUALS",
+                                    "value": "true"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "fix_compilation_errors": {
+                "transitions": [
+                    {
+                        "name": "processors_enhanced",
+                        "next": "notify_processors_enhanced_i2",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": FixCompilationErrorsI1j2AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 900000
+                                }
+                            }
+                        ],
+                    }
+                ]
+            },
+
+            "notify_processors_enhanced_i2": {
+                "transitions": [
+                    {
+                        "name": "proceed_to_run_compilation",
+                        "next": "run_compilation_i2",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyProcessorsEnhancedG7h8MessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
                         ]
+                    }
+                ]
+            },
+            "run_compilation_i2": {
+                "transitions": [
+                    {
+                        "name": "compilation_started",
+                        "next": "process_compilation_i2",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": RunCompilationH8i9ToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 1500000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "process_compilation_i2": {
+                "transitions": [
+                    {
+                        "name": "compilation_started",
+                        "next": "fix_compilation_errors_i2",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": CompileProjectF6g5AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 1500000
+                                }
+                            }
+                        ],
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
+                                {
+                                    "type": "simple",
+                                    "jsonPath": f"$.workflow_cache.{const.GITHUB_ACTION_COMPILED}",
+                                    "operation": "IEQUALS",
+                                    "value": "false"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "notify_prototype_compiled",
+                        "next": "notify_prototype_compiled",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
+                                {
+                                    "type": "simple",
+                                    "jsonPath": f"$.workflow_cache.{const.GITHUB_ACTION_COMPILED}",
+                                    "operation": "IEQUALS",
+                                    "value": "true"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "fix_compilation_errors_i2": {
+                "transitions": [
+                    {
+                        "name": "processors_enhanced",
+                        "next": "notify_processors_enhanced_i3",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": FixCompilationErrorsI1j2AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 900000
+                                }
+                            }
+                        ],
+                    }
+                ]
+            },
+
+            "notify_processors_enhanced_i3": {
+                "transitions": [
+                    {
+                        "name": "proceed_to_run_compilation",
+                        "next": "run_compilation_i3",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyProcessorsEnhancedG7h8MessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "run_compilation_i3": {
+                "transitions": [
+                    {
+                        "name": "compilation_started",
+                        "next": "process_compilation_i3",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": RunCompilationH8i9ToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 1500000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "process_compilation_i3": {
+                "transitions": [
+                    {
+                        "name": "compilation_started",
+                        "next": "fix_compilation_errors_i3",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": CompileProjectF6g5AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 1500000
+                                }
+                            }
+                        ],
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
+                                {
+                                    "type": "simple",
+                                    "jsonPath": f"$.workflow_cache.{const.GITHUB_ACTION_COMPILED}",
+                                    "operation": "IEQUALS",
+                                    "value": "false"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "notify_prototype_compiled",
+                        "next": "notify_prototype_compiled",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
+                                {
+                                    "type": "simple",
+                                    "jsonPath": f"$.workflow_cache.{const.GITHUB_ACTION_COMPILED}",
+                                    "operation": "IEQUALS",
+                                    "value": "true"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "fix_compilation_errors_i3": {
+                "transitions": [
+                    {
+                        "name": "processors_enhanced",
+                        "next": "notify_prototype_compiled",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": FixCompilationErrorsI1j2AgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 900000
+                                }
+                            }
+                        ],
                     }
                 ]
             },
@@ -255,7 +516,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "ask_to_confirm_migration",
-                        "next": "migration_confirmation_requested",
+                        "next": "save_env_file",
                         "manual": False,
                         "processors": [
                             {
@@ -267,78 +528,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 }
                             }
                         ]
-                    }
-                ]
-            },
-            "migration_confirmation_requested": {
-                "transitions": [
-                    {
-                        "name": "submit_answer",
-                        "next": "migration_confirmation_requested_submitted_answer",
-                        "manual": True
-                    },
-                    {
-                        "name": "manual_approve",
-                        "next": "save_env_file",
-                        "manual": True
-                    },
-                    {
-                        "name": "rollback",
-                        "next": "migration_confirmation_requested_submitted_answer",
-                        "manual": True
-                    }
-                ]
-            },
-            "migration_confirmation_requested_submitted_answer": {
-                "transitions": [
-                    {
-                        "name": "process_user_input",
-                        "next": "migration_confirmation_requested_processing",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": ProcessUserInput2185AgentConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "migration_confirmation_requested_processing": {
-                "transitions": [
-                    {
-                        "name": "process_migration_confirmation_processing",
-                        "next": "migration_confirmation_requested",
-                        "manual": False,
-                        "criterion": {
-                            "type": "function",
-                            "function": {
-                                "name": NotStageCompleted6044ToolConfig.get_name(),
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "name": "process_migration_confirmation_success",
-                        "next": "save_env_file",
-                        "manual": False,
-                        "criterion": {
-                            "type": "function",
-                            "function": {
-                                "name": IsStageCompletedC00aToolConfig.get_name(),
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        }
                     }
                 ]
             },

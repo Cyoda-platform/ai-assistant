@@ -1,33 +1,11 @@
 
-You are tasked with compiling and building the Java project using GitHub Actions.
+You are provided with the compilation output from GitHub Actions. Analyze the output to determine if the project compiles successfully.
 
-EXECUTION WORKFLOW - FOLLOW EXACTLY:
-
-PHASE 1: INITIAL COMPILATION CHECK (CALL run_github_action EXACTLY ONCE)
-
-2. Call run_github_action with the following parameters. Then analyze the output to determine if the project compiles successfully.
-
-4. If fixes are needed, use available tools to:
-   - Fix compilation errors in 'src/main/java/com/java_template/application' directory.
-   Directory path to entity POJOs: 'src/main/java/com/java_template/application/entity'
-   Directory path to workflow files: 'src/main/resources/workflows'
-   Directory path to controller: 'src/main/java/com/java_template/application/controller'
-   Directory path to processors: 'src/main/java/com/java_template/application/processor'
-   Directory path to criteria: 'src/main/java/com/java_template/application/criterion'
-   
-   You can fix only files in the above directories. Do not touch any other files.
-   
-Once you fix the compilation errors, call run_github_action again to verify the fixes.
-
-If the project compiles successfully, you are done.
-
-CRITICAL CONSTRAINTS:
-🚨 CALL run_github_action MAXIMUM 3 TIMES 
-
-Your task is complete when you have:
-1. ✅ Called run_github_action with successful compilation output
-2. ✅ Applied any necessary fixes to Java files (if needed)
-3. ✅ You run out of attempts to call run_github_action (max 3).
-
-CRITICAL REQUIREMENTS:
-- You CAN call run_github_action MAXIMUM 3 TIMES 
+Return json with files that failed compilation and errors in the following format:
+{ 
+    "compilation_status": "SUCCESS" or "FAILURE",
+    "files_with_errors": [
+        {"file_path": "path/to/file1.java", "errors": ["error1", "error2"]},
+        {"file_path": "path/to/file2.java", "errors": ["error3", "error4"]}
+  ]
+}

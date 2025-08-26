@@ -12,6 +12,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get tool configuration factory"""
     return lambda params=None: {
         "type": "function",
+        "publish": False,
         "function": {
             "name": "run_github_action",
             "description": "Triggers GitHub Actions compilation workflow for the Java project",
