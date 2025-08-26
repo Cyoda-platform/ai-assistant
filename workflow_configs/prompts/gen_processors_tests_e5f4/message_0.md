@@ -65,5 +65,81 @@ One and only one @Test test, testing the sunny-day path
 Only EntityService is mocked where needed; everything else uses real objects
 No Spring context usage in tests
 
+You can use the following code as a reference (it is just an example):
+package com.java_template.application.processor;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.java_template.common.serializer.CriterionSerializer;
+import com.java_template.common.serializer.ProcessorSerializer;
+import com.java_template.common.serializer.SerializerFactory;
+import com.java_template.common.serializer.jackson.JacksonCriterionSerializer;
+import com.java_template.common.serializer.jackson.JacksonProcessorSerializer;
+import com.java_template.common.service.EntityService;
+import com.java_template.common.workflow.CyodaEventContext;
+import org.cyoda.cloud.api.event.common.DataPayload;
+import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationRequest;
+import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationResponse;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+public class ExampleProcessorTest {
+
+    @Test
+    void sunnyDay_process_test() {
+        // Arrange
+        ObjectMapper objectMapper = new ObjectMapper();
+        ProcessorSerializer processorSerializer = new JacksonProcessorSerializer(objectMapper);
+        CriterionSerializer criterionSerializer = new JacksonCriterionSerializer(objectMapper);
+        SerializerFactory serializerFactory = new SerializerFactory(
+                java.util.List.of(processorSerializer),
+                java.util.List.of(criterionSerializer)
+        );
+
+        EntityService entityService = mock(EntityService.class);
+        when(entityService.getItemsByCondition(anyString(), anyString(), any(), anyBoolean()))
+                .thenReturn(CompletableFuture.completedFuture(objectMapper.createArrayNode()));
+
+        ExampleProcessor processor = new ExampleProcessor(serializerFactory, entityService, objectMapper);
+
+        ObjectNode entityJson = objectMapper.createObjectNode();
+        entityJson.put("id", 100);
+        entityJson.put("exampleField", "exampleValue");
+
+        EntityProcessorCalculationRequest request = new EntityProcessorCalculationRequest();
+        request.setId("r1");
+        request.setRequestId("r1");
+        request.setEntityId("e1");
+        request.setProcessorName("ExampleProcessor");
+        DataPayload payload = new DataPayload();
+        payload.setData(entityJson);
+        request.setPayload(payload);
+
+        CyodaEventContext<EntityProcessorCalculationRequest> context = new CyodaEventContext<>() {
+            @Override
+            public io.cloudevents.v1.proto.CloudEvent getCloudEvent() { return null; }
+            @Override
+            public EntityProcessorCalculationRequest getEvent() { return request; }
+        };
+
+        // Act
+        EntityProcessorCalculationResponse response = processor.process(context);
+
+        // Assert
+        assertNotNull(response);
+        assertTrue(response.getSuccess());
+        // Verify EntityService was called for deduplication search
+        verify(entityService, times(1)).getItemsByCondition(anyString(), anyString(), any(), anyBoolean());
+    }
+}
+
 Output format:
 CRITICAL: Return only the full processor code. Do not include any other text or explanations.
