@@ -39,7 +39,7 @@ class TestGitHubWorkflowService:
     async def test_trigger_github_workflow_success(self, github_service, mock_entity):
         """Test successful GitHub workflow trigger"""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = "test_token"
+            mock_config.GITHUB_TOKEN = "test_token"
             mock_config.GH_DEFAULT_OWNER = "test-owner"
 
             # Mock the GitHub API request
@@ -88,7 +88,7 @@ class TestGitHubWorkflowService:
     async def test_trigger_github_workflow_no_token(self, github_service, mock_entity):
         """Test GitHub workflow trigger without GitHub token"""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = None
+            mock_config.GITHUB_TOKEN = None
 
             result = await github_service.trigger_github_workflow(
                 "tech_id", mock_entity,
@@ -96,13 +96,13 @@ class TestGitHubWorkflowService:
                 workflow_id="build.yml"
             )
 
-            assert "GH_TOKEN not configured" in result
+            assert "GITHUB_TOKEN not configured" in result
 
     @pytest.mark.asyncio
     async def test_monitor_workflow_run_success(self, github_service, mock_entity):
         """Test successful workflow run monitoring"""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = "test_token"
+            mock_config.GITHUB_TOKEN = "test_token"
             mock_config.GH_DEFAULT_OWNER = "test-owner"
 
             # Mock the GitHub API response
@@ -144,7 +144,7 @@ class TestGitHubWorkflowService:
     async def test_get_workflow_run_status_success(self, github_service, mock_entity):
         """Test getting workflow run status"""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = "test_token"
+            mock_config.GITHUB_TOKEN = "test_token"
             mock_config.GH_DEFAULT_OWNER = "test-owner"
 
             # Mock the GitHub API response
@@ -199,7 +199,7 @@ class TestGitHubWorkflowService:
     async def test_run_github_action_success(self, github_service, mock_entity):
         """Test successful GitHub action run with completion"""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = "test_token"
+            mock_config.GITHUB_TOKEN = "test_token"
             mock_config.GH_DEFAULT_OWNER = "test-owner"
 
             # Mock the trigger workflow response
@@ -260,7 +260,7 @@ class TestGitHubWorkflowService:
     async def test_run_github_action_timeout(self, github_service, mock_entity):
         """Test GitHub action run with timeout"""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = "test_token"
+            mock_config.GITHUB_TOKEN = "test_token"
             mock_config.GH_DEFAULT_OWNER = "test-owner"
 
             # Mock the trigger workflow response
@@ -304,7 +304,7 @@ class TestGitHubWorkflowService:
     async def test_run_github_action_trigger_failure(self, github_service, mock_entity):
         """Test GitHub action run when trigger fails"""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = "test_token"
+            mock_config.GITHUB_TOKEN = "test_token"
 
             with patch.object(github_service, 'trigger_github_workflow') as mock_trigger:
                 mock_trigger.return_value = "Error: Failed to trigger workflow"

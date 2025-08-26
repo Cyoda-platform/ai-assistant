@@ -75,7 +75,7 @@ class CompilationErrorSplitService(BaseWorkflowService):
             file_paths = []
             for file_error in files_with_errors:
                 file_path = file_error.get("file_path")
-                if file_path:
+                if file_path and file_path.startswith("src/main/java/com/java_template/application"):
                     file_paths.append(file_path)
                     self.logger.info(f"Found file with errors: {file_path}")
 

@@ -76,7 +76,7 @@ class Config:
         self.CHAT_ID = _get_env("CHAT_ID", default=None)
         self.GRPC_PROCESSOR_TAG = _get_env("GRPC_PROCESSOR_TAG", default="ai_assistant")
         self.CHAT_REPOSITORY = _get_env("CHAT_REPOSITORY", default="local")
-        self.GH_TOKEN = _get_env("GH_TOKEN")
+        self.GITHUB_TOKEN = _get_env("GITHUB_TOKEN")
 
         # GitHub repository defaults
         self.GH_DEFAULT_OWNER = _get_env("GH_DEFAULT_OWNER", default="Cyoda-platform")

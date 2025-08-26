@@ -397,14 +397,19 @@ class ChatService:
             if answer == const.Notifications.APPROVE.value \
             else const.TransitionKey.PROCESS_USER_INPUT.value
 
-        edge_id, transitioned = await trigger_manual_transition(
-            entity_service=self.entity_service,
-            chat=chat,
-            answer=val_answer,
-            user_file=user_file,
-            cyoda_auth_service=self.cyoda_auth_service,
-            transition=next_transition
-        )
+        transitioned = False
+        try:
+
+            edge_id, transitioned = await trigger_manual_transition(
+                entity_service=self.entity_service,
+                chat=chat,
+                answer=val_answer,
+                user_file=user_file,
+                cyoda_auth_service=self.cyoda_auth_service,
+                transition=next_transition
+            )
+        except Exception as e:
+            logger.exception(f"Failed to process answer: {e}")
         if transitioned:
             return {"answer_technical_id": edge_id}, 200
         return {"message": const.Notifications.DESIGN_PLEASE_WAIT.value}, 409

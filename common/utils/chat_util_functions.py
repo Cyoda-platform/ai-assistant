@@ -98,13 +98,7 @@ async def trigger_manual_transition(
                                 await asyncio.sleep(retry_delay)
 
                     except Exception as e:
-                        last_exception = e
-                        logger.warning(f"Failed to retrieve child entity {child_id}, attempt {attempt + 1}: {e}")
-                        if attempt < max_retries - 1:
-                            await asyncio.sleep(retry_delay)
-                        else:
-                            # Log final failure
-                            logger.error(f"Failed to retrieve child entity {child_id} after {max_retries} attempts: {e}")
+                        raise e
 
                 # Skip if we couldn't retrieve the child entity
                 if not child or not hasattr(child, 'current_state') or child.current_state is None:
@@ -263,7 +257,7 @@ async def _launch_transition(
 
     except Exception as e:
         logger.exception(f"Failed to launch transition for technical_id={technical_id}: {e}")
-        return False
+        raise e
 
 
 def _select_transition(requested_transition: str, available_transitions: list) -> str:
@@ -279,7 +273,7 @@ def _select_transition(requested_transition: str, available_transitions: list) -
     """
     if requested_transition and requested_transition not in available_transitions:
         logger.error(f"Requested transition '{requested_transition}' not in available transitions: {available_transitions}")
-        return ""
+        raise Exception(f"Requested transition '{requested_transition}' not in available transitions: {available_transitions}")
 
     selected_transition = requested_transition or available_transitions[0]
 

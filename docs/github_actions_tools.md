@@ -120,7 +120,7 @@ await get_workflow_run_status(
 
 ### Environment Variables
 
-- `GH_TOKEN`: GitHub personal access token (required)
+- `GITHUB_TOKEN`: GitHub personal access token (required)
 - `GH_DEFAULT_OWNER`: Default repository owner (defaults to "Cyoda-platform")
 - `GH_DEFAULT_REPOS`: Comma-separated list of default repositories
 
@@ -133,7 +133,7 @@ await get_workflow_run_status(
 
 2. Set the environment variable:
    ```bash
-   export GH_TOKEN="your_github_token_here"
+   export GITHUB_TOKEN="your_github_token_here"
    ```
 
 ## Usage Examples
@@ -206,7 +206,7 @@ while True:
 
 All tools return error messages as strings when something goes wrong:
 
-- `"Error: GH_TOKEN not configured in environment variables"`
+- `"Error: GITHUB_TOKEN not configured in environment variables"`
 - `"Missing required parameters: workflow_id"`
 - `"Failed to trigger workflow: <details>"`
 - `"Error: Failed to get status for run ID 'xyz'"`

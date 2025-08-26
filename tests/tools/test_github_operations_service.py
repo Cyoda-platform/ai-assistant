@@ -44,7 +44,7 @@ class TestGitHubOperationsService:
     async def test_add_collaborator_success(self, github_service, mock_entity):
         """Test successful collaborator addition."""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = "test_token"
+            mock_config.GITHUB_TOKEN = "test_token"
             mock_config.GH_DEFAULT_OWNER = "default_owner"
             mock_config.GH_DEFAULT_REPOS = ["repo1", "repo2"]
             mock_config.GH_DEFAULT_PERMISSION = "push"
@@ -72,7 +72,7 @@ class TestGitHubOperationsService:
     async def test_add_collaborator_missing_token(self, github_service, mock_entity):
         """Test collaborator addition with missing GitHub token."""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = None
+            mock_config.GITHUB_TOKEN = None
             
             result = await github_service.add_collaborator(
                 technical_id="test_id",
@@ -82,7 +82,7 @@ class TestGitHubOperationsService:
                 username="test_user"
             )
             
-            assert "Error: GH_TOKEN not configured" in result
+            assert "Error: GITHUB_TOKEN not configured" in result
 
     @pytest.mark.asyncio
     async def test_add_collaborator_missing_params(self, github_service, mock_entity):
@@ -99,7 +99,7 @@ class TestGitHubOperationsService:
     async def test_add_collaborator_invalid_permission(self, github_service, mock_entity):
         """Test collaborator addition with invalid permission level."""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = "test_token"
+            mock_config.GITHUB_TOKEN = "test_token"
             mock_config.GH_DEFAULT_OWNER = "default_owner"
             mock_config.GH_DEFAULT_REPOS = ["default_repo"]
             mock_config.GH_DEFAULT_PERMISSION = "invalid_permission"
@@ -118,7 +118,7 @@ class TestGitHubOperationsService:
     async def test_add_collaborator_api_error(self, github_service, mock_entity):
         """Test collaborator addition with API error."""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = "test_token"
+            mock_config.GITHUB_TOKEN = "test_token"
             mock_config.GH_DEFAULT_OWNER = "default_owner"
             mock_config.GH_DEFAULT_REPOS = ["default_repo"]
             mock_config.GH_DEFAULT_PERMISSION = "push"
@@ -139,7 +139,7 @@ class TestGitHubOperationsService:
     async def test_add_collaborator_default_permission(self, github_service, mock_entity):
         """Test collaborator addition with default permission."""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = "test_token"
+            mock_config.GITHUB_TOKEN = "test_token"
             mock_config.GH_DEFAULT_OWNER = "default_owner"
             mock_config.GH_DEFAULT_REPOS = ["default_repo"]
             mock_config.GH_DEFAULT_PERMISSION = "push"
@@ -164,7 +164,7 @@ class TestGitHubOperationsService:
     async def test_add_collaborator_with_config_defaults(self, github_service, mock_entity):
         """Test collaborator addition using configuration defaults."""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = "test_token"
+            mock_config.GITHUB_TOKEN = "test_token"
             mock_config.GH_DEFAULT_OWNER = "default-owner"
             mock_config.GH_DEFAULT_REPOS = ["default-repo"]
             mock_config.GH_DEFAULT_PERMISSION = "maintain"
@@ -192,7 +192,7 @@ class TestGitHubOperationsService:
     async def test_make_github_api_request_put_success(self, github_service):
         """Test successful PUT request to GitHub API."""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = "test_token"
+            mock_config.GITHUB_TOKEN = "test_token"
             
             mock_response = MagicMock()
             mock_response.status_code = 201
@@ -214,7 +214,7 @@ class TestGitHubOperationsService:
     async def test_make_github_api_request_error_status(self, github_service):
         """Test GitHub API request with error status code."""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = "test_token"
+            mock_config.GITHUB_TOKEN = "test_token"
             
             mock_response = MagicMock()
             mock_response.status_code = 404
@@ -236,7 +236,7 @@ class TestGitHubOperationsService:
     async def test_make_github_api_request_network_error(self, github_service):
         """Test GitHub API request with network error."""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = "test_token"
+            mock_config.GITHUB_TOKEN = "test_token"
             
             with patch('httpx.AsyncClient') as mock_client:
                 mock_client.return_value.__aenter__.return_value.put.side_effect = httpx.RequestError("Network error")
@@ -254,7 +254,7 @@ class TestGitHubOperationsService:
     async def test_get_repository_info_missing_token(self, github_service, mock_entity):
         """Test repository info retrieval with missing token."""
         with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GH_TOKEN = None
+            mock_config.GITHUB_TOKEN = None
             
             result = await github_service.get_repository_info(
                 technical_id="test_id",
@@ -263,7 +263,7 @@ class TestGitHubOperationsService:
                 repo="test_repo"
             )
             
-            assert "Error: GH_TOKEN not configured" in result
+            assert "Error: GITHUB_TOKEN not configured" in result
 
     # Removed test_list_collaborators_missing_params - method doesn't exist in production code
 

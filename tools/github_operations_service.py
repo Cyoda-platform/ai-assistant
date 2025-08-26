@@ -48,8 +48,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 return error_msg
 
             # Check if GitHub token is configured
-            if not config.GH_TOKEN:
-                return "Error: GH_TOKEN not configured in environment variables"
+            if not config.GITHUB_TOKEN:
+                return "Error: GITHUB_TOKEN not configured in environment variables"
 
             # Extract parameters with configuration defaults
             username = params.get("username")
@@ -106,8 +106,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 return error_msg
 
             # Check if GitHub token is configured
-            if not config.GH_TOKEN:
-                return "Error: GH_TOKEN not configured in environment variables"
+            if not config.GITHUB_TOKEN:
+                return "Error: GITHUB_TOKEN not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner")
@@ -139,7 +139,7 @@ class GitHubOperationsService(BaseWorkflowService):
 
         url = f"https://api.github.com/{path}"
         headers = {
-            "Authorization": f"Bearer {config.GH_TOKEN}",
+            "Authorization": f"Bearer {config.GITHUB_TOKEN}",
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
             "Content-Type": "application/json"
@@ -206,8 +206,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 return error_msg
 
             # Check if GitHub token is configured
-            if not config.GH_TOKEN:
-                return "Error: GH_TOKEN not configured in environment variables"
+            if not config.GITHUB_TOKEN:
+                return "Error: GITHUB_TOKEN not configured in environment variables"
 
             # Extract parameters with defaults
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -295,8 +295,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 return error_msg
 
             # Check if GitHub token is configured
-            if not config.GH_TOKEN:
-                return "Error: GH_TOKEN not configured in environment variables"
+            if not config.GITHUB_TOKEN:
+                return "Error: GITHUB_TOKEN not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -354,8 +354,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 return error_msg
 
             # Check if GitHub token is configured
-            if not config.GH_TOKEN:
-                return "Error: GH_TOKEN not configured in environment variables"
+            if not config.GITHUB_TOKEN:
+                return "Error: GITHUB_TOKEN not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -414,8 +414,8 @@ class GitHubOperationsService(BaseWorkflowService):
             params["git_branch"] = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
 
             # Check if GitHub token is configured
-            if not config.GH_TOKEN:
-                return "Error: GH_TOKEN not configured in environment variables"
+            if not config.GITHUB_TOKEN:
+                return "Error: GITHUB_TOKEN not configured in environment variables"
 
             # Extract parameters with defaults
             timeout_minutes = params.get("timeout_minutes", 2)
@@ -609,8 +609,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 return error_msg
 
             # Check if GitHub token is configured
-            if not config.GH_TOKEN:
-                return "Error: GH_TOKEN not configured in environment variables"
+            if not config.GITHUB_TOKEN:
+                return "Error: GITHUB_TOKEN not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -658,8 +658,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 return error_msg
 
             # Check if GitHub token is configured
-            if not config.GH_TOKEN:
-                return "Error: GH_TOKEN not configured in environment variables"
+            if not config.GITHUB_TOKEN:
+                return "Error: GITHUB_TOKEN not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -783,7 +783,7 @@ captured in the GitHub Actions logs.
         """
         try:
             headers = {
-                "Authorization": f"Bearer {config.GH_TOKEN}",
+                "Authorization": f"Bearer {config.GITHUB_TOKEN}",
                 "Accept": "application/vnd.github.v3+json",
                 "User-Agent": "AI-Assistant"
             }
@@ -842,7 +842,7 @@ captured in the GitHub Actions logs.
         try:
             # GitHub logs endpoint returns a redirect to the actual download URL
             headers = {
-                "Authorization": f"Bearer {config.GH_TOKEN}",
+                "Authorization": f"Bearer {config.GITHUB_TOKEN}",
                 "Accept": "application/vnd.github.v3+json",
                 "User-Agent": "AI-Assistant"
             }
