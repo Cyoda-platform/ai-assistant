@@ -99,6 +99,35 @@
           "content_from_file": "enhance_criteria_e5f4"
         }
       ]
+    },
+    {
+      "type": "agent",
+      "publish": false,
+      "model": {},
+      "tools": [],
+      "split_function": {
+        "name": "validate_workflow_processors",
+        "split_parameter": "ProcessorName",
+        "input_file": "src/main/java/com/java_template/prototype/workflow_processors.json"
+      },
+      "memory_tags": [
+        "EnhanceProcessorsE5f4PromptConfig"
+      ],
+      "output": "src/test/java/com/java_template/application/processor/{ProcessorName}Test.java",
+      "tool_choice": "auto",
+      "max_iteration": 30,
+      "approve": true,
+      "input": {
+        "local_fs": [
+          "src/main/java/com/java_template/application/processor/{ProcessorName}.java"
+        ]
+      },
+      "messages": [
+        {
+          "role": "user",
+          "content_from_file": "gen_processors_tests_e5f4"
+        }
+      ]
     }
   ]
 }

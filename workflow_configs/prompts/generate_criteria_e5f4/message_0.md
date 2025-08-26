@@ -86,5 +86,7 @@ return EvaluationOutcome.fail("message", StandardEvalReasonCategories.DATA_QUALI
 - NO placeholder code - implement real validation logic
 - Use StandardEvalReasonCategories enum directly (not .getCode())
 
+Do not use Java reflection - use entity getters and setters only.
+
 Output format:
 CRITICAL: Return only the generated criterion code. Do not include any other text or explanations.

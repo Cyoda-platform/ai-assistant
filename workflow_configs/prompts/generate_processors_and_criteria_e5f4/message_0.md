@@ -158,5 +158,12 @@ Example:
 * Inject ObjectMapper via constructor for JSON conversion if needed
 * You can inject only EntityService, ObjectMapper, and SerializerFactory via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES. 
 
+Do not use Java reflection - use entity getters and setters only.
+For ingestion jobs you need to fully implement the data ingestion logic based on the functional requirements.
+You can use  HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+to call external APIs.
+
 Output format:
 CRITICAL: Return only the generated processor code. Do not include any other text or explanations.

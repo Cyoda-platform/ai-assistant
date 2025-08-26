@@ -65,17 +65,12 @@ stateDiagram-v2
     FAILED --> [*]
 ```
 
-Example:
+Example of wrong state diagram: - NEVER USE QUOTES IN THE NODE NAMES
 
 ```mermaid
 stateDiagram-v2
-    [*] --> REGISTERED
-    REGISTERED --> ACTIVE : RegisterSubscriberProcessor, *automatic*
-    ACTIVE --> PENDING_NOTIFICATION : JobCompletionEvent, *automatic*
-    PENDING_NOTIFICATION --> NOTIFIED : SendNotificationProcessor
-    PENDING_NOTIFICATION --> FAILED_NOTIFICATION : SendNotificationProcessor
-    FAILED_NOTIFICATION --> PENDING_NOTIFICATION : RetryNotificationCriterion
-    NOTIFIED --> [*]
+    [*] --> "PERSISTED_BY_JOB" -- NEVER use quotes like this
+    "PERSISTED_BY_JOB" --> [*]  -- NEVER use quotes like this
 ```
 
 Each state can have multiple transitions. Each transition can have a criterion or a processor. These represent Java criterion and processor classes that need to be implemented.

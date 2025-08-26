@@ -1,7 +1,7 @@
 {
   "type": "agent",
   "publish": true,
-  "approve": true,
+  "approve": false,
   "allow_anonymous_users": true,
   "model": {},
   "memory_tags": [
