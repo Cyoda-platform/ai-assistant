@@ -27,7 +27,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     return lambda params=None: {
         "type": "agent",
         "publish": True,
-        "approve": True,
+        "approve": False,
         "allow_anonymous_users": True,
         "model": {},
         "memory_tags": [

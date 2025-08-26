@@ -130,6 +130,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 * Include @RequestBody for request payloads
 * Include @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = YourResponseDto.class))) for responses
 and any other appropriate Swagger annotations
+Do not use Java reflection - use entity getters and setters only.
 
 Output Format:
 CRITICAL: Return only the generated controller code. Do not include any other text or explanations.
