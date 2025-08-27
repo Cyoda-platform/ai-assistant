@@ -73,6 +73,15 @@ stateDiagram-v2
     "PERSISTED_BY_JOB" --> [*]  -- NEVER use quotes like this
 ```
 
+CRITICAL:
+NEVER use quotes in the node names like 
+```mermaid
+stateDiagram-v2
+    [*] --> "PERSISTED" -- these quotes are not allowed, should be PERSISTED instead
+    "PERSISTED" --> "VALIDATED" : ValidationProcessor -- these quotes are not allowed, should be VALIDATED instead
+    "VALIDATED" --> [*] -- these quotes are not allowed, should be VALIDATED instead
+```
+
 Each state can have multiple transitions. Each transition can have a criterion or a processor. These represent Java criterion and processor classes that need to be implemented.
 Briefly specify after the workflow for each entity, what criterion and processor classes are needed, you can also provide pseudo code for the processor classes.
 Do not use escape characters in the mermaid diagrams. Do not use quotes in the mermaid diagrams. Use only allowed characters.

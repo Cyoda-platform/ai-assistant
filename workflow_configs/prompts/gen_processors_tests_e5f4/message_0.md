@@ -113,8 +113,7 @@ public class ExampleProcessorTest {
         EntityName exampleEntity = new EntityName();
         exampleEntity.setExampleField("exampleValue");
 
-        // Convert entity to JsonNode using serializer
-        JsonNode entityJson = processorSerializer.entityToJsonNode(exampleEntity);
+        JsonNode entityJson = objectMapper.valueToTree(exampleEntity);
 
         EntityProcessorCalculationRequest request = new EntityProcessorCalculationRequest();
         request.setId("r1");

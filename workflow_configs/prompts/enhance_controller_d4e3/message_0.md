@@ -37,52 +37,81 @@ Review the existing controller code and the compilation log to identify issues t
 * Entity classes must be reused as-is
 
 **EntityService Operations Available:**
-1. ADD:
-   CompletableFuture<UUID> idFuture = entityService.addItem(
-   entityModel={split_parameter_value}.ENTITY_NAME,
-   entityVersion=String.valueOf({split_parameter_value}.ENTITY_VERSION),
-   entity=data
-   )
-
+## 1. ADD Operations
+### Add Single Item
+```java
+CompletableFuture<UUID> idFuture = entityService.addItem(
+    {EntityClass}.ENTITY_NAME,
+    {EntityClass}.ENTITY_VERSION,
+    entity
+);
+UUID entityId = idFuture.get();
+```
+### Add Multiple Items
+```java
 CompletableFuture<List<UUID>> idsFuture = entityService.addItems(
-entityModel={split_parameter_value}.ENTITY_NAME,
-entityVersion=String.valueOf({split_parameter_value}.ENTITY_VERSION),
-entities=data
-)
-
-2. READ:
-   CompletableFuture<ObjectNode> itemFuture = entityService.getItem(
-   entityModel={split_parameter_value}.ENTITY_NAME,
-   entityVersion=String.valueOf({split_parameter_value}.ENTITY_VERSION),
-   technicalId=UUID.fromString(technicalId)
-   )
-
-CompletableFuture<ArrayNode> itemsFuture = entityService.getItems(
-entityModel={split_parameter_value}.ENTITY_NAME,
-entityVersion=String.valueOf({split_parameter_value}.ENTITY_VERSION)
-)
-
-CompletableFuture<ArrayNode> filteredItemsFuture = entityService.getItemsByCondition(
-entityModel={split_parameter_value}.ENTITY_NAME,
-entityVersion=String.valueOf({split_parameter_value}.ENTITY_VERSION),
-condition=condition,
-inMemory=true
-)
-
-3. UPDATE:
-   CompletableFuture<UUID> updatedId = entityService.updateItem(
-   entityModel={split_parameter_value}.ENTITY_NAME,
-   entityVersion=String.valueOf({split_parameter_value}.ENTITY_VERSION),
-   technicalId=UUID.fromString(technicalId),
-   entity=data
-   )
-
-4. DELETE:
-   CompletableFuture<UUID> deletedId = entityService.deleteItem(
-   entityModel={split_parameter_value}.ENTITY_NAME,
-   entityVersion=String.valueOf({split_parameter_value}.ENTITY_VERSION),
-   technicalId=UUID.fromString(technicalId)
-   )
+    {EntityClass}.ENTITY_NAME,
+    {EntityClass}.ENTITY_VERSION,
+    entities
+);
+List<UUID> entityIds = idsFuture.get();
+```
+## 2. READ Operations
+### Get Single Item by ID
+```java
+CompletableFuture<DataPayload> itemFuture = entityService.getItem(UUID.fromString(technicalId));
+DataPayload dataPayload = itemFuture.get();
+ObjectNode node = dataPayload != null ? (ObjectNode) dataPayload.getData() : null;
+```
+### Get Multiple Items
+```java
+CompletableFuture<List<DataPayload>> itemsFuture = entityService.getItems(
+    {EntityClass}.ENTITY_NAME,
+    {EntityClass}.ENTITY_VERSION,
+    null, null, null  // pageSize, pageNumber, pointTime
+);
+List<DataPayload> dataPayloads = itemsFuture.get();
+// Process each DataPayload:
+List<YourResponseClass> responses = new ArrayList<>();
+if (dataPayloads != null) {
+    for (DataPayload payload : dataPayloads) {
+        JsonNode data = payload.getData(); // Extract JSON data
+        // Convert to specific type:
+        YourResponseClass response = objectMapper.treeToValue(payload.getData(), YourResponseClass.class);
+        responses.add(response);
+    }
+}
+```
+### Get Items by Condition
+```java
+CompletableFuture<List<DataPayload>> filteredItemsFuture = entityService.getItemsByCondition(
+    {EntityClass}.ENTITY_NAME,
+    {EntityClass}.ENTITY_VERSION,
+    condition,
+    true  // inMemory flag
+);
+List<DataPayload> dataPayloads = filteredItemsFuture.get();
+// Process results the same way as getItems above
+for (DataPayload payload : dataPayloads) {
+    JsonNode data = payload.getData();
+    // Process each data node
+}
+```
+## 3. UPDATE Operations
+### Update Single Item
+```java
+CompletableFuture<UUID> updatedId = entityService.updateItem(
+    UUID.fromString(technicalId),
+    entity
+);
+UUID entityId = updatedId.get();
+```
+## 4. DELETE Operations
+### Delete Single Item
+```java
+CompletableFuture<UUID> deletedId = entityService.deleteItem(UUID.fromString(technicalId));
+UUID entityId = deletedId.get();
+```
 
 **Search Conditions (for simple filtering only):**
 Use SearchConditionRequest.group() and Condition.of() for basic field-based queries:
