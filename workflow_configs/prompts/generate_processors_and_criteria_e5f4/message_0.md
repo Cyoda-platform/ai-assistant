@@ -27,6 +27,9 @@ import com.java_template.common.workflow.OperationSpecification;
 import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationRequest;
 import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.cyoda.cloud.api.event.common.DataPayload;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.java_template.common.service.EntityService;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -168,6 +171,8 @@ Supported operators: "EQUALS", "NOT_EQUAL", "IEQUALS", "GREATER_THAN", "LESS_THA
 
 Required Imports and Configuration:
 * import static com.java_template.common.config.Config.*;
+* import org.cyoda.cloud.api.event.common.DataPayload;
+* import com.fasterxml.jackson.databind.ObjectMapper;
 * import com.java_template.common.service.EntityService;
 * import com.java_template.common.util.Condition; //if needed
 * import com.java_template.common.util.SearchConditionRequest;//if needed
@@ -190,10 +195,7 @@ Example:
 
 Do not use Java reflection - use entity getters and setters only.
 For ingestion jobs you need to fully implement the data ingestion logic based on the functional requirements.
-You can use  HttpClient client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(10))
-                .build();
-to call external APIs.
+You can use  HttpClient to call external APIs.
 
 Output format:
 CRITICAL: Return only the generated processor code. Do not include any other text or explanations.
