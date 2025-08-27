@@ -6,8 +6,8 @@ Configuration data for the workflow.
 """
 
 from typing import Any, Dict, Callable
-from workflow_config_code.tools.schedule_deploy_env_f9ed.tool import ScheduleDeployEnvF9edTool
-from workflow_config_code.tools.lock_chat_670c.tool import LockChat670cTool
+from workflow_config_code.tools.schedule_deploy_env_f9ed.tool import ScheduleDeployEnvF9edToolConfig
+from workflow_config_code.tools.lock_chat_670c.tool import LockChat670cToolConfig
 
 
 def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
@@ -33,7 +33,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "manual": False,
                         "processors": [
                             {
-                                "name": ScheduleDeployEnvF9edTool.get_name(),
+                                "name": ScheduleDeployEnvF9edToolConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",
@@ -52,7 +52,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "manual": False,
                         "processors": [
                             {
-                                "name": LockChat670cTool.get_name(),
+                                "name": LockChat670cToolConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",
@@ -90,7 +90,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "manual": False,
                         "processors": [
                             {
-                                "name": LockChat670cTool.get_name(),
+                                "name": LockChat670cToolConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",

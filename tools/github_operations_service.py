@@ -146,7 +146,8 @@ class GitHubOperationsService(BaseWorkflowService):
         }
 
         try:
-            async with httpx.AsyncClient() as client:
+            timeout = httpx.Timeout(150.0, connect=60.0)
+            async with httpx.AsyncClient(timeout=timeout, trust_env=False) as client:
                 if method.upper() == "PUT":
                     response = await client.put(url, json=data, headers=headers)
                 elif method.upper() == "GET":
@@ -519,7 +520,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 await asyncio.sleep(poll_interval)
 
         except Exception as e:
-            return self._handle_error(entity, e, f"Error running GitHub action: {e}")
+            #return self._handle_error(entity, e, f"Error running GitHub action: {e}")
+            logger.exception()
 
     async def _wait_for_run_to_appear(self, wait_seconds: int = 5) -> None:
         """

@@ -1,37 +1,39 @@
 """
-ScheduleDeployEnvF9edTool Implementation
+ScheduleDeployEnvF9edToolConfig Tool
 
 Generated from config: workflow_configs/tools/schedule_deploy_env_f9ed/tool.json
-Tool implementation for schedule_deploy_env function.
+Implements FunctionProcessor interface with get_name() and get_config() methods.
 """
 
 from typing import Any, Dict
-from tools.base_workflow_service import BaseWorkflowService
+from workflow.interfaces.interfaces import FunctionProcessor
+from .config import get_config
 
 
-class ScheduleDeployEnvF9edTool(BaseWorkflowService):
-    """Tool for scheduling deployment of Cyoda environment"""
+class ScheduleDeployEnvF9edToolConfig(FunctionProcessor):
+    """Tool configuration for schedule_deploy_env_f9ed"""
+
+    @staticmethod
+    def get_type() -> str:
+        """Get the processor type"""
+        return FunctionProcessor.get_type()
 
     @staticmethod
     def get_name() -> str:
-        """Get the static name of this tool"""
-        return "schedule_deploy_env"
+        """Get the full processor name"""
+        return f"{ScheduleDeployEnvF9edToolConfig.get_type()}.schedule_deploy_env_f9ed"
 
-    def run(self, technical_id: str, entity: Dict[str, Any], **params) -> Dict[str, Any]:
-        """
-        Schedule deployment of Cyoda environment
-        
-        Args:
-            technical_id: Technical identifier
-            entity: Entity data
-            **params: Additional parameters
-            
-        Returns:
-            Dict containing the result of scheduling deployment
-        """
-        return self.call_function(
-            function_name="schedule_deploy_env",
-            technical_id=technical_id,
-            entity=entity,
-            **params
-        )
+    @staticmethod
+    def get_config(params: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Get tool configuration"""
+        config_factory = get_config()
+        return config_factory(params or {})
+
+    @staticmethod
+    def get_tool_name() -> str:
+        """Get the tool name without processor type"""
+        return "schedule_deploy_env_f9ed"
+
+
+# Create singleton instance
+schedule_deploy_env_f9ed_tool = ScheduleDeployEnvF9edToolConfig()
