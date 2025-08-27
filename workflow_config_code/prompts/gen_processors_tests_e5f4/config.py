@@ -120,12 +120,12 @@ public class ExampleProcessorTest {
                 .thenReturn(CompletableFuture.completedFuture(objectMapper.createArrayNode()));
 
         ExampleProcessor processor = new ExampleProcessor(serializerFactory, entityService, objectMapper);
-
+        //You MUST use the entity directly, do not use the JsonNode
         EntityName exampleEntity = new EntityName();
         exampleEntity.setExampleField("exampleValue");
 
         // Convert entity to JsonNode using serializer
-        JsonNode jobJson = processorSerializer.entityToJsonNode(exampleEntity);
+        JsonNode entityJson = processorSerializer.entityToJsonNode(exampleEntity);
 
         EntityProcessorCalculationRequest request = new EntityProcessorCalculationRequest();
         request.setId("r1");

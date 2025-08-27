@@ -142,6 +142,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "input": {
                     "local_fs": [
                         "src/main/java/com/java_template/application/processor/{ProcessorName}.java",
+                        "src/main/java/com/java_template/application/entity",
                     ]
                 },
                 "messages": [

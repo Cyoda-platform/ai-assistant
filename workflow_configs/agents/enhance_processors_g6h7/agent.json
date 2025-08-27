@@ -119,7 +119,8 @@
       "approve": true,
       "input": {
         "local_fs": [
-          "src/main/java/com/java_template/application/processor/{ProcessorName}.java"
+          "src/main/java/com/java_template/application/processor/{ProcessorName}.java",
+          "src/main/java/com/java_template/application/entity"
         ]
       },
       "messages": [
