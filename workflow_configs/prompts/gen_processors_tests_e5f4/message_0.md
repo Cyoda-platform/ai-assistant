@@ -70,7 +70,7 @@ package com.java_template.application.processor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.java_template.application.entity.entity_name.version_1.EntityName;
 import com.java_template.common.serializer.CriterionSerializer;
 import com.java_template.common.serializer.ProcessorSerializer;
 import com.java_template.common.serializer.SerializerFactory;
@@ -110,9 +110,11 @@ public class ExampleProcessorTest {
 
         ExampleProcessor processor = new ExampleProcessor(serializerFactory, entityService, objectMapper);
 
-        ObjectNode entityJson = objectMapper.createObjectNode();
-        entityJson.put("id", 100);
-        entityJson.put("exampleField", "exampleValue");
+        EntityName exampleEntity = new EntityName();
+        exampleEntity.setExampleField("exampleValue");
+
+        // Convert entity to JsonNode using serializer
+        JsonNode jobJson = processorSerializer.entityToJsonNode(exampleEntity);
 
         EntityProcessorCalculationRequest request = new EntityProcessorCalculationRequest();
         request.setId("r1");
@@ -137,7 +139,7 @@ public class ExampleProcessorTest {
         assertNotNull(response);
         assertTrue(response.getSuccess());
         // Verify EntityService was called for deduplication search
-        verify(entityService, times(1)).getItemsByCondition(anyString(), anyString(), any(), anyBoolean());
+        verify(entityService, atLeastOnce()).addItem(eq("EntityName"), anyString(), any());
     }
 }
 

@@ -84,6 +84,9 @@ class Config:
         self.GH_DEFAULT_USERNAME = _get_env("GH_DEFAULT_USERNAME", default="target-username")
         self.GH_DEFAULT_PERMISSION = _get_env("GH_DEFAULT_PERMISSION", default="push")
 
+        # Git configuration
+        self.GIT_BASE_BRANCH = _get_env("GIT_BASE_BRANCH", default="main")
+
         # — optional ints with defaults —
         self.MAX_ITERATION = _get_int_env("MAX_ITERATION", default=30)
         self.MAX_AI_AGENT_ITERATIONS = _get_int_env("MAX_AI_AGENT_ITERATIONS", default=30)
