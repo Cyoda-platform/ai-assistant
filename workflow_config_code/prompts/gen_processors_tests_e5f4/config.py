@@ -118,9 +118,9 @@ public class ExampleProcessorTest {
         EntityService entityService = mock(EntityService.class);
         when(entityService.getItemsByCondition(anyString(), anyString(), any(), anyBoolean()))
                 .thenReturn(CompletableFuture.completedFuture(objectMapper.createArrayNode()));
-
-        ExampleProcessor processor = new ExampleProcessor(serializerFactory, entityService, objectMapper);
-        //You MUST use the entity directly, do not use the JsonNode
+        Check what dependencies the processor has and add them to the processor constructor
+        ExampleProcessor processor = new ExampleProcessor(serializerFactory, entityService, objectMapper); // you might not need all of these arguments - check the processor code
+        //You MUST use the entity directly, do not use the JsonNode/ObjectNode 
         EntityName exampleEntity = new EntityName();
         exampleEntity.setExampleField("exampleValue");
 

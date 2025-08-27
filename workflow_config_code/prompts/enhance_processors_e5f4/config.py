@@ -74,6 +74,10 @@ public class {split_parameter_value} implements CyodaProcessor {
 
         return serializer.withRequest(request) //always use this method name to request EntityProcessorCalculationResponse
             .toEntity({EntityName}.class)
+            .withErrorHandler((error, entity) -> {
+                    logger.error("Failed to extract entity: {}", error.getMessage(), error);
+                    return new ErrorInfo("TO_ENTITY_ERROR", "Failed to extract entity: " + error.getMessage());
+                })
             .validate(this::isValidEntity, "Invalid entity state")
             .map(this::processEntityLogic) // Implement business logic here
             .complete();

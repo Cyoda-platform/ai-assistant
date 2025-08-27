@@ -3,6 +3,8 @@ For {split_parameter_value} entity find workflow design in the functional requir
 
 IMPORTANT:
 Find the workflow design in the functional requirements only for {split_parameter_value} entity. 
+You need to find the workflow design for {split_parameter_value} entity only. It is a mermaid state diagram.
+Do your best to find this state diagram to the json format below and use it to generate the workflow design json.
 
 1. Design a workflow for {split_parameter_value} entity based on the functional requirements. 
 Workflow Design Rules:
@@ -20,6 +22,7 @@ Workflow Design Rules:
   - processors (list of processor definitions)
   - criterion (definition for conditional transitions)
 Processors represent business logic execution (e.g. validation, data processing, data enrichment, data transformation, external API calls or business domain logic: order, approve, sign, notify), and criteria represent conditional logic.
+Ideally all processors from the state diagram should be included in the workflow json.
 
 Workflow JSON Example:
 {
