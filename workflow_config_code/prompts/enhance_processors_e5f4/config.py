@@ -49,6 +49,9 @@ import com.java_template.common.workflow.OperationSpecification;
 import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationRequest;
 import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.cyoda.cloud.api.event.common.DataPayload;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.java_template.common.service.EntityService;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -196,9 +199,11 @@ Supported operators: "EQUALS", "NOT_EQUAL", "IEQUALS", "GREATER_THAN", "LESS_THA
 
 Required Imports and Configuration:
 * import static com.java_template.common.config.Config.*;
-* import com.java_template.common.service.EntityService;
 * import com.java_template.common.util.Condition; //if needed
 * import com.java_template.common.util.SearchConditionRequest;//if needed
+* import org.cyoda.cloud.api.event.common.DataPayload;
+* import com.fasterxml.jackson.databind.ObjectMapper;
+* import com.java_template.common.service.EntityService;
 * package com.java_template.application.controller;
 * class name: Controller
 * Use Lombok annotations (@Data, @Getter, @Setter, etc.)

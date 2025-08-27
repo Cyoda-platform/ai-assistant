@@ -125,7 +125,7 @@ Supported operators: "EQUALS", "NOT_EQUAL", "IEQUALS", "GREATER_THAN", "LESS_THA
 Required Imports and Configuration:
 * import static com.java_template.common.config.Config.*;
 * import org.cyoda.cloud.api.event.common.DataPayload;
-import com.fasterxml.jackson.databind.ObjectMapper;
+* import com.fasterxml.jackson.databind.ObjectMapper;
 * import com.java_template.common.service.EntityService;
 * import com.java_template.common.util.Condition; //if needed
 * import com.java_template.common.util.SearchConditionRequest;//if needed
