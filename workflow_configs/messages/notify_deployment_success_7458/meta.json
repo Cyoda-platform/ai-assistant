@@ -1,0 +1,6 @@
+{
+  "type": "notification",
+  "approve": false,
+  "publish": false,
+  "allow_anonymous_users": true
+}

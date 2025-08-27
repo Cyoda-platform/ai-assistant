@@ -521,7 +521,8 @@ class GitHubOperationsService(BaseWorkflowService):
 
         except Exception as e:
             #return self._handle_error(entity, e, f"Error running GitHub action: {e}")
-            logger.exception()
+            logger.exception(e)
+            return "Failed to run compilation job"
 
     async def _wait_for_run_to_appear(self, wait_seconds: int = 5) -> None:
         """

@@ -1,0 +1,14 @@
+{
+  "type": "function",
+  "function": {
+    "name": "lock_chat",
+    "description": "Locks the chat to prevent user interaction during deployment",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  }
+}
