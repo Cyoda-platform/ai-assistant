@@ -2,6 +2,17 @@ You’ve just built a working sketch of your Cyoda application. This marks the b
 
 Next, we’ll convert this prototype into a full application that connects directly to your Cyoda Cloud environment.
 
+```mermaid
+graph LR
+    A([Finalize App Requirements]):::done e1@
+    ==> B([Deploy Cyoda environment]):::done e2@
+    ==> C([Gen Entities & Workflows]):::done e3@
+    ==> D([Gen Controllers, Processors, Criteria & Tests]):::done e4@
+    ==> E([Launch Cyoda App]):::done
+
+    classDef done fill:#0D8484,stroke:#0D8484,color:#fff
+```
+
 By doing so, you gain:
 
 ✅ A robust, event-driven backend on a single, coherent platform

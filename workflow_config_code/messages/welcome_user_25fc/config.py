@@ -17,9 +17,9 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
 ```mermaid
 graph TD
     A([Finalize App Requirements]):::bar e1@== build_general_application
-    ==> B([Environment Deployment]):::bar
-    B e2@== deploy_cyoda_env ==> C([Generate Entities&Workflows]):::bar
-    C e3@== functional_requirements_to_prototype ==> D([Build Prototype]):::bar
+    ==> B([Deploy Cyoda environment]):::bar
+    B e2@== deploy_cyoda_env ==> C([Gen Entities & Workflows]):::bar
+    C e3@== functional_requirements_to_prototype ==> D([Gen Controllers, Processors, Criteria & Tests]):::bar
     D e4@== init_setup_workflow ==> E([Launch Cyoda App]):::bar
 
     e1@{ animate: true }

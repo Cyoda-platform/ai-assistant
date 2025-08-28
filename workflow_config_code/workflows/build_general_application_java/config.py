@@ -20,11 +20,15 @@ from workflow_config_code.messages.welcome_user_25fc.message import WelcomeUser2
 from workflow_config_code.agents.process_configs_discussion_0000.agent import ProcessConfigsDiscussion0000AgentConfig
 from workflow_config_code.messages.notify_generated_original_requirements_b94e.message import \
     NotifyGeneratedOriginalRequirementsB94eMessageConfig
+from workflow_config_code.messages.notify_requirement_discussion_a1b3.message import \
+    NotifyRequirementDiscussionA1b3MessageConfig
 from workflow_config_code.messages.ask_about_api_d91f.message import AskAboutApiD91fMessageConfig
 from workflow_config_code.agents.process_initial_question_cd33.agent import ProcessInitialQuestionCd33AgentConfig
 from workflow_config_code.agents.generate_functional_requirements_accc.agent import \
     GenerateFunctionalRequirementsAcccAgentConfig
 from workflow_config_code.agents.process_user_input_9a8e.agent import ProcessUserInput9a8eAgentConfig
+from workflow_config_code.messages.notify_env_deployment_start_c5d6.message import \
+    NotifyEnvDeploymentStartC5d6MessageConfig
 from workflow_config_code.tools.init_chats_d512.tool import InitChatsD512ToolConfig
 from workflow_config_code.tools.clone_repo_b60a.tool import CloneRepoB60aToolConfig
 from workflow_config_code.agents.generate_workflow_from_requirements_0000.agent import \
@@ -272,11 +276,30 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "notify_generated_original_requirements",
-                        "next": "notified_generated_original_requirements",
+                        "next": "notified_generated_original_requirements_saved",
                         "manual": False,
                         "processors": [
                             {
                                 "name": NotifyGeneratedOriginalRequirementsB94eMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 900000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "notified_generated_original_requirements_saved": {
+                "transitions": [
+                    {
+                        "name": "notify_requirement_discussion",
+                        "next": "notified_generated_original_requirements",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyRequirementDiscussionA1b3MessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",
@@ -522,6 +545,25 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 ]
             },
             "env_deployment_started": {
+                "transitions": [
+                    {
+                        "name": "notify_env_deployment_start",
+                        "next": "env_deployment_notified",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyEnvDeploymentStartC5d6MessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 900000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "env_deployment_notified": {
                 "transitions": [
                     {
                         "name": "process_user_input",

@@ -366,7 +366,7 @@
       "transitions": [
         {
           "name": "notify_generated_original_requirements",
-          "next": "notified_generated_original_requirements",
+          "next": "notified_generated_original_requirements_saved",
           "manual": false,
           "processors": [
             {
@@ -408,6 +408,56 @@
         {
           "name": "unlock",
           "next": "generated_original_requirements",
+          "manual": true
+        }
+      ]
+    },
+    "notified_generated_original_requirements_saved": {
+      "transitions": [
+        {
+          "name": "notify_requirement_discussion",
+          "next": "notified_generated_original_requirements",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_requirement_discussion_a1b3",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "notified_generated_original_requirements_saved",
+          "manual": true
+        },
+        {
+          "name": "fail_notified_generated_original_requirements_saved",
+          "next": "locked_notified_generated_original_requirements_saved",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_notified_generated_original_requirements_saved": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "notified_generated_original_requirements_saved",
           "manual": true
         }
       ]
@@ -990,12 +1040,12 @@
     "env_deployment_started": {
       "transitions": [
         {
-          "name": "process_user_input",
-          "next": "app_requirements_step3_processing",
+          "name": "notify_env_deployment_start",
+          "next": "env_deployment_notified",
           "manual": false,
           "processors": [
             {
-              "name": "AgentProcessor.process_user_input_9a8e",
+              "name": "MessageProcessor.notify_env_deployment_start_c5d6",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
@@ -1033,6 +1083,56 @@
         {
           "name": "unlock",
           "next": "env_deployment_started",
+          "manual": true
+        }
+      ]
+    },
+    "env_deployment_notified": {
+      "transitions": [
+        {
+          "name": "process_user_input",
+          "next": "app_requirements_step3_processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_user_input_9a8e",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "env_deployment_notified",
+          "manual": true
+        },
+        {
+          "name": "fail_env_deployment_notified",
+          "next": "locked_env_deployment_notified",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_env_deployment_notified": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "env_deployment_notified",
           "manual": true
         }
       ]

@@ -44,6 +44,10 @@ response.getSuccess() is true
 Inspect response.getPayload().getData() for the expected sunny-day state changes (e.g., fields set/updated by the processor)
 Keep assertions focused and minimal to the processor’s core happy-path behavior
 
+Acceptance criteria:
+One and only one @Test test, testing the sunny-day path
+Only EntityService is mocked where needed; everything else uses real objects
+No Spring context usage in tests
 
 You can use the following code as a reference (it is just an example):
 package com.java_template.application.processor;

@@ -1,7 +1,22 @@
 
-🎉 **Project Compilation Completed Successfully!**
+🎉 **Project Generation Completed Successfully!**
 
-Your prototype application has been fully generated and compiled.
+```mermaid
+graph LR
+    A([Finalize App Requirements]):::done e1@
+    ==> B([Deploy Cyoda environment]):::done e2@
+    ==> C([Gen Entities & Workflows]):::done e3@
+    ==> D([Gen Controllers, Processors, Criteria & Tests]):::done e4@
+    ==> E([Launch Cyoda App]):::next
+
+    e4@{ animate: true }
+
+    classDef bar stroke:#0D8484
+    classDef done fill:#0D8484,stroke:#0D8484,color:#fff
+    classDef next stroke:#0D8484,stroke-width:3px,stroke-dasharray:6 4
+```
+
+Your prototype application has been fully generated.
 
 📁 **Project Structure:**
 ```

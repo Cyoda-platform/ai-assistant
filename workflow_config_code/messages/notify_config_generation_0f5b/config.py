@@ -14,6 +14,22 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
     return lambda params=None: \
 """🌟 Getting Started with Initial Configurations 🛠️
 
+```mermaid
+graph LR
+    A([Finalize App Requirements]):::done e1@
+    ==> B([Deploy Cyoda environment]):::done e2@
+    ==> C([Gen Entities & Workflows]):::done e3@
+    ==> D([Gen Controllers, Processors, Criteria & Tests]):::next
+    D e4@ ==> E([Launch Cyoda App]):::bar
+
+    e3@{ animate: true }
+
+    classDef bar stroke:#0D8484
+    classDef done fill:#0D8484,stroke:#0D8484,color:#fff
+    classDef next stroke:#0D8484,stroke-width:3px,stroke-dasharray:6 4
+```
+
+
 I’ll generate the initial **Entity POJOs** and **Workflow Configurations** for you. You can review them in the **`{git_branch}`** branch on [GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch}) once they are ready.
 
 ---
