@@ -35,7 +35,7 @@ I can assist with any changes or questions.
  
 Alternatively, you can edit configs directly in the code.
 
-If you need to push changes to your branch, ask me here for access. I'll need your GitHub username to add you as a collaborator. If you'd like to be a Cyoda contributor instead of a contributor and enjoy more privileges, please let us know via [Discord](https://discord.gg/95rdAyBZr2).
+If you need to push changes to your branch, ask me here for access. I'll need your GitHub username to add you as a collaborator. If you'd like to be a Cyoda contributor instead of a collaborator and enjoy more privileges, please let us know via [Discord](https://discord.gg/95rdAyBZr2).
 
 You can evolve the workflows and entities in your IDE with your own IDE assistant.
 
