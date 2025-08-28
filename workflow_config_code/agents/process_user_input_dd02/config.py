@@ -24,7 +24,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "type": "agent",
         "publish": True,
         "allow_anonymous_users": True,
-        "model": {},
+        "model": {"model_name": "gpt-4o-mini"},
         "tools": [
             {
                 "name": AddCollaboratorToDefaultRepos865fToolConfig.get_tool_name()

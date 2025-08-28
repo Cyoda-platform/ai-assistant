@@ -21,10 +21,13 @@ graph LR
     classDef next  fill:#FFFFFF,stroke:#0D8484,stroke-width:3px,stroke-dasharray:6 4,rx:12,ry:12,color:#083A3A
     linkStyle default stroke:#0D8484,stroke-width:2px,opacity:0.95
 
+
+
 ```
 
 
-I’ll generate the initial **Entity POJOs** and **Workflow Configurations** for you. You can review them in the **`{git_branch}`** branch on [GitHub](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch}) once they are ready.
+
+I’ll generate the initial **Entity POJOs** and **Workflow Configurations** for you. You can review them in the your branch once they are ready.
 
 ---
 

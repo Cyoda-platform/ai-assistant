@@ -12,9 +12,9 @@ from workflow_config_code.prompts.prompt_sent_d866.prompt import PromptSentD866P
 def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get agent configuration factory"""
     return lambda params=None: {
-        "type": "prompt",
+        "type": "agent",
         "approve": True,
-        "model": {},
+        "model": {"model_name": "gpt-4o-mini"},
         "messages": [
                 {
                         "role": "user",

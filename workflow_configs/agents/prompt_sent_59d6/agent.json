@@ -1,7 +1,9 @@
 {
   "type": "prompt",
   "approve": true,
-  "model": {},
+  "model": {
+    "model_name": "gpt-4o-mini"
+  },
   "messages": [
     {
       "role": "user",
