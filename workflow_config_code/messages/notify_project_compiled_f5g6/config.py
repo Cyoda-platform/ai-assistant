@@ -62,7 +62,6 @@ You can run and test it locally or directly in **GitHub Codespaces**.
 ./gradlew test 
 
 *Click Approve when you are ready to proceed and I will launch Cyoda setup assistant*
-```
 
 ---### ✅ Approval or Feedback
 If you're happy with the prototype, feel free to approve it.
@@ -72,6 +71,7 @@ If anything's off or you'd like changes, just ping me here. 🙌
 Alternatively, you can use your IDE AI assistant with a suggested prompt:
 
 **Prompt for your IDE:**
+
 ```markdown
 This project is a **Cyoda client application**.
 
