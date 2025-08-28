@@ -2,7 +2,7 @@
   "version": "1.0",
   "name": "deploy_cyoda_env",
   "desc": "Workflow for deploying Cyoda environment",
-  "initialState": "none",
+  "initialState": "initial_state",
   "active": true,
   "criterion": {
     "type": "simple",
@@ -11,7 +11,7 @@
     "value": "deploy_cyoda_env"
   },
   "states": {
-    "none": {
+    "initial_state": {
       "transitions": [
         {
           "name": "schedule_deploy_env",
@@ -30,12 +30,12 @@
         },
         {
           "name": "retry",
-          "next": "none",
+          "next": "initial_state",
           "manual": true
         },
         {
-          "name": "fail_none",
-          "next": "locked_none",
+          "name": "fail_initial_state",
+          "next": "locked_initial_state",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -52,11 +52,11 @@
         }
       ]
     },
-    "locked_none": {
+    "locked_initial_state": {
       "transitions": [
         {
           "name": "unlock",
-          "next": "none",
+          "next": "initial_state",
           "manual": true
         }
       ]

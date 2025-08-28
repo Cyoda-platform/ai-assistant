@@ -17,7 +17,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "version": "1.0",
         "name": "scheduler_entity",
         "desc": "Scheduler entity workflow for managing scheduled processes",
-        "initialState": "none",
+        "initialState": "initial_state",
         "active": True,
         "criterion": {
             "type": "simple",
@@ -26,7 +26,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             "value": "scheduler_entity"
         },
         "states": {
-            "none": {
+            "initial_state": {
                 "transitions": [
                     {
                         "name": "schedule",

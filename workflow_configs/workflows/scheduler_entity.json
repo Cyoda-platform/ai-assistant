@@ -2,7 +2,7 @@
   "version": "1.0",
   "name": "scheduler_entity",
   "desc": "Scheduler entity workflow for managing scheduled processes",
-  "initialState": "none",
+  "initialState": "initial_state",
   "active": true,
   "criterion": {
     "type": "simple",
@@ -11,7 +11,7 @@
     "value": "scheduler_entity"
   },
   "states": {
-    "none": {
+    "initial_state": {
       "transitions": [
         {
           "name": "schedule",
@@ -20,12 +20,12 @@
         },
         {
           "name": "retry",
-          "next": "none",
+          "next": "initial_state",
           "manual": true
         },
         {
-          "name": "fail_none",
-          "next": "locked_none",
+          "name": "fail_initial_state",
+          "next": "locked_initial_state",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -42,11 +42,11 @@
         }
       ]
     },
-    "locked_none": {
+    "locked_initial_state": {
       "transitions": [
         {
           "name": "unlock",
-          "next": "none",
+          "next": "initial_state",
           "manual": true
         }
       ]

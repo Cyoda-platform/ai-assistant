@@ -19,7 +19,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "version": "1.0",
         "name": "deploy_cyoda_env_background",
         "desc": "Background workflow for deploying Cyoda environment",
-        "initialState": "none",
+        "initialState": "initial_state",
         "active": True,
         "criterion": {
             "type": "simple",
@@ -28,7 +28,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             "value": "deploy_cyoda_env_background"
         },
         "states": {
-            "none": {
+            "initial_state": {
                 "transitions": [
                     {
                         "name": "schedule_deploy_env",

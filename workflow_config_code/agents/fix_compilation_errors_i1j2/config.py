@@ -35,6 +35,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "input": {
                     "local_fs": [
                         "{file_path}",
+                        "src/main/java/com/java_template/application/entity",
                         "src/main/java/com/java_template/prototype/project_compilation_output.json"
                     ]
                 },

@@ -65,6 +65,99 @@ Your task is complete when you have:
 2. ✅ Fixed all identified compilation errors in the Java file
 4. ✅ Ensured all fixes maintain code quality and functionality
 
+===================
+Reference:
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.java_template.application.entity.adoptionrequest.version_1.AdoptionRequest;
+import com.java_template.common.serializer.CriterionSerializer;
+import com.java_template.common.serializer.ProcessorSerializer;
+import com.java_template.common.serializer.SerializerFactory;
+import com.java_template.common.serializer.jackson.JacksonCriterionSerializer;
+import com.java_template.common.serializer.jackson.JacksonProcessorSerializer;
+import com.java_template.common.service.EntityService;
+import com.java_template.common.workflow.CyodaEventContext;
+import org.cyoda.cloud.api.event.common.DataPayload;
+import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationRequest;
+import org.cyoda.cloud.api.event.processing.EntityProcessorCalculationResponse;
+import org.junit.jupiter.api.Test;
+
+
+public interface EntityService {
+
+    // Retrieve a single item based on its ID.
+    CompletableFuture<DataPayload> getItem(@NotNull UUID entityId);
+
+    // Retrieve an item based on a condition.
+    CompletableFuture<Optional<DataPayload>> getFirstItemByCondition(
+            @NotNull String modelName,
+            @NotNull Integer modelVersion,
+            @NotNull Object condition,
+            boolean inMemory
+    );
+
+    // Retrieve multiple items based on the entity model and version.
+    CompletableFuture<List<DataPayload>> getItems(
+            @NotNull String modelName,
+            @NotNull Integer modelVersion,
+            @Nullable Integer pageSize,
+            @Nullable Integer pageNumber,
+            @Nullable Date pointTime
+    );
+
+    // Retrieve items based on a condition with option for in-memory search.
+    CompletableFuture<List<DataPayload>> getItemsByCondition(
+            @NotNull String modelName,
+            @NotNull Integer modelVersion,
+            @NotNull Object condition,
+            boolean inMemory
+    );
+
+    // Add a new item to the repository and return the entity's unique ID.
+    <ENTITY_TYPE> CompletableFuture<UUID> addItem(
+            @NotNull String modelName,
+            @NotNull Integer modelVersion,
+            @NotNull ENTITY_TYPE entity
+    );
+
+    // Add a new item to the repository and return the entity ID along with the
+    // transaction ID.
+    <ENTITY_TYPE> CompletableFuture<ObjectNode> addItemAndReturnTransactionInfo(
+            @NotNull String modelName,
+            @NotNull Integer modelVersion,
+            @NotNull ENTITY_TYPE entity
+    );
+
+    // Add a list of items to the repository and return the entities' IDs.
+    <ENTITY_TYPE> CompletableFuture<List<UUID>> addItems(
+            @NotNull String modelName,
+            @NotNull Integer modelVersion,
+            @NotNull Collection<ENTITY_TYPE> entities
+    );
+
+    // Add a list of items to the repository and return the entities' IDs along with
+    // the transaction ID.
+    <ENTITY_TYPE> CompletableFuture<EntityTransactionInfo> addItemsAndReturnTransactionInfo(
+            @NotNull String modelName,
+            @NotNull Integer modelVersion,
+            @NotNull Collection<ENTITY_TYPE> entities
+    );
+
+    // Update an existing item in the repository.
+    <ENTITY_TYPE> CompletableFuture<UUID> updateItem(@NotNull UUID entityId, @NotNull ENTITY_TYPE entity);
+
+    <ENTITY_TYPE> CompletableFuture<List<UUID>> updateItems(@NotNull Collection<ENTITY_TYPE> entities);
+
+    CompletableFuture<List<String>> applyTransition(@NotNull UUID entityId, @NotNull String transitionName);
+
+    // Delete an item by ID.
+    CompletableFuture<UUID> deleteItem(@NotNull UUID entityId);
+
+    // Delete all items by modelName and modelVersion.
+    CompletableFuture<Integer> deleteItems(@NotNull String modelName, @NotNull Integer modelVersion);
+}
+===================
+
 Output format:
 Return only the full Java code without any additional text or comments.
 """
