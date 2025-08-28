@@ -24,7 +24,6 @@ Workflow Design Rules:
 - Construct the workflow JSON using a typical FSM model based on the functional requirements.
 - Avoid loops in the state transitions.
 - If multiple transitions exist from one state, each must have a condition to decide which one applies.
-- Limit processors to 1-2 unless the user explicitly requests more. At least one processor is recommended per workflow.
 - JSON should be an ordered dictionary of states.
 - Each state has a list of transitions.
 - Each transition must have:
@@ -35,7 +34,7 @@ Workflow Design Rules:
   - processors (list of processor definitions)
   - criterion (definition for conditional transitions)
 Processors represent business logic execution (e.g. validation, data processing, data enrichment, data transformation, external API calls or business domain logic: order, approve, sign, notify), and criteria represent conditional logic.
-Ideally all processors from the state diagram should be included in the workflow json.
+Ideally all processors from the state diagram should be included in the workflow json, we just 'translate' the state diagram to the json format. Necessary deviations are acceptable.
 
 Workflow JSON Example:
 {
@@ -91,8 +90,6 @@ Workflow JSON Example:
     }
   }
 }
-
-CRITICAL: Avoid putting criterion and processors in the same transition if possible. Ideally, each transition has either a criterion or a processor, but not both.
 
 "response_format": {
     "name": "workflow_design_schema",

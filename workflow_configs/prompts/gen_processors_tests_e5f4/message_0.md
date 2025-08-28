@@ -14,7 +14,10 @@ Serializer setup (use real objects):
 new ObjectMapper()
 ProcessorSerializer = new JacksonProcessorSerializer(objectMapper)
 CriterionSerializer = new JacksonCriterionSerializer(objectMapper)
-SerializerFactory serializerFactory = new SerializerFactory( List.of(processorSerializer), List.of(criterionSerializer) )
+SerializerFactory serializerFactory = new SerializerFactory(
+                java.util.List.of(processorSerializer),
+                java.util.List.of(criterionSerializer)
+        );
 Context setup (no Spring):
 Build EntityProcessorCalculationRequest with:
 id, requestId, entityId, processorName
@@ -44,11 +47,20 @@ Arrange
 ObjectMapper om = new ObjectMapper()
 ProcessorSerializer ps = new JacksonProcessorSerializer(om)
 CriterionSerializer cs = new JacksonCriterionSerializer(om)
-SerializerFactory sf = new SerializerFactory(List.of(ps), List.of(cs))
+SerializerFactory serializerFactory = new SerializerFactory(
+                java.util.List.of(processorSerializer),
+                java.util.List.of(criterionSerializer)
+        );
+
 EntityService es = mock(EntityService.class) if constructor needs it
-Processor underTest = new CLASS(sf, es?, om?)
-ObjectNode data = om.createObjectNode(); // fill fields to satisfy entity.isValid()
-DataPayload payload = new DataPayload(); payload.setData(data)
+ExampleProcessor processor = new ExampleProcessor(serializerFactory, entityService, objectMapper); // you might not need all of these arguments - check the processor code
+        //You MUST use the entity directly, do not use the JsonNode/ObjectNode
+        EntityName exampleEntity = new EntityName();
+        exampleEntity.setExampleField("exampleValue");
+        //Ideally this data should pass the processor isValidEntity validation
+
+        JsonNode entityJson = objectMapper.valueToTree(exampleEntity);
+DataPayload payload = new DataPayload(); payload.setData(entityJson)
 EntityProcessorCalculationRequest req = new EntityProcessorCalculationRequest()
 set id/requestId/entityId
 set processorName to the actual processor class simple name
@@ -109,9 +121,10 @@ public class ExampleProcessorTest {
                 .thenReturn(CompletableFuture.completedFuture(objectMapper.createArrayNode()));
         Check what dependencies the processor has and add them to the processor constructor
         ExampleProcessor processor = new ExampleProcessor(serializerFactory, entityService, objectMapper); // you might not need all of these arguments - check the processor code
-        //You MUST use the entity directly, do not use the JsonNode/ObjectNode 
+        //You MUST use the entity directly, do not use the JsonNode/ObjectNode
         EntityName exampleEntity = new EntityName();
         exampleEntity.setExampleField("exampleValue");
+        //Ideally this data should pass the processor isValidEntity validation
 
         JsonNode entityJson = objectMapper.valueToTree(exampleEntity);
 
