@@ -16,11 +16,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "name": "trigger_parent_entity",
                 "description": "Triggers the parent entity after completion",
                 "strict": True,
-                "parameters": {
-                        "type": "object",
-                        "properties": {},
-                        "required": [],
-                        "additionalProperties": False
-                }
+
         }
 }

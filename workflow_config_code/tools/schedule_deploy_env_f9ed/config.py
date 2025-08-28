@@ -15,12 +15,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "function": {
                 "name": "schedule_deploy_env",
                 "description": "Schedules deployment of Cyoda environment for the user",
-                "strict": True,
-                "parameters": {
-                        "type": "object",
-                        "properties": {},
-                        "required": [],
-                        "additionalProperties": False
-                }
+                "strict": True
+
         }
 }

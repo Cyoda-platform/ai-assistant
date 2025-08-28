@@ -15,12 +15,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "function": {
                 "name": "lock_chat",
                 "description": "Locks the chat to prevent user interaction during deployment",
-                "strict": True,
-                "parameters": {
-                        "type": "object",
-                        "properties": {},
-                        "required": [],
-                        "additionalProperties": False
-                }
+                "strict": True
         }
 }

@@ -45,39 +45,10 @@ sudo apt install -y openjdk-21-jdk-headless
 # Set Java 21 as active version
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export PATH=$JAVA_HOME/bin:$PATH
-# Run the prototype app
-./gradlew test --tests PrototypeApplicationTest -Dprototype.enabled=true
-```
-3. Make the app accessible from the browser:
-- In the **Ports** panel (bottom of the IDE), right-click on port `8081` and select **Change Port Visibility → Public**
-- Alternatively, after starting the app, click **Make Public** in the popup.
-
-4. Preview the app in the browser:
-`/swagger-ui/index.html` - Swagger UI: `https://<your-codespace-url>/swagger-ui/index.html`
-- OpenAPI specification: `https://<your-codespace-url>/v3/api-docs`> 
-*Codespaces will provide a forwarded port URL — just append `/swagger-ui/index.html` or `/v3/api-docs` to it.*
-
----#### **Option 2: Local Environment**
-
-1. Make sure you're on the correct branch and up to date:
-
-```bash
-git checkout {git_branch}
-git pull
+# Run the tests for processors and use debugger to step through the processors code
+./gradlew test 
 ```
 
-2. Run the prototype app:
-
-```bash
-./gradlew test --tests PrototypeApplicationTest -Dprototype.enabled=true
-```
-3. Open your browser and go to:
-- [http://localhost:8081/swagger-ui/index.html](http://localhost:8081/swagger-ui/index.html)
-- or [http://localhost:8081/v3/api-docs](http://localhost:8081/v3/api-docs)
----### 🧪 Testing
-You'll find example requests and responses in:
-📄 `prototype/functional_requirement.md`
-Use these to test the API via the Swagger UI.
 ---### ✅ Approval or Feedback
 If you're happy with the prototype, feel free to approve it.
 

@@ -15,12 +15,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "function": {
                 "name": "check_scheduled_entity_status",
                 "description": "Checks the status of a scheduled entity",
-                "strict": True,
-                "parameters": {
-                        "type": "object",
-                        "properties": {},
-                        "required": [],
-                        "additionalProperties": False
-                }
+                "strict": True
         }
 }
