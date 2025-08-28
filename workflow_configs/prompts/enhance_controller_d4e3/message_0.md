@@ -81,6 +81,19 @@ if (dataPayloads != null) {
         responses.add(response);
     }
 }
+
+This is the DataPayload class:
+public class DataPayload {
+
+    @JsonProperty("data")
+    public JsonNode getData() {
+        return data;
+    }
+    @JsonProperty("meta")
+    public JsonNode getMeta() {
+        return meta;
+    }
+}
 ```
 ### Get Items by Condition
 ```java

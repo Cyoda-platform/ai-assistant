@@ -1,6 +1,6 @@
 {
   "type": "notification",
   "approve": false,
-  "publish": false,
+  "publish": true,
   "allow_anonymous_users": true
 }

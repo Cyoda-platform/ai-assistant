@@ -142,6 +142,7 @@ CompletableFuture<List<DataPayload>> itemsFuture = entityService.getItems(
     null, null, null  // pageSize, pageNumber, pointTime
 );
 List<DataPayload> dataPayloads = itemsFuture.get();
+
 // Process each DataPayload:
 List<YourResponseClass> responses = new ArrayList<>();
 if (dataPayloads != null) {
@@ -150,6 +151,18 @@ if (dataPayloads != null) {
         // Convert to specific type:
         YourResponseClass response = objectMapper.treeToValue(payload.getData(), YourResponseClass.class);
         responses.add(response);
+    }
+}
+This is the DataPayload class:
+public class DataPayload {
+
+    @JsonProperty("data")
+    public JsonNode getData() {
+        return data;
+    }
+    @JsonProperty("meta")
+    public JsonNode getMeta() {
+        return meta;
     }
 }
 ```

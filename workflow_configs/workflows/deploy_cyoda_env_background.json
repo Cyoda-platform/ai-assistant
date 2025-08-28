@@ -23,12 +23,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000,
-                "publish": false,
-                "memory_tags": [
-                  "chat_deploy_env",
-                  "general_memory_tag"
-                ]
+                "responseTimeoutMs": 300000
               }
             }
           ]
@@ -78,8 +73,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000,
-                "publish": true
+                "responseTimeoutMs": 300000
               }
             }
           ]
