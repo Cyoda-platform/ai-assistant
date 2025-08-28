@@ -72,6 +72,8 @@ if (dataPayloads != null) {
         responses.add(response);
     }
 }
+technicalId = dataPayload.getMeta().get("entityId").asText(); //if you need it
+
 ```
 ### Get Items by Condition
 ```java

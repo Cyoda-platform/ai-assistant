@@ -44,42 +44,6 @@ response.getSuccess() is true
 Inspect response.getPayload().getData() for the expected sunny-day state changes (e.g., fields set/updated by the processor)
 Keep assertions focused and minimal to the processor’s core happy-path behavior
 
-Example skeleton (replace CLASS and payload specifics per processor):
-Use this as a guide; keep exactly one @Test per processor
-Test skeleton:
-Arrange
-ObjectMapper om = new ObjectMapper()
-ProcessorSerializer ps = new JacksonProcessorSerializer(om)
-CriterionSerializer cs = new JacksonCriterionSerializer(om)
-SerializerFactory serializerFactory = new SerializerFactory(
-                java.util.List.of(processorSerializer),
-                java.util.List.of(criterionSerializer)
-        );
-
-EntityService es = mock(EntityService.class) if constructor needs it
-ExampleProcessor processor = new ExampleProcessor(serializerFactory, entityService, objectMapper); // you might not need all of these arguments - check the processor code
-        //You MUST use the entity directly, do not use the JsonNode/ObjectNode
-        EntityName exampleEntity = new EntityName();
-        exampleEntity.setExampleField("exampleValue");
-        //Ideally this data should pass the processor isValidEntity validation
-
-        JsonNode entityJson = objectMapper.valueToTree(exampleEntity);
-DataPayload payload = new DataPayload(); payload.setData(entityJson)
-EntityProcessorCalculationRequest req = new EntityProcessorCalculationRequest()
-set id/requestId/entityId
-set processorName to the actual processor class simple name
-setPayload(payload)
-CyodaEventContext ctx = new CyodaEventContext<>() { getCloudEvent() => null; getEvent() => req; }
-Act
-EntityProcessorCalculationResponse resp = underTest.process(ctx)
-Assert
-assertNotNull(resp); assertTrue(resp.getSuccess())
-JsonNode out = resp.getPayload().getData()
-assert expected business field(s)
-Acceptance criteria:
-One and only one @Test test, testing the sunny-day path
-Only EntityService is mocked where needed; everything else uses real objects
-No Spring context usage in tests
 
 You can use the following code as a reference (it is just an example):
 package com.java_template.application.processor;
@@ -139,6 +103,7 @@ public class ExampleProcessorTest {
         request.setProcessorName("ExampleProcessor");
         DataPayload payload = new DataPayload();
         payload.setData(entityJson); //only set data, no other fields
+        //data payload has only data and meta (JsonNode) no other fields!
         request.setPayload(payload);
 
         CyodaEventContext<EntityProcessorCalculationRequest> context = new CyodaEventContext<>() {
