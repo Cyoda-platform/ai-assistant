@@ -11,10 +11,10 @@ import json
 
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
-    return lambda params=None: """🎉 Congrats on launching your first app! 
-Your hard work paid off—this is just the beginning. 
-Keep iterating, stay creative, and aim high! 
-🚀 Join our [Discord](https://discord.gg/95rdAyBZr2) to share feedback and stay updated. 🙌
+    return lambda params=None: """
+    
+🎉 Congrats on launching your first app! 
+    
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables':{
@@ -35,6 +35,16 @@ graph LR
     linkStyle default stroke:#0D8484,stroke-width:2px,opacity:0.95
 
 ```
+
+
+Your hard work paid off—this is just the beginning. 
+
+Keep iterating, stay creative, and aim high! 
+
+
+🚀 Join our [Discord](https://discord.gg/95rdAyBZr2) to share feedback and stay updated. 🙌
+
+
 """
 
 

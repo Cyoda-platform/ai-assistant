@@ -59,9 +59,13 @@ This project is a **Cyoda client application**.
  For detailed instructions, see `README.md` in the project root.
  The most up-to-date configuration and reference material can be loaded from the **doc server** at https://docs.cyoda.net.
  Assist in locating, editing, and creating entities and workflows, explaining configuration concepts, and applying best practices from the Cyoda Workflow Configuration Guide.
+
+CRITICAL: Do NOT generate processors, criteria or controllers for now.
 ```
 
 If you make any changes, please share them with me in the chat or just push them to your branch and ask me to review them or just click "Approve".
+
+*Please, do not click Approve before you review the generated entities and workflows. You can edit the code directly in the IDE or we can review the changes together 😀*
 """
 
 

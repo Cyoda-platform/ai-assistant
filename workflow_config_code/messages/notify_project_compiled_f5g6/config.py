@@ -56,24 +56,8 @@ src/main/resources/
 ```
 
 🚀 **Next Steps:**
-1. You can run and test it locally or directly in **GitHub Codespaces**.
+You can run and test it locally or directly in **GitHub Codespaces**.
 
-### ▶️ How to Run the Prototype
-
-#### **Option 1: GitHub Codespaces **
-You can open the repo in GitHub Codespaces and launch the prototype there:
-
-1. Open the repository in [GitHub Codespaces](https://github.com/Cyoda-platform/{repository_name}/tree/{git_branch}).
-2. In the Codespace terminal, run:
-
-```bash
-# Update package list
-sudo apt update
-# Install Java 21 (headless — no GUI tools)
-sudo apt install -y openjdk-21-jdk-headless
-# Set Java 21 as active version
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-export PATH=$JAVA_HOME/bin:$PATH
 # Run the tests for processors and use debugger to step through the processors code
 ./gradlew test 
 
