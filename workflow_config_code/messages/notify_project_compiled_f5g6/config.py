@@ -12,6 +12,9 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
     return lambda params=None: """
 🎉 **Project Generation Completed Successfully!**
 
+Your prototype application has been fully generated.
+
+
 ```mermaid
 %%{init: {'theme':'base','themeVariables':{
   'primaryColor':'#ECF8F8','primaryTextColor':'#083A3A','primaryBorderColor':'#0D8484',
@@ -35,7 +38,7 @@ graph LR
 
 ```
 
-Your prototype application has been fully generated.
+
 
 📁 **Project Structure:**
 ```
