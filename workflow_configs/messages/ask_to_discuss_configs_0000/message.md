@@ -1,24 +1,23 @@
 ✅ **Entity POJOs** and **workflow configurations** have been added to your application.
-
-```markdown
+   📂 src/
+    ├─ main/java/com/java_template/application/entity/entityName/version_1    ← Entities
+    └─ main/resources/workflow/entityName/version_1                           ← Workflows
+ 
+```mermaid
 graph LR
     A([Finalize App Requirements]):::done e1@
     ==> B([Deploy Cyoda environment]):::done e2@
-    ==> C([Gen Entities & Workflows]):::done e3@
-    ==> D([Gen Controllers, Processors, Criteria & Tests]):::next
+    ==> C([Gen Entities & Workflows]):::done
+    C e3@ ==> D([Gen Controllers, Processors, Criteria & Tests]):::bar
     D e4@ ==> E([Launch Cyoda App]):::bar
 
-    e3@{ animate: true }
+    e2@{ animate: true }
 
     classDef bar stroke:#0D8484
     classDef done fill:#0D8484,stroke:#0D8484,color:#fff
     classDef next stroke:#0D8484,stroke-width:3px,stroke-dasharray:6 4
 ```
 
-   📂 src/
-    ├─ main/java/com/java_template/application/entity/entityName/version_1    ← Entities
-    └─ main/resources/workflow/entityName/version_1                           ← Workflows
- 
 For a detailed reference on workflow configuration, see the **[Cyoda Workflow Configuration Guide](https://docs.cyoda.net/#guides/workflow-config-guide)**. It explains:
 
 • How to define states, transitions, and criteria  

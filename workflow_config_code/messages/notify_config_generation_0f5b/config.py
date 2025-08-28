@@ -18,11 +18,11 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
 graph LR
     A([Finalize App Requirements]):::done e1@
     ==> B([Deploy Cyoda environment]):::done e2@
-    ==> C([Gen Entities & Workflows]):::done e3@
-    ==> D([Gen Controllers, Processors, Criteria & Tests]):::next
+    ==> C([Gen Entities & Workflows]):::next
+    C e3@ ==> D([Gen Controllers, Processors, Criteria & Tests]):::bar
     D e4@ ==> E([Launch Cyoda App]):::bar
 
-    e3@{ animate: true }
+    e2@{ animate: true }
 
     classDef bar stroke:#0D8484
     classDef done fill:#0D8484,stroke:#0D8484,color:#fff

@@ -96,7 +96,7 @@ ToolChoice = Literal["none", "auto", "required"]
 class ModelConfig(BaseModel):
     model_config = ConfigDict(extra="ignore")
     model_name: ModelName = Field(
-        default="gpt-5-mini",
+        default_factory=lambda: config.DEFAULT_MODEL_NAME,
         description="Name of the model to use"
     )
     temperature: float = Field(
