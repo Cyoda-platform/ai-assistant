@@ -12,25 +12,32 @@ import json
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
     return lambda params=None: \
-"""✅ **Entity POJOs** and **workflow configurations** have been added to your application.
+"""
+
+```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'primaryColor':'#ECF8F8','primaryTextColor':'#083A3A','primaryBorderColor':'#0D8484',
+  'lineColor':'#0D8484','fontFamily':'Inter, Arial, sans-serif','edgeLabelBackground':'#FFFFFF'
+}}}%%
+graph LR
+    S((Start)):::start ==> A([🏆 Finalize App Requirements]):::done
+    A e1@ ==> B([🛠️ Deploy Cyoda environment]):::done
+    B e2@ ==> C([🛠️ Gen Entities & Workflows]):::done
+    C e3@ ==> D([🔒 Gen Controllers, Processors, Criteria & Tests]):::bar
+    D e4@ ==> E([🔒 Launch Cyoda App]):::bar
+
+    classDef start fill:#FFFFFF,stroke:#0D8484,stroke-width:2px,color:#083A3A
+    classDef bar   fill:#ECF8F8,stroke:#0D8484,stroke-width:2px,rx:12,ry:12,color:#083A3A
+    classDef done  fill:#0D8484,stroke:#0D8484,stroke-width:2px,rx:12,ry:12,color:#FFFFFF
+    classDef next  fill:#FFFFFF,stroke:#0D8484,stroke-width:3px,stroke-dasharray:6 4,rx:12,ry:12,color:#083A3A
+    linkStyle default stroke:#0D8484,stroke-width:2px,opacity:0.95
+
+```
+
+✅ **Entity POJOs** and **workflow configurations** have been added to your application.
    📂 src/
     ├─ main/java/com/java_template/application/entity/entityName/version_1    ← Entities
     └─ main/resources/workflow/entityName/version_1                           ← Workflows
- 
-```mermaid
-graph LR
-    A([Finalize App Requirements]):::done e1@
-    ==> B([Deploy Cyoda environment]):::done e2@
-    ==> C([Gen Entities & Workflows]):::done
-    C e3@ ==> D([Gen Controllers, Processors, Criteria & Tests]):::bar
-    D e4@ ==> E([Launch Cyoda App]):::bar
-
-    e2@{ animate: true }
-
-    classDef bar stroke:#0D8484
-    classDef done fill:#0D8484,stroke:#0D8484,color:#fff
-    classDef next stroke:#0D8484,stroke-width:3px,stroke-dasharray:6 4
-```
 
 For a detailed reference on workflow configuration, see the **[Cyoda Workflow Configuration Guide](https://docs.cyoda.net/#guides/workflow-config-guide)**. It explains:
 

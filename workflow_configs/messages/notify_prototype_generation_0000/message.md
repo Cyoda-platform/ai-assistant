@@ -2,31 +2,29 @@
 🌟 Let’s kick off the first prototype! 🛠️
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'primaryColor':'#ECF8F8','primaryTextColor':'#083A3A','primaryBorderColor':'#0D8484',
+  'lineColor':'#0D8484','fontFamily':'Inter, Arial, sans-serif','edgeLabelBackground':'#FFFFFF'
+}}}%%
 graph LR
-    A([Finalize App Requirements]):::done e1@
-    ==> B([Deploy Cyoda environment]):::done e2@
-    ==> C([Gen Entities & Workflows]):::done e3@
-    ==> D([Gen Controllers, Processors, Criteria & Tests]):::done e4@
-    ==> E([Launch Cyoda App]):::next
+    S((Start)):::start ==> A([🏆 Finalize App Requirements]):::done
+    A e1@ ==> B([🛠️ Deploy Cyoda environment]):::done
+    B e2@ ==> C([🏆 Gen Entities & Workflows]):::done
+    C e3@ ==> D([🛠️ Gen Controllers, Processors, Criteria & Tests]):::next
+    D e4@ ==> E([🔒 Launch Cyoda App]):::bar
 
-    e4@{ animate: true }
+    %% animate handoff to next step (D)
+    e3@{ animate: true }
 
-    classDef bar stroke:#0D8484
-    classDef done fill:#0D8484,stroke:#0D8484,color:#fff
-    classDef next stroke:#0D8484,stroke-width:3px,stroke-dasharray:6 4
+    classDef start fill:#FFFFFF,stroke:#0D8484,stroke-width:2px,color:#083A3A
+    classDef bar   fill:#ECF8F8,stroke:#0D8484,stroke-width:2px,rx:12,ry:12,color:#083A3A
+    classDef done  fill:#0D8484,stroke:#0D8484,stroke-width:2px,rx:12,ry:12,color:#FFFFFF
+    classDef next  fill:#FFFFFF,stroke:#0D8484,stroke-width:3px,stroke-dasharray:6 4,rx:12,ry:12,color:#083A3A
+    linkStyle default stroke:#0D8484,stroke-width:2px,opacity:0.95
+
 ```
 
-💡  Just a heads-up: this prototype is a **simulation of the application**.
-- No Cyoda components will be running.
-- No data persistence.
-- The goal is to confirm the **business logic** and ensure you’re getting the expected results.
-
-For now, please focus on:
-✅ API endpoints and functional requirements  
-✅ Simulated state machine behavior  
-✅ Integrating with any external APIs (a perfect time to test these out!)
-
-We’re not tackling non-functional requirements yet—this stage is all about getting the prototype right.
+We are going to generate Controllers, Processors, Criteria and Tests based on the functional requirements and entity class files!
 
 💡 Want to dig deeper into the ideas behind this?  
 - [What’s an Entity Database?](https://medium.com/@paul_42036/whats-an-entity-database-11f8538b631a)  

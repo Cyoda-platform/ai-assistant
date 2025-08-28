@@ -12,7 +12,7 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
     return lambda params=None: """
 ✅**Code Generation Complete**
 
-⏳Proceed to the next step: Compiling the complete project and fixing compilation errors..."""
+⏳Proceeding to the next step: Compiling the complete project and fixing compilation errors..."""
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get message meta configuration factory"""

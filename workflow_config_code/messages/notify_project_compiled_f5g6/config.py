@@ -13,18 +13,26 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
 🎉 **Project Generation Completed Successfully!**
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'primaryColor':'#ECF8F8','primaryTextColor':'#083A3A','primaryBorderColor':'#0D8484',
+  'lineColor':'#0D8484','fontFamily':'Inter, Arial, sans-serif','edgeLabelBackground':'#FFFFFF'
+}}}%%
 graph LR
-    A([Finalize App Requirements]):::done e1@
-    ==> B([Deploy Cyoda environment]):::done e2@
-    ==> C([Gen Entities & Workflows]):::done e3@
-    ==> D([Gen Controllers, Processors, Criteria & Tests]):::done e4@
-    ==> E([Launch Cyoda App]):::next
+    S((Start)):::start ==> A([🏆 Finalize App Requirements]):::done
+    A e1@ ==> B([🛠️ Deploy Cyoda environment]):::done
+    B e2@ ==> C([🏆 Gen Entities & Workflows]):::done
+    C e3@ ==> D([🛠️ Gen Controllers, Processors, Criteria & Tests]):::done
+    D e4@ ==> E([🔒 Launch Cyoda App]):::bar
 
-    e4@{ animate: true }
+    %% animate handoff to next step (D)
+    e3@{ animate: true }
 
-    classDef bar stroke:#0D8484
-    classDef done fill:#0D8484,stroke:#0D8484,color:#fff
-    classDef next stroke:#0D8484,stroke-width:3px,stroke-dasharray:6 4
+    classDef start fill:#FFFFFF,stroke:#0D8484,stroke-width:2px,color:#083A3A
+    classDef bar   fill:#ECF8F8,stroke:#0D8484,stroke-width:2px,rx:12,ry:12,color:#083A3A
+    classDef done  fill:#0D8484,stroke:#0D8484,stroke-width:2px,rx:12,ry:12,color:#FFFFFF
+    classDef next  fill:#FFFFFF,stroke:#0D8484,stroke-width:3px,stroke-dasharray:6 4,rx:12,ry:12,color:#083A3A
+    linkStyle default stroke:#0D8484,stroke-width:2px,opacity:0.95
+
 ```
 
 Your prototype application has been fully generated.
@@ -36,9 +44,12 @@ src/main/java/com/java_template/
 │   ├── controller/     # REST API endpoints
 │   ├── processor/      # Business logic
 │   ├── criteria/       # Validation rules
-│   └── workflow/       # Workflow configs
+│   └── entity/         # Entities
 └── prototype/
     └── functional_requirement.md
+    
+src/main/resources/
+└── workflow/           # Workflow configs
 ```
 
 🚀 **Next Steps:**
@@ -62,6 +73,8 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export PATH=$JAVA_HOME/bin:$PATH
 # Run the tests for processors and use debugger to step through the processors code
 ./gradlew test 
+
+*Click Approve when you are ready to proceed and I will launch Cyoda setup assistant*
 ```
 
 ---### ✅ Approval or Feedback
@@ -104,9 +117,7 @@ Do not modify the workflow JSONs or entities without explicit approval.
 
 If you make any changes, please share them with me in the chat or just push them to your branch and ask me to review them or just click "Approve".
 
-> ⚠️ **Note:** This prototype runs in isolated mode with only the essential components, without authentication or gRPC dependencies.",
-
-Please, make sure you review the code before approving and going to the next step.
+Once you review the code and click *Approve*, I will launch the Cyoda setup assistant.
 """
 
 

@@ -903,8 +903,19 @@ async def _save_file(_data, item, git_branch_id, repository_name: str, folder_na
                 await output.write(file_data)  # Now you can await the write operation
         else:
             # Process and save as text or binary
-
-            if isinstance(_data, dict):
+            if file_path.endswith('.json'):
+                # For JSON files, always format the data properly
+                if isinstance(_data, (dict, list)):
+                    output_data = json.dumps(_data, indent=4)
+                else:
+                    # Try to parse as JSON if it's a string
+                    try:
+                        parsed_data = json.loads(_data) if isinstance(_data, str) else _data
+                        output_data = json.dumps(parsed_data, indent=4)
+                    except (json.JSONDecodeError, TypeError):
+                        # If parsing fails, save as-is
+                        output_data = _data
+            elif isinstance(_data, dict):
                 output_data = json.dumps(_data, indent=4)
             elif isinstance(_data, list):
                 output_data = json.dumps(_data, indent=4)
@@ -912,7 +923,6 @@ async def _save_file(_data, item, git_branch_id, repository_name: str, folder_na
                 output_data = _data
             write_mode = 'w' if isinstance(output_data, str) else 'wb'
             async with aiofiles.open(file_path, write_mode) as output:
-
                 await output.write(output_data)
     except Exception as e:
         logger.error(f"Failed to save file {file_path}: {e}")

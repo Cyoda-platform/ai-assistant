@@ -11,26 +11,34 @@ import json
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
     return lambda params=None: """
-💬 We are about to discuss your initial requirement. I'm going to give you my vision of the requirement and a couple of questions for clarification.
+💬 Let’s review your initial requirement.
+I’ll share my understanding (my “vision”) and a few clarifying questions.
 
-You don't have to answer all of them - I can use my own judgment to fill the gaps.
+You can answer as many as you like—I’ll use good judgment to fill any gaps.
 
-If you are ok with my vision you don't have to answer them at all, just click the Approve button and we'll go to the next step where I'll give you formal functional requirements that we can edit together or you can do it in your IDE.
+If everything looks right, just click Approve. We’ll move to the next step, where I’ll provide formal functional requirements for us to edit together here—or you can work on them in your IDE.
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'primaryColor':'#ECF8F8','primaryTextColor':'#083A3A','primaryBorderColor':'#0D8484',
+  'lineColor':'#0D8484','fontFamily':'Inter, Arial, sans-serif','edgeLabelBackground':'#FFFFFF'
+}}}%%
 graph LR
-    A([Finalize App Requirements]):::done e1@
-    ==> B([Deploy Cyoda environment]):::next
-    B e2@ ==> C([Gen Entities & Workflows]):::bar
-    C e3@ ==> D([Gen Controllers, Processors, Criteria & Tests]):::bar
-    D e4@ ==> E([Launch Cyoda App]):::bar
+    S((Start)):::start e0@ ==> A([🛠️ Finalize App Requirements]):::next
+    A e1@ ==> B([🔒 Deploy Cyoda environment]):::bar
+    B e2@ ==> C([🔒 Gen Entities & Workflows]):::bar
+    C e3@ ==> D([🔒 Gen Controllers, Processors, Criteria & Tests]):::bar
+    D e4@ ==> E([🔒 Launch Cyoda App]):::bar
 
-    %% animate the transition to the next step
-    e1@{ animate: true }
+    %% animate incoming to the next step (A)
+    e0@{ animate: true }
 
-    classDef bar stroke:#0D8484
-    classDef done fill:#0D8484,stroke:#0D8484,color:#fff
-    classDef next stroke:#0D8484,stroke-width:3px,stroke-dasharray:6 4
+    classDef start fill:#FFFFFF,stroke:#0D8484,stroke-width:2px,color:#083A3A
+    classDef bar   fill:#ECF8F8,stroke:#0D8484,stroke-width:2px,rx:12,ry:12,color:#083A3A
+    classDef done  fill:#0D8484,stroke:#0D8484,stroke-width:2px,rx:12,ry:12,color:#FFFFFF
+    classDef next  fill:#FFFFFF,stroke:#0D8484,stroke-width:3px,stroke-dasharray:6 4,rx:12,ry:12,color:#083A3A
+    linkStyle default stroke:#0D8484,stroke-width:2px,opacity:0.95
+
 ```
 
 
