@@ -12,6 +12,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get tool configuration factory"""
     return lambda params=None: {
         "type": "function",
+        "publish": True,
         "function": {
                 "name": "schedule_deploy_env",
                 "description": "Schedules deployment of Cyoda environment for the user",

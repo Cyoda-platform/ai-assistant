@@ -13,7 +13,11 @@
       "content_from_file": "generate_functional_requirements_1641"
     }
   ],
-  "input": {},
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/functional_requirement.md"
+    ]
+  },
   "output": {
     "local_fs": [
       "src/main/java/com/java_template/prototype/functional_requirement.md"

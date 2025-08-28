@@ -67,6 +67,24 @@ Your task is complete when you have:
 
 ===================
 Reference:
+
+This is the org.cyoda.cloud.api.event.common.DataPayload class:
+public class DataPayload {
+
+    @JsonProperty("data")
+    public JsonNode getData() {
+        return data;
+    }
+    @JsonProperty("meta")
+    public JsonNode getMeta() {
+        return meta;
+    }
+}
+
+This is com.java_template.common.service.EntityService class:
+
+package com.java_template.common.service;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.java_template.application.entity.adoptionrequest.version_1.AdoptionRequest;
@@ -156,6 +174,12 @@ public interface EntityService {
     // Delete all items by modelName and modelVersion.
     CompletableFuture<Integer> deleteItems(@NotNull String modelName, @NotNull Integer modelVersion);
 }
+
+This is how we setup ObjectMapper:
+ObjectMapper objectMapper = new ObjectMapper();
+// Configure ObjectMapper to ignore unknown properties during deserialization
+objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        
 ===================
 
 Output format:

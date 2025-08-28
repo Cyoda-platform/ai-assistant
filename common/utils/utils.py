@@ -905,9 +905,9 @@ async def _save_file(_data, item, git_branch_id, repository_name: str, folder_na
             # Process and save as text or binary
 
             if isinstance(_data, dict):
-                output_data = json.dumps(_data)
+                output_data = json.dumps(_data, indent=4)
             elif isinstance(_data, list):
-                output_data = json.dumps(_data)
+                output_data = json.dumps(_data, indent=4)
             else:
                 output_data = _data
             write_mode = 'w' if isinstance(output_data, str) else 'wb'

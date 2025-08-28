@@ -456,6 +456,11 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "name": "rollback",
                         "next": "prototype_discussion_requested_submitted_answer",
                         "manual": True
+                    },
+                    {
+                        "name": "rollback_to_initial_state",
+                        "next": "initial_state",
+                        "manual": True
                     }
                 ]
             },

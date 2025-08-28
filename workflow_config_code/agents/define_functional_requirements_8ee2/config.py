@@ -27,6 +27,11 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "src/main/java/com/java_template/prototype/user_requirement.md"
             ]
         },
+        "output": {
+            "local_fs": [
+                "src/main/java/com/java_template/prototype/functional_requirement.md"
+            ]
+        },
         "messages": [
             {
                 "role": "user",

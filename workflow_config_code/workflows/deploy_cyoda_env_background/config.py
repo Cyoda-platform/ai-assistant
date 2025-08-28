@@ -41,8 +41,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",
                                     "responseTimeoutMs": 300000,
-                                    "publish": False,
-                                    "memory_tags": ["chat_deploy_env", "general_memory_tag"]
                                 }
                             }
                         ]
@@ -62,7 +60,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",
                                     "responseTimeoutMs": 300000,
-                                    "publish": True
                                 }
                             }
                         ]

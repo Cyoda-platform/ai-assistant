@@ -16,4 +16,4 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get message meta configuration factory"""
-    return lambda params=None: {'type': 'notification', 'approve': False, 'publish': False, 'allow_anonymous_users': True}
+    return lambda params=None: {'type': 'notification', 'approve': False, 'publish': True, 'allow_anonymous_users': True}

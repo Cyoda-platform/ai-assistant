@@ -116,17 +116,47 @@
         {
           "name": "finish_deployment_success",
           "next": "deployed_env",
-          "manual": true
+          "manual": true,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_deployment_success_7458",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
         },
         {
           "name": "finish_deployment_failure",
           "next": "deployed_env",
-          "manual": true
+          "manual": true,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_deployment_failure_b556",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
         },
         {
           "name": "rollback",
           "next": "deployed_env",
-          "manual": true
+          "manual": true,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_deployment_rollback_c4f9",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
         },
         {
           "name": "retry",

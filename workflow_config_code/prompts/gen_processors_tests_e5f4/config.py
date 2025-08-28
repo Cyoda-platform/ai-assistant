@@ -22,7 +22,11 @@ Use real Jackson serializers and a real SerializerFactory (no Spring context)
 Do not introduce new test dependencies beyond JUnit 5 and Mockito already available
 Do not use Spring test runners or ApplicationContext
 Serializer setup (use real objects):
-new ObjectMapper()
+This is how we setup ObjectMapper:
+ObjectMapper objectMapper = new ObjectMapper();
+// Configure ObjectMapper to ignore unknown properties during deserialization
+objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        
 ProcessorSerializer = new JacksonProcessorSerializer(objectMapper)
 CriterionSerializer = new JacksonCriterionSerializer(objectMapper)
 SerializerFactory serializerFactory = new SerializerFactory(
@@ -145,7 +149,7 @@ public class ExampleProcessorTest {
         request.setEntityId("e1");
         request.setProcessorName("ExampleProcessor");
         DataPayload payload = new DataPayload();
-        payload.setData(entityJson);
+        payload.setData(entityJson); //only set data, no other fields
         request.setPayload(payload);
 
         CyodaEventContext<EntityProcessorCalculationRequest> context = new CyodaEventContext<>() {
@@ -164,6 +168,110 @@ public class ExampleProcessorTest {
         // Verify EntityService was called for deduplication search
         verify(entityService, atLeastOnce()).addItem(eq("EntityName"), anyString(), any());
     }
+}
+
+Reference:
+This is the DataPayload class:
+public class DataPayload {
+
+    @JsonProperty("data")
+    public JsonNode getData() {
+        return data;
+    }
+    @JsonProperty("meta")
+    public JsonNode getMeta() {
+        return meta;
+    }
+}
+This is EntityService class:
+package com.java_template.common.service;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
+import org.cyoda.cloud.api.event.common.DataPayload;
+import org.cyoda.cloud.api.event.entity.EntityTransactionInfo;
+
+public interface EntityService {
+
+    // Retrieve a single item based on its ID.
+    CompletableFuture<DataPayload> getItem(@NotNull UUID entityId);
+
+    // Retrieve an item based on a condition.
+    CompletableFuture<Optional<DataPayload>> getFirstItemByCondition(
+            @NotNull String modelName,
+            @NotNull Integer modelVersion,
+            @NotNull Object condition,
+            boolean inMemory
+    );
+
+    // Retrieve multiple items based on the entity model and version.
+    CompletableFuture<List<DataPayload>> getItems(
+            @NotNull String modelName,
+            @NotNull Integer modelVersion,
+            @Nullable Integer pageSize,
+            @Nullable Integer pageNumber,
+            @Nullable Date pointTime
+    );
+
+    // Retrieve items based on a condition with option for in-memory search.
+    CompletableFuture<List<DataPayload>> getItemsByCondition(
+            @NotNull String modelName,
+            @NotNull Integer modelVersion,
+            @NotNull Object condition,
+            boolean inMemory
+    );
+
+    // Add a new item to the repository and return the entity's unique ID.
+    <ENTITY_TYPE> CompletableFuture<UUID> addItem(
+            @NotNull String modelName,
+            @NotNull Integer modelVersion,
+            @NotNull ENTITY_TYPE entity
+    );
+
+    // Add a new item to the repository and return the entity ID along with the
+    // transaction ID.
+    <ENTITY_TYPE> CompletableFuture<ObjectNode> addItemAndReturnTransactionInfo(
+            @NotNull String modelName,
+            @NotNull Integer modelVersion,
+            @NotNull ENTITY_TYPE entity
+    );
+
+    // Add a list of items to the repository and return the entities' IDs.
+    <ENTITY_TYPE> CompletableFuture<List<UUID>> addItems(
+            @NotNull String modelName,
+            @NotNull Integer modelVersion,
+            @NotNull Collection<ENTITY_TYPE> entities
+    );
+
+    // Add a list of items to the repository and return the entities' IDs along with
+    // the transaction ID.
+    <ENTITY_TYPE> CompletableFuture<EntityTransactionInfo> addItemsAndReturnTransactionInfo(
+            @NotNull String modelName,
+            @NotNull Integer modelVersion,
+            @NotNull Collection<ENTITY_TYPE> entities
+    );
+
+    // Update an existing item in the repository.
+    <ENTITY_TYPE> CompletableFuture<UUID> updateItem(@NotNull UUID entityId, @NotNull ENTITY_TYPE entity);
+
+    <ENTITY_TYPE> CompletableFuture<List<UUID>> updateItems(@NotNull Collection<ENTITY_TYPE> entities);
+
+    CompletableFuture<List<String>> applyTransition(@NotNull UUID entityId, @NotNull String transitionName);
+
+    // Delete an item by ID.
+    CompletableFuture<UUID> deleteItem(@NotNull UUID entityId);
+
+    // Delete all items by modelName and modelVersion.
+    CompletableFuture<Integer> deleteItems(@NotNull String modelName, @NotNull Integer modelVersion);
 }
 
 Output format:

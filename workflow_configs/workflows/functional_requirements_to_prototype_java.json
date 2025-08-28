@@ -952,6 +952,11 @@
           "manual": true
         },
         {
+          "name": "rollback_to_initial_state",
+          "next": "initial_state",
+          "manual": true
+        },
+        {
           "name": "retry",
           "next": "waiting_prototype_discussion_requested",
           "manual": true
