@@ -11,7 +11,7 @@ import json
 
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
-    return lambda params=None: """🙈  We encountered internal issues with checking the status of your Cyoda environment. You can check the the deployment status for {build_id} in a separate chat or it will be checked at a later step for you automatically. Don't worry!"""
+    return lambda params=None: """🙈  We encountered internal issues with checking the status of your Cyoda environment. You can check the the deployment status for {build_id} manually here or in any chat. Don't worry!"""
 
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:

@@ -164,6 +164,9 @@ if (dataPayloads != null) {
         responses.add(response);
     }
 }
+
+technicalId = dataPayload.getMeta().get("entityId").asText(); //if you need it
+
 This is the DataPayload class:
 public class DataPayload {
 
