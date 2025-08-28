@@ -825,7 +825,20 @@ async def save_all(responses: list, git_branch_id: str, repository_name: str, co
                 await asyncio.to_thread(os.makedirs, os.path.dirname(full_file_path), exist_ok=True)
 
                 # Determine write mode and process data
-                if isinstance(data, dict):
+                if output_path.endswith('.json'):
+                    # For JSON files, always format the data properly
+                    if isinstance(data, (dict, list)):
+                        output_data = json.dumps(data, indent=4)
+                    else:
+                        # Try to parse as JSON if it's a string
+                        try:
+                            parsed_data = json.loads(data) if isinstance(data, str) else data
+                            output_data = json.dumps(parsed_data, indent=4)
+                        except (json.JSONDecodeError, TypeError):
+                            # If parsing fails, save as-is
+                            output_data = str(data)
+                    write_mode = 'w'
+                elif isinstance(data, dict):
                     output_data = json.dumps(data, indent=2)
                     write_mode = 'w'
                 elif isinstance(data, list):

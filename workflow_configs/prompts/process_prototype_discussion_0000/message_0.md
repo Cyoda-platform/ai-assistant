@@ -5,6 +5,7 @@ List all files in 'src/main/java/com/java_template/application/processor' to get
 List all files in 'src/main/java/com/java_template/application/criterion' to get the list of criteria.
 List all files in 'src/main/resources/workflow' to get the list of workflow files.
 List all files in 'src/main/java/com/java_template/application/controller' to get the list of controllers.
+List all files in 'src/test/java/com/java_template/application/processor' to get the list of processor tests.
 
 Use 'read_file' tool to read the content of any file. Pass the full path to the file as the parameter.
 
