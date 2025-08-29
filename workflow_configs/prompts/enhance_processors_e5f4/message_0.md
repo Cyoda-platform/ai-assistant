@@ -231,7 +231,7 @@ Example:
 * Inject ObjectMapper via constructor for JSON conversion if needed
 * You can inject only EntityService, ObjectMapper, and SerializerFactory via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES. 
 
-
+CRITICAL: Never use Java reflection. Use entity getters and setters only. If there's code accessing non-existent properties in the entity, just remove this code from the processor.
 
 Output format:
 CRITICAL: Return only the full processor code. Do not include any other text or explanations.

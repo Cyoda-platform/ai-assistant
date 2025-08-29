@@ -179,6 +179,7 @@ and any other appropriate Swagger annotations
 2. **Implement Missing API Endpoints** from functional requirements
 3. **Enhance Existing Endpoints** to meet all requirements
 4. **Maintain Code Quality** and follow established patterns
+CRITICAL: Never use Java reflection. Use entity getters and setters only. If there are settings of non-existent properties in the entity, just remove them.
 
 Output Format:
 CRITICAL: Return only the full controller code. Do not include any other text or explanations.

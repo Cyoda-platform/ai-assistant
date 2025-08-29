@@ -164,6 +164,9 @@ public interface EntityService {
     CompletableFuture<Integer> deleteItems(@NotNull String modelName, @NotNull Integer modelVersion);
 }
 
+CRITICAL: Never use Java reflection. Use entity getters and setters only. If there are settings of non-existent properties in the entity, just remove them.
+CRITICAL: Never use Java reflection. Use entity getters and setters only. If there's code accessing non-existent properties in the entity, just remove this code from the processor.
+
 This is how we setup ObjectMapper:
 ObjectMapper objectMapper = new ObjectMapper();
 // Configure ObjectMapper to ignore unknown properties during deserialization

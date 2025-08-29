@@ -47,7 +47,8 @@ src/main/resources/
 🚀 **Next Steps:**
 You can run and test it locally or directly in **GitHub Codespaces**.
 
-# Run the tests for processors and use debugger to step through the processors code
+Run the tests for processors and use debugger to step through the processors code
+
 ./gradlew test 
 
 *Click Approve when you are ready to proceed and I will launch Cyoda setup assistant*
@@ -83,7 +84,7 @@ This project is a **Cyoda client application**.
  The most up-to-date configuration and reference material can be loaded from the **doc server** at https://docs.cyoda.net.
 
 Instructions:
-1. Review the generated code and configuration. Fix any compilation errors.
+1. Review the generated code and configuration. Fix any compilation errors or test failures.
 2. Review the `prototype/functional_requirement.md` document. Make sure all the example requests and responses in the controllers are correct and up to date.
 3. Review the `prototype/functional_requirement.md` document and Workflows (YAML/JSON configs). Make sure all processors and criteria are implemented correctly.
 If any processors, criteria or controllers are not implemented correctly, fix the implementation.

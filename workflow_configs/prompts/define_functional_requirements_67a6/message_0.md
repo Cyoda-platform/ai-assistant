@@ -84,10 +84,11 @@ stateDiagram-v2
 
 Each state can have multiple transitions. Each transition can have a criterion or a processor. These represent Java criterion and processor classes that need to be implemented.
 It is ok for a transition not to have a criterion or a processor.
-Ideally there are about 1-3 processors and 1-3 criteria per the whole workflow. Can be more or less if asked for by the user.
-Briefly specify after the workflow for each entity, what criterion and processor classes are needed, you can also provide pseudo code for the processor classes.
+Ideally there should be about 1-3 processors and 1-3 criteria per the whole workflow. Can be more or less if asked for by the user.
+If the user explicitly asks in their request for more than 3 processors or criteria, you should add it. But if not specified, you can assume 1-3 processors and criteria per workflow.
+Briefly specify after the workflow for each entity, what criterion and processor classes are needed, you should also provide pseudo code for each processor class.
 Do not use escape characters in the mermaid diagrams. Do not use quotes in the mermaid diagrams. Use only allowed characters.
-If the user does not specify processors and criteria directy in the requirement, you can make reasonable assumptions about what processors and criteria are needed, trying to keep the number of processors 3-5 per workflow, and criteria 1-3 per workflow. If the user gives you specific names for processors and criteria, use them as many as specified.
+If the user does not specify processors and criteria directly in the requirement, you can make reasonable assumptions about what processors and criteria are needed, trying to keep the number of processors 3-5 per workflow, and criteria 1-3 per workflow. If the user gives you specific names for processors and criteria, use them as many as specified.
 Prefer linear flows without loops and multiple choices unless explicitly requested by the user.
 
 ## REQUIREMENTS TO DEFINE:
@@ -126,7 +127,7 @@ Response format:
   
     ### 1. Entity Definitions
     ### 2. Entity workflows
-    ### 3. Pseudo code for processor classes
+    ### 3. Pseudo code for each processor class
     ### 4. API Endpoints Design Rules
     
 Base your response on the user requirement:
