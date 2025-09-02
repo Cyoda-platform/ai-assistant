@@ -30,15 +30,6 @@ ARG GITHUB_USERNAME
 ENV GITHUB_TOKEN=${GITHUB_TOKEN}
 ENV GITHUB_USERNAME=${GITHUB_USERNAME}
 
-# Set Augment credentials as build arguments (API token preferred)
-ARG AUGMENT_API_TOKEN
-ARG AUGMENT_SESSION_AUTH
-ARG AUGMENT_API_URL
-
-ENV AUGMENT_API_TOKEN=${AUGMENT_API_TOKEN}
-ENV AUGMENT_SESSION_AUTH=${AUGMENT_SESSION_AUTH}
-ENV AUGMENT_API_URL=${AUGMENT_API_URL}
-
 # Configure Git to use the Personal Access Token in a global .git-credentials file
 RUN git config --global credential.helper store && \
     echo "https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com" > ~/.git-credentials && \
