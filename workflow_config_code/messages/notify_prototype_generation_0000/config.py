@@ -46,7 +46,7 @@ We are going to generate Controllers, Processors, Criteria and Tests based on th
 
 Let’s make this prototype work smoothly together! 🚀
 
-It’ll be ready in about 10 minutes ⏳. I’ll notify you as soon as it’s done.
+It’ll be ready in about 20 minutes ⏳. I’ll notify you as soon as it’s done.
 
 🚧 Initial prototype is now in progress... 🚀💡
 """

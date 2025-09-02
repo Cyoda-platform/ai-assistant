@@ -25,32 +25,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "max_iteration": 5,
         "approve": True,
         "jobs": [
-            {"type": "agent",
-             "publish": False,
-             "model": {},
-             "tools": [
-             ],
-             "split_function": {"name": "get_entity_names_from_entities_requirement",
-                                "split_parameter": "EntityName",
-                                "input_file": "src/main/java/com/java_template/prototype/entities_requirement.json"},
-
-             "memory_tags": [
-                 "get_entity_names_from_entities_requirement"
-             ],
-             "messages": [
-                 {"role": "user",
-                  "content_from_file": ExtractEntitiesFromPrototypeE7faPromptConfig.get_name()}
-             ],
-             "input": {
-                 "local_fs": [
-                     "src/main/java/com/java_template/prototype/entities_requirement.json"
-                 ]
-             },
-             "output": "src/main/java/com/java_template/application/entity/{entityname}/version_1/{EntityName}.java",
-             "tool_choice": "auto",
-             "max_iteration": 30,
-             "approve": True
-             },
             {
                 "type": "agent",
                 "name": "generate_workflow_from_requirements_0000",
@@ -72,7 +46,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "tool_choice": "auto",
                 "input": {
                     "local_fs": [
-                        "src/main/java/com/java_template/prototype/functional_requirement.md"
+                        "src/main/resources/functional_requirements/workflows.md"
                     ]
                 },
                 "output": "src/main/resources/workflow/{entityname}/version_1/{EntityName}.json",

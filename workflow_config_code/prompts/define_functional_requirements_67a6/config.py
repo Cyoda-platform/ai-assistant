@@ -11,135 +11,44 @@ from typing import Any, Dict, Callable
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get prompt configuration factory"""
     return lambda params=None: """
-Please help me define the functional requirements for my project using an Event-Driven Architecture (EDA) approach.
+You are provided with a user requirement in 'src/main/resources/functional_requirements/user_requirement.md' (also check src/main/resources/functional_requirements/user_requirement_additional_info.md if exists). 
+Instructions:
+1. Understand the user requirement.
+2. Review README.md to understand the project structure.
+3. In the functional_requirements directory, add a file called entities.md with the detailed requirements for the entities. Specify the name of the entity, its attributes, and its relationships with other entities.
+Entity state is an internal entity attribute that is not part of the entity schema.
+It is used to represent the state of the entity in the workflow.
+It will be changed automatically by the workflow based on the transitions. You can get entity state by calling entity.meta.state in the processor code. But you cannot change it.
+If the user uses semantically similar concept to state - like status, etc. you can use it as the state. but you should let the user know about it.
+So if there are fields like state, status do NOT include them in the entity schema. You will use entity.meta.state instead to get the state. And you will not be able to change it, the system will manage it for you.
+4. In the functional_requirements directory, add a file called workflows.md with the detailed requirements for the workflows. Specify the name of the workflow, its states, and its transitions. Add mermaid state diagrams for each workflow.
+There should be a workflow for each entity. Each entity workflow should have at least one transition from initial state to the first state.
+Each workflow transition may have a processor, a criterion, both or none.
+Transitions can be manual or automatic. First transition from initial state is always automatic. If there is a loop transition from a state to itself or a previous state, it should be marked as manual.
 
-## IMPORTANT EDA CONCEPTS:
-In Event-Driven Architecture:
-- Each entity add operation is an **EVENT** that triggers automated processing
-Once an entity is persisted, Cyoda starts entity workflow that will involve calling actions and criteria to process this entity.
-For example, when a Job entity is persisted, Cyoda starts the Job workflow that will involve calling actions and criteria to process this job (ingestion, transformation, etc.)
-- Focus on business entities, job entities, or orchestration entities that represent your domain
-- **Key Pattern**: Entity persistence triggers the process method that does the heavy lifting
 
-## RESPONSE STRUCTURE:
-**Start your answer with outlining the entities and their fields in this format:**
+Processor represents a java class that implements the business logic of the transition. For example, a processor may be responsible for validating the data, enriching the data, transforming the data, calling an external API, or executing a business domain logic.
+Criterion represents a java class that implements the conditional logic of the transition. For example, a criterion may be responsible for checking if the data is valid, if the user has the permission to perform the action, if the entity is in the correct state, etc.
+Naming conventions:
+Processor and Criterion name must be in PascalCase, starting with the entity name. For example, UserProcessor, ProductProcessor, OrderProcessor.
 
-Max 10 entities allowed. If the user specifies more than 10 entities, you should only consider the first 10 will be considered and notify the user.
-If the user explicitly specifies less than 10 entities, you should consider only those entities. Do not add any additional entities.
-If the user doesn't explicitly specify any entities, default to max 3 entities unless the user explicitly asks for more.
+Recommendations:
+It is perfectly ok to have transitions without processors or criteria. Use processors and criteria only if needed for the business logic.
+If you have to check for the state in the processor - you should consider adding a separate transition with a criterion that checks for the state, and a processor for it.
 
-IMPORTANT:
-Do your best to represent the user's requirement in the form of entities and their workflows.
-Make the workflows represent the business domain as best as possible, adding different states the entity can go through. 
-For example Pizza workflow can go through different states: Ordered, Prepared, Delivered, etc.
+5. In functional_requirements directory, add a file called processors.md with the detailed requirements for the processors. For each processor, specify the name of the processor, the entity it belongs to, expected input data, what it does, and the expected entity output (it should modify input entity state or add/update/delete/get other entities). Add pseudocode for each processor. This should be pseudocode for the process() method not Java code, so that a business analyst can understand it. It should be concise but fully descriptive.
+If the processor needs to update another entity, specify its transition name or specify that transition is not needed (null transition).
+6. In functional_requirements directory, add a file called criteria.md with the detailed requirements for the criteria.
+Keep criteria simple. For example, check if the data is valid, if the user has the permission to perform the action, if the entity is in the correct state, etc.
+7. In functional_requirements directory, add a file called controllers.md with the detailed requirements for the controllers.
+We need a separate controller for each entity. For example, UserController, ProductController, OrderController.
+Update endpoints should have a parameter for transition name. It can be null if we do not move to a different state, but if this is used to propagate the event to a different state, it should be specified. Align with the workflow doc.
+Always give examples of request and response bodies.
+The api should exactly match the user requirement if there is any api requirement specified. Be very careful.
+If there are any update with transition name endpoints, make sure the transition name is specified in the workflow.
+Always make sure the current entity state has this transition to the next state otherwise pass null as transition name.
+Always provide full request example including all the parameters. Response example can be shorter, but the request example should be complete.
 
-Make workflows interesting and simulate the real world as best as possible.
-
-### 1. Entity Definitions
-```
-EntityName:
-- field1: DataType (description/purpose)
-- field2: DataType (description/purpose)
- Do not use enum - not supported temporarily.
-```
-
-### 2. Entity workflows
-**Continue with explaining the basic flow of each entity:**
-The transitions can be of 2 types: manual and automatic.
-Manual transitions require human intervention and are triggered by a user.
-Automatic transitions are triggered by the system.
-**Example:**
-```
-Job workflow:
-1. Initial State: Job created with PENDING status
-2. Validation: Check job parameters and data sources
-3. Processing: Execute data ingestion/transformation
-4. Completion: Update status to COMPLETED/FAILED
-5. Notification: Send results to configured endpoints
-```
-For each entity, include a state diagram:
-```mermaid
-Entity state diagrams
-
-Example:
-
-```mermaid
-stateDiagram-v2
-    [*] --> PENDING
-    PENDING --> IN_PROGRESS : StartAnalysisProcessor, manual
-    state if_state <<choice>>
-    IN_PROGRESS --> CheckCompleteCriterion
-    CheckCompleteCriterion --> if_state
-    if_state --> FAILED: if not entity.complete
-    if_state --> COMPLETED : if entity.complete
-    COMPLETED --> USERS_NOTIFIED : NotifyUsersProcessor
-    USERS_NOTIFIED --> [*]
-    FAILED --> [*]
-```
-
-Example of wrong state diagram: - NEVER USE QUOTES IN THE NODE NAMES
-
-```mermaid
-stateDiagram-v2
-    [*] --> "PERSISTED_BY_JOB" -- NEVER use quotes like this
-    "PERSISTED_BY_JOB" --> [*]  -- NEVER use quotes like this
-```
-
-CRITICAL:
-NEVER use quotes in the node names like 
-```mermaid
-stateDiagram-v2
-    [*] --> "PERSISTED" -- these quotes are not allowed, should be PERSISTED instead
-    "PERSISTED" --> "VALIDATED" : ValidationProcessor -- these quotes are not allowed, should be VALIDATED instead
-    "VALIDATED" --> [*] -- these quotes are not allowed, should be VALIDATED instead
-```
-
-Each state can have multiple transitions. Each transition can have a criterion or a processor. These represent Java criterion and processor classes that need to be implemented.
-It is ok for a transition not to have a criterion or a processor.
-Ideally there should be about 1-3 processors and 1-3 criteria per the whole workflow. Can be more or less if asked for by the user.
-If the user explicitly asks in their request for more than 3 processors or criteria, you should add it. But if not specified, you can assume 1-3 processors and criteria per workflow.
-Briefly specify after the workflow for each entity, what criterion and processor classes are needed, you should also provide pseudo code for each processor class.
-Do not use escape characters in the mermaid diagrams. Do not use quotes in the mermaid diagrams. Use only allowed characters.
-If the user does not specify processors and criteria directly in the requirement, you can make reasonable assumptions about what processors and criteria are needed, trying to keep the number of processors 3-5 per workflow, and criteria 1-3 per workflow. If the user gives you specific names for processors and criteria, use them as many as specified.
-Prefer linear flows without loops and multiple choices unless explicitly requested by the user.
-
-## REQUIREMENTS TO DEFINE:
-
-### 1. Business Entities (Min 1)
-- **Orchestration entities** (Job, Task, Workflow) - perfect for scenarios like data ingestion, transformation, aggregation, etl, scheduling, monitoring, etc.
-- **Business domain entities** (Order, Customer, Product) - perfect for scenarios like e-commerce, inventory management, etc. 
-
-### 2. API Endpoints Design Rules
-- **POST endpoints**: Entity creation (triggers events) + business logic. POST endpoint that adds an entity should return only entity `technicalId` - this field is not included in the entity itself, it's a datastore imitated specific field. Nothing else.
-- **GET endpoints**: ONLY for retrieving stored application results
-- **GET by technicalId**: ONLY for retrieving stored application results by technicalId - should be present for all entities that are created via POST endpoints.
-- **GET by condition**: ONLY for retrieving stored application results by non-technicalId fields - should be present only if explicitly asked by the user.
-- **GET all: optional.
-
-- If you have an orchestration entity (like Job, Task, Workflow), it should have a POST endpoint to create it, and a GET by technicalId to retrieve it. You will most likely not need any other POST endpoints for business entities as saving business entity is done via the process method.
-- **Business logic rule**: External data sources, calculations, processing → POST endpoints
-
-### 4. Request/Response Formats
-Specify JSON structures for all API endpoints.
-Use ```json ``` markdown for request/response formats.
-
-## VISUAL REPRESENTATION:
-Mermaid diagrams rules:
-    1. Always start with ```mermaid and close with ``` on a new line.
-    2. Do NOT chain multiple arrows on one line. Write each connection separately.
-    3. Wrap node labels in double quotes.
-    4. Escape special characters in labels (use &#39; for single quotes).
-    5. Use \n for manual line breaks in long labels if needed.
-    6. Ensure node IDs only contain letters, numbers, or underscores.
-    7. Output only valid Mermaid code inside the code block, no extra text
-- Ensure all Mermaid blocks are properly closed
-
-Response format:
-  
-    ### 1. Entity Definitions
-    ### 2. Entity workflows
-    ### 3. Pseudo code for each processor class
-    ### 4. API Endpoints Design Rules
-    
-Base your response on the user requirement:
+You can parallelise the work on processors, criteria and controllers.
+Exit the task when all the requirements are implemented correctly silently.
 """

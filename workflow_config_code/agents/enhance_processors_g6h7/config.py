@@ -74,7 +74,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "input": {
                     "local_fs": [
                         "src/main/java/com/java_template/prototype/functional_requirement.md",
-                        "src/main/java/com/java_template/prototype/user_requirement.md",
+                        "src/main/resources/functional_requirements/user_requirement.md",
                         "src/main/java/com/java_template/application/entity",
                         "src/main/java/com/java_template/application/processor/{ProcessorName}.java",
                         "src/main/java/com/java_template/prototype/project_compilation.log"
@@ -108,7 +108,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "input": {
                     "local_fs": [
                         "src/main/java/com/java_template/prototype/functional_requirement.md",
-                        "src/main/java/com/java_template/prototype/user_requirement.md",
+                        "src/main/resources/functional_requirements/user_requirement.md",
                         "src/main/java/com/java_template/application/entity",
                         "src/main/java/com/java_template/application/criterion/{CriterionName}.java",
                         "src/main/java/com/java_template/prototype/project_compilation.log"

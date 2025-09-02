@@ -55,7 +55,7 @@
       "transitions": [
         {
           "name": "controller_generated",
-          "next": "run_init_compilation",
+          "next": "resources_generated",
           "manual": false,
           "processors": [
             {
@@ -63,7 +63,7 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000
+                "responseTimeoutMs": 6000000
               }
             }
           ]
@@ -101,107 +101,7 @@
         }
       ]
     },
-    "run_init_compilation": {
-      "transitions": [
-        {
-          "name": "compilation_started",
-          "next": "enhance_processors",
-          "manual": false,
-          "processors": [
-            {
-              "name": "FunctionProcessor.run_compilation_h8i9",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 1500000
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "run_init_compilation",
-          "manual": true
-        },
-        {
-          "name": "fail_run_init_compilation",
-          "next": "locked_run_init_compilation",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_run_init_compilation": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "run_init_compilation",
-          "manual": true
-        }
-      ]
-    },
-    "enhance_processors": {
-      "transitions": [
-        {
-          "name": "processors_enhanced",
-          "next": "notify_processors_enhanced",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.enhance_processors_g6h7",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "enhance_processors",
-          "manual": true
-        },
-        {
-          "name": "fail_enhance_processors",
-          "next": "locked_enhance_processors",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_enhance_processors": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "enhance_processors",
-          "manual": true
-        }
-      ]
-    },
-    "notify_processors_enhanced": {
+    "resources_generated": {
       "transitions": [
         {
           "name": "proceed_to_run_compilation",
@@ -219,12 +119,12 @@
         },
         {
           "name": "retry",
-          "next": "notify_processors_enhanced",
+          "next": "resources_generated",
           "manual": true
         },
         {
-          "name": "fail_notify_processors_enhanced",
-          "next": "locked_notify_processors_enhanced",
+          "name": "fail_resources_generated",
+          "next": "locked_resources_generated",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -241,11 +141,11 @@
         }
       ]
     },
-    "locked_notify_processors_enhanced": {
+    "locked_resources_generated": {
       "transitions": [
         {
           "name": "unlock",
-          "next": "notify_processors_enhanced",
+          "next": "resources_generated",
           "manual": true
         }
       ]

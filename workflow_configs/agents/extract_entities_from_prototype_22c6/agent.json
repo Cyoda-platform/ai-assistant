@@ -7,35 +7,6 @@
   "jobs": [
     {
       "type": "agent",
-      "publish": false,
-      "model": {},
-      "tools": [],
-      "split_function": {
-        "name": "get_entity_names_from_entities_requirement",
-        "split_parameter": "EntityName",
-        "input_file": "src/main/java/com/java_template/prototype/entities_requirement.json"
-      },
-      "memory_tags": [
-        "get_entity_names_from_entities_requirement"
-      ],
-      "messages": [
-        {
-          "role": "user",
-          "content_from_file": "extract_entities_from_prototype_e7fa"
-        }
-      ],
-      "input": {
-        "local_fs": [
-          "src/main/java/com/java_template/prototype/entities_requirement.json"
-        ]
-      },
-      "output": "src/main/java/com/java_template/application/entity/{entityname}/version_1/{EntityName}.java",
-      "tool_choice": "auto",
-      "max_iteration": 30,
-      "approve": true
-    },
-    {
-      "type": "agent",
       "name": "generate_workflow_from_requirements_0000",
       "model": {},
       "memory_tags": [
@@ -56,7 +27,7 @@
       "tool_choice": "auto",
       "input": {
         "local_fs": [
-          "src/main/java/com/java_template/prototype/functional_requirement.md"
+          "src/main/resources/functional_requirements/workflows.md"
         ]
       },
       "output": "src/main/resources/workflow/{entityname}/version_1/{EntityName}.json",

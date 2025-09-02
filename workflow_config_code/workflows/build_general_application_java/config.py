@@ -662,25 +662,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             "configs_generation_notified": {
                 "transitions": [
                     {
-                        "name": "generate_functional_requirements",
-                        "next": "generated_functional_requirements",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": GenerateFunctionalRequirementsAcccAgentConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "generated_functional_requirements": {
-                "transitions": [
-                    {
                         "name": "generate_entities_requirements",
                         "next": "generated_entities_requirements",
                         "manual": False,
@@ -698,25 +679,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 ]
             },
             "generated_entities_requirements": {
-                "transitions": [
-                    {
-                        "name": "notify_generated_functional_requirements",
-                        "next": "notified_generated_functional_requirements",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": NotifyGeneratedFunctionalRequirements0beeMessageConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "notified_generated_functional_requirements": {
                 "transitions": [
                     {
                         "name": "extract_entities_from_prototype",

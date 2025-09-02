@@ -78,7 +78,7 @@ This project is a **Cyoda client application**.
 
  * **Entities** (POJOs) are in `src/main/java/com/java_template/application/entity/`
  * **Workflows** (YAML/JSON configs) are in `src/main/resources/workflow/`
- * **Original user requirements** are in `src/main/java/com/java_template/prototype/user_requirement.md`
+ * **Original user requirements** are in `src/main/resources/functional_requirements/user_requirement.md`
  * **Functional requirements** are in `src/main/java/com/java_template/prototype/functional_requirement.md`
  * **Controllers** (REST API endpoints) are in `src/main/java/com/java_template/application/controller/`
  * **Processors** (business logic) are in `src/main/java/com/java_template/application/processor/`
@@ -102,6 +102,7 @@ If any processors, criteria or controllers are not implemented correctly, fix th
 Do not modify the workflow JSONs or entities without explicit approval.
 4. Generate a report of the implemented functionality and if it matches the functional requirements.
 ```
+Important: entity fields such as state/status are managed by Cyoda. There is no need to add them to entity schema explicitly. 
 
 If you make any changes, please share them with me in the chat or just push them to your branch and ask me to review them or just click "Approve".
 

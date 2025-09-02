@@ -111,7 +111,7 @@ class GrpcClient:
                     "requestId": data.get('requestId'),
                     "entityId": data.get('entityId'),
                     "owner": OWNER,
-                    "matches": response,
+                    "matches": response if response else False,
                     "success": True
                 }
             )

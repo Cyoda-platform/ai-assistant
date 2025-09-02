@@ -55,7 +55,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "controller_generated",
-                        "next": "run_init_compilation",
+                        "next": "resources_generated",
                         "manual": False,
                         "processors": [
                             {
@@ -63,52 +63,14 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
+                                    "responseTimeoutMs": 6000000
                                 }
                             }
                         ]
                     }
                 ]
             },
-            "run_init_compilation": {
-                "transitions": [
-                    {
-                        "name": "compilation_started",
-                        "next": "enhance_processors",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": RunCompilationH8i9ToolConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 1500000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "enhance_processors": {
-                "transitions": [
-                    {
-                        "name": "processors_enhanced",
-                        "next": "notify_processors_enhanced",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": EnhanceProcessorsG6h7AgentConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 900000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "notify_processors_enhanced": {
+            "resources_generated": {
                 "transitions": [
                     {
                         "name": "proceed_to_run_compilation",

@@ -13,9 +13,15 @@ COPY . /app/
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-# Install git and curl
+
+# Install git, curl, and Node.js 22
 RUN apt-get update && \
-    apt-get install -y git curl
+    apt-get install -y git curl && \
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y nodejs
+
+# Install Auggie CLI globally
+RUN npm install -g @augmentcode/auggie
 
 # Set GitHub credentials as build arguments (to avoid hardcoding)
 ARG GITHUB_TOKEN
@@ -24,11 +30,23 @@ ARG GITHUB_USERNAME
 ENV GITHUB_TOKEN=${GITHUB_TOKEN}
 ENV GITHUB_USERNAME=${GITHUB_USERNAME}
 
+# Set Augment credentials as build arguments (API token preferred)
+ARG AUGMENT_API_TOKEN
+ARG AUGMENT_SESSION_AUTH
+ARG AUGMENT_API_URL
+
+ENV AUGMENT_API_TOKEN=${AUGMENT_API_TOKEN}
+ENV AUGMENT_SESSION_AUTH=${AUGMENT_SESSION_AUTH}
+ENV AUGMENT_API_URL=${AUGMENT_API_URL}
+
 # Configure Git to use the Personal Access Token in a global .git-credentials file
 RUN git config --global credential.helper store && \
     echo "https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com" > ~/.git-credentials && \
     git config --global user.email "app-builder@example.com" && \
     git config --global user.name "app-builder"
+
+# Verify Auggie CLI installation
+RUN auggie --version || echo "Auggie CLI installation verification failed"
 
 # Expose the port the app runs on
 EXPOSE 5000

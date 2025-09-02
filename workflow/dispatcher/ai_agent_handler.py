@@ -7,6 +7,7 @@ from common.utils.utils import get_current_timestamp_num
 from entity.model import AgenticFlowEntity, ChatMemory, ModelConfig, FlowEdgeMessage, AIMessage
 from workflow.config_builder import ConfigBuilder
 from workflow.dispatcher.jobs_processor import JobsProcessor
+from workflow.dispatcher.auggie_processor import AuggieProcessor
 
 # Conditional import to avoid dependency issues during testing
 try:
@@ -24,7 +25,8 @@ class AIAgentHandler:
     Handles AI agent interactions, including running agents and processing responses.
     """
 
-    def __init__(self, ai_agent, method_registry, memory_manager, cls_instance, entity_service, cyoda_auth_service, config_builder=None):
+    def __init__(self, ai_agent, method_registry, memory_manager, cls_instance, entity_service, cyoda_auth_service,
+                 config_builder=None):
         """
         Initialize the AI agent handler.
 
@@ -55,9 +57,20 @@ class AIAgentHandler:
             cyoda_auth_service=cyoda_auth_service,
             config_builder=self.config_builder
         )
-    
+
+        # Initialize auggie processor
+        self.auggie_processor = AuggieProcessor(
+            ai_agent=ai_agent,
+            method_registry=method_registry,
+            memory_manager=memory_manager,
+            cls_instance=cls_instance,
+            entity_service=entity_service,
+            cyoda_auth_service=cyoda_auth_service,
+            config_builder=self.config_builder
+        )
+
     async def run_ai_agent(self, config: Dict[str, Any], entity: AgenticFlowEntity,
-                          memory: ChatMemory, technical_id: str) -> str:
+                           memory: ChatMemory, technical_id: str) -> str:
         """
         Run the AI agent with the given configuration.
 
@@ -82,11 +95,15 @@ class AIAgentHandler:
             # Append configured messages to memory if present
             finished_flow = entity.chat_flow.finished_flow
 
-            if not config.get("jobs"):
+            if config.get("type") == "agent" and config.get("agent_type") and config.get("agent_type") == "auggie":
+                # Handle Auggie CLI processing using dedicated processor
+                response = await self.auggie_processor.process_auggie_agent(config, entity, memory, technical_id)
+            elif not config.get("jobs"):
                 await self._append_messages(entity=entity, memory=memory, config=config, finished_flow=finished_flow)
                 # Get memory messages including input data
                 memory_tags = config.get("memory_tags", [env_config.GENERAL_MEMORY_TAG])
-                messages = await self._get_ai_memory(entity=entity, config=config, memory=memory, technical_id=technical_id)
+                messages = await self._get_ai_memory(entity=entity, config=config, memory=memory,
+                                                     technical_id=technical_id)
                 # Extract model configuration
                 model = ModelConfig.model_validate(config.get("model", {}))
 
@@ -104,18 +121,22 @@ class AIAgentHandler:
                 )
                 await self.memory_manager.store_ai_response(response=response, memory=memory, memory_tags=memory_tags)
 
-            else:
+            elif config.get("jobs"):
                 # Handle jobs processing using dedicated processor
                 response = await self.jobs_processor.process_jobs(config, entity, memory, technical_id)
 
+            else:
+                # No specific processing type found
+                response = "Configuration error: No valid processing type found (jobs or auggie)"
+
             return response
-            
+
         except Exception as e:
             logger.exception(f"Error running AI agent: {e}")
             return f"Sorry, i'm having a little trouble with the LLM: usually it's ok, just send a message 'retry' to retry or go to the next step ('proceed' or click approve)."
 
     async def _get_ai_memory(self, entity: AgenticFlowEntity, config: Dict[str, Any],
-                            memory: ChatMemory, technical_id: str) -> List[AIMessage]:
+                             memory: ChatMemory, technical_id: str) -> List[AIMessage]:
         """
         Get AI memory messages including input data from config.
 
@@ -183,7 +204,7 @@ class AIAgentHandler:
         return messages
 
     async def _read_local_path(self, path_name: str, technical_id: str,
-                              branch_name_id: str, repository_name: str) -> str:
+                               branch_name_id: str, repository_name: str) -> str:
         """
         Read local file or directory content.
 
@@ -405,7 +426,6 @@ class AIAgentHandler:
         from common.utils.utils import get_repository_name
         return get_repository_name(entity)
 
-    
     async def _handle_batch_processing(self, config: Dict[str, Any]) -> str:
         """
         Handle batch processing configuration.
@@ -418,26 +438,26 @@ class AIAgentHandler:
         """
         if batch_process_file is None:
             return "Batch processing not available (dependency issue)"
-        
+
         try:
             input_file_path = config.get("input", {}).get("local_fs", [None])[0]
             output_file_path = config.get("output", {}).get("local_fs", [None])[0]
-            
+
             if not input_file_path or not output_file_path:
                 return "Invalid batch processing configuration: missing file paths"
-            
+
             await batch_process_file(
                 input_file_path=input_file_path,
                 output_file_path=output_file_path
             )
             return f"Scheduled batch processing for {input_file_path}"
-            
+
         except Exception as e:
             logger.exception(f"Error in batch processing: {e}")
             return f"Batch processing failed: {e}"
-    
-    async def process_ai_response(self, response: str, entity: AgenticFlowEntity, 
-                                 memory: ChatMemory, config: Dict[str, Any]) -> str:
+
+    async def process_ai_response(self, response: str, entity: AgenticFlowEntity,
+                                  memory: ChatMemory, config: Dict[str, Any]) -> str:
         """
         Process AI agent response and handle any post-processing.
         
@@ -453,16 +473,16 @@ class AIAgentHandler:
         try:
             # Handle memory storage if needed
             memory_tags = config.get("memory_tags", [env_config.GENERAL_MEMORY_TAG])
-            
+
             # Additional processing can be added here
             # For example: response validation, formatting, etc.
-            
+
             return response
-            
+
         except Exception as e:
             logger.exception(f"Error processing AI response: {e}")
             return response  # Return original response if processing fails
-    
+
     def validate_config(self, config: Dict[str, Any]) -> tuple[bool, str]:
         """
         Validate AI agent configuration.
@@ -475,26 +495,36 @@ class AIAgentHandler:
         """
         if not config:
             return False, "Configuration is empty"
-        
+
         # Check for required fields based on type
         config_type = config.get("type")
-        
+
         if config_type == "batch":
             input_config = config.get("input", {})
             output_config = config.get("output", {})
-            
+
             if not input_config.get("local_fs"):
                 return False, "Batch config missing input.local_fs"
-            
+
             if not output_config.get("local_fs"):
                 return False, "Batch config missing output.local_fs"
-        
+
+        elif config_type == "auggie":
+            tasks = config.get("tasks", [])
+
+            if not tasks:
+                return False, "Auggie config missing tasks array"
+
+            for i, task in enumerate(tasks):
+                if not task.get("instruction"):
+                    return False, f"Auggie task {i} missing instruction"
+
         # Add more validation rules as needed
-        
+
         return True, ""
-    
-    async def handle_function_calling(self, function_name: str, parameters: Dict[str, Any], 
-                                    entity: AgenticFlowEntity, technical_id: str) -> Any:
+
+    async def handle_function_calling(self, function_name: str, parameters: Dict[str, Any],
+                                      entity: AgenticFlowEntity, technical_id: str) -> Any:
         """
         Handle function calling from AI agent.
         
@@ -511,16 +541,16 @@ class AIAgentHandler:
             if not self.method_registry.has_method(function_name):
                 available_methods = self.method_registry.list_methods()
                 return f"Function '{function_name}' not found. Available: {available_methods}"
-            
+
             # Add entity and technical_id to parameters
             parameters.update({
                 'entity': entity,
                 'technical_id': technical_id
             })
-            
+
             result = await self.method_registry.dispatch_method(method_name=function_name, **parameters)
             return result
-            
+
         except Exception as e:
             logger.exception(f"Error in function calling '{function_name}': {e}")
             return f"Error calling function '{function_name}': {e}"
@@ -555,7 +585,7 @@ class AIAgentHandler:
         return False
 
     async def _append_messages(self, entity: AgenticFlowEntity, config: Dict[str, Any],
-                              memory: ChatMemory, finished_flow: List[FlowEdgeMessage]) -> None:
+                               memory: ChatMemory, finished_flow: List[FlowEdgeMessage]) -> None:
         """
         Append configured messages to memory.
 

@@ -10,23 +10,21 @@ from typing import Any, Dict, Callable
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get prompt configuration factory"""
     return lambda params=None: """
-You are Java 21 Spring Boot 3 developer. You are tasked with generating Cyoda processor {split_parameter_value} based on the functional requirements and entity class files.
+This project is a **Cyoda client application**.
 
-**Entity Structure Analysis:**
-1. **Review Entity POJO**: Examine entity structure for available properties
-   - Use ONLY existing getters/setters
-   - Never invent properties that don't exist
+Reference:
 
-2. **Understand Business Logic**: Review functional requirements for validation rules
-   - Look for conditional logic, business constraints
-   - Identify what each criterion should validate
-   - Map business rules to processor implementations
+1. Example Condition:
+Condition cartIdCondition = Condition.of("$.cartId", "EQUALS", cartId);
+            SearchConditionRequest condition = new SearchConditionRequest();
+            condition.setType("group");
+            condition.setOperator("AND");
+            condition.setConditions(List.of(cartIdCondition));
 
-📝 **PROCESSOR GENERATION:**
 
-- **EntityName**: Replace with actual entity class that is the subject of the processor according to the functional requirements.
+2. CRITICAL: inMemory flag in entity service requests should be set to true.
 
-Processor template structure:
+3. Processor template structure:
 ```java
 package com.java_template.application.processor;
 import com.java_template.application.entity.entityName.version_1.EntityName; //replace with actual entity name and version.
@@ -84,137 +82,145 @@ public class {split_parameter_value} implements CyodaProcessor {
 
     private {EntityName} processEntityLogic(ProcessorSerializer.ProcessorEntityExecutionContext<{EntityName}> context) {
         {EntityName} entity = context.entity();
-        
+
         IMPORTANT: Implement all business logic based on the functional requirements here.
-        
+
         return entity;
     }
-}
-```
 
-Implemnt all business logic based on the functional requirements and the following business logic rules:
 
-1. **Analyze Current Implementation** against functional requirements
-Entity Usage:
-* Import and reuse existing entity classes from their correct versioned packages under 'src/main/java/com/java_template/application/entity'
-* Do not create static classes for entities
-* Entity classes must be reused as-is
-You can add/update/delete other entities via entity service. 
-You should not do any add update/delete operations on the entity that triggered the workflow. You can only add/update/delete other entities. Just change the current entity state (data) as needed. It will be persisted automatically by Cyoda based on the workflow.
-EntityService Operations Available:
-## 1. ADD Operations
-### Add Single Item
-```java
-CompletableFuture<UUID> idFuture = entityService.addItem(
-    {EntityClass}.ENTITY_NAME,
-    {EntityClass}.ENTITY_VERSION,
-    entity
-);
-UUID entityId = idFuture.get();
-```
-### Add Multiple Items
-```java
-CompletableFuture<List<UUID>> idsFuture = entityService.addItems(
-    {EntityClass}.ENTITY_NAME,
-    {EntityClass}.ENTITY_VERSION,
-    entities
-);
-List<UUID> entityIds = idsFuture.get();
-```
-## 2. READ Operations
-### Get Single Item by ID
-```java
-CompletableFuture<DataPayload> itemFuture = entityService.getItem(UUID.fromString(technicalId));
-DataPayload dataPayload = itemFuture.get();
-ObjectNode node = dataPayload != null ? (ObjectNode) dataPayload.getData() : null;
-```
-### Get Multiple Items
-```java
-CompletableFuture<List<DataPayload>> itemsFuture = entityService.getItems(
-    {EntityClass}.ENTITY_NAME,
-    {EntityClass}.ENTITY_VERSION,
-    null, null, null  // pageSize, pageNumber, pointTime
-);
-List<DataPayload> dataPayloads = itemsFuture.get();
-// Process each DataPayload:
-List<YourResponseClass> responses = new ArrayList<>();
-if (dataPayloads != null) {
-    for (DataPayload payload : dataPayloads) {
-        JsonNode data = payload.getData(); // Extract JSON data
-        // Convert to specific type:
-        YourResponseClass response = objectMapper.treeToValue(payload.getData(), YourResponseClass.class);
-        responses.add(response);
+4. Criterion template structure:
+
+
+package com.java_template.application.criterion;
+
+import com.java_template.application.entity.EntityName;
+import com.java_template.common.serializer.CriterionSerializer;
+import com.java_template.common.serializer.EvaluationOutcome;
+import com.java_template.common.serializer.ReasonAttachmentStrategy;
+import com.java_template.common.serializer.SerializerFactory;
+import com.java_template.common.serializer.StandardEvalReasonCategories;
+import com.java_template.common.config.Config;
+import com.java_template.common.workflow.CyodaCriterion;
+import com.java_template.common.workflow.CyodaEventContext;
+import com.java_template.common.workflow.OperationSpecification;
+import org.cyoda.cloud.api.event.processing.EntityCriteriaCalculationRequest;
+import org.cyoda.cloud.api.event.processing.EntityCriteriaCalculationResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CriterionClassName implements CyodaCriterion {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final CriterionSerializer serializer;
+    private final String className = this.getClass().getSimpleName();
+
+    public CriterionClassName(SerializerFactory serializerFactory) {
+        this.serializer = serializerFactory.getDefaultCriteriaSerializer();
+    }
+
+    @Override
+    public EntityCriteriaCalculationResponse check(CyodaEventContext<EntityCriteriaCalculationRequest> context) {
+        EntityCriteriaCalculationRequest request = context.getEvent();
+        // This is a predefined chain. Just write the business logic in processEntityLogic method.
+        return serializer.withRequest(request)
+            .evaluateEntity(EntityName.class, this::validateEntity)
+            .withReasonAttachment(ReasonAttachmentStrategy.toWarnings())
+            .complete();
+    }
+
+    @Override
+    public boolean supports(OperationSpecification modelSpec) {
+        return className.equalsIgnoreCase(modelSpec.operationName());
+    }
+
+    private EvaluationOutcome validateEntity(CriterionSerializer.CriterionEntityEvaluationContext<EntityName> context) {
+         EntityName entity = context.entity();
+         Implement validation logic based on business requirements
+         Example patterns:
+         if (entity.getSomeField() == null) {
+            return EvaluationOutcome.fail("Field is required", StandardEvalReasonCategories.VALIDATION_FAILURE);
+         }
+         if (!businessRuleCheck(entity)) {
+             return EvaluationOutcome.fail("Business rule violated", StandardEvalReasonCategories.BUSINESS_RULE_FAILURE);
+        }
+        return EvaluationOutcome.success();
     }
 }
 
-technicalId = dataPayload.getMeta().get("entityId").asText(); //if you need it
-```
-### Get Items by Condition
-```java
-CompletableFuture<List<DataPayload>> filteredItemsFuture = entityService.getItemsByCondition(
-    {EntityClass}.ENTITY_NAME,
-    {EntityClass}.ENTITY_VERSION,
-    condition,
-    true  // inMemory flag
-);
-List<DataPayload> dataPayloads = filteredItemsFuture.get();
-// Process results the same way as getItems above
-for (DataPayload payload : dataPayloads) {
-    JsonNode data = payload.getData();
-    // Process each data node
-}
-```
-## 3. UPDATE Operations
-### Update Single Item
-```java
-CompletableFuture<UUID> updatedId = entityService.updateItem(
-    UUID.fromString(technicalId),
-    entity
-);
-UUID entityId = updatedId.get();
-```
-## 4. DELETE Operations
-### Delete Single Item
-```java
-CompletableFuture<UUID> deletedId = entityService.deleteItem(UUID.fromString(technicalId));
-UUID entityId = deletedId.get();
-```
+5. Important: A business entity always has a technical id, which assigned by Cyoda. This id is returned with entity service save operation
+in EntityResponse.
+entityResponse.getMetadata().getState() -- to get the state of the entity saved/retrieved with entity service 
+entityResponse.getMetadata().getId() -- to get the technical id of the entity saved/retrieved with entity service 
 
-Search Conditions (for simple filtering only):
-Use SearchConditionRequest.group() and Condition.of() for basic field-based queries:
-SearchConditionRequest.group("AND",
-Condition.of("$.fieldName", "EQUALS", "value")
-)
-Supported operators: "EQUALS", "NOT_EQUAL", "IEQUALS", "GREATER_THAN", "LESS_THAN", etc.
+However business entities can have business id as well, which is set by the user. This id is not unique and can be changed by the user.
+You can also use business id to retrieve the entity.
+In this case you will need to use entity service update by business id, find by business id, etc.
+So you need to decide which type of id you want to use for your entity and then use proper entity service methods.
 
-Required Imports and Configuration:
-* import static com.java_template.common.config.Config.*;
-* import org.cyoda.cloud.api.event.common.DataPayload;
-* import com.fasterxml.jackson.databind.ObjectMapper;
-* import com.java_template.common.service.EntityService;
-* import com.java_template.common.util.Condition; //if needed
-* import com.java_template.common.util.SearchConditionRequest;//if needed
-* package com.java_template.application.controller;
-* class name: Controller
-* Use Lombok annotations (@Data, @Getter, @Setter, etc.)
-* Use SLF4J logging: Logger logger = LoggerFactory.getLogger(Controller.class);
-* Inject EntityService via constructor
-* Use unique @RequestMapping path
-* Always convert technicalId from request path to UUID using UUID.fromString()
+
+Instructions:
+1. Read the code for src/main/java/com/java_template/common/service/EntityService.java, src/main/java/com/java_template/common/util/SearchConditionRequest.java, src/main/java/com/java_template/common/workflow/CyodaEntity.java, src/main/java/com/java_template/common/workflow/CyodaEventContext.java
+
+2. Read requirements for entities in src/main/resources/functional_requirements/entities.md
+Implement entities in src/main/java/com/java_template/application/entity/{entity_name}/version_1/{EntityName}.java as POJOs. Use Lombok @Data annotation.
+Use constants for entity class name, entity name (always use class name), and version - always 1.
 Example:
- This entity technicalId=UUID.fromString(context.request().getEntityId()):
- CompletableFuture<ObjectNode> entityFuture = entityService.getItem(
-                {EntityName}.ENTITY_NAME,
-                {EntityName}.ENTITY_VERSION,
-                UUID.fromString(context.request().getEntityId())
-            );
-* Inject ObjectMapper via constructor for JSON conversion if needed
-* You can inject only EntityService, ObjectMapper, and SerializerFactory via constructor. NEVER INJECT ANYTHING ELSE. NEVER REFERENCE DIRECTLY ANY CONTROLLERS OR ANY OTHER CLASSES. 
+@Data
+public class CatFact implements CyodaEntity {
+    public static final String ENTITY_NAME = CatFact.class.getSimpleName(); 
+    public static final Integer ENTITY_VERSION = 1;
+    @Override
+    public OperationSpecification getModelKey() {
+        ModelSpec modelSpec = new ModelSpec();
+        modelSpec.setName(ENTITY_NAME);
+        modelSpec.setVersion(ENTITY_VERSION);
+        return new OperationSpecification.Entity(modelSpec, ENTITY_NAME);
+    }
+    @Override
+    public boolean isValid() {
+        return true;
+    }
+    
+Run compilation . Fix any compilation errors.
+3. Read workflow json files in src/main/resources/workflow for workflow documentation. Understand the workflow states, transitions, processors and criteria.
+4. Read requirements for processors in src/main/resources/functional_requirements/processors.md
+Implement each processor in src/main/java/com/java_template/application/processor/{ProcessorName}.java based on the requirements.
+Implement all the necessary business logic, including calls to other entities, external APIs, etc.
+You cannot update the current entity state. You can only retrieve the current state. 
+You cannot update this (current) entity. But you can get/update/delete other entities with EntityService.
+If you update other entity be careful with the transition you use. Check the workflow documentation to understand which manual transitions are possible from the current entity state.
+You can get entity id (technical id assigned by Cyoda) for the current entity from context.getEvent().getEntityId() and for other entities call entity service and get entityResponse.getMetadata().getId().
+You can get entity state from context.getEvent().getPayload().getMeta().get("state") for the current entity and for other entities call entity service and get entityResponse.getMetadata().getState() for the other entity. 
+You are recommended to use entity technical id and not business id in the entityService calls for performance reasons.
 
-Do not use Java reflection - use entity getters and setters only.
-For ingestion jobs you need to fully implement the data ingestion logic based on the functional requirements.
-You can use  HttpClient to call external APIs.
+You can also update without specifying the transition. In this case the entity will loop back to the same state it was before the update.
+If you need to move to a different transition/state, you need to check the next transition in the workflow and use it in update operation. Refer to entity workflow documentation.
 
-Output format:
-CRITICAL: Return only the generated processor code. Do not include any other text or explanations.
+Make sure the generated code compiles. Fix any compilation errors. You can parallelise the work on processors, criteria and controllers.
+CRITICAL: Do not use Java reflection. Use entity getters and setters only. You cannot modify code in src/main/java/com/java_template/common directory.
+CRITICAL: Do compilation checks as often as possible, do not delay them.
+If you need to add tests you can add them to src/test/java/com/java_template/application directory. You can leave the less tests there.
+
+5. Implement criteria in src/main/java/com/java_template/application/criterion/{CriterionName}.java based on the requirements in src/main/resources/functional_requirements/criteria.md
+Be minimalistic. Criteria should be simple.
+
+6. Implement controllers in src/main/java/com/java_template/application/controller/{EntityName}Controller.java based on the requirements in src/main/resources/functional_requirements/controllers.md
+
+Be very precise, do not miss any requirements. The endpoints should match the requirements exactly.
+Prefer using entity technical id (you can get one from entityResponse.getMetadata().getId()) over business id for performance reasons.
+You can use technical id in the request and response. But you need to return the technical id in the response. 
+The main purpose of the controller is to proxy the requests to the entity service. There should be no business logic in the controllers.
+Implement all the endpoints exactly as specified in the requirements. If there are CRUD operations that are not present in the requirements, implement them as well.
+EntityService is in src/main/java/com/java_template/common/service/EntityService.java
+If there are update endpoints, transition name should be nullable, the user may send null if they do not want to move to a different state.
+Check in the workflow what transitions can be used for the current entity state.
+You can get current entity state from the entity service response by calling entityResponse.getMetadata().getState()
+You can get current entity technical id from the entity service response by calling entityResponse.getMetadata().getId()
+
+Once you are ready check if your implementation satisfies the src/main/resources/functional_requirements/user_requirement.md.
+
+Exit the task when all the requirements are implemented correctly silently.
 """

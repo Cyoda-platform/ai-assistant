@@ -1310,12 +1310,12 @@
     "configs_generation_notified": {
       "transitions": [
         {
-          "name": "generate_functional_requirements",
-          "next": "generated_functional_requirements",
+          "name": "generate_entities_requirements",
+          "next": "generated_entities_requirements",
           "manual": false,
           "processors": [
             {
-              "name": "AgentProcessor.generate_functional_requirements_accc",
+              "name": "AgentProcessor.generate_entities_requirements_accc",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
@@ -1357,65 +1357,15 @@
         }
       ]
     },
-    "generated_functional_requirements": {
-      "transitions": [
-        {
-          "name": "generate_entities_requirements",
-          "next": "generated_entities_requirements",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.generate_entities_requirements_accc",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "generated_functional_requirements",
-          "manual": true
-        },
-        {
-          "name": "fail_generated_functional_requirements",
-          "next": "locked_generated_functional_requirements",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_generated_functional_requirements": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "generated_functional_requirements",
-          "manual": true
-        }
-      ]
-    },
     "generated_entities_requirements": {
       "transitions": [
         {
-          "name": "notify_generated_functional_requirements",
-          "next": "notified_generated_functional_requirements",
+          "name": "extract_entities_from_prototype",
+          "next": "notify_generated_entities_n_workflows",
           "manual": false,
           "processors": [
             {
-              "name": "MessageProcessor.notify_generated_functional_requirements_0bee",
+              "name": "AgentProcessor.extract_entities_from_prototype_22c6",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
@@ -1453,56 +1403,6 @@
         {
           "name": "unlock",
           "next": "generated_entities_requirements",
-          "manual": true
-        }
-      ]
-    },
-    "notified_generated_functional_requirements": {
-      "transitions": [
-        {
-          "name": "extract_entities_from_prototype",
-          "next": "notify_generated_entities_n_workflows",
-          "manual": false,
-          "processors": [
-            {
-              "name": "AgentProcessor.extract_entities_from_prototype_22c6",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000
-              }
-            }
-          ]
-        },
-        {
-          "name": "retry",
-          "next": "notified_generated_functional_requirements",
-          "manual": true
-        },
-        {
-          "name": "fail_notified_generated_functional_requirements",
-          "next": "locked_notified_generated_functional_requirements",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_notified_generated_functional_requirements": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "notified_generated_functional_requirements",
           "manual": true
         }
       ]

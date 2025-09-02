@@ -13,29 +13,14 @@ from workflow_config_code.prompts.define_functional_requirements_67a6.prompt imp
 def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get agent configuration factory"""
     return lambda params=None: {
-        "name": "define_functional_requirements_8ee2",
-        "type": "prompt",
-        "publish": True,
-        "allow_anonymous_users": True,
-        "model": {},
-        "memory_tags": [
-            "process_initial_requirement",
-            "requirements_generation"
-        ],
+        "type": "agent",
+        "agent_type": "auggie",
+        "script_path": "workflow/scripts/auggie_example.sh",
+        "prompt": DefineFunctionalRequirements67a6PromptConfig.get_config(),
+        "model": "sonnet4",
         "input": {
             "local_fs": [
-                "src/main/java/com/java_template/prototype/user_requirement.md"
+                "src/main/resources/functional_requirements/user_requirement.md"
             ]
-        },
-        "output": {
-            "local_fs": [
-                "src/main/java/com/java_template/prototype/functional_requirement.md"
-            ]
-        },
-        "messages": [
-            {
-                "role": "user",
-                "content_from_file": DefineFunctionalRequirements67a6PromptConfig.get_name()
-            }
-        ]
+        }
     }

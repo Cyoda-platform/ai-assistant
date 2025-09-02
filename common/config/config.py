@@ -79,6 +79,11 @@ class Config:
         self.GITHUB_TOKEN = _get_env("GITHUB_TOKEN")
         self.DEFAULT_MODEL_NAME = _get_env("DEFAULT_MODEL_NAME", default="gpt-5-mini")
 
+        # Augment CLI authentication (API token preferred over session token)
+        self.AUGMENT_API_TOKEN = _get_env("AUGMENT_API_TOKEN")
+        self.AUGMENT_SESSION_AUTH = _get_env("AUGMENT_SESSION_AUTH")
+        self.AUGMENT_API_URL = _get_env("AUGMENT_API_URL")
+
         # GitHub repository defaults
         self.GH_DEFAULT_OWNER = _get_env("GH_DEFAULT_OWNER", default="Cyoda-platform")
         self.GH_DEFAULT_REPOS = _get_env("GH_DEFAULT_REPOS", default="quart-client-template,java-client-template").split(",")
@@ -141,6 +146,36 @@ class Config:
             Config.ScheduledAction.SCHEDULE_USER_APP_BUILD: self.BUILD_USER_APP,
             Config.ScheduledAction.SCHEDULE_USER_APP_DEPLOY: self.DEPLOY_USER_APP,
         }
+
+    def get_augment_token(self) -> tuple[str | None, str]:
+        """
+        Get the preferred Augment authentication token.
+
+        Returns:
+            Tuple of (token, token_type) where token_type is 'api' or 'session'
+            Returns (None, 'none') if no token is available
+        """
+        if self.AUGMENT_API_TOKEN:
+            return self.AUGMENT_API_TOKEN, 'api'
+        elif self.AUGMENT_SESSION_AUTH:
+            return self.AUGMENT_SESSION_AUTH, 'session'
+        else:
+            return None, 'none'
+
+    def get_augment_token(self) -> tuple[str | None, str]:
+        """
+        Get the preferred Augment authentication token.
+
+        Returns:
+            Tuple of (token, token_type) where token_type is 'api' or 'session'
+            Returns (None, 'none') if no token is available
+        """
+        if self.AUGMENT_API_TOKEN:
+            return self.AUGMENT_API_TOKEN, 'api'
+        elif self.AUGMENT_SESSION_AUTH:
+            return self.AUGMENT_SESSION_AUTH, 'session'
+        else:
+            return None, 'none'
         self.ACTION_SUCCESS_TRANSITIONS = {
             Config.ScheduledAction.SCHEDULE_CYODA_ENV_DEPLOY: "finish_deployment_success",
             Config.ScheduledAction.SCHEDULE_USER_APP_DEPLOY: "finish_deployment_success",

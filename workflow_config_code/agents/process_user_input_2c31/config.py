@@ -54,7 +54,12 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         ],
         "input": {
             "local_fs": [
-                "src/main/java/com/java_template/prototype/user_requirement.md"
+                "src/main/resources/functional_requirements/user_requirement.md"
+            ]
+        },
+        "output": {
+            "local_fs": [
+                "src/main/resources/functional_requirements/user_requirement_additional_info.md"
             ]
         },
         "tool_choice": "auto",
