@@ -62,12 +62,15 @@ setup_environment() {
     export NODE_ENV=production
 
     # Set Java and build tool environment (auto-detect Java version)
-    if [ -d "/usr/lib/jvm/java-21-openjdk-amd64" ]; then
+    if [ -d "/usr/lib/jvm/temurin-17-jdk-amd64" ]; then
+        export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
+        log "Using Temurin Java 17"
+    elif [ -d "/usr/lib/jvm/java-21-openjdk-amd64" ]; then
         export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-        log "Using Java 21"
+        log "Using OpenJDK Java 21"
     elif [ -d "/usr/lib/jvm/java-17-openjdk-amd64" ]; then
         export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-        log "Using Java 17"
+        log "Using OpenJDK Java 17"
     else
         export JAVA_HOME=$(readlink -f /usr/bin/java | sed 's:/bin/java::')
         log "Using Java from: $JAVA_HOME"
