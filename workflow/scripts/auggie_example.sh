@@ -61,6 +61,16 @@ setup_environment() {
     export FORCE_COLOR=0
     export NODE_ENV=production
 
+    # Set Java 21 and build tool environment
+    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+    export PATH=$PATH:$JAVA_HOME/bin:/opt/gradle/gradle-8.10.2/bin
+
+    # Ensure Gradle wrapper is executable if it exists
+    if [[ -f "$workspace/gradlew" ]]; then
+        chmod +x "$workspace/gradlew"
+        log "Made gradlew executable"
+    fi
+
     # Set Augment API URL if not already set
     if [[ -z "${AUGMENT_API_URL:-}" ]]; then
         export AUGMENT_API_URL="https://api.augmentcode.com"
