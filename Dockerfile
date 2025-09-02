@@ -23,11 +23,17 @@ RUN apt-get update && \
         unzip \
         sudo \
         build-essential \
-        openjdk-21-jdk \
-        maven \
+        software-properties-common \
+        ca-certificates \
+        gnupg \
+        lsb-release \
         && \
+    (apt-get install -y openjdk-21-jdk || apt-get install -y openjdk-17-jdk) && \
+    apt-get install -y maven && \
     curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
-    apt-get install -y nodejs
+    apt-get install -y nodejs && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Gradle (latest version compatible with Java 21)
 RUN wget https://services.gradle.org/distributions/gradle-8.10.2-bin.zip -P /tmp && \
@@ -35,7 +41,17 @@ RUN wget https://services.gradle.org/distributions/gradle-8.10.2-bin.zip -P /tmp
     ln -s /opt/gradle/gradle-8.10.2/bin/gradle /usr/bin/gradle && \
     rm /tmp/gradle-8.10.2-bin.zip
 
-# Set JAVA_HOME for Java 21
+# Set JAVA_HOME (detect Java version automatically)
+RUN if [ -d "/usr/lib/jvm/java-21-openjdk-amd64" ]; then \
+        echo "export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64" >> /etc/environment; \
+    elif [ -d "/usr/lib/jvm/java-17-openjdk-amd64" ]; then \
+        echo "export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> /etc/environment; \
+    else \
+        echo "export JAVA_HOME=$(readlink -f /usr/bin/java | sed 's:/bin/java::')" >> /etc/environment; \
+    fi
+
+# Source the environment and set for this build
+RUN . /etc/environment && export JAVA_HOME
 ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ENV PATH=$PATH:$JAVA_HOME/bin
 
