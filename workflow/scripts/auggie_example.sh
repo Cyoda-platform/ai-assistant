@@ -54,19 +54,28 @@ fi
 # Set up environment for automation (following official docs)
 setup_environment() {
     log "Setting up automation environment..."
-    
+
     export CI=true
     export TERM=dumb
     export NO_COLOR=1
     export FORCE_COLOR=0
     export NODE_ENV=production
-    
+
+    # Set Augment API URL if not already set
+    if [[ -z "${AUGMENT_API_URL:-}" ]]; then
+        export AUGMENT_API_URL="https://api.augmentcode.com"
+        log "Set AUGMENT_API_URL to default: https://api.augmentcode.com"
+    fi
+
     # Augment authentication (should be set externally)
     if [[ -z "${AUGMENT_API_TOKEN:-}" && -z "${AUGMENT_SESSION_AUTH:-}" ]]; then
         log "WARNING: No Augment authentication token found"
         log "Set AUGMENT_API_TOKEN or AUGMENT_SESSION_AUTH environment variable"
+        log "You can get your API token from: https://app.augmentcode.com/settings/api-keys"
+    else
+        log "Augment authentication configured"
     fi
-    
+
     log "Environment configured for automation"
 }
 

@@ -14,7 +14,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     return lambda params=None: {
         "type": "prompt",
         "approve": True,
-        "model": {},
+        "model": {"model_name": "gpt-5-mini"},
         "messages": [
                 {
                         "role": "user",

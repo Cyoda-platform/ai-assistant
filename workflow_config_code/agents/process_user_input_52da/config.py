@@ -21,7 +21,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "publish": True,
         "approve": True,
         "allow_anonymous_users": True,
-        "model": {},
+        "model": {"model_name": "gpt-5-mini"},
         "memory_tags": [
                 "chat_deploy_env",
                 "general_memory_tag"

@@ -17,7 +17,9 @@
       "name": "ui_function_issue_technical_user_808a"
     }
   ],
-  "model": {},
+  "model": {
+    "model_name": "gpt-5-mini"
+  },
   "memory_tags": [
     "chat_deploy_env"
   ],

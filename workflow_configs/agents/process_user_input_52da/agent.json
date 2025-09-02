@@ -3,7 +3,9 @@
   "publish": true,
   "approve": true,
   "allow_anonymous_users": true,
-  "model": {},
+  "model": {
+    "model_name": "gpt-5-mini"
+  },
   "memory_tags": [
     "chat_deploy_env",
     "general_memory_tag"

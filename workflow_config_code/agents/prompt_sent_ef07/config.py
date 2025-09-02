@@ -35,7 +35,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "name": UiFunctionIssueTechnicalUser808aToolConfig.get_tool_name()
                 }
         ],
-        "model": {},
+        "model": {"model_name": "gpt-5-mini"},
         "memory_tags": [
                 "chat_deploy_env"
         ],
