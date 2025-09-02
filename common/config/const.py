@@ -278,7 +278,7 @@ I’m a Cyoda client application myself - I’ll save entities for you and follo
 
 Enjoy exploring! 🎏
 
-Please give em a moment to look into your request... You'll see a notification soon.
+Please give me a moment to look into your request... You'll see a notification soon.
 """
 
 GITHUB_ACTION_COMPILED = "github_action_compiled"

@@ -65,7 +65,7 @@ CRITICAL: Do NOT generate entities, processors, criteria or controllers for now.
 
 If you make any changes, please share them with me in the chat or just push them to your branch and ask me to review them or just click "Approve".
 
-*Please, do not click Approve before you review the generated entities and workflows. You can edit the code directly in the IDE or we can review the changes together 😀*
+*Please, do not click Approve before you review the generated entities and workflows. You can edit the code directly in the IDE or we can review the changes together* 😀
 """
 
 
