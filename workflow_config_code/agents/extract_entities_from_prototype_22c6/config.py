@@ -114,7 +114,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                                             "type": "object",
                                                             "required": [
                                                                 "name",
-                                                                "config"
+                                                                "config",
+                                                                "executionMode"
                                                             ],
                                                             "properties": {
                                                                 "name": {

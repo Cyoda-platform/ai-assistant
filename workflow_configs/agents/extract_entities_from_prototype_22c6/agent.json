@@ -95,7 +95,8 @@
                             "type": "object",
                             "required": [
                               "name",
-                              "config"
+                              "config",
+                              "executionMode"
                             ],
                             "properties": {
                               "name": {

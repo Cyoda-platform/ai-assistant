@@ -61,7 +61,8 @@ Workflow JSON Example:
           "manual": false,
           "processors": [
             {
-              "name": "ProcessorClassName", -- CamelCase the processor class name
+              "name": "ProcessorClassName", -- CamelCase the processor class name,
+              "executionMode": "SYNC", -- always use SYNC
               "config": {
                 "calculationNodesTags": "cyoda_application"
               }
@@ -154,7 +155,8 @@ Workflow JSON Example:
                                             "type": "object",
                                             "required": [
                                                 "name",
-                                                "config"
+                                                "config",
+                                                "executionMode"
                                             ],
                                             "properties": {
                                                 "name": {
