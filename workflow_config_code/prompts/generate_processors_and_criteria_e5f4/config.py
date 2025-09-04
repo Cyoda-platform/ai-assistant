@@ -224,6 +224,7 @@ However business entities can have business id as well, which is set by the user
 You can also use business id to retrieve the entity.
 In this case you will need to use entity service update by business id, find by business id, etc.
 So you need to decide which type of id you want to use for your entity and then use proper entity service methods.
+Refer to README.md for more information if needed.
 
 Instructions:
 1. Read the code for src/main/java/com/java_template/common/service/EntityService.java, src/main/java/com/java_template/common/util/SearchConditionRequest.java, src/main/java/com/java_template/common/workflow/CyodaEntity.java, src/main/java/com/java_template/common/workflow/CyodaEventContext.java
@@ -293,6 +294,7 @@ You can get current entity technical id from the entity service response by call
 7. **CRITICAL: Run compilation checks frequently and fix any issues immediately.**
 
 Once you are ready check if your implementation satisfies the src/main/resources/functional_requirements/user_requirement.md.
+
 
 Exit the task when all the requirements are implemented correctly silently.
 
