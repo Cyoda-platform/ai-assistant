@@ -740,14 +740,14 @@ async def clone_repo(git_branch_id: str, repository_name: str):
         # First, checkout the base branch
         base_checkout_process = await asyncio.create_subprocess_exec(
             'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'checkout', config.GIT_BASE_BRANCH,
+            'checkout', config.CLIENT_GIT_BRANCH,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
         stdout, stderr = await base_checkout_process.communicate()
 
         if base_checkout_process.returncode != 0:
-            logger.error(f"Error during git checkout of base branch '{config.GIT_BASE_BRANCH}': {stderr.decode()}")
+            logger.error(f"Error during git checkout of base branch '{config.CLIENT_GIT_BRANCH}': {stderr.decode()}")
             return
 
         # Then create and checkout the new branch from the base branch
