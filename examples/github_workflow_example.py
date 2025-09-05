@@ -8,7 +8,7 @@ This script shows how to:
 3. Handle the complete workflow lifecycle
 
 Prerequisites:
-- Set GITHUB_TOKEN environment variable with a GitHub personal access token
+- Set GITHUB_API_TOKEN environment variable with a GitHub personal access token
 - Configure GH_DEFAULT_OWNER in environment (defaults to "Cyoda-platform")
 - Ensure the target repository has the specified workflow file
 
@@ -29,10 +29,10 @@ async def main():
     """Main example function"""
     
     # Check if GitHub token is configured
-    if not os.getenv('GITHUB_TOKEN'):
-        print("❌ Error: GITHUB_TOKEN environment variable not set")
+    if not os.getenv('GITHUB_API_TOKEN'):
+        print("❌ Error: GITHUB_API_TOKEN environment variable not set")
         print("Please set your GitHub personal access token:")
-        print("export GITHUB_TOKEN='your_github_token_here'")
+        print("export GITHUB_API_TOKEN='your_github_token_here'")
         return
     
     print("🚀 GitHub Actions Workflow Tools Example")

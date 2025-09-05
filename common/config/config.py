@@ -76,7 +76,7 @@ class Config:
         self.CHAT_ID = _get_env("CHAT_ID", default=None)
         self.GRPC_PROCESSOR_TAG = _get_env("GRPC_PROCESSOR_TAG", default="ai_assistant")
         self.CHAT_REPOSITORY = _get_env("CHAT_REPOSITORY", default="local")
-        self.GITHUB_TOKEN = _get_env("GITHUB_TOKEN")
+        self.GITHUB_API_TOKEN = _get_env("GITHUB_API_TOKEN")
         self.DEFAULT_MODEL_NAME = _get_env("DEFAULT_MODEL_NAME", default="gpt-4o-mini")
 
         # Augment CLI authentication (API token preferred over session token)

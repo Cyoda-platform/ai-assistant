@@ -4,11 +4,9 @@ import time
 import zipfile
 import io
 from typing import Optional, Dict, Any
-import aiohttp
-
+import httpx
 from common.config import const
 from common.config.config import config
-from common.utils.utils import send_put_request
 from entity.chat.chat import ChatEntity
 from tools.base_service import BaseWorkflowService
 
@@ -48,8 +46,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 return error_msg
 
             # Check if GitHub token is configured
-            if not config.GITHUB_TOKEN:
-                return "Error: GITHUB_TOKEN not configured in environment variables"
+            if not config.GITHUB_API_TOKEN:
+                return "Error: GITHUB_API_TOKEN not configured in environment variables"
 
             # Extract parameters with configuration defaults
             username = params.get("username")
@@ -106,8 +104,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 return error_msg
 
             # Check if GitHub token is configured
-            if not config.GITHUB_TOKEN:
-                return "Error: GITHUB_TOKEN not configured in environment variables"
+            if not config.GITHUB_API_TOKEN:
+                return "Error: GITHUB_API_TOKEN not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner")
@@ -135,11 +133,9 @@ class GitHubOperationsService(BaseWorkflowService):
         Raises:
             Exception: If request fails
         """
-        import httpx
-
         url = f"https://api.github.com/{path}"
         headers = {
-            "Authorization": f"Bearer {config.GITHUB_TOKEN}",
+            "Authorization": f"Bearer {config.GITHUB_API_TOKEN}",
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
             "Content-Type": "application/json"
@@ -207,8 +203,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 return error_msg
 
             # Check if GitHub token is configured
-            if not config.GITHUB_TOKEN:
-                return "Error: GITHUB_TOKEN not configured in environment variables"
+            if not config.GITHUB_API_TOKEN:
+                return "Error: GITHUB_API_TOKEN not configured in environment variables"
 
             # Extract parameters with defaults
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -296,8 +292,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 return error_msg
 
             # Check if GitHub token is configured
-            if not config.GITHUB_TOKEN:
-                return "Error: GITHUB_TOKEN not configured in environment variables"
+            if not config.GITHUB_API_TOKEN:
+                return "Error: GITHUB_API_TOKEN not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -355,8 +351,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 return error_msg
 
             # Check if GitHub token is configured
-            if not config.GITHUB_TOKEN:
-                return "Error: GITHUB_TOKEN not configured in environment variables"
+            if not config.GITHUB_API_TOKEN:
+                return "Error: GITHUB_API_TOKEN not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -415,8 +411,8 @@ class GitHubOperationsService(BaseWorkflowService):
             params["git_branch"] = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
 
             # Check if GitHub token is configured
-            if not config.GITHUB_TOKEN:
-                return "Error: GITHUB_TOKEN not configured in environment variables"
+            if not config.GITHUB_API_TOKEN:
+                return "Error: GITHUB_API_TOKEN not configured in environment variables"
 
             # Extract parameters with defaults
             timeout_minutes = params.get("timeout_minutes", 2)
@@ -612,8 +608,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 return error_msg
 
             # Check if GitHub token is configured
-            if not config.GITHUB_TOKEN:
-                return "Error: GITHUB_TOKEN not configured in environment variables"
+            if not config.GITHUB_API_TOKEN:
+                return "Error: GITHUB_API_TOKEN not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -661,8 +657,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 return error_msg
 
             # Check if GitHub token is configured
-            if not config.GITHUB_TOKEN:
-                return "Error: GITHUB_TOKEN not configured in environment variables"
+            if not config.GITHUB_API_TOKEN:
+                return "Error: GITHUB_API_TOKEN not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -786,42 +782,43 @@ captured in the GitHub Actions logs.
         """
         try:
             headers = {
-                "Authorization": f"Bearer {config.GITHUB_TOKEN}",
+                "Authorization": f"Bearer {config.GITHUB_API_TOKEN}",
                 "Accept": "application/vnd.github.v3+json",
                 "User-Agent": "AI-Assistant"
             }
 
-            async with aiohttp.ClientSession() as session:
+            async with httpx.AsyncClient(timeout=150.0) as client:
                 # First request to get the redirect URL
-                async with session.get(
+                response = await client.get(
                     f"https://api.github.com/repos/{owner}/{repo}/actions/runs/{run_id}/logs",
                     headers=headers,
-                    allow_redirects=False
-                ) as response:
-                    if response.status == 302:
-                        # Follow the redirect to download the zip file
-                        download_url = response.headers.get('Location')
-                        if download_url:
-                            async with session.get(download_url) as download_response:
-                                if download_response.status == 200:
-                                    # Read the zip content
-                                    zip_content = await download_response.read()
+                    follow_redirects=False
+                )
 
-                                    # Extract and combine log files
-                                    combined_logs = []
-                                    with zipfile.ZipFile(io.BytesIO(zip_content)) as zip_file:
-                                        self.logger.info(f"Found {len(zip_file.namelist())} files in log zip: {zip_file.namelist()}")
-                                        for file_name in sorted(zip_file.namelist()):
-                                            if file_name.endswith('.txt'):
-                                                with zip_file.open(file_name) as log_file:
-                                                    log_content = log_file.read().decode('utf-8', errors='ignore')
-                                                    self.logger.info(f"Extracted {len(log_content)} characters from {file_name}")
-                                                    combined_logs.append(f"=== {file_name} ===\n{log_content}\n")
+                if response.status_code == 302:
+                    # Follow the redirect to download the zip file
+                    download_url = response.headers.get('Location')
+                    if download_url:
+                        download_response = await client.get(download_url)
+                        if download_response.status_code == 200:
+                            # Read the zip content
+                            zip_content = download_response.content
 
-                                    total_content = "\n".join(combined_logs) if combined_logs else None
-                                    if total_content:
-                                        self.logger.info(f"Total combined log content: {len(total_content)} characters")
-                                    return total_content
+                            # Extract and combine log files
+                            combined_logs = []
+                            with zipfile.ZipFile(io.BytesIO(zip_content)) as zip_file:
+                                self.logger.info(f"Found {len(zip_file.namelist())} files in log zip: {zip_file.namelist()}")
+                                for file_name in sorted(zip_file.namelist()):
+                                    if file_name.endswith('.txt'):
+                                        with zip_file.open(file_name) as log_file:
+                                            log_content = log_file.read().decode('utf-8', errors='ignore')
+                                            self.logger.info(f"Extracted {len(log_content)} characters from {file_name}")
+                                            combined_logs.append(f"=== {file_name} ===\n{log_content}\n")
+
+                            total_content = "\n".join(combined_logs) if combined_logs else None
+                            if total_content:
+                                self.logger.info(f"Total combined log content: {len(total_content)} characters")
+                            return total_content
 
             return None
 
@@ -845,35 +842,37 @@ captured in the GitHub Actions logs.
         try:
             # GitHub logs endpoint returns a redirect to the actual download URL
             headers = {
-                "Authorization": f"Bearer {config.GITHUB_TOKEN}",
+                "Authorization": f"Bearer {config.GITHUB_API_TOKEN}",
                 "Accept": "application/vnd.github.v3+json",
                 "User-Agent": "AI-Assistant"
             }
 
-            async with aiohttp.ClientSession() as session:
+            timeout = httpx.Timeout(150.0, connect=60.0)
+            async with httpx.AsyncClient(timeout=timeout, trust_env=False) as client:
                 # First request to get the redirect URL
-                async with session.get(
+                response = await client.get(
                     f"https://api.github.com/repos/{owner}/{repo}/actions/runs/{run_id}/logs",
                     headers=headers,
-                    allow_redirects=False
-                ) as response:
-                    if response.status == 302:
-                        # Follow the redirect to download the zip file
-                        download_url = response.headers.get('Location')
-                        if download_url:
-                            async with session.get(download_url) as download_response:
-                                if download_response.status == 200:
-                                    # Read the zip content
-                                    zip_content = await download_response.read()
+                    follow_redirects=False
+                )
 
-                                    # Extract and search through log files
-                                    with zipfile.ZipFile(io.BytesIO(zip_content)) as zip_file:
-                                        for file_name in zip_file.namelist():
-                                            if file_name.endswith('.txt'):
-                                                with zip_file.open(file_name) as log_file:
-                                                    log_content = log_file.read().decode('utf-8', errors='ignore')
-                                                    if tracker_id in log_content:
-                                                        return True
+                if response.status_code == 302:
+                    # Follow the redirect to download the zip file
+                    download_url = response.headers.get('Location')
+                    if download_url:
+                        download_response = await client.get(download_url)
+                        if download_response.status_code == 200:
+                            # Read the zip content
+                            zip_content = download_response.content
+
+                            # Extract and search through log files
+                            with zipfile.ZipFile(io.BytesIO(zip_content)) as zip_file:
+                                for file_name in zip_file.namelist():
+                                    if file_name.endswith('.txt'):
+                                        with zip_file.open(file_name) as log_file:
+                                            log_content = log_file.read().decode('utf-8', errors='ignore')
+                                            if tracker_id in log_content:
+                                                return True
 
             return False
 

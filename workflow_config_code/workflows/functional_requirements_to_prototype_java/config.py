@@ -63,7 +63,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 6000000
+                                    "responseTimeoutMs": 6000000,
+                                    "retryPolicy": "NONE"
                                 }
                             }
                         ]

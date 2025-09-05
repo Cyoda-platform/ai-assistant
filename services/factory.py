@@ -18,7 +18,6 @@ from entity.model_registry import model_registry
 from entity.chat.helper_functions import WorkflowHelperService
 from entity.chat.workflow import ChatWorkflow
 from services.chat_service import ChatService
-from services.deployment_http_service import DeploymentHttpService
 from services.labels_config_service import LabelsConfigService
 from services.scheduler import Scheduler
 from tools.deployment_service import DeploymentService
@@ -99,7 +98,6 @@ class ServicesFactory:
                 scheduler_service=self.scheduler,
                 data_service=self.data_service
             )
-            self.deployment_http_service = DeploymentHttpService(self.deployment_service)
 
             self.grpc_client = GrpcClient(workflow_dispatcher=self.workflow_dispatcher,
                                           auth=self.cyoda_auth_service,
@@ -151,7 +149,6 @@ class ServicesFactory:
             "scheduler_service": self.scheduler,
             "data_service": self.data_service,
             "deployment_service": self.deployment_service,
-            "deployment_http_service": self.deployment_http_service
         }  # or directly paste the BeanFactory class here, then drop logic.init
 
 
@@ -172,4 +169,3 @@ workflow_helper_service = _services['workflow_helper_service']
 scheduler_service = _services['scheduler_service']
 data_service = _services['data_service']
 deployment_service = _services['deployment_service']
-deployment_http_service = _services['deployment_http_service']

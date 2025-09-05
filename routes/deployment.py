@@ -8,7 +8,6 @@ from common.config.config import config
 from common.utils.auth_utils import auth_required, auth_optional
 from routes.chat_utils import extract_auth_info
 from routes.rl_key_functions import token_key_function
-from services.factory import deployment_http_service
 
 deployment_bp = Blueprint('deployment', __name__, url_prefix=f"{config.API_PREFIX}/deployment")
 logger = logging.getLogger(__name__)

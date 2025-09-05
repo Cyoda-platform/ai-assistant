@@ -97,14 +97,14 @@ RUN python --version && \
     npm --version
 
 # Set build arguments for GitHub credentials
-ARG GITHUB_TOKEN
+ARG GITHUB_API_TOKEN
 ARG GITHUB_USERNAME
-ENV GITHUB_TOKEN=${GITHUB_TOKEN}
+ENV GITHUB_API_TOKEN=${GITHUB_API_TOKEN}
 ENV GITHUB_USERNAME=${GITHUB_USERNAME}
 
 # Configure Git with credentials
 RUN git config --global credential.helper store && \
-    echo "https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com" > ~/.git-credentials && \
+    echo "https://${GITHUB_USERNAME}:${GITHUB_API_TOKEN}@github.com" > ~/.git-credentials && \
     git config --global user.email "app-builder@example.com" && \
     git config --global user.name "app-builder"
 
@@ -117,7 +117,7 @@ RUN pipx ensurepath
 
 # Configure Git for appuser with credentials
 RUN git config --global credential.helper store && \
-    echo "https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com" > ~/.git-credentials && \
+    echo "https://${GITHUB_USERNAME}:${GITHUB_API_TOKEN}@github.com" > ~/.git-credentials && \
     git config --global user.email "app-builder@example.com" && \
     git config --global user.name "app-builder"
 
