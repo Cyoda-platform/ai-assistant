@@ -8,6 +8,7 @@ import common.config.const as const
 from common.exception.errors import init_error_handlers
 from common.utils.event_loop import BackgroundEventLoop
 from routes.chat import chat_bp
+from routes.deployment import deployment_bp
 from routes.labels_config import labels_config_bp
 from routes.token import token_bp
 from routes.workflow import workflow_bp
@@ -80,6 +81,7 @@ def create_app():
     # --- Register blueprints ---
     app.register_blueprint(token_bp)
     app.register_blueprint(chat_bp)
+    app.register_blueprint(deployment_bp)
     app.register_blueprint(labels_config_bp)
     app.register_blueprint(workflow_bp)
 

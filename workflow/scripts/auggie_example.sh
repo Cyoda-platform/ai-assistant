@@ -61,12 +61,6 @@ setup_environment() {
     export FORCE_COLOR=0
     export NODE_ENV=production
 
-    # Augment authentication (should be set externally)
-    if [[ -z "${AUGMENT_API_TOKEN:-}" && -z "${AUGMENT_SESSION_AUTH:-}" ]]; then
-        log "WARNING: No Augment authentication token found"
-        log "Set AUGMENT_API_TOKEN or AUGMENT_SESSION_AUTH environment variable"
-    fi
-
     log "Environment configured for automation"
 }
 

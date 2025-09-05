@@ -18,8 +18,10 @@ from entity.model_registry import model_registry
 from entity.chat.helper_functions import WorkflowHelperService
 from entity.chat.workflow import ChatWorkflow
 from services.chat_service import ChatService
+from services.deployment_http_service import DeploymentHttpService
 from services.labels_config_service import LabelsConfigService
 from services.scheduler import Scheduler
+from tools.deployment_service import DeploymentService
 from entity.workflow import Workflow
 from workflow.dispatcher.workflow_dispatcher import WorkflowDispatcher
 
@@ -87,6 +89,18 @@ class ServicesFactory:
                                             ai_agent=self.ai_agent,
                                             data_service=self.data_service)
             self.labels_config_service = LabelsConfigService()
+
+            # Initialize deployment services
+            self.deployment_service = DeploymentService(
+                workflow_helper_service=self.workflow_helper_service,
+                entity_service=self.entity_service,
+                cyoda_auth_service=self.cyoda_auth_service,
+                workflow_converter_service=self.workflow_converter_service,
+                scheduler_service=self.scheduler,
+                data_service=self.data_service
+            )
+            self.deployment_http_service = DeploymentHttpService(self.deployment_service)
+
             self.grpc_client = GrpcClient(workflow_dispatcher=self.workflow_dispatcher,
                                           auth=self.cyoda_auth_service,
                                           chat_service=self.chat_service)
@@ -133,7 +147,11 @@ class ServicesFactory:
             "dataset": self.dataset,
             "device_sessions": self.device_sessions,
             "cyoda_auth_service": self.cyoda_auth_service,
-            "workflow_converter_service": self.workflow_converter_service
+            "workflow_converter_service": self.workflow_converter_service,
+            "scheduler_service": self.scheduler,
+            "data_service": self.data_service,
+            "deployment_service": self.deployment_service,
+            "deployment_http_service": self.deployment_http_service
         }  # or directly paste the BeanFactory class here, then drop logic.init
 
 
@@ -150,3 +168,8 @@ cyoda_auth_service = _services['cyoda_auth_service']
 chat_service = _services['chat_service']
 labels_config_service = _services['labels_config_service']
 workflow_converter_service = _services['workflow_converter_service']
+workflow_helper_service = _services['workflow_helper_service']
+scheduler_service = _services['scheduler_service']
+data_service = _services['data_service']
+deployment_service = _services['deployment_service']
+deployment_http_service = _services['deployment_http_service']

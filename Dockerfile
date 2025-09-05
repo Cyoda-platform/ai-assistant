@@ -20,6 +20,24 @@ RUN apt-get update && \
         ca-certificates \
         gnupg \
         lsb-release \
+        python3-dev \
+        python3-venv \
+        python3-pip \
+        python3-setuptools \
+        python3-wheel \
+        libffi-dev \
+        libssl-dev \
+        zlib1g-dev \
+        libbz2-dev \
+        libreadline-dev \
+        libsqlite3-dev \
+        libncurses5-dev \
+        libncursesw5-dev \
+        xz-utils \
+        tk-dev \
+        libxml2-dev \
+        libxmlsec1-dev \
+        liblzma-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Java 21 from Eclipse Temurin
@@ -47,6 +65,11 @@ ENV PATH=$PATH:$JAVA_HOME/bin
 # Install Auggie CLI
 RUN npm install -g @augmentcode/auggie
 
+# Upgrade pip and install Python package management tools
+RUN python -m pip install --upgrade pip setuptools wheel && \
+    python -m pip install --no-cache-dir pipx virtualenv poetry && \
+    pipx ensurepath
+
 # Copy requirements first (for better caching)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -63,7 +86,11 @@ RUN chown -R appuser:appuser /app && \
     find /app -name "*.sh" -exec chmod +x {} \;
 
 # Verify installations
-RUN java --version && \
+RUN python --version && \
+    pip --version && \
+    pipx --version && \
+    poetry --version && \
+    java --version && \
     gradle --version && \
     mvn --version && \
     node --version && \
@@ -83,6 +110,10 @@ RUN git config --global credential.helper store && \
 
 # Switch to non-root user
 USER appuser
+
+# Set up Python environment for appuser
+ENV PATH="/home/appuser/.local/bin:$PATH"
+RUN pipx ensurepath
 
 # Configure Git for appuser with credentials
 RUN git config --global credential.helper store && \
