@@ -63,7 +63,8 @@
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 6000000
+                "responseTimeoutMs": 6000000,
+                "retryPolicy": "NONE"
               }
             }
           ]
