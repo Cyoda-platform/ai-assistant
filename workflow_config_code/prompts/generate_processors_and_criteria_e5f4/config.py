@@ -68,6 +68,8 @@ CRITICAL: Check example_code before implementing your own.
 
 Implementation Checklist
 
+0. Make sure build/generated-sources/js2p/org/cyoda/cloud/api/event generated classes are generated.
+If not run ./gradlew build
 1.  Familiarize with codebase in example_code directory.
 2.  Entities
     -   Implement POJOs under
