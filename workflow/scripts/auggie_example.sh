@@ -98,10 +98,23 @@ main() {
     log "Model: $MODEL"
     log "Workspace: $WORKSPACE_DIR"
     log "Branch ID: $BRANCH_ID"
-    
+
     setup_environment
-    execute_auggie "$WORKSPACE_DIR" "$PROMPT" "$MODEL"
-    
+
+    # Run Auggie CLI with a 1-hour timeout
+    timeout --foreground 1h auggie --print --model "$MODEL" --workspace-root "$WORKSPACE_DIR" "$PROMPT"
+    local exit_code=$?
+
+    if [[ $exit_code -eq 124 ]]; then
+        log "ERROR: Auggie CLI execution timed out after 1 hour"
+        exit 124
+    elif [[ $exit_code -eq 0 ]]; then
+        log "Auggie CLI execution completed successfully"
+    else
+        log "ERROR: Auggie CLI execution failed with exit code $exit_code"
+        exit $exit_code
+    fi
+
     log "Auggie automation script completed successfully"
 }
 

@@ -105,9 +105,18 @@ class AuggieProcessor:
             logger.exception(f"Error in Auggie agent processing: {e}")
             return f"Sorry, I'm having trouble with the Auggie agent: {str(e)}"
 
-    async def _execute_script(self, script_path: str, prompt: str, model: str, workspace_dir: str = None, branch_id: str = None) -> str:
+    async def _execute_script(
+            self,
+            script_path: str,
+            prompt: str,
+            model: str,
+            workspace_dir: str = None,
+            branch_id: str = None,
+            timeout_seconds: int = 3600,   # 1 hour default
+            kill_grace_seconds: int = 5    # wait before force-killing
+    ) -> str:
         """
-        Execute the specified script asynchronously and wait for it to complete.
+        Execute the specified script asynchronously with a timeout.
         Passes parameters as command line arguments.
 
         Args:
@@ -116,6 +125,8 @@ class AuggieProcessor:
             model: Model to pass as argument
             workspace_dir: Workspace directory path
             branch_id: Branch ID
+            timeout_seconds: Max time (in seconds) before forcibly stopping the process
+            kill_grace_seconds: Time to wait after terminate() before kill()
 
         Returns:
             Script execution result
@@ -143,36 +154,55 @@ class AuggieProcessor:
             if branch_id:
                 logger.info(f"🌿 Branch: {branch_id}")
 
-            # Execute the script
+            # Start process
             process = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=os.path.dirname(script_path) if os.path.dirname(script_path) else "."
+                cwd=os.path.dirname(script_path) if os.path.dirname(script_path) else ".",
             )
+            logger.info(f"Started process {process.pid}")
 
-            # Wait for the process to complete
+            try:
+                # Enforce timeout on the process itself
+                await asyncio.wait_for(process.wait(), timeout=timeout_seconds)
+            except asyncio.TimeoutError:
+                logger.error(f"⏰ Script exceeded {timeout_seconds} seconds, terminating... process {process.pid}")
+                try:
+                    process.terminate()
+                except ProcessLookupError:
+                    pass  # already gone
+
+                try:
+                    await asyncio.wait_for(process.wait(), timeout=kill_grace_seconds)
+                except asyncio.TimeoutError:
+                    logger.error(f"⚠️ Script did not terminate, killing... process {process.pid}")
+                    try:
+                        process.kill()
+                    except ProcessLookupError:
+                        pass
+                    await process.wait()
+
+            # Collect remaining output
             stdout, stderr = await process.communicate()
 
-            # Decode output
-            stdout_str = stdout.decode('utf-8') if stdout else ""
-            stderr_str = stderr.decode('utf-8') if stderr else ""
+            stdout_str = stdout.decode('utf-8', errors="replace") if stdout else ""
+            stderr_str = stderr.decode('utf-8', errors="replace") if stderr else ""
 
             if process.returncode == 0:
-                logger.info(f"✅ Script executed successfully")
+                logger.info(f"✅ Script executed successfully process {process.pid}")
                 if stdout_str:
                     logger.debug(f"📋 Script output: {stdout_str[:200]}{'...' if len(stdout_str) > 200 else ''}")
-                return stdout_str if stdout_str else "Script executed successfully (no output)"
+                return stdout_str if stdout_str else f"Script executed successfully (no output)  process {process.pid}"
             else:
                 logger.error(f"❌ Script failed with return code {process.returncode}")
                 if stderr_str:
-                    logger.error(f"❌ Script error: {stderr_str}")
-                return f"Error: Script failed with return code {process.returncode}. Error: {stderr_str}"
+                    logger.error(f"❌ Script error: {stderr_str}  process {process.pid}")
+                return f"Error: Script failed with return code {process.returncode}. Error: {stderr_str}  process {process.pid}"
 
         except Exception as e:
-            logger.exception(f"Error executing script: {e}")
+            logger.exception(f"Error executing script: {e} ")
             return f"Error executing script: {str(e)}"
-
 
 
     def _find_project_root(self) -> Path:
