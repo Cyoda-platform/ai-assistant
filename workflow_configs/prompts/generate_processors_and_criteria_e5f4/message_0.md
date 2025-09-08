@@ -43,8 +43,8 @@ Repository Map
     -   common/service/EntityService.java
     -   common/workflow/CyodaEntity.java
     -   common/workflow/CyodaEventContext.java
-2.  Examples: example_code (processors, criteria, controllers)
-CRITICAL: Check example_code before implementing your own.
+2.  Examples: llm_example/code/application (processors, criteria, controllers)
+CRITICAL: Check llm_example/code/application before implementing your own.
 
 3.  Functional Requirements
     -   Entities: resources/functional_requirements/entities.md
@@ -59,7 +59,7 @@ Implementation Checklist
 
 0. Make sure build/generated-sources/js2p/org/cyoda/cloud/api/event generated classes are generated.
 If not run ./gradlew build
-1.  Familiarize with codebase in example_code directory.
+1.  Familiarize with codebase in llm_example/code/application directory.
 2.  Entities
     -   Implement POJOs under
         application/entity/{entity_name}/version_1/ with Lombok @Data.
