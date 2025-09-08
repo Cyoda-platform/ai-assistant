@@ -70,11 +70,15 @@ If not run ./gradlew build
             public static final Integer ENTITY_VERSION = 1;
 
     -   Implement getModelKey() and isValid() as per template.
+    
+    Entities should exactly match the requirements specified in the resources/functional_requirements/entities.md file.
+    Be careful with fields that semantically mean entity state (like status, state, etc.). If the functional requirements specify that we do not need business field for such field (status, state) then use entity state that you get from entity metadata.
 3.  Workflows
-    -   Study JSON definitions (states + transitions).
+    -   Study JSON definitions (states + transitions) in resources/workflow/*.json.
     -   Use only manual transitions; if unsure → save without
         transition.
 4.  Processors
+    -   Study processors requirements in resources/functional_requirements/processors.md.
     -   Entity passed to process(...) already contains all needed data.
     -   No updates to current entity - it will be updated automatically once you return; only get/update/delete other entities.
     -   To update another entity use entityService
@@ -82,9 +86,11 @@ If not run ./gradlew build
 UUID currentEntityId = entityWithMetadata.metadata().getId(); -- if you need current entity technical id
 String currentState = entityWithMetadata.metadata().getState(); -- if you need current entity state
 5.  Criteria
+    -   Study criteria requirements in resources/functional_requirements/criteria.md.
     -   Implement under application/criterion/.
     -   Keep minimal and direct.
 6.  Controllers
+    -   Study controller requirements in resources/functional_requirements/controllers.md.
     -   Implement under application/controller/.
     -   Accept entities as @RequestBody (not Map).
     -   Work with EntityResponse<T> and forward to EntityService.
