@@ -32,6 +32,7 @@ IDs & Metadata
     entityResponse.getMetadata().getId()
 -   Entity state:
     entityResponse.getMetadata().getState()
+    Entity state is managed by the workflow and you can not change it manually, you can only read it.
 -   Business ID (user-defined, non-unique, mutable):
     retrievable/updatable with business ID–specific methods.
 -   Update semantics:
@@ -51,7 +52,6 @@ Repository Map
 
 1.  Core APIs & Types
     -   common/service/EntityService.java
-    -   common/util/SearchConditionRequest.java
     -   common/workflow/CyodaEntity.java
     -   common/workflow/CyodaEventContext.java
 2.  Examples: example_code (processors, criteria, controllers)
@@ -83,7 +83,7 @@ If not run ./gradlew build
     -   Implement getModelKey() and isValid() as per template.
     
     Entities should exactly match the requirements specified in the resources/functional_requirements/entities.md file.
-    Be careful with fields that semantically mean entity state (like status, state, etc.). If the functional requirements specify that we do not need business field for such field (status, state) then use entity state that you get from entity metadata.
+    Be careful with fields that semantically mean entity state (like status, state, etc.). If the functional requirements specify that we do not need business field for such field (status, state) then use entity state that you get from entity metadata. This state is managed by the workflow and you should not change it manually, you can only read it.
 3.  Workflows
     -   Study JSON definitions (states + transitions) in resources/workflow/*.json.
     -   Use only manual transitions; if unsure → save without
@@ -104,7 +104,6 @@ String currentState = entityWithMetadata.metadata().getState(); -- if you need c
     -   Study controller requirements in resources/functional_requirements/controllers.md.
     -   Implement under application/controller/.
     -   Accept entities as @RequestBody (not Map).
-    -   Work with EntityResponse<T> and forward to EntityService.
     -   Endpoints must match requirements exactly; add CRUD if missing.
     -   Prefer technical IDs in responses.
     -   Update endpoints: transition nullable; must be manual if provided.
@@ -114,8 +113,7 @@ String currentState = entityWithMetadata.metadata().getState(); -- if you need c
 
 Acceptance Criteria
 
--   Entities/processors/criteria/controllers fully match functional
-    requirements.
+-   Entities/processors/criteria/controllers fully match functional requirements.
 -   Controllers proxy only; no embedded business logic.
 -   No reflection; common untouched.
 -   Project compiles cleanly.
