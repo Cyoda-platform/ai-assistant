@@ -1,0 +1,13 @@
+{
+  "type": "function",
+  "function": {
+    "name": "init_chats",
+    "description": "Initialises ai service"
+  },
+  "allow_anonymous_users": true,
+  "output": {
+    "local_fs": [
+      "functional_requirements/user_requirement.md"
+    ]
+  }
+}

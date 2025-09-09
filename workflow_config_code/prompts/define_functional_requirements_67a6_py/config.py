@@ -1,0 +1,53 @@
+"""
+DefineFunctionalRequirements67a6PromptConfig Configuration
+
+Generated from config: workflow_configs/prompts/define_functional_requirements_67a6/message_0.md
+Configuration data for the prompt.
+"""
+
+from typing import Any, Dict, Callable
+
+
+def get_config() -> Callable[[Dict[str, Any]], str]:
+    """Get prompt configuration factory"""
+    return lambda params=None: """
+You are provided with a user requirement in 'functional_requirements/user_requirement.md' (also check functional_requirements/user_requirement_additional_info.md if exists). 
+Instructions:
+1. Understand the user requirement.
+2. Review README.md to understand the project structure.
+3. In the functional_requirements directory, add a file called entities.md with the detailed requirements for the entities. Specify the name of the entity, its attributes, and its relationships with other entities.
+Entity state is an internal entity attribute that is not part of the entity schema.
+It is used to represent the state of the entity in the workflow.
+It will be changed automatically by the workflow based on the transitions. You can get entity state by calling entity.meta.state in the processor code. But you cannot change it.
+If the user uses semantically similar concept to state - like status, etc. you can use it as the state. but you should let the user know about it.
+So if there are fields like state, status do NOT include them in the entity schema. You will use entity.meta.state instead to get the state. And you will not be able to change it, the system will manage it for you.
+4. In the functional_requirements directory, add a file called workflows.md with the detailed requirements for the workflows. Specify the name of the workflow, its states, and its transitions. Add mermaid state diagrams for each workflow.
+There should be a workflow for each entity. Each entity workflow should have at least one transition from initial state to the first state.
+Each workflow transition may have a processor, a criterion, both or none.
+Transitions can be manual or automatic. First transition from initial state is always automatic. If there is a loop transition from a state to itself or a previous state, it should be marked as manual.
+
+Processor represents a java class that implements the business logic of the transition. For example, a processor may be responsible for validating the data, enriching the data, transforming the data, calling an external API, or executing a business domain logic.
+Criterion represents a java class that implements the conditional logic of the transition. For example, a criterion may be responsible for checking if the data is valid, if the user has the permission to perform the action, if the entity is in the correct state, etc.
+Naming conventions:
+Processor and Criterion name must be in PascalCase, starting with the entity name. For example, UserProcessor, ProductProcessor, OrderProcessor.
+
+Recommendations:
+It is perfectly ok to have transitions without processors or criteria. Use processors and criteria only if needed for the business logic.
+If you have to check for the state in the processor - you should consider adding a separate transition with a criterion that checks for the state, and a processor for it.
+
+5. In functional_requirements directory, add a file called processors.md with the detailed requirements for the processors. For each processor, specify the name of the processor, the entity it belongs to, expected input data, what it does, and the expected entity output (it should modify input entity state or add/update/delete/get other entities). Add pseudocode for each processor. This should be pseudocode for the process() method not Java code, so that a business analyst can understand it. It should be concise but fully descriptive.
+If the processor needs to update another entity, specify its transition name or specify that transition is not needed (null transition).
+6. In functional_requirements directory, add a file called criteria.md with the detailed requirements for the criteria.
+Keep criteria simple. For example, check if the data is valid, if the user has the permission to perform the action, if the entity is in the correct state, etc.
+7. In functional_requirements directory, add a file called controllers.md with the detailed requirements for the controllers.
+We need a separate routes class for each entity. For example, UserRoutes, ProductRoutes, OrderRoutes.
+Update endpoints should have a parameter for transition name. It can be null if we do not move to a different state, but if this is used to propagate the event to a different state, it should be specified. Align with the workflow doc.
+Always give examples of request and response bodies.
+The api should exactly match the user requirement if there is any api requirement specified. Be very careful.
+If there are any update with transition name endpoints, make sure the transition name is specified in the workflow.
+Always make sure the current entity state has this transition to the next state otherwise pass null as transition name.
+Always provide full request example including all the parameters. Response example can be shorter, but the request example should be complete.
+
+You can parallelise the work on processors, criteria and controllers.
+Exit the task when all the requirements are implemented correctly silently.
+"""
