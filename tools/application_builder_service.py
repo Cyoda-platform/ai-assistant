@@ -220,13 +220,7 @@ class ApplicationBuilderService(BaseWorkflowService):
         """
         try:
             # Validate required parameters
-            is_valid, error_msg = await self._validate_required_params(
-                params, ["programming_language"]
-            )
-            if not is_valid:
-                return error_msg
-
-            programming_language = params.get("programming_language")
+            programming_language = entity.workflow_cache.get(const.PROGRAMMING_LANGUAGE_PARAM)
             params[const.REPOSITORY_NAME_PARAM] = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM)
             params[const.GIT_BRANCH_PARAM] = entity.workflow_cache.get(const.GIT_BRANCH_PARAM)
 

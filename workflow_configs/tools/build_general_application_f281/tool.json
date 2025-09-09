@@ -13,7 +13,8 @@
         "programming_language": {
           "type": "string",
           "enum": [
-            "JAVA"
+            "JAVA",
+            "PYTHON"
           ]
         }
       },

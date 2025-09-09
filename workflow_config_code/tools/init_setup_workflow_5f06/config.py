@@ -16,8 +16,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "name": "init_setup_workflow",
                 "description": "init_setup_workflow",
                 "parameters": {
-                        "user_request": "Hello! Please help me start my new application.",
-                        "programming_language": "JAVA"
+                        "user_request": "Hello! Please help me start my new application."
                 }
         },
         "publish": False

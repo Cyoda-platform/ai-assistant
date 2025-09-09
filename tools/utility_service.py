@@ -182,6 +182,7 @@ class UtilityService(BaseWorkflowService):
             List of entity names extracted from the JSON file
         """
         try:
+            params = params.get('params', params)
             input_file = params.get('input_file', 'src/main/java/com/java_template/prototype/entities_requirement.json')
 
             # Get repository information from entity

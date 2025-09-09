@@ -1,7 +1,7 @@
 """
 BuildGeneralApplicationJavaWorkflowConfig Workflow
 
-Generated from config: workflow_configs/workflows/build_general_application_java.json
+Generated from config: workflow_configs/workflows/build_general_application_python.json
 Workflow configuration with get_name() and get_config() methods.
 """
 
@@ -9,13 +9,13 @@ from typing import Any, Dict
 from .config import get_config
 
 
-class BuildGeneralApplicationJavaWorkflowConfig:
-    """Workflow configuration for build_general_application_java"""
+class BuildGeneralApplicationPythonWorkflowConfig:
+    """Workflow configuration for build_general_application_python"""
 
     @staticmethod
     def get_name() -> str:
         """Get the static name of this workflow"""
-        return "build_general_application_java"
+        return "build_general_application_python"
 
     @staticmethod
     def get_config(params: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -25,4 +25,4 @@ class BuildGeneralApplicationJavaWorkflowConfig:
 
 
 # Create singleton instance
-build_general_application_java_workflow = BuildGeneralApplicationJavaWorkflowConfig()
+build_general_application_python_workflow = BuildGeneralApplicationPythonWorkflowConfig()

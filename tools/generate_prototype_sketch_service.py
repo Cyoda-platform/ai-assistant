@@ -39,7 +39,7 @@ class GeneratePrototypeSketchService(BaseWorkflowService):
                 technical_id=technical_id,
                 entity=entity,
                 entity_model=const.ModelName.CHAT_ENTITY.value,
-                workflow_name=const.ModelName.FUNCTIONAL_REQUIREMENTS_TO_PROTOTYPE_JAVA.value,
+                workflow_name=await self.get_workflow_name(entity, technical_id),
                 workflow_cache=workflow_cache,
             )
 
@@ -48,3 +48,8 @@ class GeneratePrototypeSketchService(BaseWorkflowService):
 
         except Exception as e:
             return self._handle_error(entity, e, f"Error generating prototype sketch: {e}")
+
+    async def get_workflow_name(self, entity, technical_id):
+        return const.ModelName.FUNCTIONAL_REQUIREMENTS_TO_PROTOTYPE_JAVA.value if entity.workflow_cache.get(
+            const.PROGRAMMING_LANGUAGE_PARAM,
+            "java").lower() == "java" else const.ModelName.FUNCTIONAL_REQUIREMENTS_TO_PROTOTYPE_PYTHON.value

@@ -7,6 +7,7 @@ Configuration data for the agent.
 
 from typing import Any, Dict, Callable
 
+from workflow_config_code.prompts.process_user_input_2e66_py.prompt import ProcessUserInput2e66PyPromptConfig
 from workflow_config_code.tools.add_application_resource_3d0b.tool import AddApplicationResource3d0bToolConfig
 from workflow_config_code.tools.add_collaborator_to_default_repos_ffe7.tool import \
     AddCollaboratorToDefaultReposFfe7ToolConfig
@@ -62,7 +63,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "messages": [
             {
                 "role": "user",
-                "content_from_file": ProcessUserInput2e66PromptConfig.get_name()
+                "content_from_file": ProcessUserInput2e66PyPromptConfig.get_name()
             }
         ],
         "tool_choice": "auto",

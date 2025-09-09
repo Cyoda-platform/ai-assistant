@@ -1,7 +1,7 @@
 """
 BuildGeneralApplicationJavaWorkflowConfig Configuration
 
-Generated from config: workflow_configs/workflows/build_general_application_java.json
+Generated from config: workflow_configs/workflows/build_general_application_python.json
 Configuration data for the workflow.
 """
 
@@ -19,8 +19,11 @@ from workflow_config_code.agents.process_configs_discussion_0000_py.agent import
     ProcessConfigsDiscussion0000PyAgentConfig
 from workflow_config_code.agents.process_user_input_2c31_py.agent import ProcessUserInput2c31PyAgentConfig
 from workflow_config_code.agents.process_user_input_cd43_py.agent import ProcessUserInputCd43PyAgentConfig
+from workflow_config_code.messages.ask_about_api_063f_py.message import AskAboutApi063fPyMessageConfig
 from workflow_config_code.messages.ask_about_api_d91f_py.message import AskAboutApiD91fPyMessageConfig
 from workflow_config_code.messages.ask_to_discuss_configs_0000_py.message import AskToDiscussConfigs0000PyMessageConfig
+from workflow_config_code.messages.notify_config_generation_0f5b_py.message import \
+    NotifyConfigGeneration0f5bPyMessageConfig
 from workflow_config_code.messages.notify_generated_original_requirements_b94e_py.message import \
     NotifyGeneratedOriginalRequirementsB94ePyMessageConfig
 from workflow_config_code.messages.notify_prototype_generation_0000.message import \
@@ -74,19 +77,20 @@ from workflow_config_code.tools.not_stage_completed_f57d.tool import NotStageCom
 from workflow_config_code.agents.generate_original_requirements_c87e.agent import \
     GenerateOriginalRequirementsC87eAgentConfig
 
+
 def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get workflow configuration factory"""
     return lambda params=None: {
         "version": "1.0",
-        "name": "build_general_application_java",
-        "desc": "Migrated from build_general_application_java",
+        "name": "build_general_application_python",
+        "desc": "Migrated from build_general_application_python",
         "initialState": "initial_state",
         "active": True,
         "criterion": {
             "type": "simple",
             "jsonPath": "$.workflow_name",
             "operation": "EQUALS",
-            "value": "build_general_application_java"
+            "value": "build_general_application_python"
         },
         "states": {
             "initial_state": {
@@ -423,7 +427,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "manual": False,
                         "processors": [
                             {
-                                "name": AskAboutApi063fMessageConfig.get_name(),
+                                "name": AskAboutApi063fPyMessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",
@@ -663,7 +667,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "manual": False,
                         "processors": [
                             {
-                                "name": NotifyConfigGeneration0f5bMessageConfig.get_name(),
+                                "name": NotifyConfigGeneration0f5bPyMessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",
@@ -829,16 +833,16 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "name": "generate_prototype",
                         "next": "completed",
                         "manual": False,
-                        # "processors": [
-                        #     {
-                        #         "name": GeneratePrototypeSketch2269FunctionConfig.get_name(),
-                        #         "executionMode": "ASYNC_NEW_TX",
-                        #         "config": {
-                        #             "calculationNodesTags": "ai_assistant",
-                        #             "responseTimeoutMs": 900000
-                        #         }
-                        #     }
-                        # ]
+                        "processors": [
+                            {
+                                "name": GeneratePrototypeSketch2269FunctionConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 900000
+                                }
+                            }
+                        ]
                     }
                 ]
             },

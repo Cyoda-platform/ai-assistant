@@ -1,14 +1,14 @@
 {
   "version": "1.0",
-  "name": "build_general_application_java",
-  "desc": "Migrated from build_general_application_java",
+  "name": "build_general_application_python",
+  "desc": "Migrated from build_general_application_python",
   "initialState": "initial_state",
   "active": true,
   "criterion": {
     "type": "simple",
     "jsonPath": "$.workflow_name",
     "operation": "EQUALS",
-    "value": "build_general_application_java"
+    "value": "build_general_application_python"
   },
   "states": {
     "initial_state": {
@@ -685,7 +685,7 @@
           "manual": false,
           "processors": [
             {
-              "name": "MessageProcessor.ask_about_api_063f",
+              "name": "MessageProcessor.ask_about_api_063f_py",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
@@ -1266,7 +1266,7 @@
           "manual": false,
           "processors": [
             {
-              "name": "MessageProcessor.notify_config_generation_0f5b",
+              "name": "MessageProcessor.notify_config_generation_0f5b_py",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
@@ -1678,7 +1678,17 @@
         {
           "name": "generate_prototype",
           "next": "completed",
-          "manual": false
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.generate_prototype_sketch_2269",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          ]
         },
         {
           "name": "retry",

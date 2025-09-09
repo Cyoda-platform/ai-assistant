@@ -44,7 +44,7 @@
   "messages": [
     {
       "role": "user",
-      "content_from_file": "process_user_input_a094"
+      "content_from_file": "process_user_input_a094_py"
     }
   ],
   "tool_choice": "auto",

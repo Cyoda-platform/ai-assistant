@@ -38,7 +38,7 @@
   "messages": [
     {
       "role": "user",
-      "content_from_file": "process_user_input_2e66"
+      "content_from_file": "process_user_input_2e66_py"
     }
   ],
   "tool_choice": "auto",

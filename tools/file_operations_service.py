@@ -399,8 +399,10 @@ class FileOperationsService(BaseWorkflowService):
             Success message with branch information
         """
         try:
+
+            programming_language = entity.workflow_cache.get("programming_language", "JAVA")
             # Use repository resolver to determine repository name
-            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            repository_name = resolve_repository_name_with_language_param(entity, programming_language)
 
             # Use safe clone and file operations (utils.py handles all concurrency safety)
             clone_result = await clone_repo(git_branch_id=technical_id, repository_name=repository_name)

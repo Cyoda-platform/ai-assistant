@@ -33,7 +33,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         },
         "output": {
             "local_fs": [
-                "unctional_requirements/entities_requirement.json"
+                "functional_requirements/entities_requirement.json"
             ]
         },
         "response_format": {
