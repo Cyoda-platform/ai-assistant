@@ -10,8 +10,8 @@ from workflow.interfaces.interfaces import AgentProcessor
 from .config import get_config
 
 
-class ProcessUserInputE32dAgentConfig(AgentProcessor):
-    """Agent configuration for process_user_input_e32d"""
+class ProcessUserInputE32dPyAgentConfig(AgentProcessor):
+    """Agent configuration for process_user_input_e32d_py"""
 
     @staticmethod
     def get_type() -> str:
@@ -21,7 +21,7 @@ class ProcessUserInputE32dAgentConfig(AgentProcessor):
     @staticmethod
     def get_name() -> str:
         """Get the full processor name"""
-        return f"{ProcessUserInputE32dAgentConfig.get_type()}.process_user_input_e32d"
+        return f"{ProcessUserInputE32dPyAgentConfig.get_type()}.process_user_input_e32d_py"
 
     @staticmethod
     def get_config(params: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -31,4 +31,4 @@ class ProcessUserInputE32dAgentConfig(AgentProcessor):
 
 
 # Create singleton instance
-process_user_input_e32d_agent = ProcessUserInputE32dAgentConfig()
+process_user_input_e32d_py_agent = ProcessUserInputE32dPyAgentConfig()
