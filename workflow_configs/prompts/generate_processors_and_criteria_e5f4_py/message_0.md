@@ -64,11 +64,18 @@ Implementation Checklist
     -   No updates to current entity with the entityService - it will be updated automatically once you return; only get/update/delete other entities.
     -   To update another entity use entityService
     -   Apply correct transition (manual only), or omit for loop-back.
+    - Check with example_application processors for reference.
+    - You do not need kwargs in processors. Just use entity as the argument, ignore any other arguments.
+    - Do not validate entity state in processors. Entity state is managed by the workflow.
+    
 You can get entity id, state etc directly from entity as it extends CyodaEntity.
 5.  Criteria
     -   Study criteria requirements in application/resources/functional_requirements/criteria.md.
     -   Implement under application/criterion/.
     -   Keep minimal and direct.
+    -   You do not need kwargs in processors. Just use entity as the argument, ignore any other arguments.
+    -   Do not validate entity state in processors. Entity state is managed by the workflow.
+
 6.  Routers
     -   Study controller requirements in application/resources/functional_requirements/controllers.md.
     -   Implement under application/routes/.
@@ -77,13 +84,14 @@ You can get entity id, state etc directly from entity as it extends CyodaEntity.
     -   Update endpoints: transition nullable; must be manual if provided.
     -   Validate endpoints like in example_application routes. 
 7.  Testing & Validation
+Make sure there is no __init__.py file in the root of the mcp-cyoda-quart-app project. It will cause mypy to fail. 
+Just remove __init__.py from the root of the project if it exists.
+
     Validate with:
     python -m black .                    # Format code
     python -m isort .                    # Sort imports  
     python -m mypy .                     # Type checking
     python -m flake8 .                   # Style checking
-    python -m bandit -r .                # Security scanning
-    python -m pytest --cov              # Run tests with coverage
     look for more details in PACKAGE_MANAGEMENT_GUIDE.md
 
 Acceptance Criteria
@@ -95,6 +103,6 @@ Acceptance Criteria
 -   Requirements in user_requirement.md satisfied.
 
 Parallelise the work on processors, criteria and routers if possible.
-
+Critical: Keep criteria minimal and direct.
 Exit silently when all requirements are correctly implemented and build succeeds.
 

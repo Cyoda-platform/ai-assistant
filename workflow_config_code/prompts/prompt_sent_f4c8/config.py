@@ -22,6 +22,7 @@ pip install .
 Then they can either run it locally with python app.py or ask the IDE agent to read AI_TESTING_GUIDE.md and do everything for them.
 Install mcp tools with:  https://pypi.org/project/mcp-cyoda-client/
 pipx install mcp-cyoda-client
+```json
 {
   "mcpServers": {
     "cyoda": {
@@ -34,7 +35,7 @@ pipx install mcp-cyoda-client
     }
   }
 }
-
+```
 then you can import your workflows with these mcp tools - but you can fully delegate this to your AI agent
  Setting values at .env file: 
 - Let the user know: a default value is used for `GRPC_PROCESSOR_TAG` (they can change it if they like).
