@@ -112,7 +112,7 @@ class AuggieProcessor:
             model: str,
             workspace_dir: str = None,
             branch_id: str = None,
-            timeout_seconds: int = 3600,   # 1 hour default
+            timeout_seconds: int = 1800,   # 1/2 hour default
             kill_grace_seconds: int = 5    # wait before force-killing
     ) -> str:
         """
