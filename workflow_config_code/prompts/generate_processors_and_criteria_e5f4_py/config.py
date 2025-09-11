@@ -94,6 +94,7 @@ You can get entity id, state etc directly from entity as it extends CyodaEntity.
     -   Prefer technical IDs in responses.
     -   Update endpoints: transition nullable; must be manual if provided.
     -   Validate endpoints like in example_application routes. 
+    -   Import blueprints for the routes to application/app.py. Use example_application app.py as a reference.
 7.  Testing & Validation
 Make sure there is no __init__.py file in the root of the mcp-cyoda-quart-app project. It will cause mypy to fail. 
 Just remove __init__.py from the root of the project if it exists.
