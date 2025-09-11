@@ -38,7 +38,7 @@ If you have to check for the state in the processor - you should consider adding
 If the processor needs to update another entity, specify its transition name or specify that transition is not needed (null transition).
 5. In functional_requirements directory, add a file called criteria.md with the detailed requirements for the criteria.
 Keep criteria simple. For example, check if the data is valid, if the user has the permission to perform the action, if the entity is in the correct state, etc.
-6. In functional_requirements directory, add a file called controllers.md with the detailed requirements for the controllers.
+6. In functional_requirements directory, add a file called routes.md with the detailed requirements for the routes.
 We need a separate routes class for each entity. For example, UserRoutes, ProductRoutes, OrderRoutes.
 Update endpoints should have a parameter for transition name. It can be null if we do not move to a different state, but if this is used to propagate the event to a different state, it should be specified. Align with the workflow doc.
 Always give examples of request and response bodies.
@@ -47,6 +47,6 @@ If there are any update with transition name endpoints, make sure the transition
 Always make sure the current entity state has this transition to the next state otherwise pass null as transition name.
 Always provide full request example including all the parameters. Response example can be shorter, but the request example should be complete.
 
-You can parallelise the work on processors, criteria and controllers.
+You can parallelise the work on processors, criteria and routes.
 Exit the task when all the requirements are implemented correctly silently.
 """

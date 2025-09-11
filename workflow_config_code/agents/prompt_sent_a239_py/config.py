@@ -6,7 +6,7 @@ Configuration data for the agent.
 """
 
 from typing import Any, Dict, Callable
-from workflow_config_code.prompts.prompt_sent_f4c8.prompt import PromptSentF4c8PromptConfig
+from workflow_config_code.prompts.prompt_sent_f4c8_py.prompt import PromptSentF4c8PyPromptConfig
 
 
 def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
@@ -18,7 +18,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "messages": [
                 {
                         "role": "user",
-                        "content_from_file": PromptSentF4c8PromptConfig.get_name()
+                        "content_from_file": PromptSentF4c8PyPromptConfig.get_name()
                 }
         ],
         "publish": True

@@ -28,14 +28,14 @@ Repository Map
 1.  Core APIs & Types
     -   common/service/entity_service.py
     -   common/entity/cyoda_entity.py
-2.  Examples: example_application directory (processors, criteria, controllers)
+2.  Examples: example_application directory (processors, criteria, routes)
 CRITICAL: Check example_application before implementing your own.
 
 3.  Functional Requirements
     -   Entities: application/resources/functional_requirements/entities.md
     -   Processors: application/resources/functional_requirements/processors.md
     -   Criteria: application/resources/functional_requirements/criteria.md
-    -   Controllers: application/resources/functional_requirements/controllers.md
+    -   Controllers: application/resources/functional_requirements/routes.md
     -   Acceptance:
         application/resources/functional_requirements/user_requirement.md
 4.  Workflow docs: application/resources/workflow/*.json
@@ -77,7 +77,7 @@ You can get entity id, state etc directly from entity as it extends CyodaEntity.
     -   Do not validate entity state in processors. Entity state is managed by the workflow.
 
 6.  Routers
-    -   Study controller requirements in application/resources/functional_requirements/controllers.md.
+    -   Study router requirements in application/resources/functional_requirements/routes.md.
     -   Implement under application/routes/.
     -   Endpoints must match requirements exactly; add CRUD if missing.
     -   Prefer technical IDs in responses.
