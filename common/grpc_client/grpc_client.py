@@ -189,7 +189,7 @@ class GrpcClient:
         # Based on Java client, GREET_EVENT is processed but no response is sent
         logger.info(f"Received greet event: {data}")
         # todo Update member status and trigger rollback
-        self.processor_loop.run_coroutine(self.rollback_failed_workflows())
+        #self.processor_loop.run_coroutine(self.rollback_failed_workflows())
         # No response event is created for GREET_EVENT based on Java client pattern
 
     async def handle_error_event(self, response, queue: asyncio.Queue):
