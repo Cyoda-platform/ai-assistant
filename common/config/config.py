@@ -86,7 +86,7 @@ class Config:
 
         # GitHub repository defaults
         self.GH_DEFAULT_OWNER = _get_env("GH_DEFAULT_OWNER", default="Cyoda-platform")
-        self.GH_DEFAULT_REPOS = _get_env("GH_DEFAULT_REPOS", default="quart-client-template,java-client-template").split(",")
+        self.GH_DEFAULT_REPOS = _get_env("GH_DEFAULT_REPOS", default="mcp-cyoda-quart-app,java-client-template").split(",")
         self.GH_DEFAULT_USERNAME = _get_env("GH_DEFAULT_USERNAME", default="target-username")
         self.GH_DEFAULT_PERMISSION = _get_env("GH_DEFAULT_PERMISSION", default="push")
 

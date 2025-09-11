@@ -14,7 +14,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "type": "function",
         "function": {
             "name": "add_collaborator",
-            "description": "Adds a user as collaborator to the default Cyoda repositories (quart-client-template, java-client-template). Use when user requests repository access, push rights, or to be added to repositories. Use when the user says they have an issue pushing/accessing to the repository. The AI must extract the GitHub username from the user's request - cannot invent usernames.",
+            "description": "Adds a user as collaborator to the default Cyoda repositories (mcp-cyoda-quart-app, java-client-template). Use when user requests repository access, push rights, or to be added to repositories. Use when the user says they have an issue pushing/accessing to the repository. The AI must extract the GitHub username from the user's request - cannot invent usernames.",
             "strict": True,
             "parameters": {
                 "type": "object",
