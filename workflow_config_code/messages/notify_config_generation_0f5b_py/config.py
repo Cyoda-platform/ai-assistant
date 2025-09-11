@@ -47,9 +47,6 @@ I’ll generate the initial **Entity POJOs** and **Workflow Configurations** for
 
 ### **Your New Configs**
 
-**Entities** are the core business objects that represent real-world concepts like customers or orders. You'll find their Plain Old Java Objects (POJOs) here:
-`entity`
-
 **Workflows** define the lifecycle of your entities. Each workflow is made up of:
 
 * **States**: The stages an entity moves through (e.g., `Draft` → `Approved` → `Completed`).
@@ -57,7 +54,7 @@ I’ll generate the initial **Entity POJOs** and **Workflow Configurations** for
 * **Processors**: Custom logic that runs during a transition, such as sending notifications.
 
 Your new workflow files will be available here:
-`resources/workflows`
+`applicationresources/workflows`
 
 ---
 

@@ -1059,7 +1059,7 @@
           "manual": false,
           "processors": [
             {
-              "name": "AgentProcessor.process_user_input_f107_py",
+              "name": "AgentProcessor.process_user_input_e32d_py",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",

@@ -15,7 +15,7 @@
       "split_function": {
         "name": "get_entity_names_from_entities_requirement",
         "split_parameter": "EntityName",
-        "input_file": "functional_requirements/entities_requirement.json"
+        "input_file": "application/resources/functional_requirements/entities_requirement.json"
       },
       "messages": [
         {
@@ -27,10 +27,10 @@
       "tool_choice": "auto",
       "input": {
         "local_fs": [
-          "functional_requirements/workflows.md"
+          "application/resources/functional_requirements/workflows.md"
         ]
       },
-      "output": "resources/workflow/{entityname}/version_1/{EntityName}.json",
+      "output": "application/resources/workflow/{entityname}/version_1/{EntityName}.json",
       "publish": false,
       "response_format": {
         "name": "workflow_design_schema",

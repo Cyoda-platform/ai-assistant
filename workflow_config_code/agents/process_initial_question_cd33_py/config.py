@@ -35,7 +35,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         ],
         "input": {
             "local_fs": [
-                "functional_requirements/user_requirement.md"
+                "application/resources/functional_requirements/user_requirement.md"
             ]
         },
         "max_iteration": 30,

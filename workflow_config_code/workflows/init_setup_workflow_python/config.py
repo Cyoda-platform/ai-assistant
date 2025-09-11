@@ -473,7 +473,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "manual": False,
                         "processors": [
                             {
-                                "name": ProcessUserInputF107PyAgentConfig.get_name(),
+                                "name": ProcessUserInputE32dPyAgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",

@@ -34,7 +34,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 ],
                 "split_function": {"name": "get_entity_names_from_entities_requirement",
                                    "split_parameter": "EntityName",
-                                   "input_file": "functional_requirements/entities_requirement.json"},
+                                   "input_file": "application/resources/functional_requirements/entities_requirement.json"},
                 "messages": [
                     {
                         "role": "user",
@@ -46,10 +46,10 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "tool_choice": "auto",
                 "input": {
                     "local_fs": [
-                        "functional_requirements/workflows.md"
+                        "application/resources/functional_requirements/workflows.md"
                     ]
                 },
-                "output": "resources/workflow/{entityname}/version_1/{EntityName}.json",
+                "output": "application/resources/workflow/{entityname}/version_1/{EntityName}.json",
                 "publish": False,
                 "response_format": {
                     "name": "workflow_design_schema",

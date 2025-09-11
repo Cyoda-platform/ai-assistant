@@ -14,7 +14,7 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
     return lambda params=None: \
 """
 ✅ **Workflow configurations** have been added to your application.
-   📂 resources/workflow/entityName/version_1                           ← Workflows
+   📂 application/resources/workflow/entityName/version_1     ← Workflows
 
 For a detailed reference on workflow configuration, see the **[Cyoda Workflow Configuration Guide](https://docs.cyoda.net/#guides/workflow-config-guide)**. It explains:
 
@@ -42,9 +42,9 @@ You can evolve the workflows and entities in your IDE with your own IDE assistan
 ```markdown
 This project is a **Cyoda client application**.
 
- * **Workflows** (YAML/JSON configs) are in `resources/workflow/entityName/version_1/`
- * **Original user requirements** are in `functional_requirements/user_requirement.md`
- * **Functional requirements** are in `functional_requirements/functional_requirement.md`
+ * **Workflows** (YAML/JSON configs) are in `application/resources/workflow/entityName/version_1/`
+ * **Original user requirements** are in `application/resources/functional_requirements/user_requirement.md`
+ * **Functional requirements** are in `application/resources/functional_requirements/functional_requirement.md`
 
  The system is **event-driven** — workflows define states, transitions, and criteria declaratively, without code changes.
 

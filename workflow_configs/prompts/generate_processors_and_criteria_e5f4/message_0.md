@@ -108,7 +108,6 @@ Acceptance Criteria
 -   Project compiles cleanly.
 -   Requirements in user_requirement.md satisfied.
 
-Completion Condition
+Parallelise the work on processors, criteria and controllers.
 
 Exit silently when all requirements are correctly implemented and build succeeds.
-

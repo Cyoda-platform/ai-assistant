@@ -2,113 +2,99 @@
 This project is a **Cyoda client application**.
 Role & Objective
 
-Develop and maintain a Cyoda client application by implementing entities, processors, criteria, and controllers to spec and workflow definitions. Exit silently once all requirements pass and the project
-compiles.
+Develop and maintain a Cyoda client application by implementing entities, processors, criteria, and routers to spec and workflow definitions. Exit silently once all requirements pass and the project
+quality check passes.
 
 Golden Rules
 
 -   No reflection.
--   Do not modify anything in src/main/java/com/java_template/common.
+-   Modify only the application directory.
 -   Compile early and often; fix errors immediately.
--   Controllers = thin proxies to EntityService (no business logic).
+-   Routes = thin proxies to EntityService (no business logic).
 -   Prefer technical IDs for performance.
--   In processors, you cannot update the current entity (read-only); you may get/update/delete other entities via EntityService.
+-   In processors, you cannot use entityService to update the current entity (read-only); The current entity will be updated automatically once you return from the processor.
+    you may get/update/delete other entities via EntityService.
 -   CRITICAL: Update using only manual transitions (never automatic).
-
-IDs & Metadata
-
--   Technical ID (UUID, unique, immutable):
-    entityResponse.getMetadata().getId()
--   Entity state:
-    entityResponse.getMetadata().getState()
-    Entity state is managed by the workflow and you can not change it manually, you can only read it.
--   Business ID (user-defined, non-unique, mutable):
-    retrievable/updatable with business ID–specific methods.
--   Update semantics:
-    -   With transition → moves to that state.
-    -   Without transition → loops back to same state.
-    -   If in doubt, save without transition.
 
 Workflows — Super Important
 
 Workflows define states and transitions for each entity:
-- Saving an entity to a non-existent state (absent from workflow JSON) →
-fails.
+- Saving an entity to a non-existent state (absent from workflow JSON) → fails.
 - Update entities via manual transitions. Automatic transitions are not valid for update operations.
-- Always cross-check with the workflow JSON in src/main/resources/workflow.
+- Always cross-check with the workflow JSON in application/resources/workflow.
 
 Repository Map
 
 1.  Core APIs & Types
-    -   common/service/EntityService.java
-    -   common/workflow/CyodaEntity.java
-    -   common/workflow/CyodaEventContext.java
-2.  Examples: llm_example/code/application (processors, criteria, controllers)
-CRITICAL: Check llm_example/code/application before implementing your own.
+    -   common/service/entity_service.py
+    -   common/entity/cyoda_entity.py
+2.  Examples: example_application directory (processors, criteria, controllers)
+CRITICAL: Check example_application before implementing your own.
 
 3.  Functional Requirements
-    -   Entities: resources/functional_requirements/entities.md
-    -   Processors: resources/functional_requirements/processors.md
-    -   Criteria: resources/functional_requirements/criteria.md
-    -   Controllers: resources/functional_requirements/controllers.md
+    -   Entities: application/resources/functional_requirements/entities.md
+    -   Processors: application/resources/functional_requirements/processors.md
+    -   Criteria: application/resources/functional_requirements/criteria.md
+    -   Controllers: application/resources/functional_requirements/controllers.md
     -   Acceptance:
-        resources/functional_requirements/user_requirement.md
-4.  Workflow docs: resources/workflow/*.json
+        application/resources/functional_requirements/user_requirement.md
+4.  Workflow docs: application/resources/workflow/*.json
 
 Implementation Checklist
 
-0. Make sure build/generated-sources/js2p/org/cyoda/cloud/api/event generated classes are generated.
-If not run ./gradlew build
-1.  Familiarize with codebase in llm_example/code/application directory.
+1.  Familiarize with codebase in example_application directory.
 2.  Entities
-    -   Implement POJOs under
-        application/entity/{entity_name}/version_1/ with Lombok @Data.
+    -   Implement under application/entity/{entity_name}/version_1/ with Pydantic.
 
     -   Constants:
 
-            public static final String ENTITY_NAME = Entity.class.getSimpleName();
-            public static final Integer ENTITY_VERSION = 1;
+                ENTITY_NAME: ClassVar[str] = "ExampleEntity" -- always PascalCase
+                ENTITY_VERSION: ClassVar[int] = 1 -- always 1
 
-    -   Implement getModelKey() and isValid() as per template.
     
-    Entities should exactly match the requirements specified in the resources/functional_requirements/entities.md file.
+    Entities should exactly match the requirements specified in the application/resources/functional_requirements/entities.md file.
     Be careful with fields that semantically mean entity state (like status, state, etc.). If the functional requirements specify that we do not need business field for such field (status, state) then use entity state that you get from entity metadata. This state is managed by the workflow and you should not change it manually, you can only read it.
 3.  Workflows
     -   Study JSON definitions (states + transitions) in resources/workflow/*.json.
     -   Use only manual transitions; if unsure → save without
         transition.
 4.  Processors
-    -   Study processors requirements in resources/functional_requirements/processors.md.
-    -   Entity passed to process(...) already contains all needed data.
-    -   No updates to current entity - it will be updated automatically once you return; only get/update/delete other entities.
+    -   Implement under application/processor/.
+    -   Study processors requirements in application/resources/functional_requirements/processors.md.
+    -   No updates to current entity with the entityService - it will be updated automatically once you return; only get/update/delete other entities.
     -   To update another entity use entityService
     -   Apply correct transition (manual only), or omit for loop-back.
-UUID currentEntityId = entityWithMetadata.metadata().getId(); -- if you need current entity technical id
-String currentState = entityWithMetadata.metadata().getState(); -- if you need current entity state
+You can get entity id, state etc directly from entity as it extends CyodaEntity.
 5.  Criteria
-    -   Study criteria requirements in resources/functional_requirements/criteria.md.
+    -   Study criteria requirements in application/resources/functional_requirements/criteria.md.
     -   Implement under application/criterion/.
     -   Keep minimal and direct.
-6.  Controllers
-    -   Study controller requirements in resources/functional_requirements/controllers.md.
-    -   Implement under application/controller/.
-    -   Accept entities as @RequestBody (not Map).
+6.  Routers
+    -   Study controller requirements in application/resources/functional_requirements/controllers.md.
+    -   Implement under application/routes/.
     -   Endpoints must match requirements exactly; add CRUD if missing.
     -   Prefer technical IDs in responses.
     -   Update endpoints: transition nullable; must be manual if provided.
+    -   Validate endpoints like in example_application routes. 
 7.  Testing & Validation
-    -   Compile often with ./gradlew clean compileJava; resolve errors immediately.
-    -   Validate against user_requirement.md.
+    Validate with:
+    python -m black .                    # Format code
+    python -m isort .                    # Sort imports  
+    python -m mypy .                     # Type checking
+    python -m flake8 .                   # Style checking
+    python -m bandit -r .                # Security scanning
+    python -m pytest --cov              # Run tests with coverage
+    look for more details in PACKAGE_MANAGEMENT_GUIDE.md
 
 Acceptance Criteria
 
--   Entities/processors/criteria/controllers fully match functional requirements.
--   Controllers proxy only; no embedded business logic.
--   No reflection; common untouched.
--   Project compiles cleanly.
+-   Entities/processors/criteria/routers fully match functional requirements.
+-   Routes proxy only; no embedded business logic.
+-   Code modifies only application directory.
+-   Code passes quality checks.
 -   Requirements in user_requirement.md satisfied.
 
-Completion Condition
+Parallelise the work on processors, criteria and routers if possible.
 
 Exit silently when all requirements are correctly implemented and build succeeds.
 

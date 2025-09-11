@@ -22,7 +22,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "model": "sonnet4",
         "input": {
             "local_fs": [
-                "functional_requirements/user_requirement.md"
+                "application/resources/functional_requirements/user_requirement.md"
             ]
         }
     }

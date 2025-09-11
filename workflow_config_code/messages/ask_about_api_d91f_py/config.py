@@ -12,7 +12,7 @@ import json
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
     return lambda params=None: """
-    Your requirement has been specified in the 'functional_requirements' directory.
+    Your requirement has been specified in the *'application/resources/functional_requirements'* directory.
 
  Would you like to improve or make adjustments to the functional requirements and the API?
     

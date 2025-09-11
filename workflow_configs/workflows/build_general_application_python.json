@@ -470,7 +470,7 @@
           "manual": false,
           "processors": [
             {
-              "name": "AgentProcessor.process_initial_question_cd33",
+              "name": "AgentProcessor.process_initial_question_cd33_py",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",

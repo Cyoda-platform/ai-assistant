@@ -7,7 +7,7 @@
   "allow_anonymous_users": true,
   "output": {
     "local_fs": [
-      "functional_requirements/user_requirement.md"
+      "application/resources/functional_requirements/user_requirement.md"
     ]
   }
 }

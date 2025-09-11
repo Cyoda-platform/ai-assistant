@@ -17,6 +17,7 @@ from workflow_config_code.agents.generate_entities_requirements_accc_py.agent im
     GenerateEntitiesRequirementsAcccPyAgentConfig
 from workflow_config_code.agents.process_configs_discussion_0000_py.agent import \
     ProcessConfigsDiscussion0000PyAgentConfig
+from workflow_config_code.agents.process_initial_question_cd33_py.agent import ProcessInitialQuestionCd33PyAgentConfig
 from workflow_config_code.agents.process_user_input_2c31_py.agent import ProcessUserInput2c31PyAgentConfig
 from workflow_config_code.agents.process_user_input_cd43_py.agent import ProcessUserInputCd43PyAgentConfig
 from workflow_config_code.messages.ask_about_api_063f_py.message import AskAboutApi063fPyMessageConfig
@@ -336,7 +337,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "manual": False,
                         "processors": [
                             {
-                                "name": ProcessInitialQuestionCd33AgentConfig.get_name(),
+                                "name": ProcessInitialQuestionCd33PyAgentConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",
