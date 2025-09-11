@@ -90,7 +90,7 @@ class ChatService:
 
             for transfer in transfers:
                 guest_id = transfer["guest_user_id"]
-                if guest_id not in guest_user_ids:
+                if guest_id not in guest_user_ids and guest_id.startswith("guest."):
                     transfer_chats += await self.data_service.get_entities_by_user_name(
                         user_id=guest_id,
                         model=const.ModelName.CHAT_BUSINESS_ENTITY.value
