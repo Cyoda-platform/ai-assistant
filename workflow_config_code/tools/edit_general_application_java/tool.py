@@ -1,7 +1,7 @@
 """
-EditGeneralApplicationJava Tool
+EditGeneralApplication Tool
 
-Generated from config: workflow_configs/tools/edit_general_application_java/tool.json
+Generated from config: workflow_configs/tools/edit_general_application/tool.json
 Implements FunctionProcessor interface with get_name() and get_config() methods.
 """
 
@@ -10,8 +10,8 @@ from workflow.interfaces.interfaces import FunctionProcessor
 from .config import get_config
 
 
-class EditGeneralApplicationJavaToolConfig(FunctionProcessor):
-    """Tool configuration for edit_general_application_java"""
+class EditGeneralApplicationToolConfig(FunctionProcessor):
+    """Tool configuration for edit_general_application"""
 
     @staticmethod
     def get_type() -> str:
@@ -21,7 +21,7 @@ class EditGeneralApplicationJavaToolConfig(FunctionProcessor):
     @staticmethod
     def get_name() -> str:
         """Get the full processor name"""
-        return f"{EditGeneralApplicationJavaToolConfig.get_type()}.edit_general_application_java"
+        return f"{EditGeneralApplicationToolConfig.get_type()}.edit_general_application"
 
     @staticmethod
     def get_config(params: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -32,8 +32,8 @@ class EditGeneralApplicationJavaToolConfig(FunctionProcessor):
     @staticmethod
     def get_tool_name() -> str:
         """Get the tool name without processor type"""
-        return "edit_general_application_java"
+        return "edit_general_application"
 
 
 # Create singleton instance
-edit_general_application_java_tool = EditGeneralApplicationJavaToolConfig()
+edit_general_application_tool = EditGeneralApplicationToolConfig()

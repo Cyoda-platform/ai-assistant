@@ -1,0 +1,165 @@
+{
+  "version": "1.0",
+  "name": "edit_general_application_python",
+  "desc": "Complete workflow to transform functional requirements into a working application",
+  "initialState": "initial_state",
+  "active": true,
+  "criterion": {
+    "type": "simple",
+    "jsonPath": "$.workflow_name",
+    "operation": "EQUALS",
+    "value": "edit_general_application_python"
+  },
+  "states": {
+    "initial_state": {
+      "transitions": [
+        {
+          "name": "start_edit_application",
+          "next": "edit_application_requested",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_editing_started",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "initial_state",
+          "manual": true
+        },
+        {
+          "name": "fail_initial_state",
+          "next": "locked_initial_state",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_initial_state": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "initial_state",
+          "manual": true
+        }
+      ]
+    },
+    "processing_user_input": {
+      "transitions": [
+        {
+          "name": "submit_answer",
+          "next": "edit_application_requested",
+          "manual": true
+        },
+        {
+          "name": "rollback",
+          "next": "edit_application_requested",
+          "manual": true
+        },
+        {
+          "name": "manual_approve",
+          "next": "edit_application_requested",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "processing_user_input",
+          "manual": true
+        },
+        {
+          "name": "fail_processing_user_input",
+          "next": "locked_processing_user_input",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_processing_user_input": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "processing_user_input",
+          "manual": true
+        }
+      ]
+    },
+    "edit_application_requested": {
+      "transitions": [
+        {
+          "name": "edit_application_requested_processing",
+          "next": "processing_user_input",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_user_input_57d2_py",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "edit_application_requested",
+          "manual": true
+        },
+        {
+          "name": "fail_edit_application_requested",
+          "next": "locked_edit_application_requested",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_edit_application_requested": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "edit_application_requested",
+          "manual": true
+        }
+      ]
+    }
+  }
+}

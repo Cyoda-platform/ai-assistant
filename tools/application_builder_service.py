@@ -38,6 +38,8 @@ class WorkflowNameResolver:
         else:
             if type == "build":
                 return const.ModelName.GEN_APP_ENTITY_PYTHON.value
+            if type == "edit":
+                return const.ModelName.EDIT_GENERAL_APPLICATION_PYTHON.value
 
     @staticmethod
     def resolve_setup_workflow_name(programming_language: str) -> str:
@@ -108,7 +110,7 @@ class ApplicationBuilderService(BaseWorkflowService):
             return self._handle_error(entity, e, f"Error building general application: {e}")
 
 
-    async def edit_general_application_java(self, technical_id: str, entity: ChatEntity, **params: Any) -> str:
+    async def edit_general_application(self, technical_id: str, entity: ChatEntity, **params: Any) -> str:
         """
         Build a general application based on user request and programming language.
 

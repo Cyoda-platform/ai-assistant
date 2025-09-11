@@ -7,7 +7,7 @@ Configuration data for the agent.
 
 from typing import Any, Dict, Callable
 
-from workflow_config_code.tools.edit_general_application_java.tool import EditGeneralApplicationJavaToolConfig
+from workflow_config_code.tools.edit_general_application_java.tool import EditGeneralApplicationToolConfig
 from workflow_config_code.tools.get_user_info_d8dc.tool import GetUserInfoD8dcToolConfig
 from workflow_config_code.tools.web_search_53be.tool import WebSearch53beToolConfig
 from workflow_config_code.tools.read_link_3fd1.tool import ReadLink3fd1ToolConfig
@@ -86,7 +86,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "name": AddCollaboratorToDefaultRepos4d46ToolConfig.get_tool_name()
                 },
                 {
-                        "name": EditGeneralApplicationJavaToolConfig.get_tool_name()
+                        "name": EditGeneralApplicationToolConfig.get_tool_name()
                 },
         ],
         "messages": [

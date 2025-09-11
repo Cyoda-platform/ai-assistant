@@ -327,7 +327,7 @@ class ChatWorkflow(Workflow):
 
             # Prototype Generation
             'generate_prototype_sketch_2269': self.generate_prototype_sketch_service.generate_prototype_sketch_2269,
-            'edit_general_application_java': self.application_builder_service.edit_general_application_java,
+            'edit_general_application': self.application_builder_service.edit_general_application,
             'get_files_with_compilation_errors': self.compilation_error_split_service.get_files_with_compilation_errors
         }
 

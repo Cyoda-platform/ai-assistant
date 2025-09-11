@@ -13,7 +13,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     return lambda params=None: {
         "type": "function",
         "function": {
-            "name": "edit_general_application_java",
+            "name": "edit_general_application",
             "description": "Launches workflow that is necessary to help the user edit/update existing application. Key factor is that an application already exists and the user explicitly asks to edit it. If the user doesn't specify the branch, ask yourself.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
             "strict": True,
             "parameters": {
@@ -28,7 +28,8 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     "programming_language": {
                         "type": "string",
                         "enum": [
-                            "JAVA"
+                            "JAVA",
+                            "PYTHON"
                         ]
                     }
                 },
