@@ -22,7 +22,7 @@ pip install .
 Then they can either run it locally with python app.py or ask the IDE agent to read AI_TESTING_GUIDE.md and do everything for them.
 Install mcp tools with:  https://pypi.org/project/mcp-cyoda-client/
 pipx install mcp-cyoda-client
-```json
+```json --remember to add markdown
 {
   "mcpServers": {
     "cyoda": {

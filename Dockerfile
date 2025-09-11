@@ -38,6 +38,8 @@ RUN apt-get update && \
         libxml2-dev \
         libxmlsec1-dev \
         liblzma-dev \
+        procps \
+        psmisc \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Java 21 from Eclipse Temurin
@@ -94,7 +96,10 @@ RUN python --version && \
     gradle --version && \
     mvn --version && \
     node --version && \
-    npm --version
+    npm --version && \
+    ps --version && \
+    echo "Testing ps command functionality:" && \
+    ps -eo pid,ppid,user,stat,etime,cmd --no-headers | head -5
 
 # Set build arguments for GitHub credentials
 ARG GITHUB_API_TOKEN

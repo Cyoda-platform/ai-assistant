@@ -80,6 +80,11 @@ Implementation Checklist
     - Do not validate entity state in processors. Entity state is managed by the workflow.
     
 You can get entity id, state etc directly from entity as it extends CyodaEntity.
+
+Critical:
+Avoid validating CyodaEntity state. Entity state is managed by the workflow.
+Do NOT use CyodaEntity add_metadata and update_timestamp methods. You can only update concrete entities fields.
+
 5.  Criteria
     -   Study criteria requirements in application/resources/functional_requirements/criteria.md.
     -   Implement under application/criterion/.
@@ -96,9 +101,13 @@ You can get entity id, state etc directly from entity as it extends CyodaEntity.
     -   Validate endpoints like in example_application routes. 
     -   Import blueprints for the routes to application/app.py. Use example_application app.py as a reference.
 7.  Testing & Validation
-Make sure there is no __init__.py file in the root of the mcp-cyoda-quart-app project. It will cause mypy to fail. 
-Just remove __init__.py from the root of the project if it exists.
 
+Preconditions:
+Make sure there is no __init__.py file in the root of the mcp-cyoda-quart-app project. It will cause mypy to fail. 
+Just remove __init__.py from the root of the project if it exists. Do not restore it after the tests. This file should not be in the project root.
+Then run `pip install -e ".[dev]` to install all the dependencies.
+
+Tasks:
     Validate with:
     python -m black .                    # Format code
     python -m isort .                    # Sort imports  
