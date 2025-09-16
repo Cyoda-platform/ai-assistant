@@ -5,6 +5,19 @@ import csv
 import xml.etree.ElementTree as ET
 
 try:
+    import yaml
+except ImportError:
+    # Mock yaml for testing or when PyYAML is not available
+    class MockYaml:
+        @staticmethod
+        def safe_load(content):
+            return content
+        @staticmethod
+        def load(content, Loader=None):
+            return content
+    yaml = MockYaml()
+
+try:
     import fitz
 except ImportError:
     # Mock fitz for testing or when PyMuPDF is not available
@@ -31,7 +44,13 @@ except ImportError:
 def read_file_content(file):
     """
     Reads the contents of an uploaded file based on its extension and returns the content.
-    Supports .txt, .json, .csv, .pdf, .drawio, .xml, .html, .java, .kt, .py extensions.
+    Supports textual formats: .txt, .json, .csv, .pdf, .drawio, .xml, .html, .yml, .yaml,
+    .toml, .ini, .cfg, .conf, .properties, .env, .log, .md, .rst, .tex, .sql, .sh, .bat,
+    .ps1, .dockerfile, .gitignore, .gitattributes, .editorconfig, .htaccess, .robots,
+    .makefile, .cmake, .gradle, .maven, .sbt, .requirements, .pipfile, .poetry, .cargo,
+    and code files: .java, .kt, .py, .js, .ts, .jsx, .tsx, .c, .cpp, .h, .hpp, .cs, .php,
+    .rb, .go, .rs, .swift, .scala, .r, .m, .pl, .lua, .dart, .elm, .clj, .hs, .ml, .fs,
+    .vb, .pas, .asm, .s, .f90, .f95, .jl, .nim, .zig, .v, .d, .cr, .ex, .exs, .erl, .hrl.
 
     :param file: A file-like object (e.g. from Quart's request.files) with a .filename attribute.
     :return: The file's contents in an appropriate format.
@@ -76,17 +95,109 @@ def read_file_content(file):
         file.seek(0)
         return read_html(file)
 
-    elif ext in {'.java', '.kt', '.py'}:
+    elif ext in {'.yml', '.yaml'}:
+        file.seek(0)
+        content = file.read().decode('utf-8')
+        return yaml.safe_load(content)
+
+    elif ext in {'.toml'}:
+        file.seek(0)
+        content = file.read().decode('utf-8')
+        return read_toml_content(content)
+
+    elif ext in {'.ini', '.cfg', '.conf'}:
+        file.seek(0)
+        content = file.read().decode('utf-8')
+        return read_ini_content(content)
+
+    elif ext in {'.properties'}:
+        file.seek(0)
+        content = file.read().decode('utf-8')
+        return read_properties_content(content)
+
+    elif ext in {'.env'}:
+        file.seek(0)
+        content = file.read().decode('utf-8')
+        return read_env_content(content)
+
+    elif ext in {'.md', '.markdown'}:
+        file.seek(0)
+        content = file.read().decode('utf-8')
+        return content
+
+    elif ext in {'.rst'}:
+        file.seek(0)
+        content = file.read().decode('utf-8')
+        return content
+
+    elif ext in {'.tex', '.latex'}:
+        file.seek(0)
+        content = file.read().decode('utf-8')
+        return content
+
+    elif ext in {'.log'}:
+        file.seek(0)
+        content = file.read().decode('utf-8')
+        return content
+
+    elif ext in {'.sql'}:
+        file.seek(0)
+        content = file.read().decode('utf-8')
+        return content
+
+    elif ext in {'.ps1'}:
+        file.seek(0)
+        return read_code_file(file)
+
+    elif ext in {'dockerfile', '.dockerfile'}:
+        file.seek(0)
+        return read_code_file(file)
+
+    elif ext in {'.gitignore', '.gitattributes', '.editorconfig', '.htaccess', '.robots'}:
+        file.seek(0)
+        content = file.read().decode('utf-8')
+        return content
+
+    elif ext in {'makefile', '.makefile', '.mk'}:
+        file.seek(0)
+        return read_code_file(file)
+
+    elif ext in {'.cmake'}:
+        file.seek(0)
+        return read_code_file(file)
+
+    elif ext in {'.gradle'}:
+        file.seek(0)
+        return read_code_file(file)
+
+    elif ext in {'.java', '.kt', '.py', '.js', '.ts', '.jsx', '.tsx', '.c', '.cpp', '.cc', '.cxx',
+                 '.h', '.hpp', '.hh', '.hxx', '.cs', '.php', '.rb', '.go', '.rs', '.swift',
+                 '.scala', '.r', '.m', '.pl', '.lua', '.dart', '.elm', '.clj', '.cljs', '.cljc',
+                 '.hs', '.lhs', '.ml', '.mli', '.fs', '.fsi', '.fsx', '.vb', '.pas', '.pp',
+                 '.asm', '.s', '.f90', '.f95', '.f03', '.f08', '.jl', '.nim', '.zig', '.v',
+                 '.d', '.cr', '.ex', '.exs', '.erl', '.hrl'}:
         file.seek(0)
         return read_code_file(file)
 
     else:
-        raise ValueError(f"Unsupported file extension: {ext}")
+        # Try to read as plain text for any other extension
+        try:
+            file.seek(0)
+            content = file.read()
+            return content.decode('utf-8') if isinstance(content, bytes) else content
+        except Exception:
+            raise ValueError(f"Unsupported file extension: {ext}")
 
 def read_file_content_by_file_path(file_path):
     """
     Reads the contents of a file based on its extension and returns the content.
-    Supports .txt, .json, .csv, .pdf, .drawio, .xml, .html, .java, .kt, .py extensions.
+    Supports textual formats: .txt, .json, .csv, .pdf, .drawio, .xml, .html, .yml, .yaml,
+    .toml, .ini, .cfg, .conf, .properties, .env, .log, .md, .rst, .tex, .sql, .sh, .bat,
+    .ps1, .dockerfile, .gitignore, .gitattributes, .editorconfig, .htaccess, .robots,
+    .makefile, .cmake, .gradle, .maven, .sbt, .requirements, .pipfile, .poetry, .cargo,
+    and code files: .java, .kt, .py, .js, .ts, .jsx, .tsx, .c, .cpp, .h, .hpp, .cs, .php,
+    .rb, .go, .rs, .swift, .scala, .r, .m, .pl, .lua, .dart, .elm, .clj, .hs, .ml, .fs,
+    .vb, .pas, .asm, .s, .f90, .f95, .jl, .nim, .zig, .v, .d, .cr, .ex, .exs, .erl, .hrl.
     """
     ext = os.path.splitext(file_path)[1].lower()
 
@@ -115,11 +226,44 @@ def read_file_content_by_file_path(file_path):
     elif ext == '.html':
         return read_html(file_path)
 
+    elif ext in {'.yml', '.yaml'}:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return yaml.safe_load(file)
+
+    elif ext in {'.toml'}:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return read_toml_content(file.read())
+
+    elif ext in {'.ini', '.cfg', '.conf'}:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return read_ini_content(file.read())
+
+    elif ext in {'.properties'}:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return read_properties_content(file.read())
+
+    elif ext in {'.env'}:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return read_env_content(file.read())
+
+    elif ext in {'.md', '.markdown', '.rst', '.tex', '.latex', '.log', '.sql'}:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return file.read()
+
+    elif ext in {'.gitignore', '.gitattributes', '.editorconfig', '.htaccess', '.robots'}:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return file.read()
+
     else:
         try:
             return read_code_file(file_path)
         except Exception as e:
-            raise ValueError("Unsupported file extension")
+            # Try to read as plain text for any other extension
+            try:
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    return file.read()
+            except Exception:
+                raise ValueError("Unsupported file extension")
 
 
 def read_pdf(file_path):
@@ -194,3 +338,74 @@ def read_code_file(file_path):
         code_content = file.read()
 
     return code_content
+
+
+def read_toml_content(content):
+    """
+    Parses TOML content. Falls back to plain text if toml library is not available.
+    """
+    try:
+        import toml
+        return toml.loads(content)
+    except ImportError:
+        # If toml library is not available, return as plain text
+        return content
+    except Exception:
+        # If parsing fails, return as plain text
+        return content
+
+
+def read_ini_content(content):
+    """
+    Parses INI/CFG configuration files.
+    """
+    import configparser
+    config = configparser.ConfigParser()
+    try:
+        config.read_string(content)
+        # Convert to dictionary format
+        result = {}
+        for section in config.sections():
+            result[section] = dict(config.items(section))
+        return result
+    except Exception:
+        # If parsing fails, return as plain text
+        return content
+
+
+def read_properties_content(content):
+    """
+    Parses Java-style properties files.
+    """
+    properties = {}
+    try:
+        for line in content.split('\n'):
+            line = line.strip()
+            if line and not line.startswith('#') and not line.startswith('!'):
+                if '=' in line:
+                    key, value = line.split('=', 1)
+                    properties[key.strip()] = value.strip()
+                elif ':' in line:
+                    key, value = line.split(':', 1)
+                    properties[key.strip()] = value.strip()
+        return properties if properties else content
+    except Exception:
+        return content
+
+
+def read_env_content(content):
+    """
+    Parses environment variable files (.env).
+    """
+    env_vars = {}
+    try:
+        for line in content.split('\n'):
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, value = line.split('=', 1)
+                # Remove quotes if present
+                value = value.strip().strip('"').strip("'")
+                env_vars[key.strip()] = value
+        return env_vars if env_vars else content
+    except Exception:
+        return content

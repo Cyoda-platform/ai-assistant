@@ -1,12 +1,14 @@
 import asyncio
 import logging
 import os
-from typing import Dict, Any
+import signal
+from typing import Dict, Any, List
 from pathlib import Path
 import common.config.const as const
-from entity.model import AgenticFlowEntity, ChatMemory
+from common.config.config import config
+from entity.model import AgenticFlowEntity, ChatMemory, FlowEdgeMessage
 from workflow.config_builder import ConfigBuilder
-from common.utils.utils import save_all, read_file_util
+from common.utils.utils import save_all, read_file_util, get_current_timestamp_num
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ class AuggieProcessor:
         self.config_builder = config_builder or ConfigBuilder()
 
     async def process_auggie_agent(self, config: Dict[str, Any], entity: AgenticFlowEntity,
-                                  memory: ChatMemory, technical_id: str) -> str:
+                                   memory: ChatMemory, technical_id: str) -> str:
         """
         Process Auggie agent configuration by executing the specified script.
 
@@ -54,6 +56,8 @@ class AuggieProcessor:
         """
         try:
             # Validate required configuration
+            if not entity.technical_id:
+                entity.technical_id = technical_id
             script_path = config.get("script_path")
             prompt = config.get("prompt", "")
             model = config.get("model", "")
@@ -85,16 +89,31 @@ class AuggieProcessor:
             workspace_dir = f"{app_config.PROJECT_DIR}/{branch_id}/{repository_name}" if branch_id and repository_name else None
 
             # Handle input files and append to prompt
-            enhanced_prompt = await self._enhance_prompt_with_input_files(config, prompt, entity, branch_id, repository_name)
+            enhanced_prompt = await self._enhance_prompt_with_input_files(config, prompt, entity, branch_id,
+                                                                          repository_name)
 
-            result = await self._execute_script(resolved_script_path, enhanced_prompt, model, workspace_dir, branch_id)
+            result = await self._execute_script(
+                entity=entity,
+                script_path=resolved_script_path,
+                prompt=enhanced_prompt,
+                model=model,
+                workspace_dir=workspace_dir,
+                branch_id=branch_id,
+                repository_name=repository_name
+            )
 
             # Save all entity changes after successful script execution
-            if result and not result.startswith("Error"):
+            if result:
                 logger.info("💾 Saving entity changes after Auggie script execution")
-                commit_success = await self._commit_all_changes(branch_id, repository_name)
-                if commit_success:
+                commit_result = await self._commit_all_changes(branch_id, repository_name)
+                if commit_result["success"]:
                     logger.info(f"🎉 [{branch_id}] All Auggie tasks completed and committed successfully!")
+                    # Send final commit notification
+                    if commit_result["had_changes"]:
+                        await self._send_commit_notification(
+                            branch_id, repository_name, 0,
+                            commit_result["diff"], "final"
+                        )
                 else:
                     logger.warning(f"⚠️ [{branch_id}] Tasks completed but failed to commit changes")
                 logger.info("✅ Entity changes saved successfully")
@@ -107,13 +126,15 @@ class AuggieProcessor:
 
     async def _execute_script(
             self,
+            entity: AgenticFlowEntity,
             script_path: str,
             prompt: str,
             model: str,
             workspace_dir: str = None,
             branch_id: str = None,
-            timeout_seconds: int = 1800,   # 1/2 hour default
-            kill_grace_seconds: int = 5    # wait before force-killing
+            repository_name: str = None,
+            timeout_seconds: int = 2500,  # 40 minutes
+            kill_grace_seconds: int = 5  # wait before force-killing
     ) -> str:
         """
         Execute the specified script asynchronously with a timeout.
@@ -125,6 +146,7 @@ class AuggieProcessor:
             model: Model to pass as argument
             workspace_dir: Workspace directory path
             branch_id: Branch ID
+            repository_name: Repository name for git operations
             timeout_seconds: Max time (in seconds) before forcibly stopping the process
             kill_grace_seconds: Time to wait after terminate() before kill()
 
@@ -163,25 +185,13 @@ class AuggieProcessor:
             )
             logger.info(f"Started process {process.pid}")
 
-            try:
-                # Enforce timeout on the process itself
-                await asyncio.wait_for(process.wait(), timeout=timeout_seconds)
-            except asyncio.TimeoutError:
-                logger.error(f"⏰ Script exceeded {timeout_seconds} seconds, terminating... process {process.pid}")
-                try:
-                    process.terminate()
-                except ProcessLookupError:
-                    pass  # already gone
-
-                try:
-                    await asyncio.wait_for(process.wait(), timeout=kill_grace_seconds)
-                except asyncio.TimeoutError:
-                    logger.error(f"⚠️ Script did not terminate, killing... process {process.pid}")
-                    try:
-                        process.kill()
-                    except ProcessLookupError:
-                        pass
-                    await process.wait()
+            # Monitor process with periodic checks and git commits
+            await self._monitor_process_with_timeout(entity=entity,
+                                                     process=process,
+                                                     timeout_seconds=timeout_seconds,
+                                                     kill_grace_seconds=kill_grace_seconds,
+                                                     branch_id=branch_id,
+                                                     repository_name=repository_name)
 
             # Collect remaining output
             stdout, stderr = await process.communicate()
@@ -204,6 +214,107 @@ class AuggieProcessor:
             logger.exception(f"Error executing script: {e} ")
             return f"Error executing script: {str(e)}"
 
+    async def _monitor_process_with_timeout(self, entity: AgenticFlowEntity, process, timeout_seconds: int, kill_grace_seconds: int,
+                                            branch_id: str = None, repository_name: str = None):
+        """
+        Monitor process with periodic checks to detect if it exits silently.
+        Checks every minute if the process is still running by PID and commits changes.
+
+        Args:
+            process: The asyncio subprocess
+            timeout_seconds: Maximum time to wait before terminating
+            kill_grace_seconds: Time to wait after terminate() before kill()
+            branch_id: Branch ID for git operations
+            repository_name: Repository name for git operations
+        """
+        check_interval = 60  # Check every minute
+        elapsed_time = 0
+        pid = process.pid
+
+        while elapsed_time < timeout_seconds:
+            try:
+                # Wait for either process completion or check interval
+                remaining_time = min(check_interval, timeout_seconds - elapsed_time)
+                await asyncio.wait_for(process.wait(), timeout=remaining_time)
+                # Process completed normally
+                logger.info(f"✅ Process {pid} completed normally")
+                return
+            except asyncio.TimeoutError:
+                # Manually check if process is still running by PID
+                if not self._is_process_running(pid):
+                    # Process has exited silently
+                    logger.info(f"✅ Process {pid} completed (detected during PID check)")
+                    # Update process state to avoid hanging on communicate()
+                    try:
+                        process.poll()  # Update returncode
+                    except:
+                        pass
+                    return
+
+                elapsed_time += remaining_time
+                logger.debug(f"🔍 Process {pid} still running after {elapsed_time}s (timeout: {timeout_seconds}s)")
+
+                # Commit changes every minute if git info is available
+                if branch_id and repository_name:
+                    try:
+                        commit_result = await self._commit_all_changes(branch_id, repository_name)
+                        await self._send_commit_notification(
+                            entity=entity,
+                            branch_id=branch_id,
+                            repository_name=repository_name,
+                            elapsed_time=elapsed_time,
+                            git_diff=commit_result["diff"],
+                            commit_type="incremental"
+                        )
+                    except Exception as e:
+                        logger.warning(f"⚠️ [{branch_id}] Failed to commit incremental changes: {e}")
+
+        # Timeout exceeded, terminate the process
+        logger.error(f"⏰ Script exceeded {timeout_seconds} seconds, terminating... process {pid}")
+        await self._terminate_process(process, kill_grace_seconds)
+
+    async def _terminate_process(self, process, kill_grace_seconds: int):
+        """
+        Terminate a process gracefully, then forcefully if needed.
+
+        Args:
+            process: The asyncio subprocess to terminate
+            kill_grace_seconds: Time to wait after terminate() before kill()
+        """
+        try:
+            process.terminate()
+        except ProcessLookupError:
+            # Process already gone
+            return
+
+        try:
+            await asyncio.wait_for(process.wait(), timeout=kill_grace_seconds)
+        except asyncio.TimeoutError:
+            logger.error(f"⚠️ Script did not terminate, killing... process {process.pid}")
+            try:
+                process.kill()
+            except ProcessLookupError:
+                pass  # Process already gone
+            await process.wait()
+
+    def _is_process_running(self, pid: int) -> bool:
+        """
+        Check if a process is still running by PID.
+
+        Args:
+            pid: Process ID to check
+
+        Returns:
+            True if process is running, False otherwise
+        """
+        try:
+            # Send signal 0 to check if process exists
+            # This doesn't actually send a signal, just checks if we can
+            os.kill(pid, 0)
+            return True
+        except (OSError, ProcessLookupError):
+            # Process doesn't exist or we don't have permission
+            return False
 
     def _find_project_root(self) -> Path:
         """
@@ -275,8 +386,8 @@ class AuggieProcessor:
         return get_repository_name(entity)
 
     async def _enhance_prompt_with_input_files(self, config: Dict[str, Any], prompt: str,
-                                             entity: AgenticFlowEntity, branch_id: str,
-                                             repository_name: str) -> str:
+                                               entity: AgenticFlowEntity, branch_id: str,
+                                               repository_name: str) -> str:
         """
         Enhance the prompt by appending input file contents with reference and file path.
 
@@ -337,19 +448,16 @@ class AuggieProcessor:
             logger.exception(f"Error enhancing prompt with input files: {e}")
             return prompt
 
-
-
-    async def _commit_all_changes(self, branch_id: str, repository_name: str) -> bool:
+    async def _commit_all_changes(self, branch_id: str, repository_name: str) -> Dict[str, Any]:
         """
         Commit all changes made by Auggie CLI to the repository.
 
         Args:
             branch_id: Git branch ID
             repository_name: Repository name
-            completed_tasks: Number of completed tasks
 
         Returns:
-            True if commit was successful, False otherwise
+            Dict with success status, whether there were changes, and git diff
         """
         try:
             from common.config.config import config
@@ -372,7 +480,7 @@ class AuggieProcessor:
 
             if process.returncode != 0:
                 logger.error(f"❌ [{branch_id}] Git add failed: {stderr.decode('utf-8')}")
-                return False
+                return {"success": False, "had_changes": False, "diff": ""}
 
             # Check if there are changes to commit
             logger.debug(f"🔍 [{branch_id}] Checking for changes to commit...")
@@ -387,7 +495,17 @@ class AuggieProcessor:
             # If return code is 0, there are no changes to commit
             if process.returncode == 0:
                 logger.info(f"ℹ️ [{branch_id}] No changes to commit from Auggie tasks")
-                return True
+                return {"success": True, "had_changes": False, "diff": ""}
+
+            # Get git diff stats before committing
+            process = await asyncio.create_subprocess_exec(
+                "git", "diff", "--cached", "--stat",
+                cwd=work_dir,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            diff_stdout, diff_stderr = await process.communicate()
+            git_diff = diff_stdout.decode('utf-8', errors="replace") if diff_stdout else ""
 
             # Commit changes
             logger.debug(f"💾 [{branch_id}] Committing changes...")
@@ -401,7 +519,7 @@ class AuggieProcessor:
 
             if process.returncode != 0:
                 logger.error(f"❌ [{branch_id}] Git commit failed: {stderr.decode('utf-8')}")
-                return False
+                return {"success": False, "had_changes": True, "diff": git_diff}
 
             logger.info(f"✅ [{branch_id}] Changes committed successfully")
 
@@ -417,13 +535,78 @@ class AuggieProcessor:
 
             if process.returncode != 0:
                 logger.error(f"❌ [{branch_id}] Git push failed: {stderr.decode('utf-8')}")
-                return False
+                return {"success": False, "had_changes": True, "diff": git_diff}
 
             logger.info(f"🎉 [{branch_id}] Successfully committed and pushed Auggie changes: {commit_message}")
-            return True
+            return {"success": True, "had_changes": True, "diff": git_diff}
 
         except Exception as e:
             logger.exception(f"Error committing Auggie changes: {e}")
-            return False
+            return {"success": False, "had_changes": False, "diff": ""}
 
+    async def _send_commit_notification(self, entity: AgenticFlowEntity, branch_id: str, repository_name: str,
+                                        elapsed_time: int, git_diff: str, commit_type: str):
+        try:
+            # Format the notification message
+            if commit_type == "incremental":
+                message_content = f"**Script Progress Update**\n\n"
+                message_content += f"⏱️ **Time Elapsed**: {elapsed_time} seconds\n"
+                message_content += f"🌿 **Branch**: {branch_id}\n"
+                message_content += f"📁 **Repository**: {repository_name}\n\n"
+            else:
+                message_content = f"**Script Completed Successfully**\n\n"
+                message_content += f"🌿 **Branch**: {branch_id}\n"
+                message_content += f"📁 **Repository**: {repository_name}\n\n"
 
+            # Add git diff if available
+            if git_diff.strip():
+                message_content += f"**Changes Made:**\n```\n{git_diff}\n``` \n**Work in progress⌛ Stay tuned🔔**"
+            else:
+                message_content += "**Changes Made:** No file changes detected. \n**Work in progress⌛ Stay tuned🔔**"
+
+            # Create the edge message
+            message = FlowEdgeMessage(
+                type="notification",
+                approve=False,
+                publish=True,
+                message=message_content,
+                last_modified=get_current_timestamp_num()
+            )
+            await self.add_edge_message(message=message, entity=entity)
+
+            # Add the message using memory manager
+            # Note: We need to get the entity and finished_flow from context
+            # For now, we'll use a simplified approach
+            logger.info(f"📢 [{branch_id}] Sending {commit_type} commit notification")
+            logger.debug(f"📢 [{branch_id}] Notification content: {message_content[:200]}...")
+
+        except Exception as e:
+            logger.warning(f"⚠️ [{branch_id}] Failed to send commit notification: {e}")
+
+    async def add_edge_message(self, message: FlowEdgeMessage, entity: AgenticFlowEntity) -> None:
+        edge_message_id = await self.entity_service.add_item(
+            token=self.cyoda_auth_service,
+            entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
+            entity_version=config.ENTITY_VERSION,
+            entity=message,
+            meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+        )
+
+        flow_edge_message = FlowEdgeMessage(
+            type=message.type,
+            publish=message.publish,
+            edge_message_id=edge_message_id,
+            last_modified=message.last_modified,
+            user_id=entity.user_id
+        )
+        entity.chat_flow.finished_flow.append(flow_edge_message)
+        entity_id = await self.entity_service.update_item(
+            token=self.cyoda_auth_service,
+            entity_model=const.ModelName.CHAT_ENTITY.value,
+            entity_version=config.ENTITY_VERSION,
+            technical_id=entity.technical_id,
+            entity=entity,
+            meta={}
+        )
+        logger.info(f"Added edge message with ID: {edge_message_id} to entity: {entity_id}")
+        return edge_message_id

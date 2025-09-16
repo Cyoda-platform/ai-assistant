@@ -689,8 +689,11 @@ def custom_serializer(obj):
     if isinstance(obj, queue.Queue):
         # Convert queue to list
         return list(obj.queue)
+    if isinstance(obj, datetime):
+        # Convert datetime to ISO 8601 string (with timezone info if available)
+        return obj.isoformat()
     if not isinstance(obj, dict):
-        # Convert the object to a dictionary. Customize as needed.
+        # Convert other objects to dict if possible
         return obj.__dict__
     raise TypeError(f"Type {type(obj)} not serializable")
 

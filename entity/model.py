@@ -1,3 +1,4 @@
+from datetime import datetime, UTC
 from typing import Dict, Any, Optional, List, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -45,6 +46,7 @@ class FlowEdgeMessage(WorkflowEntity):
     consumed: Optional[bool] = True
     edge_message_id: Optional[str] = None
     message: Optional[Any] = None
+    last_modified_at: str = Field(default_factory=lambda: datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S"))
 
 class ChatFlow(BaseModel):
     model_config = ConfigDict(extra="forbid")

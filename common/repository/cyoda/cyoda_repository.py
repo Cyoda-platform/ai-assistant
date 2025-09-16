@@ -309,8 +309,12 @@ class CyodaRepository(CrudRepository):
         if entity is None:
             return await self._launch_transition(meta=meta, technical_id=technical_id)
 
-        transition = meta.get(const.TransitionKey.UPDATE.value, const.TransitionKey.UPDATE.value)
-        path = (f"entity/JSON/{technical_id}/{transition}?waitForConsistencyAfter=true")
+        transition = meta.get(const.TransitionKey.UPDATE.value, None)
+        path = (
+            f"entity/JSON/{technical_id}/{transition}?waitForConsistencyAfter=true"
+            if transition not in (None, "None", "")
+            else f"entity/JSON/{technical_id}?waitForConsistencyAfter=true"
+        )
         data = json.dumps(entity, default=custom_serializer)
         resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="put", path=path, data=data)
         result = resp.get("json", {})
@@ -324,7 +328,7 @@ class CyodaRepository(CrudRepository):
         for ent in entities:
             payload.append({
                 "id": meta.get("technical_id"),
-                "transition": meta.get("update_transition", const.TransitionKey.UPDATE.value),
+                "transition": meta.get("update_transition", None),
                 "payload": json.dumps(ent, default=custom_serializer),
             })
         data = json.dumps(payload)
