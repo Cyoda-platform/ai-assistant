@@ -225,6 +225,7 @@ class ApplicationBuilderService(BaseWorkflowService):
             programming_language = entity.workflow_cache.get(const.PROGRAMMING_LANGUAGE_PARAM)
             params[const.REPOSITORY_NAME_PARAM] = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM)
             params[const.GIT_BRANCH_PARAM] = entity.workflow_cache.get(const.GIT_BRANCH_PARAM)
+            params[const.PROGRAMMING_LANGUAGE_PARAM] = programming_language
 
             # Determine workflow name based on programming language
             workflow_name = WorkflowNameResolver.resolve_setup_workflow_name(programming_language)

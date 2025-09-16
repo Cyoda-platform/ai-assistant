@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import json
 import logging
 import os
@@ -94,7 +95,7 @@ class ConfigBuilder:
         with self._cache_lock:
             if processor_name in self._config_cache:
                 logger.debug(f"Config cache hit for: {processor_name}")
-                return self._config_cache[processor_name].copy()
+                return copy.deepcopy(self._config_cache[processor_name])
 
         # Build config if not in cache
         if "." not in processor_name:
