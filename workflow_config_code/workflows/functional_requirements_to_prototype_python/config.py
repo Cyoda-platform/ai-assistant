@@ -60,7 +60,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "controller_generated",
-                        "next": "resources_generated",
+                        "next": "waiting_for_app_build",
                         "manual": False,
                         "processors": [
                             {
@@ -73,6 +73,15 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 }
                             }
                         ]
+                    }
+                ]
+            },
+            "waiting_for_app_build": {
+                "transitions": [
+                    {
+                        "name": "complete_generation",
+                        "next": "resources_generated",
+                        "manual": True
                     }
                 ]
             },

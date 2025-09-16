@@ -443,7 +443,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "define_functional_requirements",
-                        "next": "functional_requirements_specified",
+                        "next": "waiting_for_requirements_gen",
                         "manual": False,
                         "processors": [
                             {
@@ -456,6 +456,15 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 }
                             }
                         ]
+                    }
+                ]
+            },
+            "waiting_for_requirements_gen": {
+                "transitions": [
+                    {
+                        "name": "complete_generation",
+                        "next": "functional_requirements_specified",
+                        "manual": True
                     }
                 ]
             },

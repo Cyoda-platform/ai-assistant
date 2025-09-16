@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Dict, Any, List
 import common.config.const as const
@@ -46,6 +47,9 @@ class AIAgentHandler:
         self.entity_service = entity_service
         self.cyoda_auth_service = cyoda_auth_service
         self.config_builder = config_builder or ConfigBuilder()
+
+        # Keep references to background tasks to prevent garbage collection
+        self._background_tasks = set()
 
         # Initialize jobs processor
         self.jobs_processor = JobsProcessor(
@@ -96,8 +100,12 @@ class AIAgentHandler:
             finished_flow = entity.chat_flow.finished_flow
 
             if config.get("type") == "agent" and config.get("agent_type") and config.get("agent_type") == "auggie":
-                # Handle Auggie CLI processing using dedicated processor
-                response = await self.auggie_processor.process_auggie_agent(config, entity, memory, technical_id)
+                # Handle Auggie CLI processing - return immediate success and run in background
+                task = asyncio.create_task(self._run_auggie_background_task(config, entity, memory, technical_id))
+                self._background_tasks.add(task)
+                # Remove task from set when it completes to prevent memory leaks
+                task.add_done_callback(self._background_tasks.discard)
+                response = "Auggie process started successfully. You will be notified when it completes."
             elif not config.get("jobs"):
                 await self._append_messages(entity=entity, memory=memory, config=config, finished_flow=finished_flow)
                 # Get memory messages including input data
@@ -651,3 +659,57 @@ class AIAgentHandler:
                     )
                     memory.messages.get(memory_tag).append(AIMessage(edge_message_id=edge_message_id))
                 latest_message.consumed = True
+
+    async def _run_auggie_background_task(self, config: Dict[str, Any], entity: AgenticFlowEntity,
+                                          memory: ChatMemory, technical_id: str) -> None:
+        """
+        Run Auggie process in the background and update entity with 'complete_generation' transition when done.
+
+        Args:
+            config: Auggie agent configuration
+            entity: Agentic flow entity
+            memory: Chat memory
+            technical_id: Technical identifier
+        """
+        try:
+            logger.info(f"🚀 Starting Auggie background task for entity {technical_id}")
+
+            # Run the Auggie processor
+            response = await self.auggie_processor.process_auggie_agent(config, entity, memory, technical_id)
+
+            logger.info(f"✅ Auggie background task completed for entity {technical_id}")
+            logger.debug(f"Auggie response: {response[:200]}{'...' if len(response) > 200 else ''}")
+
+            # Update entity with 'complete_generation' transition
+            await self._trigger_complete_generation_transition(technical_id, entity)
+
+        except Exception as e:
+            logger.exception(f"❌ Error in Auggie background task for entity {technical_id}: {e}")
+            # Optionally, you could trigger an error transition here
+            # await self._trigger_error_transition(technical_id, entity, str(e))
+
+    async def _trigger_complete_generation_transition(self, technical_id: str, entity: AgenticFlowEntity) -> None:
+        """
+        Trigger the 'complete_generation' transition for the entity.
+
+        Args:
+            technical_id: Technical identifier of the entity
+            entity: Agentic flow entity
+        """
+        try:
+            logger.info(f"🔄 Triggering 'complete_generation' transition for entity {technical_id}")
+
+            await self.entity_service.update_item(
+                token=self.cyoda_auth_service,
+                entity_model=const.ModelName.CHAT_ENTITY.value,
+                entity_version=env_config.ENTITY_VERSION,
+                technical_id=technical_id,
+                entity=entity,
+                meta={const.TransitionKey.UPDATE.value: "complete_generation"}
+            )
+
+            logger.info(f"✅ Successfully triggered 'complete_generation' transition for entity {technical_id}")
+
+        except Exception as e:
+            logger.exception(f"❌ Failed to trigger 'complete_generation' transition for entity {technical_id}: {e}")
+            raise
