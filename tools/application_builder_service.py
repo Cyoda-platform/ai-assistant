@@ -222,12 +222,16 @@ class ApplicationBuilderService(BaseWorkflowService):
         """
         try:
             # Validate required parameters
-            programming_language = entity.workflow_cache.get(const.PROGRAMMING_LANGUAGE_PARAM)
-            params[const.REPOSITORY_NAME_PARAM] = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM)
-            params[const.GIT_BRANCH_PARAM] = entity.workflow_cache.get(const.GIT_BRANCH_PARAM)
-            params[const.PROGRAMMING_LANGUAGE_PARAM] = programming_language
+            if not params[const.REPOSITORY_NAME_PARAM]:
+                params[const.REPOSITORY_NAME_PARAM] = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM)
+            if not params[const.GIT_BRANCH_PARAM]:
+                params[const.GIT_BRANCH_PARAM] = entity.workflow_cache.get(const.GIT_BRANCH_PARAM)
+            if not params[const.PROGRAMMING_LANGUAGE_PARAM]:
+                params[const.PROGRAMMING_LANGUAGE_PARAM] = entity.workflow_cache.get(const.PROGRAMMING_LANGUAGE_PARAM)
+            programming_language = params[const.PROGRAMMING_LANGUAGE_PARAM]
 
-            # Determine workflow name based on programming language
+
+        # Determine workflow name based on programming language
             workflow_name = WorkflowNameResolver.resolve_setup_workflow_name(programming_language)
 
             return await self._schedule_workflow(
