@@ -222,11 +222,11 @@ class ApplicationBuilderService(BaseWorkflowService):
         """
         try:
             # Validate required parameters
-            if not params[const.REPOSITORY_NAME_PARAM]:
+            if const.REPOSITORY_NAME_PARAM not in params:
                 params[const.REPOSITORY_NAME_PARAM] = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM)
-            if not params[const.GIT_BRANCH_PARAM]:
+            if const.GIT_BRANCH_PARAM not in params:
                 params[const.GIT_BRANCH_PARAM] = entity.workflow_cache.get(const.GIT_BRANCH_PARAM)
-            if not params[const.PROGRAMMING_LANGUAGE_PARAM]:
+            if const.PROGRAMMING_LANGUAGE_PARAM not in params:
                 params[const.PROGRAMMING_LANGUAGE_PARAM] = entity.workflow_cache.get(const.PROGRAMMING_LANGUAGE_PARAM)
             programming_language = params[const.PROGRAMMING_LANGUAGE_PARAM]
 

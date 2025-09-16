@@ -19,12 +19,20 @@
             "JAVA",
             "PYTHON"
           ]
+        },
+        "repository_name": {
+          "type": "string",
+          "enum": [
+            "java-client-template",
+            "mcp-cyoda-quart-app"
+          ]
         }
       },
       "required": [
         "user_request",
         "git_branch",
-        "programming_language"
+        "programming_language",
+        "repository_name"
       ],
       "additionalProperties": false
     }

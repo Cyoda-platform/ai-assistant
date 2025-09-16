@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import json
 import logging
 from typing import Dict, Any, Tuple, List
@@ -84,7 +85,8 @@ class EventProcessor:
                     if processor_name == "process_event" and payload.get('parameters', {}).get('context'):
                         config = json.loads(payload['parameters']['context'])
                     else:
-                        config = await self.config_builder.build_config(processor_name)
+                        config_from_cache = await self.config_builder.build_config(processor_name)
+                        config = copy.deepcopy(config_from_cache)
 
                     # Route to appropriate handler based on entity type and config
                     if config and config.get("type") and isinstance(entity, AgenticFlowEntity):
