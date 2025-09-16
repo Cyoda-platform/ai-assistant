@@ -55,7 +55,7 @@
       "transitions": [
         {
           "name": "controller_generated",
-          "next": "resources_generated",
+          "next": "waiting_for_app_build",
           "manual": false,
           "processors": [
             {
@@ -98,6 +98,46 @@
         {
           "name": "unlock",
           "next": "generate_controller",
+          "manual": true
+        }
+      ]
+    },
+    "waiting_for_app_build": {
+      "transitions": [
+        {
+          "name": "complete_generation",
+          "next": "resources_generated",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "waiting_for_app_build",
+          "manual": true
+        },
+        {
+          "name": "fail_waiting_for_app_build",
+          "next": "locked_waiting_for_app_build",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_waiting_for_app_build": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "waiting_for_app_build",
           "manual": true
         }
       ]

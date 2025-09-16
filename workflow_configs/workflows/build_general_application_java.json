@@ -731,7 +731,7 @@
       "transitions": [
         {
           "name": "define_functional_requirements",
-          "next": "functional_requirements_specified",
+          "next": "waiting_for_requirements_gen",
           "manual": false,
           "processors": [
             {
@@ -774,6 +774,46 @@
         {
           "name": "unlock",
           "next": "proceeded_to_functional_requirements",
+          "manual": true
+        }
+      ]
+    },
+    "waiting_for_requirements_gen": {
+      "transitions": [
+        {
+          "name": "complete_generation",
+          "next": "functional_requirements_specified",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "waiting_for_requirements_gen",
+          "manual": true
+        },
+        {
+          "name": "fail_waiting_for_requirements_gen",
+          "next": "locked_waiting_for_requirements_gen",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_waiting_for_requirements_gen": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "waiting_for_requirements_gen",
           "manual": true
         }
       ]
