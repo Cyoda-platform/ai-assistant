@@ -3,7 +3,7 @@
    📂 src/
     └─ main/resources/workflow/entityName/version_1                           ← Workflows
 
-For a detailed reference on workflow configuration, see the **[Cyoda Workflow Configuration Guide](https://docs.cyoda.net/#guides/workflow-config-guide)**. It explains:
+For a detailed reference on workflow configuration, see the **[Cyoda Workflow Configuration Guide](https://docs.cyoda.net/guides/workflow-config-guide)**. It explains:
 
 • How to define states, transitions, and criteria  
 • Manual vs automated transitions  
@@ -22,7 +22,7 @@ Alternatively, you can edit configs directly in the code.
 
 If you need to push changes to your branch, ask me here for access. I'll need your GitHub username to add you as a collaborator. If you'd like to be a Cyoda contributor instead of a collaborator and enjoy more privileges, please let us know via [Discord](https://discord.gg/95rdAyBZr2).
 
-You can evolve the workflows and entities in your IDE with your own IDE assistant.
+You can evolve the workflows and entities in your IDE with your own IDE AI assistant.
 
 **Prompt for your IDE:**
 

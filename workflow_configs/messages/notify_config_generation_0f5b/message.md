@@ -41,6 +41,7 @@ I’ll generate the initial **Entity POJOs** and **Workflow Configurations** for
 * **States**: The stages an entity moves through (e.g., `Draft` → `Approved` → `Completed`).
 * **Transitions**: The actions that move an entity between states.
 * **Processors**: Custom logic that runs during a transition, such as sending notifications.
+* **Criteria**: Validation rules that must pass before a transition can occur.
 
 Your new workflow files will be available here:
 `src/main/resources/workflows`

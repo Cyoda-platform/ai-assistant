@@ -59,4 +59,4 @@ VALIDATION SUCCESS CRITERIA:
 - All processors and criteria are properly implemented and follow naming conventions
 - Controller is thin and only handles API routing + EntityService persistence calls
 
-OUTPUT: Provide a detailed validation report with formal smileys. If everything is correct, confirm that the entity processing logic migration was successful and workflows make sense. If issues are found, outline them and formulate a prompt the user can give to their IDE AI assistant to fix the issues as. You cannot fix them yourself, return a prompt a user can use in their own IDE assistant.
+OUTPUT: Provide a detailed validation report with formal smileys. If everything is correct, confirm that the entity processing logic migration was successful and workflows make sense. If issues are found, outline them and formulate a prompt the user can give to their IDE AI assistant to fix the issues as. You cannot fix them yourself, return a prompt a user can use in their own IDE AI assistant.
