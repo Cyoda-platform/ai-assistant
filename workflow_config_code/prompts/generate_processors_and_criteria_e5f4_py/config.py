@@ -13,7 +13,7 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
 This project is a **Cyoda client application**.
 Role & Objective
 
-Develop and maintain a Cyoda client application by implementing entities, processors, criteria, and routers to spec and workflow definitions. Exit silently once all requirements pass and the project
+Develop and maintain a Cyoda client application by implementing entities, processors, criteria, and routers to spec and workflow definitions. Exit once all requirements pass and the project
 quality check passes.
 
 Golden Rules
@@ -43,12 +43,14 @@ Repository Map
 CRITICAL: Check example_application before implementing your own.
 
 3.  Functional Requirements
-    -   Entities: application/resources/functional_requirements/entities.md
-    -   Processors: application/resources/functional_requirements/processors.md
-    -   Criteria: application/resources/functional_requirements/criteria.md
-    -   Controllers: application/resources/functional_requirements/routes.md
+    -   Entities: application/resources/functional_requirements/entityName/entityName.md
+    -   Processors: application/resources/functional_requirements/entityName/entityName_workflow.md
+    -   Criteria: application/resources/functional_requirements/entityName/entityName_workflow.md
+    -   Controllers: application/resources/functional_requirements/entityName/entityName_routes.md
     -   Acceptance:
         application/resources/functional_requirements/user_requirement.md
+        All processors and criteria from application/resources/workflow/entityName/version_1/entityName.json must be implemented.
+        
 4.  Workflow docs: application/resources/workflow/*.json
 
 Implementation Checklist
@@ -63,7 +65,7 @@ Implementation Checklist
                 ENTITY_VERSION: ClassVar[int] = 1 -- always 1
 
     
-    Entities should exactly match the requirements specified in the application/resources/functional_requirements/entities.md file.
+    Entities should exactly match the requirements specified in the application/resources/functional_requirements/entityName/entityName.md file.
     Be careful with fields that semantically mean entity state (like status, state, etc.). If the functional requirements specify that we do not need business field for such field (status, state) then use entity state that you get from entity metadata. This state is managed by the workflow and you should not change it manually, you can only read it.
 3.  Workflows
     -   Study JSON definitions (states + transitions) in resources/workflow/*.json.
@@ -71,7 +73,7 @@ Implementation Checklist
         transition.
 4.  Processors
     -   Implement under application/processor/.
-    -   Study processors requirements in application/resources/functional_requirements/processors.md.
+    -   Study processors requirements in application/resources/functional_requirements/entityName/entityName_workflow.md
     -   No updates to current entity with the entityService - it will be updated automatically once you return; only get/update/delete other entities.
     -   To update another entity use entityService
     -   Apply correct transition (manual only), or omit for loop-back.
@@ -86,14 +88,14 @@ Avoid validating CyodaEntity state. Entity state is managed by the workflow.
 Do NOT use CyodaEntity add_metadata and update_timestamp methods. You can only update concrete entities fields.
 
 5.  Criteria
-    -   Study criteria requirements in application/resources/functional_requirements/criteria.md.
+    -   Study criteria requirements in application/resources/functional_requirements/entityName/entityName_workflow.md
     -   Implement under application/criterion/.
     -   Keep minimal and direct.
     -   You do not need kwargs in processors. Just use entity as the argument, ignore any other arguments.
     -   Do not validate entity state in processors. Entity state is managed by the workflow.
 
 6.  Routers
-    -   Study router requirements in application/resources/functional_requirements/routes.md.
+    -   Study router requirements in application/resources/functional_requirements/entityName/entityName_routes.md.
     -   Implement under application/routes/.
     -   Endpoints must match requirements exactly; add CRUD if missing.
     -   Prefer technical IDs in responses.
@@ -123,8 +125,8 @@ Acceptance Criteria
 -   Code passes quality checks.
 -   Requirements in user_requirement.md satisfied.
 
-Parallelise the work on processors, criteria and routers if possible.
+Parallelize the work on processors, criteria and routers if possible.
 Critical: Keep criteria minimal and direct.
-Exit silently when all requirements are correctly implemented and build succeeds.
+Exit when all requirements are correctly implemented and build succeeds.
 
 """

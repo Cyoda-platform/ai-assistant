@@ -2,7 +2,7 @@
 This project is a **Cyoda client application**.
 Role & Objective
 
-Develop and maintain a Cyoda client application by implementing entities, processors, criteria, and controllers to spec and workflow definitions. Exit silently once all requirements pass and the project
+Develop and maintain a Cyoda client application by implementing entities, processors, criteria, and controllers to spec and workflow definitions. Exit once all requirements pass and the project
 compiles.
 
 Golden Rules
@@ -47,13 +47,13 @@ Repository Map
 CRITICAL: Check llm_example/code/application before implementing your own.
 
 3.  Functional Requirements
-    -   Entities: resources/functional_requirements/entities.md
-    -   Processors: resources/functional_requirements/processors.md
-    -   Criteria: resources/functional_requirements/criteria.md
-    -   Controllers: resources/functional_requirements/controllers.md
+    -   Entities: src/main/resources/functional_requirements/entityName/entityName.md
+    -   Processors: src/main/resources/functional_requirements/entityName/entityName_workflow.md
+    -   Criteria: src/main/resources/functional_requirements/entityName/entityName_workflow.md
+    -   Controllers: src/main/resources/functional_requirements/entityName/entityName_controllers.md
     -   Acceptance:
         resources/functional_requirements/user_requirement.md
-4.  Workflow docs: resources/workflow/*.json
+        All processors and criteria from src/main/resources/workflow/entityName/version_1/EntityName.json must be implemented.
 
 Implementation Checklist
 
@@ -71,14 +71,14 @@ If not run ./gradlew build
 
     -   Implement getModelKey() and isValid() as per template.
     
-    Entities should exactly match the requirements specified in the resources/functional_requirements/entities.md file.
+    Entities should exactly match the requirements specified in the src/main/resources/functional_requirements/entityName/entityName.md file.
     Be careful with fields that semantically mean entity state (like status, state, etc.). If the functional requirements specify that we do not need business field for such field (status, state) then use entity state that you get from entity metadata. This state is managed by the workflow and you should not change it manually, you can only read it.
 3.  Workflows
     -   Study JSON definitions (states + transitions) in resources/workflow/*.json.
     -   Use only manual transitions; if unsure → save without
         transition.
 4.  Processors
-    -   Study processors requirements in resources/functional_requirements/processors.md.
+    -   Study processors requirements in src/main/resources/functional_requirements/entityName/entityName_workflow.md .
     -   Entity passed to process(...) already contains all needed data.
     -   No updates to current entity - it will be updated automatically once you return; only get/update/delete other entities.
     -   To update another entity use entityService
@@ -86,11 +86,11 @@ If not run ./gradlew build
 UUID currentEntityId = entityWithMetadata.metadata().getId(); -- if you need current entity technical id
 String currentState = entityWithMetadata.metadata().getState(); -- if you need current entity state
 5.  Criteria
-    -   Study criteria requirements in resources/functional_requirements/criteria.md.
+    -   Study criteria requirements in src/main/resources/functional_requirements/entityName/entityName_workflow.md .
     -   Implement under application/criterion/.
     -   Keep minimal and direct.
 6.  Controllers
-    -   Study controller requirements in resources/functional_requirements/controllers.md.
+    -   Study controller requirements in src/main/resources/functional_requirements/entityName/entityName_controllers.md.
     -   Implement under application/controller/.
     -   Accept entities as @RequestBody (not Map).
     -   Endpoints must match requirements exactly; add CRUD if missing.
@@ -102,12 +102,19 @@ String currentState = entityWithMetadata.metadata().getState(); -- if you need c
 
 Acceptance Criteria
 
--   Entities/processors/criteria/controllers fully match functional requirements.
+-   Entities/processors/criteria/controllers fully match functional requirements and workflow JSON definitions.
+-   The transitions in the code are consistent with the workflow JSON definitions.
 -   Controllers proxy only; no embedded business logic.
 -   No reflection; common untouched.
 -   Project compiles cleanly.
 -   Requirements in user_requirement.md satisfied.
 
-Parallelise the work on processors, criteria and controllers.
+    Once you are done with the above steps:
+    
+    Run WorkflowImplementationValidator with ./gradlew validateWorkflowImplementations
+    If it fails due to irrelevant reasons - run for each entity_workflow.md file individually with ./gradlew validateWorkflowImplementations -Pargs="src/main/resources/workflow/myentity/version_1/MyEntity.json"  
+    If there are missing processors or criteria - add them to the workflow JSON.
 
-Exit silently when all requirements are correctly implemented and build succeeds.
+Parallelize the work on different entities, processors, criteria, and controllers.
+
+Exit when all requirements are correctly implemented and build succeeds.

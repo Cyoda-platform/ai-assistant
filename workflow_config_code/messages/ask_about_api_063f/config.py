@@ -12,7 +12,7 @@ import json
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
     return lambda params=None: """Next up: functional requirements.
-It will take me roughly 4 mins to add requirements to `src/main/resources/functional_requirements/` directory.
+It will take me roughly 10 mins to add requirements to `src/main/resources/functional_requirements/` directory.
 I will add separate files for entities, workflows, processors, criteria and controllers.
 
 Stay tuned — thoughtful thinking in progress. 🧠✨
