@@ -43,10 +43,12 @@ Make sure you take in account all the information from application/resources/fun
   4.2 * For every processor: specify its name, entity, expected input, purpose, and expected output.
    * Provide **pseudocode for the `process()` method** (not Java).
    * If it updates another entity, reference the corresponding transition or mark as `null transition`.
+   * Processor name should be in PascalCase.
      
    4.3 * For every criterion: specify its name
    * Provide **pseudocode for the `check()` method** (not Java).
    * Keep criteria simple: validity checks, permissions, state checks, etc.
+   * Criterion name should be in PascalCase.
    
 .  4.4 *CRITICAL*  **Workflow JSON**
    Add a valid workflow definition for this entity that contains ALL the states, transitions, processors and criteria exactly as specified in the workflow diagram:
