@@ -9,6 +9,8 @@ from typing import Any, Dict, Callable
 
 from workflow_config_code.prompts.process_prototype_discussion_0000.prompt import \
     ProcessPrototypeDiscussion0000PromptConfig
+from workflow_config_code.prompts.process_prototype_discussion_0000_py.prompt import \
+    ProcessPrototypeDiscussion0000PyPromptConfig
 from workflow_config_code.tools.add_collaborator_to_default_repos_ffe7.tool import \
     AddCollaboratorToDefaultReposFfe7ToolConfig
 from workflow_config_code.tools.finish_prototype_discussion_0000.tool import FinishPrototypeDiscussion0000ToolConfig
@@ -58,7 +60,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "messages": [
             {
                 "role": "user",
-                "content_from_file": ProcessPrototypeDiscussion0000PromptConfig.get_name()
+                "content_from_file": ProcessPrototypeDiscussion0000PyPromptConfig.get_name()
             }
         ],
         "tool_choice": "auto",

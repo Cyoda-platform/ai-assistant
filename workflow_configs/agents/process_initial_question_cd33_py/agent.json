@@ -19,6 +19,11 @@
       "application/resources/functional_requirements/user_requirement.md"
     ]
   },
+  "output": {
+    "local_fs": [
+      "application/resources/functional_requirements/user_requirement_additional_info.md"
+    ]
+  },
   "max_iteration": 30,
   "approve": true
 }

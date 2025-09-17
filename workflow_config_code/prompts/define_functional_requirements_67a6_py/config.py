@@ -12,7 +12,8 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get prompt configuration factory"""
     return lambda params=None: """
 ### 
-You are provided with a user requirement in `application/resources/functional_requirements/user_requirement.md` (also check `application/resources/functional_requirements/user_requirement_additional_info.md` if it exists).
+You are provided with a user requirement in `application/resources/functional_requirements/user_requirement.md` and `application/resources/functional_requirements/user_requirement_additional_info.md`.
+Make sure you take in account all the information from application/resources/functional_requirements/user_requirement.md and application/resources/functional_requirements/user_requirement_additional_info.md
 #### Instructions:
 1. **Understand the user requirement.**
    Carefully read the user requirement files to extract the entities, workflows, and API needs.
@@ -23,7 +24,7 @@ You are provided with a user requirement in `application/resources/functional_re
    * In the `functional_requirements` directory, create a file named `<entity>/<entity>.md` (e.g., `user.md`, `order.md`).
    * Document the entity’s detailed requirements: name, attributes, and relationships with other entities.
    * Remember: *entity state* is internal (`entity.meta.state`) and should **not** appear in the entity schema. If requirements mention “state” or “status”, map them to `entity.meta.state` instead and explain this to the user.
-    Max 10 entities
+    Keep the entity requirements as short as possible. Max 100 words per entity.
     
 4. **Workflows**
    For each entity:
@@ -35,7 +36,9 @@ You are provided with a user requirement in `application/resources/functional_re
      * Transitions can have **processors**, **criteria**, both, or none.
      * Do NOT complicate the workflow with complex criteria. Keep it simple unless the requirement explicitly calls for it.
      * Keep the number of processors minimum to comply with the requirement. If the requirement is not explicit - minimize the number of processors.
-     If the requirement i explicit - you must implement all the processors and criteria it requires.
+    * Minimise the number of processors and criteria. One processor can do multiple things. Try to keep up to 3 processors per entity unless the requirement explicitly calls for more.
+
+     If the requirement is explicit - you must implement all the processors and criteria it requires.
      
   4.2 * For every processor: specify its name, entity, expected input, purpose, and expected output.
    * Provide **pseudocode for the `process()` method** (not Java).
@@ -51,19 +54,20 @@ You are provided with a user requirement in `application/resources/functional_re
    * Path: `application/resources/workflow/<entityName>/version_1/<EntityName>.json` -- always `version_1`.
    * Validate each workflow against `example_application/resources/workflow/workflow_schema.json`.
 
-8. **Controllers**
-   For each entity, create `<entity>/<entity>_controllers.md` in `functional_requirements`.
-   * Each entity should have its own controller (e.g., `UserController`, `OrderController`).
+8. **Routes**
+   For each entity, create `<entity>/<entity>_routes.md` in `functional_requirements`.
+   * Each entity should have its own route.
    * Endpoints:
      * Updates must accept a transition name (nullable if not moving states).
      * Transition names must align with the workflow definition.
    * Always provide **full request examples** (including all parameters) and **matching response examples**.
    * Verify that API specs match user requirements exactly.
+   Keep the routes requirements as short as possible. Max 100 words per route.
 
 9. **Parallelization**
-   Work on processors, criteria, and controllers in parallel once entity/workflow definitions are ready.
+   Work on processors, criteria, and routes in parallel once entity/workflow definitions are ready.
 
 10. **Exit**
-    When all per-entity requirements are implemented correctly, exit.
+    Exit when all entities and related files are complete.
     
 """

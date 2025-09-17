@@ -55,7 +55,7 @@ CRITICAL: Check llm_example/code/application before implementing your own.
         resources/functional_requirements/user_requirement.md
         All processors and criteria from src/main/resources/workflow/entityName/version_1/EntityName.json must be implemented.
 
-Implementation Checklist
+Implementation Checklist - need to repeat for each entity defined in functional requirements.
 
 0. Make sure build/generated-sources/js2p/org/cyoda/cloud/api/event generated classes are generated.
 If not run ./gradlew build
@@ -116,5 +116,7 @@ Acceptance Criteria
     If there are missing processors or criteria - add them to the workflow JSON.
 
 Parallelize the work on different entities, processors, criteria, and controllers.
+Each entity (with its workflow, processors, criteria, and controllers) can be treated as an independent subtask.
+Plan the work so that all the entities are implemented in the end.  If it takes to much resources to implement all the entities in parallel, then use placeholders for processors, criteria and routers and implement them in separate tasks.
 
-Exit when all requirements are correctly implemented and build succeeds.
+Exit when all entities with all requirements are correctly implemented and build succeeds.

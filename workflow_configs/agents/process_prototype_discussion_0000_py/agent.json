@@ -31,7 +31,7 @@
   "messages": [
     {
       "role": "user",
-      "content_from_file": "process_prototype_discussion_0000"
+      "content_from_file": "process_prototype_discussion_0000_py"
     }
   ],
   "tool_choice": "auto",

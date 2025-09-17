@@ -53,7 +53,7 @@ CRITICAL: Check example_application before implementing your own.
         
 4.  Workflow docs: application/resources/workflow/*.json
 
-Implementation Checklist
+Implementation Checklist - need to repeat for each entity defined in functional requirements.
 
 1.  Familiarize with codebase in example_application directory.
 2.  Entities
@@ -124,9 +124,12 @@ Acceptance Criteria
 -   Code modifies only application directory.
 -   Code passes quality checks.
 -   Requirements in user_requirement.md satisfied.
-
-Parallelize the work on processors, criteria and routers if possible.
 Critical: Keep criteria minimal and direct.
-Exit when all requirements are correctly implemented and build succeeds.
+
+Parallelization:
+Parallelize the work on processors, criteria and routers if possible.
+Each entity (with its workflow, processors, criteria, and routes) can be treated as an independent subtask.
+Plan the work so that all the entities listed in functional requirements are implemented in the end of this task.  If it takes to much resources to implement all the entities in parallel, then use placeholders for processors, criteria and routers and implement them in separate tasks.
+Exit when all entities with all requirements are correctly implemented and build succeeds.
 
 """

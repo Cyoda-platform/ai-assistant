@@ -10,11 +10,11 @@ from typing import Any, Dict, Callable
 
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get prompt configuration factory"""
-    return lambda params=None: """Please, adjust the functional requirements and the API according to the user request.
+    return lambda params=None: """Please, adjust the functional requirements according to the user request.
 
-Functional requirements are located in src/main/resources/functional_requirements directory. List the files and their contents to know the current state.
- * **Workflows** (YAML/JSON configs) are in `src/main/resources/workflow/entityName/version_1/`
- * **Original user requirements** are in `src/main/resources/functional_requirements/user_requirement.md`
- * **Functional requirements** are in `src/main/java/com/java_template/prototype/functional_requirement.md`
+Functional requirements are located in src/main/resources/functional_requirements directory.
+List the files and their contents to know the current state.
+If the user asks to edit workflows - edit the files in src/main/resources/workflow directory. List the files and their contents to know the current state.
 
+Use add_application_resource tool to add new files or save edited existing files.
 Here is the user request:"""
