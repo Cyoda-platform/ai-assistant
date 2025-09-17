@@ -53,7 +53,7 @@ By doing so, you gain:
 
 👍 Let’s bring your prototype to life in the Cyoda Cloud.
 
-** You'll see a notification soon. **
+**You'll see a notification soon**
 """
 
 

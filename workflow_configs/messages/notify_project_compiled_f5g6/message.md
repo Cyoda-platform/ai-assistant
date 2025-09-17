@@ -37,8 +37,7 @@ src/main/java/com/java_template/
 │   ├── processor/      # Business logic
 │   ├── criteria/       # Validation rules
 │   └── entity/         # Entities
-└── prototype/
-    └── functional_requirement.md
+
     
 src/main/resources/
 └── workflow/           # Workflow configs
@@ -63,36 +62,72 @@ Alternatively, you can use your IDE AI assistant with a suggested prompt:
 **Prompt for your IDE:**
 
 ```markdown
+
 This project is a **Cyoda client application**.
+Your role is to **validate** that entities, processors, criteria, controllers, and workflows are correctly implemented according to the functional requirements and workflow definitions.
+Do **not** generate new code — focus on **reviewing, checking, and highlighting issues or inconsistencies**.
 
- * **Entities** (POJOs) are in `src/main/java/com/java_template/application/entity/`
- * **Workflows** (YAML/JSON configs) are in `src/main/resources/workflow/`
- * **Original user requirements** are in `src/main/resources/functional_requirements/user_requirement.md`
- * **Functional requirements** are in `src/main/java/com/java_template/prototype/functional_requirement.md`
- * **Controllers** (REST API endpoints) are in `src/main/java/com/java_template/application/controller/`
- * **Processors** (business logic) are in `src/main/java/com/java_template/application/processor/`
- * **Criteria** (validation rules) are in `src/main/java/com/java_template/application/criterion/`
+#### Validation Objectives
+* Confirm implementation matches requirements and workflow definitions.
+* Ensure the project compiles and validators pass.
+* Exit once all checks succeed and requirements are met.
 
- The system is **event-driven** — workflows define states, transitions, and criteria declaratively, without code changes.
+#### Golden Rules — Check For
+* Processors do not update the current entity (read-only).
+* Only manual transitions allowed for updates.
 
- **Key rules:**
+#### IDs & Metadata — Verify Correct Usage
 
- 1. Always review and learn from the original and functional requirement documents to fully understand the user requirements.
- 2. If you update any entity or workflow, you must also update the functional requirement document.
+* **Technical ID (UUID, immutable)** → `entityResponse.getMetadata().getId()`
+* **Entity state (workflow-managed)** → `entityResponse.getMetadata().getState()` (read-only)
+* **Business ID (mutable, user-defined)** → must be handled correctly.
+* **Update semantics:**
 
- For detailed instructions, see `README.md` in the project root.
- The most up-to-date configuration and reference material can be loaded from the **doc server** at https://docs.cyoda.net.
+  * With transition → moves to new state
+  * Without transition → loops to same state
+  * If unclear → save without transition
 
-Instructions:
-1. Review the generated code and configuration. Fix any compilation errors or test failures.
-2. Review the `prototype/functional_requirement.md` document. Make sure all the example requests and responses in the controllers are correct and up to date.
-3. Review the `prototype/functional_requirement.md` document and Workflows (YAML/JSON configs). Make sure all processors and criteria are implemented correctly.
-If any processors, criteria or controllers are not implemented correctly, fix the implementation.
-Do not modify the workflow JSONs or entities without explicit approval.
-4. Generate a report of the implemented functionality and if it matches the functional requirements.
-```
-Important: entity fields such as state/status are managed by Cyoda. There is no need to add them to entity schema explicitly. 
+#### Workflows — Critical Validation
 
-If you make any changes, please share them with me in the chat or just push them to your branch and ask me to review them or just click "Approve".
+* Entity updates use **manual transitions only**.
+* No invalid saves to states absent from workflow JSON.
+* JSON in `src/main/resources/workflow` matches implemented transitions.
 
-Once you review the code and click *Approve*, I will launch the Cyoda setup assistant.
+#### Repository Map — Cross-Check Against
+
+1. **Core APIs & Types** → `EntityService`, `CyodaEntity`, `CyodaEventContext`.
+2. **Examples** → `llm_example/code/application`.
+3. **Functional Requirements** → `functional_requirements/*`.
+4. **Workflow JSONs** → `workflow/<entityName>/version_1/`.
+
+#### Validation Checklist (Per Entity)
+
+0. Confirm generated classes exist under `build/generated-sources/js2p/...`.
+1. **Entities** – POJOs match `entityName.md`. No manual state fields.
+2. **Workflows** – States + transitions align with JSON. Only manual transitions.
+3. **Processors** – Match `entity_workflow.md`.
+
+   * No updates to current entity.
+   * Proper `EntityService` use.
+   * Correct transitions.
+4. **Criteria** – Minimal, accurate, per requirements.
+5. **Controllers** – Endpoints match specs exactly.
+
+6. **Validation** – Project compiles (`./gradlew clean compileJava`).
+
+   * `./gradlew validateWorkflowImplementations` passes.
+
+#### Acceptance Criteria
+
+* Implementation matches functional requirements and workflow JSON exactly.
+* Transitions align with workflow JSON.
+* `user_requirement.md` requirements fully satisfied.
+
+If validation fails:
+* Run per-entity validation:
+  ```bash
+  ./gradlew validateWorkflowImplementations -Pargs="src/main/resources/workflow/myentity/version_1/MyEntity.json"
+  ```
+* Identify missing or incorrect processors/criteria.
+
+**Exit when**: all entities, workflows, processors, criteria, and controllers validate successfully and build compiles clean.

@@ -1,6 +1,6 @@
 
     
-🎉 Congrats on launching your first app! 
+🎉 Congrats on launching your app! 
     
 
 ```mermaid

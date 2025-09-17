@@ -13,7 +13,7 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
     return lambda params=None: """
     
-🎉 Congrats on launching your first app! 
+🎉 Congrats on launching your app! 
     
 
 ```mermaid

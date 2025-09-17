@@ -28,7 +28,6 @@ graph LR
 ```
 
 
-
 📁 **Project Structure:**
 ```
 ├── application/
@@ -53,8 +52,67 @@ Alternatively, you can use your IDE AI assistant with a suggested prompt:
 
 **Prompt for your IDE:**
 
-Complete AI startup guide can be found in *AI_TESTING_GUIDE.md*
+```
+This project is a **Cyoda client application**.
+Your role is to **validate** that entities, processors, criteria, and routers are correctly implemented according to the functional requirements and workflow definitions.
+Do **not generate or re-implement code** — focus on **reviewing, checking, and highlighting inconsistencies or missing pieces**.
 
-If you make any changes, please share them with me in the chat or just push them to your branch and ask me to review them or just click "Approve".
+#### Validation Objectives
 
-Once you review the code and click *Approve*, I will launch the Cyoda setup assistant.
+* Confirm all requirements are fully implemented and consistent.
+* Ensure workflows, processors, criteria, and routers match the functional requirements and workflow JSONs.
+* Verify that the code passes all quality checks.
+* Exit once all validations succeed.
+
+#### Workflows — Validation Focus
+
+* Updates use manual transitions only.
+* No invalid states (must exist in workflow JSON).
+* Cross-check with JSON in `application/resources/workflow`.
+
+#### Repository Map — Cross-Check Against
+
+1. **Core APIs & Types** → `common/service/entity_service.py`, `common/entity/cyoda_entity.py`.
+2. **Examples** → `example_application/`.
+3. **Functional Requirements** → `application/resources/functional_requirements/*`.
+4. **Workflow JSONs** → `application/resources/workflow/*.json`.
+
+#### Validation Checklist (Per Entity)
+1. **Entities** – Implemented under `application/entity/{entity}/version_1/`.
+   * Fields match `entityName.md` from functional requirements.
+   * No manual state fields; state comes from metadata.
+   * Constants (`ENTITY_NAME`, `ENTITY_VERSION`) correct.
+2. **Workflows** – States and transitions align with JSON. Manual-only transitions.
+3. **Processors** – Match requirements in `entity_workflow.md`.
+   * No updates to current entity.
+   * Correct use of `entityService` for others.
+   * No kwargs; only entity argument.
+   * No validation of entity state.
+4. **Criteria** – Minimal, accurate, direct.
+5. **Routers** – Match requirements in `entityName_routes.md`.
+   * Endpoints exactly as specified.
+   * Technical IDs in responses.
+   * Transition nullable; manual only if provided.
+   * Properly registered in `app.py` (check against `example_application`).
+6. **Testing & Validation** –
+   * No `__init__.py` in project root.
+   * Run quality checks:
+
+     ```bash
+     python -m black .
+     python -m isort .
+     python -m mypy .
+     python -m flake8 .
+     ```
+
+#### Acceptance Criteria
+
+* Entities, processors, criteria, and routers match functional requirements.
+* Routes act as proxies only.
+* Code modifies only the `application` directory.
+* Project passes all quality checks.
+* Requirements in `user_requirement.md` are satisfied.
+* Criteria remain minimal and direct.
+
+**Exit when**: all entities, workflows, processors, criteria, and routers validate successfully and the project passes quality checks.
+```
