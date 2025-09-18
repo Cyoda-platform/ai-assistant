@@ -1,16 +1,15 @@
 
 Your requirement has been added to the `src/main/resources/functional_requirements` directory.
 
-Would you like to refine or extend the functional requirements and API? If so, please edit the requirement files directly.
+Would you like to refine or expand the functional requirements and API? If so, please feel free to edit the requirement files directly in the IDE.
+Once you’ve made your edits, please push the changes to the repository and click 'Approve' to proceed.
+If you don’t yet have access to the repository, you can request it by sending me a message:
 
-Once you’ve made your edits, push the changes to the repository.
+```markdown
+Please grant me access to the repository. My GitHub username is {github_username}.
+```
 
-* If you don’t yet have access, request it by posting:
-  *“Please give me access to the repository. My GitHub username is {github_username}.”*
-
-I’m always open to feedback or ideas — happy to hear your thoughts 👂 (well… mostly 😏).
-
-Feel free to use your IDE’s AI agents to help with implementation. The prompt I recommend using to check the requirement is:
+You are most welcome to use your IDE’s AI agents. The prompt I recommend using to check the requirement is:
 
 ```markdown
 You are provided with already generated functional requirement files under `src/main/resources/functional_requirements` and corresponding workflow JSONs in src/main/resources/workflow.

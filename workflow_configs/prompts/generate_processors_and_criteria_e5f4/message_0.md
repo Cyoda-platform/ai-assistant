@@ -81,8 +81,7 @@ If not run ./gradlew build
     -   Study processors requirements in src/main/resources/functional_requirements/entityName/entityName_workflow.md .
     -   Entity passed to process(...) already contains all needed data.
     -   No updates to current entity - it will be updated automatically once you return; only get/update/delete other entities.
-    -   To update another entity use entityService
-    -   Apply correct transition (manual only), or omit for loop-back.
+    -   To update another entity use entityService: apply correct transition (manual only), or omit for loop-back.
 UUID currentEntityId = entityWithMetadata.metadata().getId(); -- if you need current entity technical id
 String currentState = entityWithMetadata.metadata().getState(); -- if you need current entity state
 5.  Criteria

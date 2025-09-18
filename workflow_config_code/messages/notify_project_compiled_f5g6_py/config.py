@@ -54,7 +54,8 @@ You can run and test it locally or directly in **GitHub Codespaces**.
 
 *Click Approve when you are ready to proceed and I will launch Cyoda setup assistant*
 
----### ✅ Approval or Feedback
+✅ Approval or Feedback
+
 If you're happy with the prototype, feel free to approve it.
 
 If anything's off or you'd like changes, just ping me here. 🙌

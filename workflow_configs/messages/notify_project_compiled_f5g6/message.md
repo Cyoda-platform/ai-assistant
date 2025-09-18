@@ -52,7 +52,7 @@ Run the tests for processors and use debugger to step through the processors cod
 
 *Click Approve when you are ready to proceed and I will launch Cyoda setup assistant*
 
----### ✅ Approval or Feedback
+ ✅ Approval or Feedback
 If you're happy with the prototype, feel free to approve it.
 
 If anything's off or you'd like changes, just ping me here. 🙌
@@ -104,7 +104,7 @@ Do **not** generate new code — focus on **reviewing, checking, and highlightin
 
 0. Confirm generated classes exist under `build/generated-sources/js2p/...`.
 1. **Entities** – POJOs match `entityName.md`. No manual state fields.
-2. **Workflows** – States + transitions align with JSON. Only manual transitions.
+2. **Workflows** – States + transitions align with JSON.
 3. **Processors** – Match `entity_workflow.md`.
 
    * No updates to current entity.

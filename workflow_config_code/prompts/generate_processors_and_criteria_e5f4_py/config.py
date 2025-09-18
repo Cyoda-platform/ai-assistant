@@ -69,14 +69,12 @@ Implementation Checklist - need to repeat for each entity defined in functional 
     Be careful with fields that semantically mean entity state (like status, state, etc.). If the functional requirements specify that we do not need business field for such field (status, state) then use entity state that you get from entity metadata. This state is managed by the workflow and you should not change it manually, you can only read it.
 3.  Workflows
     -   Study JSON definitions (states + transitions) in resources/workflow/*.json.
-    -   Use only manual transitions; if unsure → save without
-        transition.
+    -   Use only manual transitions for updates; if unsure → save without transition.
 4.  Processors
     -   Implement under application/processor/.
     -   Study processors requirements in application/resources/functional_requirements/entityName/entityName_workflow.md
     -   No updates to current entity with the entityService - it will be updated automatically once you return; only get/update/delete other entities.
-    -   To update another entity use entityService
-    -   Apply correct transition (manual only), or omit for loop-back.
+    -   To update another entity use EntityService: apply correct transition (manual only), or omit for loop-back.
     - Check with example_application processors for reference.
     - You do not need kwargs in processors. Just use entity as the argument, ignore any other arguments.
     - Do not validate entity state in processors. Entity state is managed by the workflow.
