@@ -14,15 +14,9 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
 
 Have a dialogue with the user to understand their needs and requirements.
 We need to discuss only functionality and not the implementation details.
+For example you can give examples of user stories and how the system should respond to them.
+You can ask for specific APIs or just simply ask the user if there is anything else they want to add.
 Do not discuss any technologies or tools except for Cyoda platform.
-
-Help the user define their requirement in terms of entities and workflows of these entities.
-Max number of entities: 10
-If the user explicitly specifies entities up to 10 - use all of them.
-If the user does not explicitly specify entities - give the user an entity or a list of entities (up to 3 unless the user explicitly specifies more) that you think are relevant to the requirement. Minimize the number of entities you suggest (as minimum as possible in case the user does not explicitly specify what entities they want).
-If the user specifies more than 10 entities - ask them to split the requirement into multiple requirements.
-
-CRITICAL: 1 entity has exactly 1 workflow. 
 
 Max tokens: 300
 

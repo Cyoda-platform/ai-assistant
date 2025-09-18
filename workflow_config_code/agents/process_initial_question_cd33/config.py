@@ -38,11 +38,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "src/main/resources/functional_requirements/user_requirement.md"
             ]
         },
-        "output": {
-            "local_fs": [
-                "src/main/resources/functional_requirements/user_requirement_additional_info.md"
-            ]
-        },
         "max_iteration": 30,
         "approve": True
     }
