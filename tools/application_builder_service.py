@@ -40,7 +40,10 @@ class WorkflowNameResolver:
                 return const.ModelName.EDIT_GENERAL_APPLICATION_JAVA.value
         else:
             if type == "build":
-                return const.ModelName.GEN_APP_ENTITY_PYTHON.value
+                workflow = const.ModelName.GEN_APP_ENTITY_PYTHON.value
+                if mode == "optimized" or has_files:
+                    workflow = const.ModelName.GEN_APP_ENTITY_PYTHON_OPTIMIZED.value
+                return workflow
             if type == "edit":
                 return const.ModelName.EDIT_GENERAL_APPLICATION_PYTHON.value
 

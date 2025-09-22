@@ -1,14 +1,13 @@
 """
 BuildGeneralApplicationJavaWorkflowConfig Configuration
 
-Generated from config: workflow_configs/workflows/build_general_application_java.json
+Generated from config: workflow_configs/workflows/build_general_application_python.json
 Configuration data for the workflow.
 """
 
 from typing import Any, Dict, Callable
 
 from workflow_config_code.agents.generate_app_python.agent import GenerateAppPythonAgentConfig
-from workflow_config_code.messages.notify_project_compiled_f5g6.message import NotifyProjectCompiledF5g6MessageConfig
 from workflow_config_code.messages.notify_project_compiled_f5g6_py.message import \
     NotifyProjectCompiledF5g6PyMessageConfig
 from workflow_config_code.messages.welcome_user_optimized.message import WelcomeUserOptimizedMessageConfig
@@ -27,15 +26,15 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get workflow configuration factory"""
     return lambda params=None: {
         "version": "1.0",
-        "name": "build_general_application_java_optimized",
-        "desc": "Migrated from build_general_application_java",
+        "name": "build_general_application_python_optimized",
+        "desc": "Migrated from build_general_application_python",
         "initialState": "initial_state",
         "active": True,
         "criterion": {
             "type": "simple",
             "jsonPath": "$.workflow_name",
             "operation": "EQUALS",
-            "value": "build_general_application_java_optimized"
+            "value": "build_general_application_python_optimized"
         },
         "states": {
             "initial_state": {

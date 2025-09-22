@@ -1,14 +1,14 @@
 {
   "version": "1.0",
-  "name": "build_general_application_java_optimized",
-  "desc": "Migrated from build_general_application_java",
+  "name": "build_general_application_python_optimized",
+  "desc": "Migrated from build_general_application_python",
   "initialState": "initial_state",
   "active": true,
   "criterion": {
     "type": "simple",
     "jsonPath": "$.workflow_name",
     "operation": "EQUALS",
-    "value": "build_general_application_java_optimized"
+    "value": "build_general_application_python_optimized"
   },
   "states": {
     "initial_state": {
