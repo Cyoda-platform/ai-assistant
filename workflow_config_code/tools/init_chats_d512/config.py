@@ -16,10 +16,5 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "name": "init_chats",
                 "description": "Initialises ai service"
         },
-        "allow_anonymous_users": True,
-        "output": {
-            "local_fs": [
-                "src/main/resources/functional_requirements/user_requirement.md"
-            ]
-        }
+        "allow_anonymous_users": True
 }

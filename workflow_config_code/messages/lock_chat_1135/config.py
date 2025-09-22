@@ -25,7 +25,7 @@ graph LR
     S((Start)):::start ==> A([🏆 Finalize App Requirements]):::done
     A e1@ ==> B([🏆 Deploy Cyoda environment]):::done
     B e2@ ==> C([🏆 Gen Entities & Workflows]):::done
-    C e3@ ==> D([🏆 Gen Controllers, Processors, Criteria & Tests]):::done
+    C e3@ ==> D([🏆 Gen Controllers, Processors, Criteria]):::done
     D e4@ ==> E([🏆 Launch Cyoda App]):::done
 
     classDef start fill:#FFFFFF,stroke:#0D8484,stroke-width:2px,color:#083A3A

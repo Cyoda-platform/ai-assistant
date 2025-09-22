@@ -1,5 +1,5 @@
 import json
-from typing import Any
+from typing import Any, List
 
 import common.config.const as const
 from common.config.config import config
@@ -17,7 +17,7 @@ class WorkflowNameResolver:
     """
 
     @staticmethod
-    def resolve_general_app_workflow_name(programming_language: str, type: str = "build") -> str:
+    def resolve_general_app_workflow_name(programming_language: str, type: str = "build", mode: str = "optimized", has_files: bool = False) -> str:
         """
         Resolve general application workflow name based on programming language.
 
@@ -32,7 +32,10 @@ class WorkflowNameResolver:
 
         if language_upper == "JAVA":
             if type == "build":
-                return const.ModelName.GEN_APP_ENTITY_JAVA.value
+                workflow = const.ModelName.GEN_APP_ENTITY_JAVA.value
+                if mode == "optimized" or has_files:
+                    workflow = const.ModelName.GEN_APP_ENTITY_JAVA_OPTIMIZED.value
+                return workflow
             if type == "edit":
                 return const.ModelName.EDIT_GENERAL_APPLICATION_JAVA.value
         else:
@@ -69,19 +72,19 @@ class ApplicationBuilderService(BaseWorkflowService):
     async def build_general_application(self, technical_id: str, entity: ChatEntity, **params: Any) -> str:
         """
         Build a general application based on user request and programming language.
-        
+
         Args:
             technical_id: Technical identifier
             entity: Chat entity
             **params: Parameters including user_request and programming_language
-            
+
         Returns:
             Success message with workflow information or error message
         """
         try:
             # Validate required parameters
             is_valid, error_msg = await self._validate_required_params(
-                params, ["user_request", "programming_language"]
+                params, ["user_request", "programming_language", "mode"]
             )
             if not is_valid:
                 return error_msg
@@ -89,8 +92,17 @@ class ApplicationBuilderService(BaseWorkflowService):
             user_request = params.get("user_request")
             programming_language = params.get("programming_language")
 
+            # Collect all file edge message IDs from chat history
+            file_edge_message_ids = self._collect_file_edge_message_ids(entity)
+
+            # Add file edge message IDs to workflow cache
+            if file_edge_message_ids:
+                params["file_edge_message_ids"] = file_edge_message_ids
+
             # Determine workflow name based on programming language
-            workflow_name = WorkflowNameResolver.resolve_general_app_workflow_name(programming_language)
+            workflow_name = WorkflowNameResolver.resolve_general_app_workflow_name(programming_language=programming_language,
+                                                                                   mode=params.get("mode"),
+                                                                                   has_files=bool(file_edge_message_ids))
 
             # Launch agentic workflow
             child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
@@ -105,7 +117,7 @@ class ApplicationBuilderService(BaseWorkflowService):
 
             return (f"Workflow {workflow_name} {child_technical_id} has been scheduled successfully. "
                    f"You'll be notified when it is in progress.")
-                   
+
         except Exception as e:
             return self._handle_error(entity, e, f"Error building general application: {e}")
 
@@ -298,4 +310,55 @@ class ApplicationBuilderService(BaseWorkflowService):
         except Exception as e:
             return self._handle_error(entity, e, f"Error scheduling workflow: {e}")
 
+    def _collect_file_edge_message_ids(self, entity: ChatEntity) -> List[str]:
+        """
+        Collect all file edge message IDs from the chat history.
+
+        Args:
+            entity: Chat entity containing chat flow with messages
+
+        Returns:
+            List of file edge message IDs found in the conversation
+        """
+        file_edge_message_ids = []
+
+        # Process current flow messages
+        if entity.chat_flow and entity.chat_flow.current_flow:
+            for message in entity.chat_flow.current_flow:
+                file_ids = self._extract_file_ids_from_message(message)
+                file_edge_message_ids.extend(file_ids)
+
+        # Process finished flow messages
+        if entity.chat_flow and entity.chat_flow.finished_flow:
+            for message in entity.chat_flow.finished_flow:
+                file_ids = self._extract_file_ids_from_message(message)
+                file_edge_message_ids.extend(file_ids)
+
+        # Remove duplicates while preserving order
+        unique_file_ids = []
+        seen = set()
+        for file_id in file_edge_message_ids:
+            if file_id not in seen:
+                unique_file_ids.append(file_id)
+                seen.add(file_id)
+
+        return unique_file_ids
+
+    def _extract_file_ids_from_message(self, message) -> List[str]:
+        """
+        Extract file IDs from a single FlowEdgeMessage.
+
+        Args:
+            message: FlowEdgeMessage object
+
+        Returns:
+            List of file IDs found in the message
+        """
+        file_ids = []
+
+        # Check for file blob IDs
+        if hasattr(message, 'file_blob_ids') and message.file_blob_ids:
+            file_ids.extend(message.file_blob_ids)
+
+        return file_ids
 

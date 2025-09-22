@@ -30,7 +30,11 @@ def service_mocks():
     cyoda_auth_service = MagicMock()
     chat_lock = asyncio.Lock()
 
-    svc = ChatService(entity_service, cyoda_auth_service, chat_lock, ai_agent)
+    data_service = MagicMock()
+    data_service.get_entities_by_user_name = AsyncMock()
+    data_service.get_entities_by_user_name_and_workflow_name = AsyncMock()
+
+    svc = ChatService(entity_service, cyoda_auth_service, chat_lock, ai_agent, data_service)
     return svc, entity_service, ai_agent
 
 
@@ -250,11 +254,11 @@ async def test_submit_question_file_too_large(monkeypatch, service_mocks):
     monkeypatch.setattr(config, "MAX_FILE_SIZE", 10)
     fake_file = SimpleNamespace(content_length=20)
     result = await svc.submit_question("Bearer token", "tid123", "question", fake_file)
-    assert result == {"error": "File size exceeds 10 limit"}
+    assert result == {"error": "File 'unknown' size exceeds 10 limit"}
 
 
 @pytest.mark.asyncio
-async def test_submit_question_file_too_large(monkeypatch, service_mocks):
+async def test_submit_question_file_too_large_duplicate(monkeypatch, service_mocks):
     svc, _, _ = service_mocks
     # stub chat retrieval
     svc._get_chat_for_user = AsyncMock(return_value=SimpleNamespace())
@@ -262,7 +266,7 @@ async def test_submit_question_file_too_large(monkeypatch, service_mocks):
     monkeypatch.setattr(config, "MAX_FILE_SIZE", 10)
     fake_file = SimpleNamespace(content_length=20)
     result = await svc.submit_question("Bearer token", "tid123", "hello", fake_file)
-    assert result == {"error": "File size exceeds 10 limit"}
+    assert result == {"error": "File 'unknown' size exceeds 10 limit"}
 
 
 @pytest.mark.asyncio
@@ -373,21 +377,28 @@ async def test_rollback_failed_workflows(monkeypatch, service_mocks):
 async def test_get_chat_success(monkeypatch, service_mocks):
     svc, _, _ = service_mocks
 
-    # 1) Stub _get_chat_for_user to return a chat with a finished_flow
-    chat_obj = SimpleNamespace(
+    # 1) Stub _get_business_chat_for_user to return business chat info
+    business_chat_obj = SimpleNamespace(
         name="ChatName",
         description="Desc",
         date="2025-05-10",
+        chat_id="chat_entity_id"
+    )
+    monkeypatch.setattr(svc, "_get_business_chat_for_user", AsyncMock(return_value=business_chat_obj))
+
+    # 2) Stub entity_service.get_item to return the actual chat entity
+    chat_obj = SimpleNamespace(
+        technical_id="chat_entity_id",
         chat_flow=SimpleNamespace(finished_flow=["msg1", "msg2"])
     )
-    monkeypatch.setattr(svc, "_get_chat_for_user", AsyncMock(return_value=chat_obj))
+    svc.entity_service.get_item = AsyncMock(return_value=chat_obj)
 
-    # 2) Stub _process_message to return dialogue and child_entities
+    # 3) Stub _process_message to return dialogue and child_entities
     fake_dialogue = [{"text": "hello"}]
     fake_children = {"childA"}
     monkeypatch.setattr(svc, "_process_message", AsyncMock(return_value=(fake_dialogue, fake_children)))
 
-    # 3) Stub _get_entities_processing_data to return a dummy map
+    # 4) Stub _get_entities_processing_data to return a dummy map
     fake_entities_data = {
         "childA": {
             "workflow_name": "wf",
@@ -411,15 +422,16 @@ async def test_get_chat_success(monkeypatch, service_mocks):
     }
 
     # Ensure helpers were called correctly
-    svc._get_chat_for_user.assert_awaited_once_with("Bearer token", "tech123")
+    svc._get_business_chat_for_user.assert_awaited_once_with(auth_header="Bearer token", technical_id="tech123")
     svc._process_message.assert_awaited_once_with(
         finished_flow=chat_obj.chat_flow.finished_flow,
         auth_header="Bearer token",
         dialogue=[],
-        child_entities=set()
+        child_entities=set(),
+        chat_technical_id="tech123"
     )
     svc._get_entities_processing_data.assert_awaited_once_with(
-        technical_id="tech123",
+        technical_id="chat_entity_id",
         child_entities=fake_children
     )
 
@@ -444,23 +456,52 @@ async def test_process_message_basic(service_mocks):
 
     async def fake_get_item(token, entity_model, entity_version, technical_id, meta=None):
         if technical_id == "e1":
-            return {"question": "Hello?", "approve": False}
+            mock_obj = MagicMock()
+            mock_obj.type = "question"
+            mock_obj.message = "Hello?"
+            mock_obj.approve = False
+            mock_obj.file_blob_ids = None
+            mock_obj.model_dump.return_value = {
+                "type": "question",
+                "message": "Hello?",
+                "approve": False,
+                "file_blob_ids": None,
+                "technical_id": "e1"
+            }
+            return mock_obj
         if technical_id == "e2":
-            return {"notification": "Info"}
-        return {}
+            mock_obj = MagicMock()
+            mock_obj.type = "notification"
+            mock_obj.message = "Info"
+            mock_obj.file_blob_ids = None
+            mock_obj.model_dump.return_value = {
+                "type": "notification",
+                "message": "Info",
+                "file_blob_ids": None,
+                "technical_id": "e2"
+            }
+            return mock_obj
+        return MagicMock()
     entity_service.get_item = AsyncMock(side_effect=fake_get_item)
 
     dialogue, children = await svc._process_message(
         finished_flow=msgs,
         auth_header="Bearer token",
         dialogue=[],
-        child_entities=set()
+        child_entities=set(),
+        chat_technical_id="test_chat"
     )
 
-    assert dialogue == [
-        {"question": "Hello?", "approve": False, "technical_id": "e1"},
-        {"notification": "Info", "technical_id": "e2"}
-    ]
+    # Check that dialogue contains the expected structure
+    assert len(dialogue) == 2
+    assert dialogue[0]["technical_id"] == "e1"
+    assert dialogue[0]["type"] == "question"
+    assert dialogue[0]["message"] == "Hello?"
+    assert dialogue[0]["question"] == "Hello?"  # backward compatibility
+    assert dialogue[1]["technical_id"] == "e2"
+    assert dialogue[1]["type"] == "notification"
+    assert dialogue[1]["message"] == "Info"
+    assert dialogue[1]["notification"] == "Info"  # backward compatibility
     assert children == set()
 
 @pytest.mark.asyncio
@@ -477,7 +518,8 @@ async def test_process_message_question_with_approve(service_mocks):
         finished_flow=msgs,
         auth_header="Bearer token",
         dialogue=[],
-        child_entities=set()
+        child_entities=set(),
+        chat_technical_id="test_chat"
     )
 
     expected = "Proceed?\n\n" + const.Notifications.APPROVE_INSTRUCTION_MESSAGE.value
@@ -501,7 +543,8 @@ async def test_process_message_answer_auto_approve(service_mocks, monkeypatch):
         finished_flow=msgs,
         auth_header="Bearer token",
         dialogue=[],
-        child_entities=set()
+        child_entities=set(),
+        chat_technical_id="test_chat"
     )
 
     expected_answer = list(const.ApproveAnswer)[1].value
@@ -536,10 +579,16 @@ async def test_process_message_child_entities_recursive(service_mocks):
         finished_flow=msgs,
         auth_header="Bearer token",
         dialogue=[],
-        child_entities=set()
+        child_entities=set(),
+        chat_technical_id="test_chat"
     )
 
-    assert dialogue == [{"notification": "Nested", "technical_id": "e5"}]
+    # Check that dialogue contains the expected structure
+    assert len(dialogue) == 1
+    assert dialogue[0]["technical_id"] == "e5"
+    assert dialogue[0]["type"] == "notification"
+    assert dialogue[0]["message"] == "Nested"
+    assert dialogue[0]["notification"] == "Nested"  # backward compatibility
     assert children == {"child1"}
 
 
@@ -864,3 +913,103 @@ async def test_validate_chat_owner_guest_to_registered_failure(service_mocks):
     entity_service.get_items_by_condition = AsyncMock(return_value=[])
     with pytest.raises(InvalidTokenException):
         await svc._validate_chat_owner(chat, "user1")
+
+
+@pytest.mark.asyncio
+async def test_download_file_success(monkeypatch, service_mocks):
+    svc, entity_service, _ = service_mocks
+
+    # Mock _get_business_chat_for_user to pass authentication
+    svc._get_business_chat_for_user = AsyncMock(return_value=SimpleNamespace())
+
+    # Mock blob edge message with file data
+    import base64
+    file_content = b"test file content"
+    encoded_content = base64.b64encode(file_content).decode('utf-8')
+
+    blob_message = SimpleNamespace(
+        type="file_blob",
+        message=encoded_content,
+        metadata={
+            "filename": "test.txt",
+            "content_type": "text/plain",
+            "file_size": len(file_content),
+            "encoding": "base64"
+        }
+    )
+
+    entity_service.get_item = AsyncMock(return_value=blob_message)
+
+    result = await svc.download_file("Bearer token", "chat123", "blob456")
+
+    assert result["filename"] == "test.txt"
+    assert result["content_type"] == "text/plain"
+    assert result["file_size"] == len(file_content)
+    assert result["content"] == file_content
+
+    # Verify authentication was checked
+    svc._get_business_chat_for_user.assert_awaited_once_with(
+        auth_header="Bearer token",
+        technical_id="chat123"
+    )
+
+    # Verify blob was retrieved
+    entity_service.get_item.assert_awaited_once_with(
+        token=svc.cyoda_auth_service,
+        entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
+        entity_version=config.ENTITY_VERSION,
+        technical_id="blob456",
+        meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+    )
+
+
+@pytest.mark.asyncio
+async def test_download_file_not_found(service_mocks):
+    svc, entity_service, _ = service_mocks
+
+    # Mock authentication to pass
+    svc._get_business_chat_for_user = AsyncMock(return_value=SimpleNamespace())
+
+    # Mock blob not found
+    entity_service.get_item = AsyncMock(return_value=None)
+
+    result = await svc.download_file("Bearer token", "chat123", "blob456")
+
+    assert result == {"error": "File not found"}
+
+
+@pytest.mark.asyncio
+async def test_download_file_invalid_type(service_mocks):
+    svc, entity_service, _ = service_mocks
+
+    # Mock authentication to pass
+    svc._get_business_chat_for_user = AsyncMock(return_value=SimpleNamespace())
+
+    # Mock blob with wrong type
+    blob_message = SimpleNamespace(type="answer", message="not a file")
+    entity_service.get_item = AsyncMock(return_value=blob_message)
+
+    result = await svc.download_file("Bearer token", "chat123", "blob456")
+
+    assert result == {"error": "Invalid file type"}
+
+
+@pytest.mark.asyncio
+async def test_download_file_decode_error(service_mocks):
+    svc, entity_service, _ = service_mocks
+
+    # Mock authentication to pass
+    svc._get_business_chat_for_user = AsyncMock(return_value=SimpleNamespace())
+
+    # Mock blob with invalid base64 content
+    blob_message = SimpleNamespace(
+        type="file_blob",
+        message="invalid_base64!",
+        metadata={"encoding": "base64"}
+    )
+    entity_service.get_item = AsyncMock(return_value=blob_message)
+
+    result = await svc.download_file("Bearer token", "chat123", "blob456")
+
+    assert "error" in result
+    assert "Failed to decode file content" in result["error"]

@@ -4,10 +4,5 @@
     "name": "init_chats",
     "description": "Initialises ai service"
   },
-  "allow_anonymous_users": true,
-  "output": {
-    "local_fs": [
-      "src/main/resources/functional_requirements/user_requirement.md"
-    ]
-  }
+  "allow_anonymous_users": true
 }

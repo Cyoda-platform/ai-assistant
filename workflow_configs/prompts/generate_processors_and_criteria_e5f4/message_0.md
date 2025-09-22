@@ -75,8 +75,7 @@ If not run ./gradlew build
     Be careful with fields that semantically mean entity state (like status, state, etc.). If the functional requirements specify that we do not need business field for such field (status, state) then use entity state that you get from entity metadata. This state is managed by the workflow and you should not change it manually, you can only read it.
 3.  Workflows
     -   Study JSON definitions (states + transitions) in resources/workflow/*.json.
-    -   Use only manual transitions; if unsure → save without
-        transition.
+    -   Use only manual transitions for updates; if unsure → save without transition.
 4.  Processors
     -   Study processors requirements in src/main/resources/functional_requirements/entityName/entityName_workflow.md .
     -   Entity passed to process(...) already contains all needed data.
@@ -113,9 +112,11 @@ Acceptance Criteria
     Run WorkflowImplementationValidator with ./gradlew validateWorkflowImplementations
     If it fails due to irrelevant reasons - run for each entity_workflow.md file individually with ./gradlew validateWorkflowImplementations -Pargs="src/main/resources/workflow/myentity/version_1/MyEntity.json"  
     If there are missing processors or criteria - add them to the workflow JSON.
+    
+    Summary documenting what was implemented can be found in the project root directory.
 
 Parallelize the work on different entities, processors, criteria, and controllers.
 Each entity (with its workflow, processors, criteria, and controllers) can be treated as an independent subtask.
-Plan the work so that all the entities are implemented in the end.  If it takes to much resources to implement all the entities in parallel, then use placeholders for processors, criteria and routers and implement them in separate tasks.
+Plan the work so that all the entities are implemented in the end.  If it takes too much resources to implement all the entities in parallel, then use placeholders for processors, criteria and routers and implement them in separate tasks.
 
 Exit when all entities with all requirements are correctly implemented and build succeeds.

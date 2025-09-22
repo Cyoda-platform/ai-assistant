@@ -17,35 +17,53 @@ async def trigger_manual_transition(
         chat: ChatEntity,
         answer,
         cyoda_auth_service,
-        user_file=None,
-        transition=None
+        user_files=None,
+        transition=None,
+        validation_service=None
 ) -> Tuple[str, bool]:
-    # Resolve the user's answer
-    user_answer = (
-        await get_user_message(message=answer, user_file=user_file)
-        if user_file
-        else answer
-    )
+
+    # Validate and process the answer if validation service is provided
+    # The validation service will handle file content processing internally
+    file_blob_ids = None
+    if validation_service:
+        user_answer, file_blob_ids = await validation_service.validate_and_process_answer(
+            answer=answer,  # Pass original answer, let validation service handle file content
+            user_files=user_files,
+            user_id=chat.user_id if hasattr(chat, 'user_id') else None
+        )
+    else:
+        # Fallback: if no validation service, use get_user_message for file processing
+        files_to_process = user_files if user_files else []
+        user_answer = (
+            await get_user_message(message=answer, user_files=files_to_process)
+            if files_to_process
+            else answer
+        )
 
     # Append to finished_flow and get the edge ID
     edge_message_id, last_modified = await add_answer_to_finished_flow(
         entity_service=entity_service,
         answer=user_answer,
-        cyoda_auth_service=cyoda_auth_service
+        cyoda_auth_service=cyoda_auth_service,
+        file_blob_ids=file_blob_ids
     )
 
     # Shared “answer + increment + launch” logic
     async def process_entity(entity: ChatEntity, technical_id: str, process_entity_transition=None) -> bool:
-        entity.chat_flow.finished_flow.append(
-            FlowEdgeMessage(
-                type="answer",
-                publish=True,
-                edge_message_id=edge_message_id,
-                last_modified=last_modified,
-                consumed=transition==const.TransitionKey.MANUAL_APPROVE.value,
-                user_id=chat.user_id
-            )
+        flow_edge_message = FlowEdgeMessage(
+            type="answer",
+            publish=True,
+            edge_message_id=edge_message_id,
+            last_modified=last_modified,
+            consumed=transition==const.TransitionKey.MANUAL_APPROVE.value,
+            user_id=chat.user_id
         )
+
+        # Add file blob references if available
+        if file_blob_ids:
+            flow_edge_message.file_blob_ids = file_blob_ids
+
+        entity.chat_flow.finished_flow.append(flow_edge_message)
         _increment_iteration(chat=entity, answer=user_answer)
         return await _launch_transition(
             entity=entity,
@@ -98,7 +116,13 @@ async def trigger_manual_transition(
                                 await asyncio.sleep(retry_delay)
 
                     except Exception as e:
-                        raise e
+                        last_exception = e
+                        logger.warning(f"Failed to retrieve child entity {child_id}, attempt {attempt + 1}: {e}")
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(retry_delay)
+                        else:
+                            # All retries exhausted, log the final exception
+                            logger.error(f"Failed to retrieve child entity {child_id} after {max_retries} attempts: {e}")
 
                 # Skip if we couldn't retrieve the child entity
                 if not child or not hasattr(child, 'current_state') or child.current_state is None:
@@ -170,7 +194,7 @@ async def trigger_manual_transition(
     return edge_message_id, transitioned
 
 
-async def add_answer_to_finished_flow(entity_service, answer: str, cyoda_auth_service, publish=True):
+async def add_answer_to_finished_flow(entity_service, answer: str, cyoda_auth_service, publish=True, file_blob_ids=None):
     last_modified = get_current_timestamp_num()
     flow_message_content = {
         "type": "answer",
@@ -178,6 +202,11 @@ async def add_answer_to_finished_flow(entity_service, answer: str, cyoda_auth_se
         "publish": publish,
         "last_modified": last_modified
     }
+
+    # Add file blob references if provided
+    if file_blob_ids:
+        flow_message_content["file_blob_ids"] = file_blob_ids
+
     edge_message_id = await entity_service.add_item(token=cyoda_auth_service,
                                                     entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
                                                     entity_version=config.ENTITY_VERSION,
@@ -187,10 +216,24 @@ async def add_answer_to_finished_flow(entity_service, answer: str, cyoda_auth_se
     return edge_message_id, last_modified
 
 
-async def get_user_message(message, user_file):
-    if user_file:
-        file_contents = read_file_content(user_file)
-        message = f"{message}: {file_contents}" if message else file_contents
+async def get_user_message(message, user_files=None):
+    # Handle multiple files (user_file conversion happens at endpoint level)
+    files_to_process = user_files if user_files else []
+
+    if files_to_process:
+        file_contents_list = []
+        for file in files_to_process:
+            try:
+                file_content = read_file_content(file)
+                filename = getattr(file, 'filename', 'unknown')
+                file_contents_list.append(f"[{filename}]: {file_content}")
+            except Exception as e:
+                filename = getattr(file, 'filename', 'unknown')
+                file_contents_list.append(f"[{filename}]: Error reading file - {str(e)}")
+
+        combined_file_contents = "\n\n".join(file_contents_list)
+        message = f"{message}: {combined_file_contents}" if message else combined_file_contents
+
     return message
 
 

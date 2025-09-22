@@ -100,16 +100,124 @@ class UtilityService(BaseWorkflowService):
 
     async def init_chats(self, technical_id: str, entity: ChatEntity, **params) -> None:
         """
-        Initialize chats. Currently a placeholder that does nothing in mock mode.
-        
+        Initialize chats by saving user request and files to functional requirements directory.
+
         Args:
             technical_id: Technical identifier
             entity: Chat entity
             **params: Additional parameters (unused)
         """
+        try:
+            # Get user request from workflow cache
+            user_request = entity.workflow_cache.get('user_request', '')
 
-        return entity.workflow_cache['user_request']
-        # Implementation would go here for non-mock mode
+            # Get repository information
+            git_branch_id = entity.workflow_cache.get('git_branch')
+            repository_name = entity.workflow_cache.get('repository_name')
+
+            if not git_branch_id or not repository_name:
+                self.logger.error("Missing git_branch or repository_name in workflow cache")
+                return "Error: Missing repository information"
+
+            # Save user request to functional_requirements/user_requirement.md
+            from common.utils.utils import _save_file
+            await _save_file(
+                _data=user_request,
+                item="user_requirement.md",
+                git_branch_id=git_branch_id,
+                repository_name=repository_name,
+                folder_name="src/main/resources/functional_requirements"
+            )
+
+            # Get file edge message IDs from workflow cache
+            file_edge_message_ids = entity.workflow_cache.get('file_edge_message_ids', [])
+
+            # Save each file from file_edge_message_ids
+            for i, message_id in enumerate(file_edge_message_ids):
+                try:
+                    # Retrieve edge message content using entity service
+                    edge_message = await self.entity_service.get_item(
+                        token=self.cyoda_auth_service,
+                        entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
+                        entity_version=config.ENTITY_VERSION,
+                        technical_id=message_id,
+                        meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+                    )
+
+                    if edge_message:
+                        # Extract blob data from edge message
+                        filename = f"uploaded_file_{i+1}.txt"
+                        file_content = ""
+
+                        # Handle FlowEdgeMessage blob format
+                        if isinstance(edge_message, dict):
+                            # Get base64 encoded content from message field
+                            base64_content = edge_message.get('message', '')
+                            metadata = edge_message.get('metadata', {})
+
+                            # Extract filename from metadata
+                            if metadata and 'filename' in metadata:
+                                filename = metadata['filename']
+
+                            # Decode base64 content if it's a file blob
+                            if base64_content and metadata.get('encoding') == 'base64':
+                                try:
+                                    import base64
+                                    # Decode base64 to get original binary data
+                                    file_content = base64.b64decode(base64_content)
+                                    self.logger.info(f"Decoded file blob: {filename} ({len(file_content)} bytes)")
+                                except Exception as decode_error:
+                                    self.logger.error(f"Error decoding base64 content: {decode_error}")
+                                    file_content = f"[Error decoding file content: {decode_error}]"
+                            else:
+                                # Fallback to raw message content
+                                file_content = str(base64_content)
+
+                        elif hasattr(edge_message, 'message') and hasattr(edge_message, 'metadata'):
+                            # Handle object format
+                            base64_content = edge_message.message
+                            metadata = edge_message.metadata or {}
+
+                            if metadata.get('filename'):
+                                filename = metadata['filename']
+
+                            if base64_content and metadata.get('encoding') == 'base64':
+                                try:
+                                    import base64
+                                    # Decode base64 to get original binary data
+                                    file_content = base64.b64decode(base64_content)
+                                    self.logger.info(f"Decoded file blob: {filename} ({len(file_content)} bytes)")
+                                except Exception as decode_error:
+                                    self.logger.error(f"Error decoding base64 content: {decode_error}")
+                                    file_content = f"[Error decoding file content: {decode_error}]"
+                            else:
+                                file_content = str(base64_content)
+                        else:
+                            # Fallback for unexpected format
+                            file_content = str(edge_message)
+
+                        # Save file content to functional_requirements directory
+                        await _save_file(
+                            _data=file_content,
+                            item=filename,
+                            git_branch_id=git_branch_id,
+                            repository_name=repository_name,
+                            folder_name="src/main/resources/functional_requirements"
+                        )
+
+                        self.logger.info(f"Saved file {filename} from edge message {message_id}")
+                    else:
+                        self.logger.warning(f"Could not retrieve content for edge message {message_id}")
+
+                except Exception as e:
+                    self.logger.error(f"Error processing edge message {message_id}: {e}")
+                    continue
+
+            self.logger.info(f"Successfully initialized chats with user request and {len(file_edge_message_ids)} files")
+            return entity.workflow_cache['user_request']
+
+        except Exception as e:
+            return self._handle_error(entity, e, f"Error initializing chats: {e}")
 
     async def fail_workflow(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
         """

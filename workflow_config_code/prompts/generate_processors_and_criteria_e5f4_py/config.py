@@ -122,6 +122,7 @@ Acceptance Criteria
 -   Code modifies only application directory.
 -   Code passes quality checks.
 -   Requirements in user_requirement.md satisfied.
+-   Summary documenting what was implemented can be found in the project root directory.
 Critical: Keep criteria minimal and direct.
 
 Parallelization:

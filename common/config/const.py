@@ -108,6 +108,7 @@ class ModelName(str, Enum):
     EDIT_GENERAL_APPLICATION_JAVA = "edit_general_application_java"
     EDIT_GENERAL_APPLICATION_PYTHON = "edit_general_application_python"
     GEN_APP_ENTITY_JAVA = "build_general_application_java"
+    GEN_APP_ENTITY_JAVA_OPTIMIZED = "build_general_application_java_optimized"
     FUNCTIONAL_REQUIREMENTS_TO_PROTOTYPE_JAVA = "functional_requirements_to_prototype_java"
     FUNCTIONAL_REQUIREMENTS_TO_PROTOTYPE_PYTHON = "functional_requirements_to_prototype_python"
     CYODA_ENV_DEPLOYMENT_CHAT = "cyoda_env_deploy_chat"
@@ -284,3 +285,4 @@ Enjoy exploring! 🎏
 """
 
 GITHUB_ACTION_COMPILED = "github_action_compiled"
+USER_ATTACHED_FILE_MESSAGE = "The user attached the full requirement in a file. You do not need the full requirement now."

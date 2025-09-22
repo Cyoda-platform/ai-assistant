@@ -13,28 +13,37 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     return lambda params=None: {
         "type": "function",
         "function": {
-                "name": "build_general_application",
-                "description": "Launches workflow that is necessary to build a new application. Do not use for editing existing applications. Do not ask user any additional information. Only Java and Python with Cyoda framework are available. Pass the full user request without missing any details.",
-                "strict": True,
-                "parameters": {
-                        "type": "object",
-                        "properties": {
-                                "user_request": {
-                                        "type": "string"
-                                },
-                                "programming_language": {
-                                        "type": "string",
-                                        "enum": [
-                                                "JAVA",
-                                                "PYTHON"
-                                        ]
-                                }
-                        },
-                        "required": [
-                                "user_request",
-                                "programming_language"
-                        ],
-                        "additionalProperties": False
-                }
+            "name": "build_general_application",
+            "description": "Launches workflow that is necessary to build a new application. Do not use for editing existing applications. Do not ask user any additional information. Only Java and Python with Cyoda framework are available. Pass full user request as is.",
+            "strict": True,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "user_request": {
+                        "type": "string"
+                    },
+                    "programming_language": {
+                        "type": "string",
+                        "enum": [
+                            "JAVA",
+                            "PYTHON"
+                        ]
+                    },
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "fast",
+                            "normal",
+                            "detailed"
+                        ]
+                    }
+                },
+                "required": [
+                    "user_request",
+                    "programming_language",
+                    "mode"
+                ],
+                "additionalProperties": False
+            }
         }
-}
+    }

@@ -72,6 +72,9 @@ Make sure you take in account all the information from src/main/resources/functi
     Run FunctionalRequirementsValidator with ./gradlew validateFunctionalRequirements
     If it fails due to irrelevant reasons - run for each entity_workflow.md file individually with ./gradlew validateFunctionalRequirements -Pargs="src/main/resources/functional_requirements/myentity/myentity_workflow.md src/main/resources/workflow/myentity/version_1/MyEntity.json"  
     If there are missing processors or criteria - add them to the workflow JSON.
+    
+    Summary documentation added to src/main/resources directory of the project with the description of what you have done.
+
 
 10. **Parallelization**
    Work on processors, criteria, and controllers in parallel once entity/workflow definitions are ready.

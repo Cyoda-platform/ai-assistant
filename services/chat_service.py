@@ -27,6 +27,7 @@ from common.utils.utils import (
 from entity.chat.chat import ChatEntity, ChatBusinessEntity
 from entity.model import FlowEdgeMessage, ChatMemory, ModelConfig, AgenticFlowEntity, AIMessage, ChatFlow, \
     TransitionsMemory, WorkflowEntity
+from services.user_answer_validation_service import UserAnswerValidationService
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ class ChatService:
         self.ai_agent = ai_agent
         self.cyoda_auth_service = cyoda_auth_service
         self.data_service = data_service
+        self.validation_service = UserAnswerValidationService(entity_service, cyoda_auth_service)
 
     async def transfer_chats(self, guest_token, auth_header):
         guest_user_id = self._get_user_id(auth_header=f"Bearer {guest_token}")
@@ -112,7 +114,10 @@ class ChatService:
             "date": c.date,
         } for c in chats]
 
-    async def add_chat(self, user_id: str, req_data: dict) -> dict:
+    async def add_chat(self, user_id: str, req_data: dict, user_files=None, user_file=None) -> dict:
+        # Convert single file to user_files for consistent processing
+        if user_file and not user_files:
+            user_files = [user_file]
         if user_id.startswith("guest."):
             existing = await self.data_service.get_entities_by_user_name_and_workflow_name(user_id=user_id,
                                                                                            model=const.ModelName.CHAT_ENTITY.value,
@@ -171,21 +176,36 @@ class ChatService:
             last_modified=last_modified
         )
 
-        # 4) echo back user question
+        # 4) echo back user question with validation
+        processed_answer, file_blob_ids = await self.validation_service.validate_and_process_answer(
+            answer=init_q,
+            user_files=user_files,
+            user_id=user_id
+        )
         ans_id, last_modified = await add_answer_to_finished_flow(
             entity_service=self.entity_service,
-            answer=init_q,
-            cyoda_auth_service=self.cyoda_auth_service
+            answer=processed_answer,
+            cyoda_auth_service=self.cyoda_auth_service,
+            file_blob_ids=file_blob_ids
         )
-        chat.chat_flow.finished_flow.extend([
-            FlowEdgeMessage(type="answer",
-                            publish=True,
-                            edge_message_id=ans_id,
-                            consumed=False,
-                            user_id=user_id,
-                            last_modified=last_modified),
-            greeting
-        ])
+
+        flow_edge_message = FlowEdgeMessage(
+            type="answer",
+            publish=True,
+            edge_message_id=ans_id,
+            consumed=False,
+            user_id=user_id,
+            last_modified=last_modified
+        )
+
+        # Add file blob references if available
+        if file_blob_ids:
+            flow_edge_message.file_blob_ids = file_blob_ids
+            # Also set single file_blob_id for backward compatibility if only one file
+            if len(file_blob_ids) == 1:
+                flow_edge_message.file_blob_id = file_blob_ids[0]
+
+        chat.chat_flow.finished_flow.extend([flow_edge_message, greeting])
 
         # 5) persist and respond
         chat_id = await self.entity_service.add_item(
@@ -220,7 +240,8 @@ class ChatService:
         dialogue, child_entities = await self._process_message(finished_flow=chat.chat_flow.finished_flow,
                                                                auth_header=auth_header,
                                                                dialogue=[],
-                                                               child_entities=set())
+                                                               child_entities=set(),
+                                                               chat_technical_id=technical_id)
         # dialogue = self._post_process_dialogue(dialogue)
         entities_data = await self._get_entities_processing_data(technical_id=chat.technical_id,
                                                                  child_entities=child_entities)
@@ -232,6 +253,64 @@ class ChatService:
             "dialogue": dialogue,
             "entities_data": entities_data
         }
+
+    async def download_file(self, auth_header: str, technical_id: str, blob_id: str) -> dict:
+        """
+        Download a file by blob ID from a chat.
+
+        Args:
+            auth_header: Authentication header
+            technical_id: Chat technical ID
+            blob_id: Blob edge message ID
+
+        Returns:
+            Dictionary containing file data and metadata or error
+        """
+        try:
+            # Verify user has access to the chat
+            await self._get_business_chat_for_user(auth_header=auth_header, technical_id=technical_id)
+
+            # Retrieve the blob edge message
+            blob_message: FlowEdgeMessage = await self.entity_service.get_item(
+                token=self.cyoda_auth_service,
+                entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
+                entity_version=config.ENTITY_VERSION,
+                technical_id=blob_id,
+                meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+            )
+
+            if not blob_message:
+                return {"error": "File not found"}
+
+            if blob_message.type != "file_blob":
+                return {"error": "Invalid file type"}
+
+            # Extract file metadata
+            metadata = blob_message.metadata or {}
+            filename = metadata.get("filename", "download")
+            content_type = metadata.get("content_type", "application/octet-stream")
+            file_size = metadata.get("file_size", 0)
+            encoding = metadata.get("encoding", "base64")
+
+            # Decode file content
+            if encoding == "base64":
+                import base64
+                try:
+                    file_content = base64.b64decode(blob_message.message)
+                except Exception as e:
+                    return {"error": f"Failed to decode file content: {str(e)}"}
+            else:
+                file_content = blob_message.message.encode('utf-8') if isinstance(blob_message.message, str) else blob_message.message
+
+            return {
+                "filename": filename,
+                "content_type": content_type,
+                "file_size": file_size,
+                "content": file_content
+            }
+
+        except Exception as e:
+            return {"error": f"Failed to download file: {str(e)}"}
 
     async def delete_chat(self, auth_header: str, technical_id: str) -> dict:
         # verify chat belongs to the user
@@ -268,28 +347,67 @@ class ChatService:
         chat = await self._get_chat_for_user(auth_header, technical_id)
         return await self._submit_question_helper(auth_header, technical_id, chat, question)
 
-    async def submit_question(self, auth_header, technical_id, question, user_file):
-        chat = await self._get_chat_for_user(auth_header, technical_id)
-        if user_file and user_file.content_length > config.MAX_FILE_SIZE:
-            return {"error": f"File size exceeds {config.MAX_FILE_SIZE} limit"}
-        return await self._submit_question_helper(auth_header, technical_id, chat, question, user_file)
+    async def submit_question(self, auth_header, technical_id, question, user_file=None, user_files=None):
+        # Convert single file to user_files for consistent processing
+        if user_file and not user_files:
+            user_files = [user_file]
+            user_file = None  # Clear single file since we moved it to user_files
 
-    async def submit_text_answer(self, auth_header, technical_id, answer):
         chat = await self._get_chat_for_user(auth_header, technical_id)
+
+        # Handle multiple files
+        files_to_process = user_files if user_files else []
+
+        # Check file size limits for all files
+        for file in files_to_process:
+            if file and file.content_length > config.MAX_FILE_SIZE:
+                filename = getattr(file, 'filename', 'unknown')
+                return {"error": f"File '{filename}' size exceeds {config.MAX_FILE_SIZE} limit"}
+
+        return await self._submit_question_helper(auth_header, technical_id, chat, question, user_files)
+
+    async def submit_text_answer(self, auth_header, technical_id, answer, user_files=None, user_file=None):
+        # Convert single file to user_files for consistent processing
+        if user_file and not user_files:
+            user_files = [user_file]
+
+        chat = await self._get_chat_for_user(auth_header, technical_id)
+
+        # Check file size limits for all files
+        if user_files:
+            for file in user_files:
+                if file and file.content_length > config.MAX_FILE_SIZE:
+                    filename = getattr(file, 'filename', 'unknown')
+                    return {"error": f"File '{filename}' size exceeds {config.MAX_FILE_SIZE} limit"}
+
         if len(answer.encode("utf-8")) > config.MAX_TEXT_SIZE:
             return {"error": "Answer size exceeds 1MB limit"}
-        return await self._submit_answer_helper(answer, chat)
+        return await self._submit_answer_helper(answer, chat, user_files=user_files)
 
-    async def submit_answer(self, auth_header, technical_id, answer, user_file):
+    async def submit_answer(self, auth_header, technical_id, answer, user_file=None, user_files=None):
+        # Convert single file to user_files for consistent processing
+        if user_file and not user_files:
+            user_files = [user_file]
+            user_file = None  # Clear single file since we moved it to user_files
+
         chat = await self._get_chat_for_user(auth_header, technical_id)
-        message = await get_user_message(answer, user_file)
-        if user_file and user_file.content_length > config.MAX_FILE_SIZE:
-            return {"error": f"File size exceeds {config.MAX_FILE_SIZE} limit"}
-        return await self._submit_answer_helper(message, chat, user_file)
+
+        # Handle multiple files
+        files_to_process = user_files if user_files else []
+
+        # Check file size limits for all files
+        for file in files_to_process:
+            if file and file.content_length > config.MAX_FILE_SIZE:
+                filename = getattr(file, 'filename', 'unknown')
+                return {"error": f"File '{filename}' size exceeds {config.MAX_FILE_SIZE} limit"}
+
+        # Don't process files into message here - let validation service handle file content as answer
+        # Only use get_user_message for the final processed message after validation
+        return await self._submit_answer_helper(answer, chat, user_files=user_files)
 
     async def approve(self, auth_header, technical_id):
         chat = await self._get_chat_for_user(auth_header, technical_id)
-        return await self._submit_answer_helper(const.Notifications.APPROVE.value, chat)
+        return await self._submit_answer_helper(const.Notifications.APPROVE.value, chat, user_files=None)
 
     async def rollback(self, auth_header, technical_id):
         chat = await self._get_chat_for_user(auth_header, technical_id)
@@ -364,13 +482,13 @@ class ChatService:
         except jwt.InvalidTokenError:
             return None
 
-    async def _submit_question_helper(self, auth_header, technical_id, chat, question, user_file=None):
+    async def _submit_question_helper(self, auth_header, technical_id, chat, question, user_files=None):
         if not question:
             return {"error": "Invalid entity"}, 400
         if config.MOCK_AI == "true":
             return {"message": "mock ai answer"}, 200
-        if user_file:
-            question = await get_user_message(message=question, user_file=user_file)
+        if user_files:
+            question = await get_user_message(message=question, user_files=user_files)
 
         result = await self.ai_agent.run_agent(
             methods_dict=None,
@@ -384,14 +502,13 @@ class ChatService:
         )
         return {"message": result}, 200
 
-    async def _submit_answer_helper(self, answer, chat, user_file=None):
+    async def _submit_answer_helper(self, answer, chat, user_files=None):
         if chat.user_id.startswith("guest.") and len(chat.chat_flow.finished_flow) > const.MAX_GUEST_CHAT_MESSAGES:
             return {"error": "Maximum messages reached"}, 403
         if len(chat.chat_flow.finished_flow) > const.MAX_CHAT_MESSAGES:
             return {"error": "Maximum messages reached"}, 403
-        valid, val_answer = self._validate_answer(answer, user_file)
-        if not valid:
-            return {"message": val_answer}, 400
+        # Validation is now handled by the UserAnswerValidationService in trigger_manual_transition
+        # No need for separate validation here
 
         next_transition = const.TransitionKey.MANUAL_APPROVE.value \
             if answer == const.Notifications.APPROVE.value \
@@ -403,10 +520,11 @@ class ChatService:
             edge_id, transitioned = await trigger_manual_transition(
                 entity_service=self.entity_service,
                 chat=chat,
-                answer=val_answer,
-                user_file=user_file,
+                answer=answer,  # Pass original answer, let validation service handle it
+                user_files=user_files,
                 cyoda_auth_service=self.cyoda_auth_service,
-                transition=next_transition
+                transition=next_transition,
+                validation_service=self.validation_service
             )
         except Exception as e:
             logger.exception(f"Failed to process answer: {e}")
@@ -461,13 +579,10 @@ class ChatService:
 
         return await _traverse(chat, technical_id, is_root=True)
 
-    def _validate_answer(self, answer, user_file):
-        if not answer:
-            return (True, "Consider the file contents") if user_file else (False, "Invalid entity")
-        return True, answer
+
 
     async def _process_message(self, finished_flow: List[FlowEdgeMessage], auth_header, dialogue: list,
-                               child_entities: set) -> Tuple[
+                               child_entities: set, chat_technical_id: str = None) -> Tuple[
         list, set]:
 
         for msg in finished_flow:
@@ -489,6 +604,41 @@ class ChatService:
                 message_content = content.model_dump()
                 # todo - for backwards compatibility - remove
                 message_content[content.type] = content.message
+
+                # Add download URLs for file attachments
+                if content.file_blob_ids:
+                    message_content["file_downloads"] = []
+                    for blob_id in content.file_blob_ids:
+                        # Get blob metadata for filename
+                        try:
+                            blob_message: FlowEdgeMessage = await self.entity_service.get_item(
+                                token=self.cyoda_auth_service,
+                                entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
+                                entity_version=config.ENTITY_VERSION,
+                                technical_id=blob_id,
+                                meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+                            )
+                            if blob_message and blob_message.metadata:
+                                filename = blob_message.metadata.get("filename", "download")
+                                file_size = blob_message.metadata.get("file_size", 0)
+                                content_type = blob_message.metadata.get("content_type", "application/octet-stream")
+                            else:
+                                filename = "download"
+                                file_size = 0
+                                content_type = "application/octet-stream"
+                        except Exception:
+                            filename = "download"
+                            file_size = 0
+                            content_type = "application/octet-stream"
+
+                        message_content["file_downloads"].append({
+                            "blob_id": blob_id,
+                            "filename": filename,
+                            "file_size": file_size,
+                            "content_type": content_type,
+                            "download_url": f"/api/chats/{chat_technical_id}/files/{blob_id}" if chat_technical_id else f"/files/{blob_id}"
+                        })
+
                 dialogue.append(message_content)
 
             if msg.type == "child_entities":
@@ -510,7 +660,8 @@ class ChatService:
                     await self._process_message(finished_flow=child.chat_flow.finished_flow,
                                                 auth_header=auth_header,
                                                 dialogue=dialogue,
-                                                child_entities=child_entities)
+                                                child_entities=child_entities,
+                                                chat_technical_id=chat_technical_id)
         return dialogue, child_entities
 
     async def _get_entities_processing_data(self, technical_id, child_entities):

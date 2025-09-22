@@ -11,4 +11,6 @@ class ChatBusinessEntity(WorkflowEntity):
     date: Optional[Any] = None
     name: Optional[str] = ""
     description: Optional[str] = ""
+    mode: Optional[str] = ""
+
 

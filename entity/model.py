@@ -46,6 +46,8 @@ class FlowEdgeMessage(WorkflowEntity):
     consumed: Optional[bool] = True
     edge_message_id: Optional[str] = None
     message: Optional[Any] = None
+    file_blob_ids: Optional[List[str]] = None  # Support for multiple file attachments
+    metadata: Optional[Dict[str, Any]] = None
     last_modified_at: str = Field(default_factory=lambda: datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S"))
 
 class ChatFlow(BaseModel):

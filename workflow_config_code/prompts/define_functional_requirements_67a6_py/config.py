@@ -65,6 +65,8 @@ Make sure you take in account all the information from application/resources/fun
    * Always provide **full request examples** (including all parameters) and **matching response examples**.
    * Verify that API specs match user requirements exactly.
    Keep the routes requirements as short as possible. Max 100 words per route.
+   
+   Summary documentation added to application/resources/functional_requirements directory of the project with the description of what you have done.
 
 9. **Parallelization**
    Work on processors, criteria, and routes in parallel once entity/workflow definitions are ready.

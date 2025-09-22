@@ -9,7 +9,7 @@ graph LR
     S((Start)):::start ==> A([🏆 Finalize App Requirements]):::done
     A e1@ ==> B([🛠️ Deploy Cyoda environment]):::done
     B e2@ ==> C([🛠️ Gen Entities & Workflows]):::next
-    C e3@ ==> D([🔒 Gen Controllers, Processors, Criteria & Tests]):::bar
+    C e3@ ==> D([🔒 Gen Controllers, Processors, Criteria]):::bar
     D e4@ ==> E([🔒 Launch Cyoda App]):::bar
 
     %% animate handoff to next step (C)
