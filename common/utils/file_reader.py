@@ -5,6 +5,11 @@ import csv
 import xml.etree.ElementTree as ET
 
 try:
+    from docx import Document
+except ImportError:
+    Document = None
+
+try:
     import yaml
 except ImportError:
     # Mock yaml for testing or when PyYAML is not available
@@ -44,7 +49,7 @@ except ImportError:
 def read_file_content(file):
     """
     Reads the contents of an uploaded file based on its extension and returns the content.
-    Supports textual formats: .txt, .json, .csv, .pdf, .drawio, .xml, .html, .yml, .yaml,
+    Supports textual formats: .txt, .json, .csv, .pdf, .docx, .drawio, .xml, .html, .yml, .yaml,
     .toml, .ini, .cfg, .conf, .properties, .env, .log, .md, .rst, .tex, .sql, .sh, .bat,
     .ps1, .dockerfile, .gitignore, .gitattributes, .editorconfig, .htaccess, .robots,
     .makefile, .cmake, .gradle, .maven, .sbt, .requirements, .pipfile, .poetry, .cargo,
@@ -82,6 +87,10 @@ def read_file_content(file):
     elif ext == '.pdf':
         file.seek(0)
         return read_pdf(file)  # Ensure read_pdf handles file-like objects
+
+    elif ext == '.docx':
+        file.seek(0)
+        return read_docx(file)
 
     elif ext == '.drawio':
         file.seek(0)
@@ -191,7 +200,7 @@ def read_file_content(file):
 def read_file_content_by_file_path(file_path):
     """
     Reads the contents of a file based on its extension and returns the content.
-    Supports textual formats: .txt, .json, .csv, .pdf, .drawio, .xml, .html, .yml, .yaml,
+    Supports textual formats: .txt, .json, .csv, .pdf, .docx, .drawio, .xml, .html, .yml, .yaml,
     .toml, .ini, .cfg, .conf, .properties, .env, .log, .md, .rst, .tex, .sql, .sh, .bat,
     .ps1, .dockerfile, .gitignore, .gitattributes, .editorconfig, .htaccess, .robots,
     .makefile, .cmake, .gradle, .maven, .sbt, .requirements, .pipfile, .poetry, .cargo,
@@ -216,6 +225,9 @@ def read_file_content_by_file_path(file_path):
 
     elif ext == '.pdf':
         return read_pdf(file_path)
+
+    elif ext == '.docx':
+        return read_docx(file_path)
 
     elif ext == '.drawio':
         return read_drawio(file_path)
@@ -266,25 +278,46 @@ def read_file_content_by_file_path(file_path):
                 raise ValueError("Unsupported file extension")
 
 
-def read_pdf(file_path):
+def read_pdf(file_input):
     """
     Extracts text from a PDF file using PyMuPDF (fitz).
+
+    Args:
+        file_input: Either a file path (str) or a file-like object (BytesIO, etc.)
     """
-    document = fitz.open(file_path)
+    if isinstance(file_input, str):
+        # File path provided
+        document = fitz.open(file_input)
+    else:
+        # File-like object provided (BytesIO, etc.)
+        file_input.seek(0)
+        document = fitz.open(stream=file_input.read(), filetype="pdf")
+
     pdf_text = ""
     for page_num in range(document.page_count):
         page = document.load_page(page_num)
         pdf_text += page.get_text("text")  # Extract text as plain text
+
+    document.close()  # Clean up resources
     return pdf_text
 
 
-def read_drawio(file_path):
+def read_drawio(file_input):
     """
     Extracts relevant text from a Draw.io (XML) file.
     This function extracts the XML structure, focusing on shapes' labels.
+
+    Args:
+        file_input: Either a file path (str) or a file-like object (BytesIO, etc.)
     """
-    with open(file_path, 'r', encoding='utf-8') as file:
-        xml_content = file.read()
+    if isinstance(file_input, str):
+        # File path provided
+        with open(file_input, 'r', encoding='utf-8') as file:
+            xml_content = file.read()
+    else:
+        # File-like object provided
+        file_input.seek(0)
+        xml_content = file_input.read().decode('utf-8')
 
     # Parse the XML content
     root = ET.fromstring(xml_content)
@@ -300,12 +333,21 @@ def read_drawio(file_path):
     return drawio_text
 
 
-def read_xml(file_path):
+def read_xml(file_input):
     """
     Reads and extracts text from an XML file.
+
+    Args:
+        file_input: Either a file path (str) or a file-like object (BytesIO, etc.)
     """
-    with open(file_path, 'r', encoding='utf-8') as file:
-        xml_content = file.read()
+    if isinstance(file_input, str):
+        # File path provided
+        with open(file_input, 'r', encoding='utf-8') as file:
+            xml_content = file.read()
+    else:
+        # File-like object provided
+        file_input.seek(0)
+        xml_content = file_input.read().decode('utf-8')
 
     # Parse the XML content
     root = ET.fromstring(xml_content)
@@ -315,12 +357,21 @@ def read_xml(file_path):
     return xml_text
 
 
-def read_html(file_path):
+def read_html(file_input):
     """
     Extracts text from an HTML file using BeautifulSoup.
+
+    Args:
+        file_input: Either a file path (str) or a file-like object (BytesIO, etc.)
     """
-    with open(file_path, 'r', encoding='utf-8') as file:
-        html_content = file.read()
+    if isinstance(file_input, str):
+        # File path provided
+        with open(file_input, 'r', encoding='utf-8') as file:
+            html_content = file.read()
+    else:
+        # File-like object provided
+        file_input.seek(0)
+        html_content = file_input.read().decode('utf-8')
 
     # Parse HTML using BeautifulSoup
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -330,14 +381,56 @@ def read_html(file_path):
     return html_text
 
 
-def read_code_file(file_path):
+def read_code_file(file_input):
     """
     Reads content of code files like .java, .kt, .py (Plain text).
+
+    Args:
+        file_input: Either a file path (str) or a file-like object (BytesIO, etc.)
     """
-    with open(file_path, 'r', encoding='utf-8') as file:
-        code_content = file.read()
+    if isinstance(file_input, str):
+        # File path provided
+        with open(file_input, 'r', encoding='utf-8') as file:
+            code_content = file.read()
+    else:
+        # File-like object provided
+        file_input.seek(0)
+        code_content = file_input.read().decode('utf-8')
 
     return code_content
+
+
+def read_docx(file_input):
+    """
+    Extracts text from a DOCX file using python-docx.
+
+    Args:
+        file_input: Either a file path (str) or a file-like object (BytesIO, etc.)
+    """
+    if Document is None:
+        raise ImportError("python-docx library is not available. Install it with: pip install python-docx")
+
+    if isinstance(file_input, str):
+        # File path provided
+        document = Document(file_input)
+    else:
+        # File-like object provided
+        file_input.seek(0)
+        document = Document(file_input)
+
+    # Extract text from all paragraphs
+    docx_text = ""
+    for paragraph in document.paragraphs:
+        docx_text += paragraph.text + "\n"
+
+    # Extract text from tables
+    for table in document.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                docx_text += cell.text + "\t"
+            docx_text += "\n"
+
+    return docx_text.strip()
 
 
 def read_toml_content(content):

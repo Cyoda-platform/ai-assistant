@@ -114,6 +114,7 @@ class UtilityService(BaseWorkflowService):
             # Get repository information
             git_branch_id = entity.workflow_cache.get('git_branch')
             repository_name = entity.workflow_cache.get('repository_name')
+            programming_language = entity.workflow_cache.get(const.PROGRAMMING_LANGUAGE_PARAM)
 
             if not git_branch_id or not repository_name:
                 self.logger.error("Missing git_branch or repository_name in workflow cache")
@@ -126,7 +127,7 @@ class UtilityService(BaseWorkflowService):
                 item="user_requirement.md",
                 git_branch_id=git_branch_id,
                 repository_name=repository_name,
-                folder_name="src/main/resources/functional_requirements"
+                folder_name=params.get(programming_language)
             )
 
             # Get file edge message IDs from workflow cache
