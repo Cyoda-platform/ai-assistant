@@ -203,7 +203,7 @@ class UtilityService(BaseWorkflowService):
                             item=filename,
                             git_branch_id=git_branch_id,
                             repository_name=repository_name,
-                            folder_name="src/main/resources/functional_requirements"
+                            folder_name=params.get(programming_language)
                         )
 
                         self.logger.info(f"Saved file {filename} from edge message {message_id}")
