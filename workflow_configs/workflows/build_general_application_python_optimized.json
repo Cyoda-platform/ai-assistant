@@ -366,12 +366,12 @@
       "transitions": [
         {
           "name": "submit_answer",
-          "next": "env_deployment_started",
+          "next": "env_deployment_notified",
           "manual": true
         },
         {
           "name": "rollback",
-          "next": "env_deployment_started",
+          "next": "env_deployment_notified",
           "manual": true
         },
         {

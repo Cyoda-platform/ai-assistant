@@ -9,17 +9,10 @@ from typing import Any, Dict, Callable
 
 from workflow_config_code.agents.generate_app_java.agent import GenerateAppJavaAgentConfig
 from workflow_config_code.messages.notify_project_compiled_f5g6.message import NotifyProjectCompiledF5g6MessageConfig
-from workflow_config_code.messages.notify_prototype_generation_0000.message import \
-    NotifyPrototypeGeneration0000MessageConfig
 from workflow_config_code.messages.welcome_user_optimized.message import WelcomeUserOptimizedMessageConfig
 from workflow_config_code.tools.delete_files_6818.tool import DeleteFiles6818ToolConfig
 from workflow_config_code.tools.init_setup_workflow_5f06.tool import InitSetupWorkflow5f06ToolConfig
-from workflow_config_code.messages.welcome_user_25fc.message import WelcomeUser25fcMessageConfig
-from workflow_config_code.messages.notify_generated_original_requirements_b94e.message import \
-    NotifyGeneratedOriginalRequirementsB94eMessageConfig
 from workflow_config_code.agents.process_user_input_9a8e.agent import ProcessUserInput9a8eAgentConfig
-from workflow_config_code.messages.notify_env_deployment_start_c5d6.message import \
-    NotifyEnvDeploymentStartC5d6MessageConfig
 from workflow_config_code.tools.init_chats_d512.tool import InitChatsD512ToolConfig
 from workflow_config_code.tools.clone_repo_b60a.tool import CloneRepoB60aToolConfig
 from workflow_config_code.tools.not_stage_completed_f259.tool import NotStageCompletedF259ToolConfig
@@ -243,12 +236,12 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "submit_answer",
-                        "next": "env_deployment_started",
+                        "next": "env_deployment_notified",
                         "manual": True
                     },
                     {
                         "name": "rollback",
-                        "next": "env_deployment_started",
+                        "next": "env_deployment_notified",
                         "manual": True
                     }
                 ]

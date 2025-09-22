@@ -237,12 +237,12 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 "transitions": [
                     {
                         "name": "submit_answer",
-                        "next": "env_deployment_started",
+                        "next": "env_deployment_notified",
                         "manual": True
                     },
                     {
                         "name": "rollback",
-                        "next": "env_deployment_started",
+                        "next": "env_deployment_notified",
                         "manual": True
                     }
                 ]
