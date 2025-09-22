@@ -39,7 +39,7 @@ class TestApplicationBuilderServiceFileCollection:
         message1 = FlowEdgeMessage(
             type="answer",
             edge_message_id="msg1",
-            file_blob_id="file1",
+            file_blob_ids=["file1"],
             publish=True
         )
         
@@ -52,17 +52,14 @@ class TestApplicationBuilderServiceFileCollection:
         
         message3 = FlowEdgeMessage(
             type="answer",
-            edge_message_id="msg3", 
-            attachment_edge_message_id="attachment1",
+            edge_message_id="msg3",
             publish=True
         )
-        
+
         message4 = FlowEdgeMessage(
             type="answer",
             edge_message_id="msg4",
             file_blob_ids=["file4", "file5"],
-            file_blob_id="file4",  # Backward compatibility
-            attachment_edge_message_id="attachment2",
             publish=True
         )
         
@@ -111,13 +108,13 @@ class TestApplicationBuilderServiceFileCollection:
         )
 
     def test_extract_file_ids_from_message_single_file(self, service):
-        """Test extracting file IDs from message with single file_blob_id."""
+        """Test extracting file IDs from message with single file in file_blob_ids."""
         message = FlowEdgeMessage(
             type="answer",
-            file_blob_id="single_file",
+            file_blob_ids=["single_file"],
             edge_message_id="msg1"
         )
-        
+
         result = service._extract_file_ids_from_message(message)
         assert result == ["single_file"]
 
@@ -132,41 +129,29 @@ class TestApplicationBuilderServiceFileCollection:
         result = service._extract_file_ids_from_message(message)
         assert result == ["file1", "file2", "file3"]
 
-    def test_extract_file_ids_from_message_attachment(self, service):
-        """Test extracting file IDs from message with attachment_edge_message_id."""
-        message = FlowEdgeMessage(
-            type="answer",
-            attachment_edge_message_id="attachment1",
-            edge_message_id="msg1"
-        )
-        
-        result = service._extract_file_ids_from_message(message)
-        assert result == ["attachment1"]
 
-    def test_extract_file_ids_from_message_all_types(self, service):
-        """Test extracting file IDs from message with all file types."""
+
+    def test_extract_file_ids_from_message_multiple_files_only(self, service):
+        """Test extracting file IDs from message with only file_blob_ids."""
         message = FlowEdgeMessage(
             type="answer",
             file_blob_ids=["file1", "file2"],
-            attachment_edge_message_id="attachment1",
             edge_message_id="msg1"
         )
-        
-        result = service._extract_file_ids_from_message(message)
-        # Should prioritize file_blob_ids over file_blob_id, and include attachment
-        assert result == ["file1", "file2", "attachment1"]
 
-    def test_extract_file_ids_from_message_backward_compatibility(self, service):
-        """Test backward compatibility with single file_blob_id when file_blob_ids is None."""
+        result = service._extract_file_ids_from_message(message)
+        assert result == ["file1", "file2"]
+
+    def test_extract_file_ids_from_message_empty_file_blob_ids(self, service):
+        """Test extracting file IDs from message with empty file_blob_ids."""
         message = FlowEdgeMessage(
             type="answer",
-            file_blob_id="single_file",
-            file_blob_ids=None,
+            file_blob_ids=[],
             edge_message_id="msg1"
         )
-        
+
         result = service._extract_file_ids_from_message(message)
-        assert result == ["single_file"]
+        assert result == []
 
     def test_extract_file_ids_from_message_no_files(self, service):
         """Test extracting file IDs from message without files."""
@@ -182,8 +167,8 @@ class TestApplicationBuilderServiceFileCollection:
         """Test collecting file edge message IDs from entity with files."""
         result = service._collect_file_edge_message_ids(chat_entity_with_files)
         
-        # Expected files: file1, file2, file3, attachment1, file4, file5, attachment2
-        expected = ["file1", "file2", "file3", "attachment1", "file4", "file5", "attachment2"]
+        # Expected files: file1, file2, file3, file4, file5 (no attachments since they don't exist in model)
+        expected = ["file1", "file2", "file3", "file4", "file5"]
         assert result == expected
 
     def test_collect_file_edge_message_ids_no_files(self, service, chat_entity_no_files):
@@ -253,7 +238,7 @@ class TestApplicationBuilderServiceFileCollection:
         call_args = service.workflow_helper_service.launch_agentic_workflow.call_args
         workflow_cache = call_args.kwargs["workflow_cache"]
         
-        expected_file_ids = ["file1", "file2", "file3", "attachment1", "file4", "file5", "attachment2"]
+        expected_file_ids = ["file1", "file2", "file3", "file4", "file5"]
         assert "file_edge_message_ids" in workflow_cache
         assert workflow_cache["file_edge_message_ids"] == expected_file_ids
         

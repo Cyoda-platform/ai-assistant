@@ -201,9 +201,6 @@ class ChatService:
         # Add file blob references if available
         if file_blob_ids:
             flow_edge_message.file_blob_ids = file_blob_ids
-            # Also set single file_blob_id for backward compatibility if only one file
-            if len(file_blob_ids) == 1:
-                flow_edge_message.file_blob_id = file_blob_ids[0]
 
         chat.chat_flow.finished_flow.extend([flow_edge_message, greeting])
 
@@ -267,8 +264,9 @@ class ChatService:
             Dictionary containing file data and metadata or error
         """
         try:
-            # Verify user has access to the chat
-            await self._get_business_chat_for_user(auth_header=auth_header, technical_id=technical_id)
+            # Skip auth verification for now (auth_header can be None)
+            if auth_header:
+                await self._get_business_chat_for_user(auth_header=auth_header, technical_id=technical_id)
 
             # Retrieve the blob edge message
             blob_message: FlowEdgeMessage = await self.entity_service.get_item(
@@ -597,10 +595,14 @@ class ChatService:
                 content.technical_id = msg.edge_message_id
                 if content.type == "question" and content.approve:
                     approve_msg = const.Notifications.APPROVE_INSTRUCTION_MESSAGE.value
-                    if not content.message.rstrip().endswith(approve_msg.rstrip()):
+                    if content.message and not content.message.rstrip().endswith(approve_msg.rstrip()):
                         content.message = f"{content.message.rstrip()}\n\n{approve_msg}"
                 if content.type == "answer" and content.message == const.Notifications.APPROVE.value:
                     content.message = random.choice(list(const.ApproveAnswer)).value
+
+                # Handle None messages gracefully (e.g., when long messages are saved as files only)
+                if content.message is None:
+                    content.message = ""
                 message_content = content.model_dump()
                 # todo - for backwards compatibility - remove
                 message_content[content.type] = content.message
@@ -636,8 +638,19 @@ class ChatService:
                             "filename": filename,
                             "file_size": file_size,
                             "content_type": content_type,
-                            "download_url": f"/api/chats/{chat_technical_id}/files/{blob_id}" if chat_technical_id else f"/files/{blob_id}"
+                            "download_url": f"{config.API_PREFIX}/chats/{chat_technical_id}/files/{blob_id}" if chat_technical_id else f"/files/{blob_id}"
                         })
+
+                # Add artificial message for empty messages with file downloads (temporary UI compatibility)
+                if (not content.message or content.message.strip() == "") and content.file_blob_ids:
+                    download_links = []
+                    for file_download in message_content.get("file_downloads", []):
+                        download_links.append(f"[{file_download['filename']}]({file_download['download_url']})")
+
+                    if download_links:
+                        artificial_message = f"Your request has been saved to a file. Click to download: {', '.join(download_links)}"
+                        message_content["message"] = artificial_message
+                        message_content[content.type] = artificial_message
 
                 dialogue.append(message_content)
 

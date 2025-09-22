@@ -24,11 +24,9 @@ This project is a **Cyoda client application** built with Spring Boot and Gradle
 ## Critical Rules
 - **NEVER modify** `src/main/java/com/java_template/common/` directory
 - **ALWAYS compile** after each component: `./gradlew clean compileJava`
-- **Processors execute but changes may not persist** - Entity data persistence from processors is a known limitation
 - **Processors are read-only** for current entity; can CRUD other entities via EntityService
 - **Import QueryCondition** for search conditions: `List<QueryCondition>` not `List<SimpleCondition>`
 - **Use Config.ENTITY_VERSION** constant (1) instead of hardcoded versions
-- **Workflow states vs business status** - Workflow state changes (e.g., "checking_out") don't automatically update business status fields
 
 ## Project Structure
 ```
@@ -93,7 +91,6 @@ public class EntityName implements CyodaEntity {
 - All transitions must have explicit `"manual": true/false` flags
 - Processor names must match Spring component class names exactly
 - Keep simple unless requirements demand complexity
-- **CRITICAL**: Import workflows BEFORE starting application
 
 **Template**:
 ```json
@@ -222,29 +219,16 @@ List<EntityWithMetadata<Entity>> results = entityService.search(modelSpec, group
 - Return slim DTOs for list endpoints, full entities for detail endpoints
 
 ### Testing Strategy
-- **CRITICAL**: Import workflows BEFORE starting application using MCP tools
 - Compile frequently: `./gradlew clean compileJava`
-- Test via REST API endpoints, not just MCP tools
-- Monitor application logs for processor execution confirmation
-- Verify workflow state transitions in entity metadata
 - Use exact entity names from ENTITY_NAME constants for workflow imports
-
-### Known Limitations
-- **Processor Data Persistence**: Processors execute correctly but entity field changes may not persist to database
-- **Business Status vs Workflow State**: Workflow state changes don't automatically update business status fields
-- **Workaround**: Create separate processors to bridge workflow states to business status fields
 
 ## Completion Checklist
 - [ ] All entities implement CyodaEntity with proper validation
 - [ ] All workflows use "initial" state (not "none") with explicit manual flags
-- [ ] All processors handle business logic and log execution
 - [ ] All controllers are thin proxies with no business logic
-- [ ] **CRITICAL**: Workflows imported BEFORE application startup
 - [ ] Project compiles successfully: `./gradlew build`
 - [ ] All functional requirements satisfied
 - [ ] No modifications to `common/` directory
-- [ ] E2E testing via REST API confirms processor execution
-- [ ] Workflow state transitions verified in entity metadata
 - [ ] Summary documentation added to root directory of the project with the description of the application (what you built, how to validate it works, etc.)
 
 ## Success Criteria
@@ -253,6 +237,4 @@ The implementation is complete when:
 2. **Requirements coverage** - All user requirements implemented
 3. **Workflow compliance** - All transitions follow manual/automatic rules with proper initial state
 4. **Architecture adherence** - No reflection, thin controllers, proper separation
-5. **E2E verification** - Processors execute and log business logic (even if data persistence has limitations)
-6. **Workflow integration** - Entities progress through workflow states correctly
 """

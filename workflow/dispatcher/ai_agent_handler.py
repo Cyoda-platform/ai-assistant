@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import common.config.const as const
 from common.config.config import config as env_config
 from common.utils.chat_util_functions import enrich_config_message
@@ -114,6 +114,9 @@ class AIAgentHandler:
                                                      technical_id=technical_id)
                 # Extract model configuration
                 model = ModelConfig.model_validate(config.get("model", {}))
+
+                # Process file content for empty/minimal user messages
+                await self._process_file_content_for_empty_messages(messages, finished_flow)
 
                 # Run the AI agent with correct signature
                 response = await self.ai_agent.run_agent(
@@ -713,3 +716,187 @@ class AIAgentHandler:
         except Exception as e:
             logger.exception(f"❌ Failed to trigger 'complete_generation' transition for entity {technical_id}: {e}")
             raise
+
+    async def _process_file_content_for_empty_messages(self, messages: List[AIMessage],
+                                                       finished_flow: List[FlowEdgeMessage]) -> None:
+        """
+        Process file content for empty/minimal user messages by extracting first 100 and last 100 words
+        from submitted files and modifying the user message in the messages list.
+
+        Args:
+            messages: List of AI messages to potentially modify
+            finished_flow: Finished flow messages containing user answers and file attachments
+        """
+        try:
+            # Find the latest user answer message
+            latest_answer = next(
+                (msg for msg in reversed(finished_flow) if msg.type == "answer"),
+                None
+            )
+
+            if not latest_answer:
+                return
+
+            # Get the message content
+            message_content: FlowEdgeMessage = await self.entity_service.get_item(
+                token=self.cyoda_auth_service,
+                entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
+                entity_version=env_config.ENTITY_VERSION,
+                technical_id=latest_answer.edge_message_id,
+                meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+            )
+
+            # Check if message is empty/minimal and has file attachments
+            user_message = message_content.message
+            file_blob_ids = message_content.file_blob_ids
+
+            if (not user_message or len(str(user_message).strip()) < 10) and file_blob_ids:
+                logger.info(f"Processing file content for empty/minimal user message with {len(file_blob_ids)} file(s)")
+
+                # Extract content from the first file
+                processed_message = await self._extract_file_content_for_message(file_blob_ids[0])
+
+                if processed_message:
+                    # Find and update the corresponding user message in the messages list
+                    await self._update_user_message_with_file_content(messages, processed_message)
+
+        except Exception as e:
+            logger.exception(f"Error processing file content for empty messages: {e}")
+            # Don't raise - this is optional processing, shouldn't break the flow
+
+    async def _extract_file_content_for_message(self, file_blob_id: str) -> Optional[str]:
+        """
+        Extract file content from a blob and create a processed message with first 100 and last 100 words.
+        """
+        try:
+            # Get the file blob
+            file_blob: FlowEdgeMessage = await self.entity_service.get_item(
+                token=self.cyoda_auth_service,
+                entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
+                entity_version=env_config.ENTITY_VERSION,
+                technical_id=file_blob_id,
+                meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+            )
+
+            if file_blob.type != "file_blob":
+                return None
+
+            # Decode the base64 content and extract text
+            import base64
+            import io
+
+            encoded_content = file_blob.message
+            file_bytes = base64.b64decode(encoded_content)
+
+            # Get filename from metadata
+            metadata = file_blob.metadata or {}
+            filename = metadata.get("filename", "unknown_file")
+
+            # Create a file-like object for the file reader
+            file_like = io.BytesIO(file_bytes)
+            file_like.filename = filename
+
+            # Use the existing file reader to extract text content
+            from common.utils.file_reader import read_file_content
+            file_content = read_file_content(file_like)
+
+            # Convert to string if it's not already
+            if not isinstance(file_content, str):
+                file_content = str(file_content)
+
+            # Apply word count processing (first 100 and last 100 words)
+            words = file_content.split()
+            if len(words) > 200:
+                first_100 = " ".join(words[:100])
+                last_100 = " ".join(words[-100:])
+                processed_message = f"{first_100} [{const.USER_ATTACHED_FILE_MESSAGE}] {last_100}"
+                logger.info(f"File content processed: {len(words)} words -> abridged message")
+            else:
+                processed_message = file_content
+                logger.info(f"File content processed: {len(words)} words -> used as-is")
+
+            return processed_message
+
+        except Exception as e:
+            logger.exception(f"Error extracting file content from blob {file_blob_id}: {e}")
+            return None
+
+    async def _update_user_message_with_file_content(self, messages: List[AIMessage], processed_message: str) -> None:
+        """
+        Update the last user message in the messages list with the processed file content.
+        """
+        try:
+            # Find the last user message and update its content
+            for message in reversed(messages):
+                if message.role == "user":
+                    # Update the message content with the processed file content
+                    message.content = processed_message
+                    logger.info("Updated user message with processed file content")
+                    break
+
+        except Exception as e:
+            logger.exception(f"Error updating user message with file content: {e}")
+
+    async def _extract_file_content_for_message(self, file_blob_id: str) -> Optional[str]:
+        """
+        Extract file content from a blob and create a processed message with first 100 and last 100 words.
+
+        Args:
+            file_blob_id: ID of the file blob to extract content from
+
+        Returns:
+            Processed message string or None if extraction fails
+        """
+        try:
+            # Get the file blob
+            file_blob: FlowEdgeMessage = await self.entity_service.get_item(
+                token=self.cyoda_auth_service,
+                entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
+                entity_version=env_config.ENTITY_VERSION,
+                technical_id=file_blob_id,
+                meta={"type": env_config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+            )
+
+            if file_blob.type != "file_blob":
+                logger.warning(f"Expected file_blob type, got {file_blob.type}")
+                return None
+
+            # Decode the base64 content
+            import base64
+            import io
+
+            encoded_content = file_blob.message
+            file_bytes = base64.b64decode(encoded_content)
+
+            # Get filename from metadata
+            metadata = file_blob.metadata or {}
+            filename = metadata.get("filename", "unknown_file")
+
+            # Create a file-like object for the file reader
+            file_like = io.BytesIO(file_bytes)
+            file_like.filename = filename
+
+            # Use the existing file reader to extract text content
+            from common.utils.file_reader import read_file_content
+            file_content = read_file_content(file_like)
+
+            # Convert to string if it's not already
+            if not isinstance(file_content, str):
+                file_content = str(file_content)
+
+            # Apply word count processing (first 100 and last 100 words)
+            words = file_content.split()
+            if len(words) > 200:
+                first_100 = " ".join(words[:100])
+                last_100 = " ".join(words[-100:])
+                processed_message = f"{first_100} [{const.USER_ATTACHED_FILE_MESSAGE}] {last_100}"
+                logger.info(f"File content processed: {len(words)} words -> abridged message")
+            else:
+                processed_message = file_content
+                logger.info(f"File content processed: {len(words)} words -> used as-is")
+
+            return processed_message
+
+        except Exception as e:
+            logger.exception(f"Error extracting file content from blob {file_blob_id}: {e}")
+            return None

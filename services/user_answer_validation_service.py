@@ -54,24 +54,12 @@ class UserAnswerValidationService:
                 blob_id = await self._save_file_as_blob(file, user_id)
                 file_blob_ids.append(blob_id)
 
-        # Check if answer is empty/minimal - if so, use first file content
+        # Check if answer is empty/minimal - keep original message unchanged
         if not answer or len(answer.strip()) < 10:  # Less than 10 characters considered minimal
             if files_to_process:
-                logger.info("Answer is minimal, using first file content as message")
-                file_content = await self._read_file_content_for_answer(files_to_process[0])
-                if file_content:
-                    # Use file content as the answer, apply word count rules to it
-                    words = file_content.split()
-                    if len(words) > 200:
-                        # File content > N words: abridge it
-                        first_100 = " ".join(words[:100])
-                        last_100 = " ".join(words[-100:])
-                        abridged_answer = f"{first_100} [{const.USER_ATTACHED_FILE_MESSAGE}] {last_100}"
-                        logger.info(f"File content abridged from {len(words)} words")
-                        return abridged_answer, file_blob_ids
-                    else:
-                        # File content <= N words: use as-is
-                        return file_content, file_blob_ids
+                logger.info("Answer is minimal with files attached - keeping original message unchanged, file processing will be handled by AI agent handler")
+                # Return original answer unchanged, let AI agent handler process file content
+                return answer, file_blob_ids
             # If no files and minimal answer, return as-is
             return answer, file_blob_ids
 
@@ -91,59 +79,36 @@ class UserAnswerValidationService:
                 logger.info(f"Short message ({word_count} words) with no files - keeping as-is")
                 return answer, None
         else:
-            # Message > N words
-            first_100 = " ".join(words[:100])
-            last_100 = " ".join(words[-100:])
-            abridged_answer = f"{first_100} [{const.USER_ATTACHED_FILE_MESSAGE}] {last_100}"
-
+            # Message > N words - treat exclusively as files, no message content
             if files_to_process:
-                # message > N and files -> message = abridged(message), files = files + file for initial message
-                logger.info(f"Long message ({word_count} words) with {len(files_to_process)} files - abridging and adding original as file")
+                # message > N and files -> message = None, files = files + file for initial message
+                logger.info(f"Long message ({word_count} words) with {len(files_to_process)} files - saving original as file, no message content")
 
                 # Save the original full message as a text file blob
                 original_message_blob_id = await self._save_text_as_blob(answer, "original_message.txt", user_id)
                 file_blob_ids.append(original_message_blob_id)
 
-                return abridged_answer, file_blob_ids
+                return None, file_blob_ids
             else:
-                # message > N and no file -> message = abridged(message), save as txt edge message the full message
-                logger.info(f"Long message ({word_count} words) with no files - abridging and saving full as attachment")
+                # message > N and no file -> message = None, save as txt edge message the full message
+                logger.info(f"Long message ({word_count} words) with no files - saving full as file, no message content")
                 attachment_id = await self._save_full_answer_as_attachment(answer)
-                return abridged_answer, [attachment_id]
+                return None, [attachment_id]
 
         # This should not be reached due to the logic above, but keeping as fallback
         return answer, None
 
     async def _save_full_answer_as_attachment(self, full_answer: str) -> str:
         """
-        Saves the full answer as an edge message attachment.
-        
+        Saves the full answer as a file blob.
+
         Args:
             full_answer: The complete user answer
-            
+
         Returns:
-            The edge message ID of the saved attachment
+            The edge message ID of the saved file blob
         """
-        last_modified = get_current_timestamp_num()
-        
-        attachment_flow_message = FlowEdgeMessage(
-            type="answer_attachment",
-            message=full_answer,
-            publish=False,  # Attachments are not published to the main flow
-            consumed=True,
-            last_modified=last_modified
-        )
-        
-        attachment_edge_message_id = await self.entity_service.add_item(
-            token=self.cyoda_auth_service,
-            entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
-            entity_version=config.ENTITY_VERSION,
-            entity=attachment_flow_message,
-            meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
-        )
-        
-        logger.info(f"Saved full answer as attachment with ID: {attachment_edge_message_id}")
-        return attachment_edge_message_id
+        return await self._save_text_as_blob(full_answer, "user_message.txt", "system")
 
     async def _save_file_as_blob(self, user_file, user_id: str = None) -> str:
         """

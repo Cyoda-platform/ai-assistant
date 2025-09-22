@@ -69,27 +69,27 @@ async def delete_chat_route(technical_id):
 
 
 @chat_bp.route('/<technical_id>/files/<blob_id>', methods=['GET'])
-@rate_limit(const.RATE_LIMIT, timedelta(minutes=1), key_function=token_key_function)
-@auth_optional
 async def download_file_route(technical_id, blob_id):
-    """Download a file by blob ID from a chat."""
-    header, _ = await extract_auth_info()
-    result = await chat_service.download_file(header, technical_id, blob_id)
+    """Download a file by blob ID from a chat (no auth for testing)."""
+    try:
+        result = await chat_service.download_file(None, technical_id, blob_id)
 
-    if "error" in result:
-        return jsonify(result), 400
+        if "error" in result:
+            return jsonify(result), 400
 
-    # Return file as response with appropriate headers
-    response = Response(
-        result["content"],
-        mimetype=result["content_type"],
-        headers={
-            "Content-Disposition": f'attachment; filename="{result["filename"]}"',
-            "Content-Length": str(result["file_size"]),
-            "Cache-Control": "no-cache"
-        }
-    )
-    return response
+        # Return file as response with appropriate headers
+        response = Response(
+            result["content"],
+            mimetype=result["content_type"],
+            headers={
+                "Content-Disposition": f'attachment; filename="{result["filename"]}"',
+                "Content-Length": str(result["file_size"]),
+                "Cache-Control": "no-cache"
+            }
+        )
+        return response
+    except Exception as e:
+        return jsonify({"error": f"Download failed: {str(e)}"}), 500
 
 
 @chat_bp.route('/<technical_id>', methods=['PUT'])
