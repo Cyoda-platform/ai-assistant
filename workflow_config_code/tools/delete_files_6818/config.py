@@ -13,16 +13,17 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     return lambda params=None: {
         "type": "function",
         "function": {
-                "name": "delete_files",
-                "description": "delete_files",
-                "parameters": {
-                        "files": [
-                                "src/main/java/com/java_template/prototype/EntityControllerPrototypeWithoutProcessing.java"
-                        ],
-                        "directories": [
-                                "src/main/java/com/java_template/application/workflow_prototypes"
-                        ]
-                }
+            "name": "delete_files",
+            "description": "delete_files",
+            "parameters": {
+                "files": [
+                    "src/main/java/com/java_template/prototype/EntityControllerPrototypeWithoutProcessing.java",
+                    "__init__.py"
+                ],
+                "directories": [
+                    "src/main/java/com/java_template/application/workflow_prototypes"
+                ]
+            }
         },
         "publish": False
-}
+    }
