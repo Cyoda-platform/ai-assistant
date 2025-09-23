@@ -59,6 +59,7 @@ pip install -e ".[dev]"
 - **Routes**: See `application/routes/` for API endpoint patterns
 
 ### 3. Create Your Entities for your application
+Keep it minimal - just enough to satisfy the requirements.
 **Location**: `application/entity/{entity_name}/version_1/{entity_name}.py`
 - Extend `CyodaEntity` from `common.entity.cyoda_entity`
 - Define `ENTITY_NAME` and `ENTITY_VERSION` constants
