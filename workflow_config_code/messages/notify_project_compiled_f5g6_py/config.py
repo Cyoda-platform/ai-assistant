@@ -92,7 +92,6 @@ Do **not generate or re-implement code** — focus on **reviewing, checking, and
 #### Validation Checklist (Per Entity)
 1. **Entities** – Implemented under `application/entity/{entity}/version_1/`.
    * Fields match `entityName.md` from functional requirements.
-   * No manual state fields; state comes from metadata.
    * Constants (`ENTITY_NAME`, `ENTITY_VERSION`) correct.
 2. **Workflows** – States and transitions align with JSON. Manual-only transitions.
 3. **Processors** – Match requirements in `entity_workflow.md`.

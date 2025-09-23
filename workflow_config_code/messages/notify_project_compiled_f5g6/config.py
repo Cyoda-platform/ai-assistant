@@ -84,7 +84,7 @@ Do **not** generate new code — focus on **reviewing, checking, and highlightin
 * Exit once all checks succeed and requirements are met.
 
 #### Golden Rules — Check For
-* Processors do not update the current entity (read-only).
+* Processors do not update the current entity (read-only) via entityService update operations.
 * Only manual transitions allowed for updates.
 
 #### IDs & Metadata — Verify Correct Usage
@@ -114,11 +114,11 @@ Do **not** generate new code — focus on **reviewing, checking, and highlightin
 #### Validation Checklist (Per Entity)
 
 0. Confirm generated classes exist under `build/generated-sources/js2p/...`.
-1. **Entities** – POJOs match `entityName.md`. No manual state fields.
+1. **Entities** – POJOs match `entityName.md`.
 2. **Workflows** – States + transitions align with JSON.
 3. **Processors** – Match `entity_workflow.md`.
 
-   * No updates to current entity.
+   * No updates to current entity via entityService update operations.
    * Proper `EntityService` use.
    * Correct transitions.
 4. **Criteria** – Minimal, accurate, per requirements.
