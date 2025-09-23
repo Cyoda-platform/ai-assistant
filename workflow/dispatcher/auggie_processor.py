@@ -231,6 +231,21 @@ class AuggieProcessor:
         elapsed_time = 0
         pid = process.pid
 
+        # Send initial notification immediately when process starts
+        if branch_id and repository_name:
+            try:
+                commit_result = await self._commit_all_changes(branch_id, repository_name)
+                await self._send_commit_notification(
+                    entity=entity,
+                    branch_id=branch_id,
+                    repository_name=repository_name,
+                    elapsed_time=0,  # Initial notification at 0 seconds
+                    git_diff=commit_result["diff"],
+                    commit_type="incremental"
+                )
+            except Exception as e:
+                logger.warning(f"⚠️ [{branch_id}] Failed to send initial commit notification: {e}")
+
         while elapsed_time < timeout_seconds:
             try:
                 # Wait for either process completion or check interval
