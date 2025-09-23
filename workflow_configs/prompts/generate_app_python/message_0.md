@@ -64,6 +64,8 @@ pip install -e ".[dev]"
 - Extend `CyodaEntity` from `common.entity.cyoda_entity`
 - Define `ENTITY_NAME` and `ENTITY_VERSION` constants
 - Add business fields with Pydantic Field definitions
+ If requirements mention “state” or “status”, map them to `entity.meta.state` instead and explain this to the user.
+State is managed by the workflow and you can not change it manually, you can only read it.
 - **Reference**: `example_application/entity/example_entity.py`
 
 ### 4. Define Workflows: 1 workflow per entity

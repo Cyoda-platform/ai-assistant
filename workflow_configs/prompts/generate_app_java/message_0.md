@@ -27,6 +27,8 @@ This project is a **Cyoda client application** built with Spring Boot and Gradle
 - **Entity state**:
   `entityResponse.getMetadata().getState()`
   Entity state is managed by the workflow and you can not change it manually, you can only read it.
+ If requirements mention “state” or “status”, map them to `entity.meta.state` instead and explain this to the user.
+    
 - **Business ID (user-defined, non-unique, mutable)**:
   retrievable/updatable with business ID–specific methods.
 - **Update semantics**:
