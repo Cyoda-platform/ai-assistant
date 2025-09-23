@@ -38,7 +38,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "publish": True,
         "allow_anonymous_users": True,
         "model": {
-                "model_name": "gpt-4o",
+                "model_name": "gpt-5-mini",
                 "temperature": 0.7,
                 "max_tokens": 10000
         },
