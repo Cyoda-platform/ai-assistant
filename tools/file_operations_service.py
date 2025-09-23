@@ -447,7 +447,7 @@ class FileOperationsService(BaseWorkflowService):
                 return "No files or directories specified for deletion"
 
             # Use repository resolver to determine repository name
-            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            repository_name = resolve_repository_name_with_language_param(entity)
             git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
 
             # Use safe delete operations (utils.py handles all concurrency safety)

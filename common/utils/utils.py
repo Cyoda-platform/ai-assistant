@@ -980,31 +980,34 @@ async def delete_file(_data, item, git_branch_id, repository_name: str, folder_n
     Delete a file inside a specific directory in a cloned repository.
     If config.CLONE_REPO is true, pushes the deletion to the repository.
     """
-    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
-    target_dir = os.path.join(f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}", folder_name or "")
-    file_path = os.path.join(target_dir, item)
+    async with _file_operations_lock:
+        await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
+        target_dir = os.path.join(f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}", folder_name or "")
+        file_path = os.path.join(target_dir, item)
 
-    logger.info(f"Attempting to delete: {file_path}")
+        logger.info(f"Attempting to delete: {file_path}")
 
-    # Ensure target directory exists before attempting to delete
-    await asyncio.to_thread(os.makedirs, os.path.dirname(file_path), exist_ok=True)
+        # Delete file if it exists
+        if await asyncio.to_thread(os.path.isfile, file_path):
+            await asyncio.to_thread(os.remove, file_path)
+            logger.info(f"Deleted file: {file_path}")
+        else:
+            logger.warning(f"File not found for deletion: {file_path}")
+            # Still continue with git operations in case the file exists in git but not locally
 
-    # Delete file
-    if os.path.isfile(file_path):
-        await asyncio.to_thread(os.remove, file_path)
-        logger.info(f"Deleted file: {file_path}")
-    else:
-        logger.warning(f"File not found for deletion: {file_path}")
+        # Push changes to Git if cloning is enabled
+        if config.CLONE_REPO == "true":
+            # Calculate the relative path from repository root for git operations
+            repo_root = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
+            relative_path = os.path.relpath(file_path, repo_root)
 
-    # Push changes to Git if cloning is enabled
-    if config.CLONE_REPO == "true":
-        await _git_push(git_branch_id=git_branch_id,
-                        file_paths=[item],
-                        commit_message=f"deleted {item}",
-                        repository_name=repository_name)
-        logger.info("Pushed deletion to git")
+            await _git_push(git_branch_id=git_branch_id,
+                            file_paths=[relative_path],
+                            commit_message=f"deleted {relative_path}",
+                            repository_name=repository_name)
+            logger.info("Pushed deletion to git")
 
-    return str(file_path)
+        return str(file_path)
 
 
 async def delete_directory(_data, item, git_branch_id, repository_name: str, folder_name=None) -> str:

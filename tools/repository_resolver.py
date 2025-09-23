@@ -6,6 +6,7 @@ based on programming language and entity context.
 from abc import ABC, abstractmethod
 from typing import Optional
 
+from common.config import const
 from common.config.config import config
 from entity.model import WorkflowEntity
 
@@ -56,7 +57,7 @@ class DefaultRepositoryResolver(RepositoryResolver):
 
         # Check entity workflow cache
         if "programming_language" in entity.workflow_cache:
-            cached_language = entity.workflow_cache["programming_language"]
+            cached_language = entity.workflow_cache[const.PROGRAMMING_LANGUAGE_PARAM]
             return self._get_repository_for_language(cached_language)
 
         # Fall back to workflow name suffix
