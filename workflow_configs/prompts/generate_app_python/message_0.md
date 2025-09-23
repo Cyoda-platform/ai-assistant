@@ -7,10 +7,9 @@ This guide helps you build **Cyoda Python client applications** using the establ
 - **Interface-based design** - Extend CyodaEntity/CyodaProcessor base classes
 - **Workflow-driven architecture** - All business logic flows through Cyoda workflows
 - **Thin routes** - Pure proxies to EntityService with no business logic
-- **Manual transitions only** - Entity updates must specify manual transitions explicitly
+- Entity updates must specify manual transitions explicitly
 
 ## Golden Rules
-- No reflection.
 - Modify only the application directory.
 - Compile early and often; fix errors immediately.
 - Routes = thin proxies to EntityService (no business logic).
@@ -53,9 +52,9 @@ pip install -e ".[dev]"
 - **Requirements**: `application/resources/functional_requirements/` - Contains all business requirements for your application
 
 **Then examine reference patterns in `example_application/`:**
-- **Entity**: `entity/example_entity.py` - Shows CyodaEntity extension patterns
-- **Processor**: `processor/example_entity_processor.py` - Business logic implementation
-- **Criterion**: `criterion/example_entity_validation_criterion.py` - Validation logic
+- **Entity**: `entity/example_entity.py` - Shows CyodaEntity extension patterns. Keep it minimal - just enough to satisfy the requirements.
+- **Processor**: `processor/example_entity_processor.py` - Business logic implementation. Functions should follow KISS principle, just enough to satisfy the requirements.
+- **Criterion**: `criterion/example_entity_validation_criterion.py` - Validation logic. Follow KISS principle, just enough to satisfy the requirements.
 - **Workflow**: `resources/workflow/example_entity/version_1/ExampleEntity.json` - Workflow structure - must validate against `example_application/resources/workflow/workflow_schema.json`
 - **Routes**: See `application/routes/` for API endpoint patterns
 
@@ -94,7 +93,6 @@ State is managed by the workflow and you can not change it manually, you can onl
 - Extend `CyodaProcessor` from `common.processor.base`
 - Use `cast_entity()` for type-safe entity operations
 - Access other entities via `get_entity_service()`
-- Study processors requirements in `application/resources/functional_requirements/entityName/entityName_workflow.md`
 - No updates to current entity with the entityService - it will be updated automatically once you return; only get/update/delete other entities.
 - To update another entity use EntityService: apply correct transition (manual only), or omit for loop-back.
 - Check with example_application processors for reference.
@@ -108,7 +106,6 @@ State is managed by the workflow and you can not change it manually, you can onl
 - You can get entity id, state etc directly from entity as it extends CyodaEntity.
 
 ### 6. Implement Criteria
-- Study criteria requirements in `application/resources/functional_requirements/entityName/entityName_workflow.md`
 - Implement under `application/criterion/`.
 - Keep minimal and direct.
 - You do not need kwargs in criteria. Just use entity as the argument, ignore any other arguments.
@@ -120,7 +117,6 @@ State is managed by the workflow and you can not change it manually, you can onl
 - Create Quart Blueprint with `/api/{entity}` prefix
 - Use `get_entity_service()` for all CRUD operations
 - Return technical IDs and entity states
-- Study router requirements in `application/resources/functional_requirements/entityName/entityName_routes.md`.
 - Endpoints must match requirements exactly; add CRUD if missing.
 - Prefer technical IDs in responses.
 - Update endpoints: transition nullable; must be manual if provided.
@@ -204,7 +200,7 @@ There should be no missing or extra processors or criteria in application/criter
 - Routes proxy only; no embedded business logic.
 - Code modifies only application directory.
 - Code passes quality checks.
-- Requirements in user_requirement.md satisfied.
+- Requirements in application/resources/functional_requirements/ are satisfied.
 - Summary documenting what was implemented can be found in the project root directory.
 - **Critical: Keep criteria minimal and direct.**
 
@@ -225,11 +221,5 @@ There should be no missing or extra processors or criteria in application/criter
 Parallelize the work on processors, criteria and routers if possible.
 Each entity (with its workflow, processors, criteria, and routes) can be treated as an independent subtask.
 Plan the work so that all the entities listed in functional requirements are implemented in the end of this task. If it takes too much resources to implement all the entities in parallel, then use placeholders for processors, criteria and routers and implement them in separate tasks.
-
-## Success Criteria
-1. **Code Quality** - All quality checks pass
-2. **Requirements Coverage** - All functional requirements implemented
-3. **Workflow Compliance** - Proper initial state and transition rules
-4. **Architecture Adherence** - Follow established patterns in `example_application/`
 
 Exit when all entities with all requirements are correctly implemented and build succeeds.

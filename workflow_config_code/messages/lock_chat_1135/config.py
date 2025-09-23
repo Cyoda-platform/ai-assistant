@@ -50,4 +50,4 @@ Keep iterating, stay creative, and aim high!
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get message meta configuration factory"""
-    return lambda params=None: {'type': 'notification', 'approve': False, 'publish': True}
+    return lambda params=None: {'type': 'question', 'approve': False, 'publish': True}

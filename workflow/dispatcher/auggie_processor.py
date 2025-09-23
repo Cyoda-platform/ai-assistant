@@ -133,7 +133,7 @@ class AuggieProcessor:
             workspace_dir: str = None,
             branch_id: str = None,
             repository_name: str = None,
-            timeout_seconds: int = 2500,  # 40 minutes
+            timeout_seconds: int = 1800,  # 30 minutes
             kill_grace_seconds: int = 5  # wait before force-killing
     ) -> str:
         """
