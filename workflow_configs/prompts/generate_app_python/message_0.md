@@ -11,7 +11,7 @@ This guide helps you build **Cyoda Python client applications** using the establ
 
 ## Golden Rules
 - Modify only the application directory.
-- Compile early and often; fix errors immediately.
+- Statically check with `mypy .` early and often; fix errors immediately.
 - Routes = thin proxies to EntityService (no business logic).
 - Prefer technical IDs for performance.
 - In processors, you cannot use entityService to update the current entity (read-only); The current entity will be updated automatically once you return from the processor.
@@ -91,6 +91,7 @@ State is managed by the workflow and you can not change it manually, you can onl
 
 ### 5. Implement Processors
 **Location**: `application/processor/{entity_name}_processor.py`
+- Make sure you understand entity service interface common/service/entity_service.py
 - Extend `CyodaProcessor` from `common.processor.base`
 - Use `cast_entity()` for type-safe entity operations
 - Access other entities via `get_entity_service()`
@@ -105,6 +106,7 @@ State is managed by the workflow and you can not change it manually, you can onl
 - Avoid validating CyodaEntity state. Entity state is managed by the workflow.
 - Do NOT use CyodaEntity add_metadata and update_timestamp methods. You can only update concrete entities fields.
 - You can get entity id, state etc directly from entity as it extends CyodaEntity.
+- Run `mypy .` after implementing each processor to make sure it is correct.
 
 ### 6. Implement Criteria
 - Implement under `application/criterion/`.
@@ -115,6 +117,7 @@ State is managed by the workflow and you can not change it manually, you can onl
 
 ### 7. Create API Routes
 **Location**: `application/routes/{entity_name}s.py`
+- Make sure you understand entity service interface common/service/entity_service.py
 - Create Quart Blueprint with `/api/{entity}` prefix
 - Use `get_entity_service()` for all CRUD operations
 - Return technical IDs and entity states
@@ -124,6 +127,8 @@ State is managed by the workflow and you can not change it manually, you can onl
 - Validate endpoints like in example_application routes.
 - Import blueprints for the routes to application/app.py. Use example_application app.py as a reference.
 - **Reference**: `application/routes/pets.py` or other route files
+- Run `mypy .` after implementing each route to make sure it is correct.
+
 
 ### 8. Register Components
 **Update `services/config.py`:**
@@ -217,6 +222,7 @@ There should be no missing or extra processors or criteria in application/criter
 - [ ] No modifications to `common/` directory
 - [ ] The number of processors and criteria in the workflow must match the number of processors and criteria in the workflow JSONs exactly.
 
+CRITICAL: Make sure mypy passes before checking in the code.
 
 ## Parallelization Strategy
 Parallelize the work on processors, criteria and routers if possible.
