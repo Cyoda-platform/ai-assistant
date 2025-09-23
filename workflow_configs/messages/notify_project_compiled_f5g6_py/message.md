@@ -53,7 +53,8 @@ Alternatively, you can use your IDE AI assistant with a suggested prompt:
 
 **Prompt for your IDE:**
 
-```
+```markdown
+
 This project is a **Cyoda client application**.
 Your role is to **validate** that entities, processors, criteria, and routers are correctly implemented according to the functional requirements and workflow definitions.
 Do **not generate or re-implement code** — focus on **reviewing, checking, and highlighting inconsistencies or missing pieces**.
@@ -82,7 +83,7 @@ Do **not generate or re-implement code** — focus on **reviewing, checking, and
 1. **Entities** – Implemented under `application/entity/{entity}/version_1/`.
    * Fields match `entityName.md` from functional requirements.
    * Constants (`ENTITY_NAME`, `ENTITY_VERSION`) correct.
-2. **Workflows** – States and transitions align with JSON. Manual-only transitions.
+2. **Workflows** – States and transitions align with JSON.
 3. **Processors** – Match requirements in `entity_workflow.md`.
    * No updates to current entity.
    * Correct use of `entityService` for others.
@@ -92,7 +93,6 @@ Do **not generate or re-implement code** — focus on **reviewing, checking, and
 5. **Routers** – Match requirements in `entityName_routes.md`.
    * Endpoints exactly as specified.
    * Technical IDs in responses.
-   * Transition nullable; manual only if provided.
    * Properly registered in `app.py` (check against `example_application`).
 6. **Testing & Validation** –
    * No `__init__.py` in project root.

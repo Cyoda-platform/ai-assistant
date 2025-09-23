@@ -147,35 +147,6 @@ class Config:
             Config.ScheduledAction.SCHEDULE_USER_APP_DEPLOY: self.DEPLOY_USER_APP,
         }
 
-    def get_augment_token(self) -> tuple[str | None, str]:
-        """
-        Get the preferred Augment authentication token.
-
-        Returns:
-            Tuple of (token, token_type) where token_type is 'api' or 'session'
-            Returns (None, 'none') if no token is available
-        """
-        if self.AUGMENT_API_TOKEN:
-            return self.AUGMENT_API_TOKEN, 'api'
-        elif self.AUGMENT_SESSION_AUTH:
-            return self.AUGMENT_SESSION_AUTH, 'session'
-        else:
-            return None, 'none'
-
-    def get_augment_token(self) -> tuple[str | None, str]:
-        """
-        Get the preferred Augment authentication token.
-
-        Returns:
-            Tuple of (token, token_type) where token_type is 'api' or 'session'
-            Returns (None, 'none') if no token is available
-        """
-        if self.AUGMENT_API_TOKEN:
-            return self.AUGMENT_API_TOKEN, 'api'
-        elif self.AUGMENT_SESSION_AUTH:
-            return self.AUGMENT_SESSION_AUTH, 'session'
-        else:
-            return None, 'none'
         self.ACTION_SUCCESS_TRANSITIONS = {
             Config.ScheduledAction.SCHEDULE_CYODA_ENV_DEPLOY: "finish_deployment_success",
             Config.ScheduledAction.SCHEDULE_USER_APP_DEPLOY: "finish_deployment_success",
@@ -186,6 +157,23 @@ class Config:
             Config.ScheduledAction.SCHEDULE_USER_APP_DEPLOY: "finish_deployment_failure",
             Config.ScheduledAction.SCHEDULE_USER_APP_BUILD: "finish_build_failure",
         }
+
+    def get_augment_token(self) -> tuple[str | None, str]:
+        """
+        Get the preferred Augment authentication token.
+
+        Returns:
+            Tuple of (token, token_type) where token_type is 'api' or 'session'
+            Returns (None, 'none') if no token is available
+        """
+        if self.AUGMENT_API_TOKEN:
+            return self.AUGMENT_API_TOKEN, 'api'
+        elif self.AUGMENT_SESSION_AUTH:
+            return self.AUGMENT_SESSION_AUTH, 'session'
+        else:
+            return None, 'none'
+
+
 
     class ScheduledAction(str, Enum):
         SCHEDULE_ENTITIES_FLOW = "schedule_entities_flow"
