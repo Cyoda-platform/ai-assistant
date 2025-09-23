@@ -67,7 +67,7 @@ class UserAnswerValidationService:
         words = answer.split()
         word_count = len(words)
 
-        if word_count <= 200:  # N = 200 words
+        if word_count <= 350:  # N = 200 words
             # Message < N words
             if files_to_process:
                 answer = f"{answer} [{const.USER_ATTACHED_FILE_MESSAGE}]"
