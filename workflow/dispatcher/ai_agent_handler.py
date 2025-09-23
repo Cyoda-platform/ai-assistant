@@ -806,7 +806,7 @@ class AIAgentHandler:
 
             # Apply word count processing (first 100 and last 100 words)
             words = file_content.split()
-            if len(words) > 200:
+            if len(words) > 350:
                 first_100 = " ".join(words[:100])
                 last_100 = " ".join(words[-100:])
                 processed_message = f"{first_100} [{const.USER_ATTACHED_FILE_MESSAGE}] {last_100}"
@@ -886,7 +886,7 @@ class AIAgentHandler:
 
             # Apply word count processing (first 100 and last 100 words)
             words = file_content.split()
-            if len(words) > 200:
+            if len(words) > 350:
                 first_100 = " ".join(words[:100])
                 last_100 = " ".join(words[-100:])
                 processed_message = f"{first_100} [{const.USER_ATTACHED_FILE_MESSAGE}] {last_100}"
