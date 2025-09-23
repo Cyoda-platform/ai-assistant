@@ -20,6 +20,29 @@ This guide helps you build **Cyoda Python client applications** using the establ
 - **Thin routes** - Pure proxies to EntityService with no business logic
 - **Manual transitions only** - Entity updates must specify manual transitions explicitly
 
+## Golden Rules
+- No reflection.
+- Modify only the application directory.
+- Compile early and often; fix errors immediately.
+- Routes = thin proxies to EntityService (no business logic).
+- Prefer technical IDs for performance.
+- In processors, you cannot use entityService to update the current entity (read-only); The current entity will be updated automatically once you return from the processor.
+  you may get/update/delete other entities via EntityService.
+- **CRITICAL: Update using only manual transitions (never automatic).**
+
+## IDs & Metadata
+
+- **Technical ID (UUID, unique, immutable)**:
+  `entity.id` - retrievable from CyodaEntity
+- **Entity state**:
+  `entity.state` - Entity state is managed by the workflow and you can not change it manually, you can only read it.
+- **Business ID (user-defined, non-unique, mutable)**:
+  retrievable/updatable with business ID–specific methods.
+- **Update semantics**:
+  - With transition → moves to that state.
+  - Without transition → loops back to same state.
+  - If in doubt, save without transition.
+
 ## Critical Rules
 - **NEVER modify** `common/` directory - framework code only
 - **ALWAYS validate workflows** against `example_application/resources/workflow/workflow_schema.json`
@@ -63,21 +86,58 @@ pip install -e ".[dev]"
 - **CRITICAL**: Validate against `example_application/resources/workflow/workflow_schema.json`
 - **Reference**: `example_application/resources/workflow/example_entity/version_1/ExampleEntity.json`
 
+   * Rules:
+     * Each workflow must have an automatic transition from the initial state to the first state.
+     * Loop transitions (to self or to a previous state) must be marked as manual.
+     * Transitions can have **processors**, **criteria**, both, or none.
+     * Do NOT complicate the workflow with complex criteria. Keep it simple unless the requirement explicitly calls for it.
+     * Keep the number of processors minimum to comply with the requirement. If the requirement is not explicit - minimize the number of processors.
+    * Minimise the number of processors and criteria. One processor can do multiple things. Try to keep up to 3 processors per entity unless the requirement explicitly calls for more.
+     If the requirement is explicit - you must implement all the processors and criteria it requires.
+   The name of the workflow must be the same as the entity name PascalCase. The number of processors and criteria in the workflow must match the number of processors and criteria in the workflow diagram exactly.
+   * Path: `application/resources/workflow/<entityName>/version_1/<EntityName>.json` -- always `version_1`.
+   * Validate each workflow against `example_application/resources/workflow/workflow_schema.json`.
+
 ### 5. Implement Processors
 **Location**: `application/processor/{entity_name}_processor.py`
 - Extend `CyodaProcessor` from `common.processor.base`
 - Use `cast_entity()` for type-safe entity operations
 - Access other entities via `get_entity_service()`
+- Study processors requirements in `application/resources/functional_requirements/entityName/entityName_workflow.md`
+- No updates to current entity with the entityService - it will be updated automatically once you return; only get/update/delete other entities.
+- To update another entity use EntityService: apply correct transition (manual only), or omit for loop-back.
+- Check with example_application processors for reference.
+- You do not need kwargs in processors. Just use entity as the argument, ignore any other arguments.
+- Do not validate entity state in processors. Entity state is managed by the workflow.
 - **Reference**: `example_application/processor/example_entity_processor.py`
 
-### 6. Create API Routes
+**Critical:**
+- Avoid validating CyodaEntity state. Entity state is managed by the workflow.
+- Do NOT use CyodaEntity add_metadata and update_timestamp methods. You can only update concrete entities fields.
+- You can get entity id, state etc directly from entity as it extends CyodaEntity.
+
+### 6. Implement Criteria
+- Study criteria requirements in `application/resources/functional_requirements/entityName/entityName_workflow.md`
+- Implement under `application/criterion/`.
+- Keep minimal and direct.
+- You do not need kwargs in criteria. Just use entity as the argument, ignore any other arguments.
+- Do not validate entity state in criteria. Entity state is managed by the workflow.
+- **Reference**: `example_application/criterion/example_entity_validation_criterion.py`
+
+### 7. Create API Routes
 **Location**: `application/routes/{entity_name}s.py`
 - Create Quart Blueprint with `/api/{entity}` prefix
 - Use `get_entity_service()` for all CRUD operations
 - Return technical IDs and entity states
+- Study router requirements in `application/resources/functional_requirements/entityName/entityName_routes.md`.
+- Endpoints must match requirements exactly; add CRUD if missing.
+- Prefer technical IDs in responses.
+- Update endpoints: transition nullable; must be manual if provided.
+- Validate endpoints like in example_application routes.
+- Import blueprints for the routes to application/app.py. Use example_application app.py as a reference.
 - **Reference**: `application/routes/pets.py` or other route files
 
-### 7. Register Components
+### 8. Register Components
 **Update `services/config.py`:**
 - Add your processor/criterion modules to the `modules` list
 - **Reference**: See existing module registration pattern
@@ -85,6 +145,23 @@ pip install -e ".[dev]"
 **Update `application/app.py`:**
 - Register your route blueprints
 - **Reference**: `application/app.py` for blueprint registration pattern
+
+### 9. Testing & Validation
+
+**Preconditions:**
+Make sure there is no `__init__.py` file in the root of the mcp-cyoda-quart-app project. It will cause mypy to fail.
+Just remove `__init__.py` from the root of the project if it exists. Do not restore it after the tests. This file should not be in the project root.
+Then run `pip install -e ".[dev]"` to install all the dependencies.
+
+**Tasks:**
+Validate with:
+```bash
+python -m black .                    # Format code
+python -m isort .                    # Sort imports
+python -m mypy .                     # Type checking
+python -m flake8 .                   # Style checking
+```
+Look for more details in PACKAGE_MANAGEMENT_GUIDE.md
 
 ## Key Patterns & Best Practices
 
@@ -122,10 +199,23 @@ black . && isort . && mypy . && flake8 . && bandit -r . -x tests/
 ## Workflow Management
 
 ### Workflow Validation (CRITICAL!)
-Before importing, validate your workflow files:
+Validate your workflow files:
 - **Schema**: `example_application/resources/workflow/workflow_schema.json`
 - Ensure your workflow JSON matches the required schema structure
 - Validate processor names match your Python class names exactly
+The number of processors and criteria in the workflow must match the number of processors and criteria in the workflow diagram exactly.
+There should be no missing or extra processors or criteria in application/criterion and application/processor directories. Each processor and criterion must exactly match the name in the workflow JSON.
+
+## Acceptance Criteria
+
+- Entities/processors/criteria/routers fully match functional requirements.
+- The number of processors and criteria in the workflow must match the number of processors and criteria in the workflow JSONs exactly.
+- Routes proxy only; no embedded business logic.
+- Code modifies only application directory.
+- Code passes quality checks.
+- Requirements in user_requirement.md satisfied.
+- Summary documenting what was implemented can be found in the project root directory.
+- **Critical: Keep criteria minimal and direct.**
 
 ## Completion Checklist
 - [ ] **Requirements reviewed** from `application/resources/functional_requirements/`
@@ -133,13 +223,23 @@ Before importing, validate your workflow files:
 - [ ] All workflows validated against `example_application/resources/workflow/workflow_schema.json`
 - [ ] All workflows use "initial_state" with explicit manual flags
 - [ ] All processors extend CyodaProcessor and log execution
+- [ ] All criteria implemented and minimal
 - [ ] All routes are thin proxies to EntityService
 - [ ] Code quality checks pass: `mypy`, `black`, `isort`, `flake8`, `bandit`
 - [ ] No modifications to `common/` directory
+- [ ] The number of processors and criteria in the workflow must match the number of processors and criteria in the workflow JSONs exactly.
+
+
+## Parallelization Strategy
+Parallelize the work on processors, criteria and routers if possible.
+Each entity (with its workflow, processors, criteria, and routes) can be treated as an independent subtask.
+Plan the work so that all the entities listed in functional requirements are implemented in the end of this task. If it takes too much resources to implement all the entities in parallel, then use placeholders for processors, criteria and routers and implement them in separate tasks.
 
 ## Success Criteria
 1. **Code Quality** - All quality checks pass
 2. **Requirements Coverage** - All functional requirements implemented
 3. **Workflow Compliance** - Proper initial state and transition rules
 4. **Architecture Adherence** - Follow established patterns in `example_application/`
+
+Exit when all entities with all requirements are correctly implemented and build succeeds.
 """

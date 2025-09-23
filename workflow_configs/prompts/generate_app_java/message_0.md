@@ -10,6 +10,30 @@ This project is a **Cyoda client application** built with Spring Boot and Gradle
 - **Manual transitions only** - Entity updates must specify manual transitions explicitly
 - **Technical ID performance** - Use UUIDs in API responses for optimal performance
 
+## Golden Rules
+
+- No reflection.
+- Do not modify anything in src/main/java/com/java_template/common.
+- Compile early and often; fix errors immediately.
+- Controllers = thin proxies to EntityService (no business logic).
+- Prefer technical IDs for performance.
+- In processors, you cannot update the current entity (read-only); you may get/update/delete other entities via EntityService.
+- **CRITICAL: Update using only manual transitions (never automatic).**
+
+## IDs & Metadata
+
+- **Technical ID (UUID, unique, immutable)**:
+  `entityResponse.getMetadata().getId()`
+- **Entity state**:
+  `entityResponse.getMetadata().getState()`
+  Entity state is managed by the workflow and you can not change it manually, you can only read it.
+- **Business ID (user-defined, non-unique, mutable)**:
+  retrievable/updatable with business ID–specific methods.
+- **Update semantics**:
+  - With transition → moves to that state.
+  - Without transition → loops back to same state.
+  - If in doubt, save without transition.
+
 ## Critical Rules
 - **NEVER modify** `src/main/java/com/java_template/common/` directory
 - **ALWAYS compile** after each component: `./gradlew clean compileJava`
@@ -32,6 +56,10 @@ src/main/java/com/java_template/
 ## Implementation Workflow
 
 ### 1. Prerequisites & Planning
+
+**Make sure build/generated-sources/js2p/org/cyoda/cloud/api/event generated classes are generated.**
+If not run `./gradlew build`
+
 ```bash
 ./gradlew build  # Ensure generated classes exist
 ```
@@ -39,8 +67,40 @@ src/main/java/com/java_template/
 - Study examples in `llm_example/code/application/` directory
 - Plan entities and their relationships
 
+## Repository Map
+
+1. **Core APIs & Types**
+   - common/service/EntityService.java
+   - common/workflow/CyodaEntity.java
+   - common/workflow/CyodaEventContext.java
+2. **Examples**: llm_example/code/application (processors, criteria, controllers)
+   **CRITICAL: Check llm_example/code/application before implementing your own.**
+
+3. **Functional Requirements**
+   - Entities: src/main/resources/functional_requirements/entityName/entityName.md
+   - Processors: src/main/resources/functional_requirements/entityName/entityName_workflow.md
+   - Criteria: src/main/resources/functional_requirements/entityName/entityName_workflow.md
+   - Controllers: src/main/resources/functional_requirements/entityName/entityName_controllers.md
+   - Acceptance: resources/functional_requirements/user_requirement.md
+     All processors and criteria from src/main/resources/workflow/entityName/version_1/EntityName.json must be implemented.
+
+## Implementation Checklist - need to repeat for each entity defined in functional requirements.
+
 ### 2. Entity Implementation
 **Location**: `application/entity/{entity_name}/version_1/{EntityName}.java`
+
+1. Familiarize with codebase in llm_example/code/application directory.
+2. Entities
+   - Implement POJOs under application/entity/{entity_name}/version_1/ with Lombok @Data.
+   - Constants:
+     ```java
+     public static final String ENTITY_NAME = Entity.class.getSimpleName();
+     public static final Integer ENTITY_VERSION = 1;
+     ```
+   - Implement getModelKey() and isValid() as per template.
+
+   Entities should exactly match the requirements specified in the src/main/resources/functional_requirements/entityName/entityName.md file.
+   Be careful with fields that semantically mean entity state (like status, state, etc.). If the functional requirements specify that we do not need business field for such field (status, state) then use entity state that you get from entity metadata. This state is managed by the workflow and you should not change it manually, you can only read it.
 
 **Template**:
 ```java
@@ -72,7 +132,11 @@ public class EntityName implements CyodaEntity {
 }
 ```
 
-### 3. Workflow Definition
+### 3. Workflows
+- Study JSON definitions (states + transitions) in resources/workflow/*.json.
+- Use only manual transitions for updates; if unsure → save without transition.
+
+### 4. Workflow Definition
 **Location**: `src/main/resources/workflow/{entityName}/version_1/{EntityName}.json`
 
 **Key Requirements**:
@@ -80,6 +144,9 @@ public class EntityName implements CyodaEntity {
 - All transitions must have explicit `"manual": true/false` flags
 - Processor names must match Spring component class names exactly
 - Keep simple unless requirements demand complexity
+- Saving an entity to a non-existent state (absent from workflow JSON) → fails.
+- Update entities via manual transitions. Automatic transitions are not valid for update operations.
+- Always cross-check with the workflow JSON in src/main/resources/workflow.
 
 **Template**:
 ```json
@@ -124,8 +191,15 @@ public class EntityName implements CyodaEntity {
 }
 ```
 
-### 4. Processor Implementation
+### 5. Processor Implementation
 **Location**: `application/processor/{ProcessorName}.java`
+
+- Study processors requirements in src/main/resources/functional_requirements/entityName/entityName_workflow.md.
+- Entity passed to process(...) already contains all needed data.
+- No updates to current entity - it will be updated automatically once you return; only get/update/delete other entities.
+- To update another entity use entityService: apply correct transition (manual only), or omit for loop-back.
+- UUID currentEntityId = entityWithMetadata.metadata().getId(); -- if you need current entity technical id
+- String currentState = entityWithMetadata.metadata().getState(); -- if you need current entity state
 
 **Template**:
 ```java
@@ -162,8 +236,20 @@ public class ProcessorName implements CyodaProcessor {
 }
 ```
 
-### 5. Controller Implementation
+### 6. Criteria Implementation
+- Study criteria requirements in src/main/resources/functional_requirements/entityName/entityName_workflow.md.
+- Implement under application/criterion/.
+- Keep minimal and direct.
+
+### 7. Controller Implementation
 **Location**: `application/controller/{EntityName}Controller.java`
+
+- Study controller requirements in src/main/resources/functional_requirements/entityName/entityName_controllers.md.
+- Implement under application/controller/.
+- Accept entities as @RequestBody (not Map).
+- Endpoints must match requirements exactly; add CRUD if missing.
+- Prefer technical IDs in responses.
+- Update endpoints: transition nullable; must be manual if provided.
 
 **Key Patterns**:
 - Map to `/ui/{entity}/**` endpoints
@@ -207,13 +293,41 @@ List<EntityWithMetadata<Entity>> results = entityService.search(modelSpec, group
 - Use `search()` with conditions for filtered queries
 - Return slim DTOs for list endpoints, full entities for detail endpoints
 
+### 8. Testing & Validation
+- Compile often with ./gradlew clean compileJava; resolve errors immediately.
+- Validate against user_requirement.md.
+
+Once you are done with the above steps:
+
+Run WorkflowImplementationValidator with `./gradlew validateWorkflowImplementations`
+If it fails due to irrelevant reasons - run for each entity_workflow.md file individually with `./gradlew validateWorkflowImplementations -Pargs="src/main/resources/workflow/myentity/version_1/MyEntity.json"`
+If there are missing processors or criteria - add them to the workflow JSON.
+
+Summary documenting what was implemented can be found in the project root directory.
+
 ### Testing Strategy
 - Compile frequently: `./gradlew clean compileJava`
 - Use exact entity names from ENTITY_NAME constants for workflow imports
 
+## Acceptance Criteria
+
+- Entities/processors/criteria/controllers fully match functional requirements and workflow JSON definitions.
+- The transitions in the code are consistent with the workflow JSON definitions.
+- Controllers proxy only; no embedded business logic.
+- No reflection; common untouched.
+- Project compiles cleanly.
+- Requirements in user_requirement.md satisfied.
+
+## Parallelization Strategy
+
+Parallelize the work on different entities, processors, criteria, and controllers.
+Each entity (with its workflow, processors, criteria, and controllers) can be treated as an independent subtask.
+Plan the work so that all the entities are implemented in the end. If it takes too much resources to implement all the entities in parallel, then use placeholders for processors, criteria and routers and implement them in separate tasks.
+
 ## Completion Checklist
 - [ ] All entities implement CyodaEntity with proper validation
 - [ ] All workflows use "initial" state (not "none") with explicit manual flags
+- [ ] All processors and criteria implemented according to workflow JSON
 - [ ] All controllers are thin proxies with no business logic
 - [ ] Project compiles successfully: `./gradlew build`
 - [ ] All functional requirements satisfied
@@ -226,3 +340,5 @@ The implementation is complete when:
 2. **Requirements coverage** - All user requirements implemented
 3. **Workflow compliance** - All transitions follow manual/automatic rules with proper initial state
 4. **Architecture adherence** - No reflection, thin controllers, proper separation
+
+Exit when all entities with all requirements are correctly implemented and build succeeds.
