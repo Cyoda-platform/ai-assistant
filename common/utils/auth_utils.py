@@ -24,6 +24,31 @@ async def get_user_id(auth_header: str) -> str:
     except jwt.InvalidTokenError:
         raise InvalidTokenException()
 
+
+async def get_user_info(auth_header: str) -> tuple[str, bool]:
+    """
+    Extract user ID and super user status from JWT token.
+
+    Returns:
+        tuple: (user_id, is_super_user)
+    """
+    token = extract_bearer_token(auth_header)
+    try:
+        decoded = jwt.decode(token, options={"verify_signature": False})
+        user_id = decoded.get("caas_org_id")
+        if not user_id:
+            raise InvalidTokenException()
+
+        # Extract super user status from Cyoda employee field (defaults to False if not present)
+        is_super = decoded.get("caas_cyoda_employee", False)
+
+        if user_id.startswith('guest.'):
+            validate_token(token)
+
+        return user_id, is_super
+    except jwt.InvalidTokenError:
+        raise InvalidTokenException()
+
 def auth_required(func):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):

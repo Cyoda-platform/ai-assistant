@@ -77,15 +77,23 @@ class ChatService:
 
     # public methods used by routes
     # todo stream chats not to load all of them into memory
-    async def list_chats(self, user_id: str) -> List[dict]:
+    async def list_chats(self, user_id: str, is_super: bool = False, target_user_id: str = None) -> List[dict]:
         if not user_id:
             raise InvalidTokenException("Invalid token")
 
-        chats = await self.data_service.get_entities_by_user_name(user_id=user_id,
+        # Determine which user's chats to retrieve
+        if is_super:
+            # Super user requesting chats - handle both all chats and specific user
+            return await self._list_all_chats(target_user_id=target_user_id)
+        else:
+            # Regular user requesting their own chats
+            query_user_id = user_id
+
+        chats = await self.data_service.get_entities_by_user_name(user_id=query_user_id,
                                                                   model=const.ModelName.CHAT_BUSINESS_ENTITY.value)
         transfer_chats = []
-        if not user_id.startswith("guest."):
-            transfers = await self.data_service.get_entities_by_user_name(user_id=user_id,
+        if not query_user_id.startswith("guest."):
+            transfers = await self.data_service.get_entities_by_user_name(user_id=query_user_id,
                                                                           model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
 
             guest_user_ids = set()
@@ -225,9 +233,10 @@ class ChatService:
         )
         return {"message": "Chat created", "technical_id": tech_id, "answer_technical_id": ans_id}
 
-    async def get_chat(self, auth_header: str, technical_id: str) -> dict:
+    async def get_chat(self, auth_header: str, technical_id: str, is_super: bool = False) -> dict:
         chat_business_entity = await self._get_business_chat_for_user(auth_header=auth_header,
-                                                                      technical_id=technical_id)
+                                                                      technical_id=technical_id,
+                                                                      is_super=is_super)
         chat: ChatEntity = await self.entity_service.get_item(
             token=self.cyoda_auth_service,
             entity_model=const.ModelName.CHAT_ENTITY.value,
@@ -414,8 +423,8 @@ class ChatService:
 
     # ─── Private helpers ─────────────────────────────────────────────────────
 
-    async def _get_business_chat_for_user(self, auth_header, technical_id):
-        user_id = self._get_user_id(auth_header)
+    async def _get_business_chat_for_user(self, auth_header, technical_id, is_super: bool = False):
+        user_id, token_is_super = self._get_user_info(auth_header)
         if not user_id:
             raise InvalidTokenException()
 
@@ -428,6 +437,10 @@ class ChatService:
 
         if not chat_business_entity:
             raise ChatNotFoundException()
+
+        # Super users can access any chat if both request and token indicate super status
+        if is_super and token_is_super:
+            return chat_business_entity
 
         await self._validate_chat_owner(chat_business_entity, user_id)
         return chat_business_entity
@@ -479,6 +492,123 @@ class ChatService:
             raise TokenExpiredException()
         except jwt.InvalidTokenError:
             return None
+
+    def _get_user_info(self, auth_header):
+        """
+        Extract user ID and super user status from JWT token.
+
+        Returns:
+            tuple: (user_id, is_super_user)
+        """
+        if not auth_header:
+            raise InvalidTokenException()
+        token = auth_header.split(" ")[1]
+        if not token:
+            raise InvalidTokenException()
+        try:
+            decoded = jwt.decode(token, options={"verify_signature": False})
+            user_id = decoded.get("caas_org_id")
+            if not user_id:
+                raise InvalidTokenException()
+
+            # Extract super user status (defaults to False if not present)
+            is_super = decoded.get("super", False)
+
+            if user_id.startswith("guest."):
+                validate_token(token)
+
+            return user_id, is_super
+        except jwt.ExpiredSignatureError:
+            raise TokenExpiredException()
+        except jwt.InvalidTokenError:
+            return None, False
+
+    async def _list_all_chats(self, target_user_id: str = None) -> List[dict]:
+        """
+        List all chats from all users (super user functionality).
+
+        Args:
+            target_user_id: Optional user ID to filter chats for specific user
+        """
+        if target_user_id:
+            # Filter chats for specific user (including their transfer chats)
+            all_chats = await self.data_service.get_entities_by_user_name(
+                user_id=target_user_id,
+                model=const.ModelName.CHAT_BUSINESS_ENTITY.value
+            )
+
+            # Add transfer chats for the specific user (same logic as regular list_chats)
+            transfer_chats = []
+            if not target_user_id.startswith("guest."):
+                transfers = await self.data_service.get_entities_by_user_name(
+                    user_id=target_user_id,
+                    model=const.ModelName.TRANSFER_CHATS_ENTITY.value
+                )
+
+                guest_user_ids = set()
+                for transfer in transfers:
+                    guest_id = transfer["guest_user_id"]
+                    if guest_id not in guest_user_ids and guest_id.startswith("guest."):
+                        transfer_chats += await self.data_service.get_entities_by_user_name(
+                            user_id=guest_id,
+                            model=const.ModelName.CHAT_BUSINESS_ENTITY.value
+                        )
+                        guest_user_ids.add(guest_id)
+
+            if transfer_chats:
+                all_chats += transfer_chats
+                # Sort by date (same logic as regular list_chats)
+                def parse_chat_date(chat):
+                    try:
+                        return datetime.strptime(chat.date, "%Y-%m-%dT%H:%M:%S.%fZ")
+                    except (TypeError, ValueError):
+                        return datetime.min
+                all_chats.sort(key=parse_chat_date, reverse=True)
+        else:
+            # Get all chat business entities without user filtering
+            all_chats = await self.entity_service.get_items(
+                token=self.cyoda_auth_service,
+                entity_model=const.ModelName.CHAT_BUSINESS_ENTITY.value,
+                entity_version=config.ENTITY_VERSION
+            )
+
+            # For super users getting ALL chats, also get ALL transfer chats
+            # This ensures complete visibility across the system
+            all_transfer_entities = await self.entity_service.get_items(
+                token=self.cyoda_auth_service,
+                entity_model=const.ModelName.TRANSFER_CHATS_ENTITY.value,
+                entity_version=config.ENTITY_VERSION
+            )
+
+            # Get all guest chats that have been transferred
+            guest_chats = []
+            processed_guests = set()
+            for transfer in all_transfer_entities:
+                guest_id = getattr(transfer, "guest_user_id", "")
+                if guest_id and guest_id.startswith("guest.") and guest_id not in processed_guests:
+                    guest_user_chats = await self.data_service.get_entities_by_user_name(
+                        user_id=guest_id,
+                        model=const.ModelName.CHAT_BUSINESS_ENTITY.value
+                    )
+                    guest_chats.extend(guest_user_chats)
+                    processed_guests.add(guest_id)
+
+            if guest_chats:
+                all_chats.extend(guest_chats)
+
+        # Format the response similar to regular list_chats
+        formatted_chats = []
+        for chat in all_chats:
+            formatted_chats.append({
+                "technical_id": chat.technical_id,
+                "name": getattr(chat, 'name', ''),
+                "description": getattr(chat, 'description', ''),
+                "date": getattr(chat, 'date', ''),
+                "user_id": getattr(chat, 'user_id', ''),
+                "last_modified": getattr(chat, 'last_modified', '')
+            })
+
+        return formatted_chats
 
     async def _submit_question_helper(self, auth_header, technical_id, chat, question, user_files=None):
         if not question:

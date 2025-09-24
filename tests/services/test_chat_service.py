@@ -22,6 +22,7 @@ def service_mocks():
     entity_service.get_items_by_condition = AsyncMock()
     entity_service.add_item = AsyncMock()
     entity_service.get_item = AsyncMock()
+    entity_service.get_items = AsyncMock()
     entity_service.delete_item = AsyncMock()
 
     ai_agent = MagicMock()
@@ -34,8 +35,18 @@ def service_mocks():
     data_service.get_entities_by_user_name = AsyncMock()
     data_service.get_entities_by_user_name_and_workflow_name = AsyncMock()
 
+    # Make data_service use entity_service for backward compatibility with existing tests
+    async def mock_get_entities_by_user_name(user_id, model):
+        return await entity_service.get_items_by_condition(
+            token=cyoda_auth_service,
+            entity_model=model,
+            entity_version="1",
+            condition={"user_id": user_id}
+        )
+    data_service.get_entities_by_user_name.side_effect = mock_get_entities_by_user_name
+
     svc = ChatService(entity_service, cyoda_auth_service, chat_lock, ai_agent, data_service)
-    return svc, entity_service, ai_agent
+    return svc, entity_service, data_service
 
 
 def make_jwt(payload: dict) -> str:
@@ -315,6 +326,81 @@ async def test_get_entities_processing_data_no_nodes(monkeypatch, service_mocks)
     monkeypatch.setattr(chat_service, "send_cyoda_request", AsyncMock(return_value={"json": {}}))
     result = await svc._get_entities_processing_data("tidX", {"childA", "childB"})
     assert result == {}
+
+
+@pytest.mark.asyncio
+async def test_list_chats_super_user_all_chats(service_mocks):
+    """Test super user listing all chats."""
+    svc, entity_service, data_service = service_mocks
+
+    # Mock all chats from different users
+    chat1 = SimpleNamespace(technical_id="c1", name="Chat1", description="D1", date="2025-01-01", user_id="user1", last_modified="2025-01-01")
+    chat2 = SimpleNamespace(technical_id="c2", name="Chat2", description="D2", date="2025-01-02", user_id="user2", last_modified="2025-01-02")
+
+    # Mock transfer entity
+    transfer1 = SimpleNamespace(guest_user_id="guest.123")
+
+    # Set up entity_service mocks
+    def mock_get_items(token, entity_model, entity_version):
+        if entity_model == "chat_business_entity":
+            return [chat1, chat2]
+        elif entity_model == "transfer_chats_entity":
+            return [transfer1]
+        return []
+
+    entity_service.get_items.side_effect = mock_get_items
+
+    # Mock data_service for guest chats
+    data_service.get_entities_by_user_name.return_value = []  # No guest chats for simplicity
+
+    result = await svc.list_chats("admin", is_super=True, target_user_id=None)
+
+    expected = [
+        {"technical_id": "c1", "name": "Chat1", "description": "D1", "date": "2025-01-01", "user_id": "user1", "last_modified": "2025-01-01"},
+        {"technical_id": "c2", "name": "Chat2", "description": "D2", "date": "2025-01-02", "user_id": "user2", "last_modified": "2025-01-02"}
+    ]
+    assert result == expected
+
+
+@pytest.mark.asyncio
+async def test_list_chats_super_user_specific_user(service_mocks):
+    """Test super user listing chats for a specific user."""
+    svc, entity_service, data_service = service_mocks
+
+    chat_obj = SimpleNamespace(technical_id="c1", name="N1", description="D1", date="2025-05-01", user_id="user123", last_modified="2025-05-01")
+
+    # Override the side_effect for this specific test
+    async def mock_get_entities_for_specific_user(user_id, model):
+        if user_id == "user123" and model == "chat_business_entity":
+            return [chat_obj]
+        elif user_id == "user123" and model == "transfer_chats_entity":
+            return []  # No transfers for simplicity
+        return []
+
+    data_service.get_entities_by_user_name.side_effect = mock_get_entities_for_specific_user
+
+    result = await svc.list_chats("admin", is_super=True, target_user_id="user123")
+
+    expected = [{"technical_id": "c1", "name": "N1", "description": "D1", "date": "2025-05-01", "user_id": "user123", "last_modified": "2025-05-01"}]
+    assert result == expected
+    # Should be called twice: once for chats, once for transfers
+    assert data_service.get_entities_by_user_name.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_list_chats_regular_user_no_super_access(service_mocks):
+    """Test that regular users cannot access super functionality."""
+    svc, entity_service, data_service = service_mocks
+
+    chat_obj = SimpleNamespace(technical_id="c1", name="N1", description="D1", date="2025-05-01")
+    data_service.get_entities_by_user_name.side_effect = [[chat_obj], []]
+
+    # Regular user trying to use super functionality - should be ignored
+    result = await svc.list_chats("user123", is_super=False, target_user_id="other_user")
+
+    # Should return user's own chats, ignoring the target_user_id
+    assert result == [{"technical_id": "c1", "name": "N1", "description": "D1", "date": "2025-05-01"}]
+    data_service.get_entities_by_user_name.assert_any_call(user_id="user123", model="chat_business_entity")
 
 @pytest.mark.asyncio
 async def test_get_entities_processing_data_success(monkeypatch, service_mocks):
@@ -602,17 +688,17 @@ async def test_submit_question_helper_empty(service_mocks):
 
 @pytest.mark.asyncio
 async def test_submit_question_helper_with_file(monkeypatch, service_mocks):
-    svc, _, ai_agent = service_mocks
+    svc, _, _ = service_mocks
     # Disable mock AI
     monkeypatch.setattr(chat_service.config, "MOCK_AI", "false")
     # Stub get_user_message to rewrite the question
     fake_file = SimpleNamespace()
     monkeypatch.setattr(chat_service, "get_user_message", AsyncMock(return_value="file_q"))
     # Stub AI agent run
-    ai_agent.run_agent = AsyncMock(return_value="ai_response")
+    svc.ai_agent.run_agent = AsyncMock(return_value="ai_response")
     res, status = await svc._submit_question_helper("Bearer token", "tid", "orig_q", fake_file)
     # AI agent should be called with rewritten question
-    ai_agent.run_agent.assert_awaited_once()
+    svc.ai_agent.run_agent.assert_awaited_once()
     assert status == 200
     assert res == {"message": "ai_response"}
 
@@ -714,13 +800,13 @@ async def test_submit_question_helper_mock_ai(monkeypatch, service_mocks):
 
 @pytest.mark.asyncio
 async def test_submit_question_helper_no_file(monkeypatch, service_mocks):
-    svc, _, ai_agent = service_mocks
+    svc, _, _ = service_mocks
     dummy_chat = SimpleNamespace()
     # Disable mock AI
     monkeypatch.setattr(chat_service.config, "MOCK_AI", "false")
-    ai_agent.run_agent = AsyncMock(return_value="res")
+    svc.ai_agent.run_agent = AsyncMock(return_value="res")
     res, status = await svc._submit_question_helper("Bearer token", "tid", dummy_chat, "hello")
-    ai_agent.run_agent.assert_awaited_once()
+    svc.ai_agent.run_agent.assert_awaited_once()
     assert status == 200
     assert res == {"message": "res"}
 

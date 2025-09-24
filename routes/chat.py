@@ -16,8 +16,20 @@ chat_bp = Blueprint('chat', __name__, url_prefix=f"{config.API_PREFIX}/chats")
 @rate_limit(const.RATE_LIMIT, timedelta(minutes=1), key_function=token_key_function)
 @auth_optional
 async def list_chats():
-    _, user_id = await extract_auth_info()
-    chats = await chat_service.list_chats(user_id)
+    header, user_id = await extract_auth_info()
+
+    # Extract query parameters
+    is_super_request = request.args.get('super', 'false').lower() == 'true'
+    target_user_id = request.args.get('target_user_id')
+
+    # Only check token for super status if request asks for super functionality
+    effective_super = False
+    if is_super_request and header:
+        from common.utils.auth_utils import get_user_info
+        _, is_super_token = await get_user_info(header)
+        effective_super = is_super_token
+
+    chats = await chat_service.list_chats(user_id, is_super=effective_super, target_user_id=target_user_id)
     return jsonify({"chats": chats})
 
 
@@ -55,7 +67,18 @@ async def create_chat():
 @auth_optional
 async def get_chat_route(technical_id):
     header, _ = await extract_auth_info()
-    result = await chat_service.get_chat(header, technical_id)
+
+    # Extract query parameter
+    is_super_request = request.args.get('super', 'false').lower() == 'true'
+
+    # Only check token for super status if request asks for super functionality
+    effective_super = False
+    if is_super_request and header:
+        from common.utils.auth_utils import get_user_info
+        _, is_super_token = await get_user_info(header)
+        effective_super = is_super_token
+
+    result = await chat_service.get_chat(header, technical_id, is_super=effective_super)
     return jsonify({"chat_body": result})
 
 
