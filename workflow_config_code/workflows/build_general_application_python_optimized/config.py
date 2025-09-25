@@ -371,7 +371,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             "env_deployment_notified": {
                 "transitions": [
                     {
-                        "name": "process_user_input",
+                        "name": "process_user_input_1",
                         "next": "app_requirements_step3_processing",
                         "manual": False,
                         "processors": [
