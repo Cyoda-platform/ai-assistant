@@ -133,6 +133,22 @@ class UtilityService(BaseWorkflowService):
             # Get file edge message IDs from workflow cache
             file_edge_message_ids = entity.workflow_cache.get('file_edge_message_ids', [])
 
+            # Also collect file_blob_ids from chat_flow.finished_flow
+            if entity.chat_flow and entity.chat_flow.finished_flow:
+                for message in entity.chat_flow.finished_flow:
+                    if hasattr(message, 'file_blob_ids') and message.file_blob_ids:
+                        file_edge_message_ids.extend(message.file_blob_ids)
+
+            # Remove duplicates while preserving order
+            unique_file_ids = []
+            seen = set()
+            for file_id in file_edge_message_ids:
+                if file_id not in seen:
+                    unique_file_ids.append(file_id)
+                    seen.add(file_id)
+
+            file_edge_message_ids = unique_file_ids
+
             # Save each file from file_edge_message_ids
             for i, message_id in enumerate(file_edge_message_ids):
                 try:

@@ -8,17 +8,28 @@ Configuration data for the workflow.
 from typing import Any, Dict, Callable
 
 from workflow_config_code.agents.generate_app_python.agent import GenerateAppPythonAgentConfig
+from workflow_config_code.agents.process_user_input_2c31_optimized.agent import ProcessUserInput2c31OptimizedAgentConfig
+from workflow_config_code.agents.process_user_input_2c31_optimized_py.agent import \
+    ProcessUserInput2c31OptimizedPyAgentConfig
 from workflow_config_code.messages.notify_project_compiled_f5g6_py.message import \
     NotifyProjectCompiledF5g6PyMessageConfig
+from workflow_config_code.messages.notify_requirements_discussion_optimized.message import \
+    NotifyRequirementsDiscussionOptimizedMessageConfig
+from workflow_config_code.messages.notify_requirements_discussion_optimized_py.message import \
+    NotifyRequirementsDiscussionOptimizedPyMessageConfig
+from workflow_config_code.messages.notify_started_application_generation.message import \
+    NotifyStartedApplicationGenerationMessageConfig
 from workflow_config_code.messages.welcome_user_optimized.message import WelcomeUserOptimizedMessageConfig
 from workflow_config_code.tools.delete_files_6818.tool import DeleteFiles6818ToolConfig
 from workflow_config_code.tools.init_setup_workflow_5f06.tool import InitSetupWorkflow5f06ToolConfig
 from workflow_config_code.agents.process_user_input_9a8e.agent import ProcessUserInput9a8eAgentConfig
 from workflow_config_code.tools.init_chats_d512.tool import InitChatsD512ToolConfig
 from workflow_config_code.tools.clone_repo_b60a.tool import CloneRepoB60aToolConfig
+from workflow_config_code.tools.is_stage_completed_e7bf.tool import IsStageCompletedE7bfToolConfig
 from workflow_config_code.tools.not_stage_completed_f259.tool import NotStageCompletedF259ToolConfig
 from workflow_config_code.tools.is_stage_completed_b809.tool import IsStageCompletedB809ToolConfig
 from workflow_config_code.agents.notify_user_env_deployed_58e2.agent import NotifyUserEnvDeployed58e2AgentConfig
+from workflow_config_code.tools.not_stage_completed_f57d.tool import NotStageCompletedF57dToolConfig
 from workflow_config_code.tools.save_env_file_d2aa.tool import SaveEnvFileD2aaToolConfig
 
 
@@ -215,6 +226,116 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                 ]
             },
             "repository_cloned": {
+                "transitions": [
+                    {
+                        "name": "notify_requirement_discussion",
+                        "next": "app_requirements_requested",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyRequirementsDiscussionOptimizedPyMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 900000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "app_requirements_requested": {
+                "transitions": [
+                    {
+                        "name": "submit_answer",
+                        "next": "app_requirements_requested_submitted_answer",
+                        "manual": True
+                    },
+                    {
+                        "name": "manual_approve",
+                        "next": "app_requirements_finalized",
+                        "manual": True
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "app_requirements_requested_submitted_answer",
+                        "manual": True
+                    }
+                ]
+            },
+            "app_requirements_requested_submitted_answer": {
+                "transitions": [
+                    {
+                        "name": "process_user_input",
+                        "next": "app_requirements_requested_processing",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": ProcessUserInput2c31OptimizedPyAgentConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 900000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "app_requirements_requested_processing": {
+                "transitions": [
+                    {
+                        "name": "process_application_requirement_processing",
+                        "next": "app_requirements_requested",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": NotStageCompletedF57dToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "process_application_requirement_success",
+                        "next": "app_requirements_finalized",
+                        "manual": False,
+                        "criterion": {
+                            "type": "function",
+                            "function": {
+                                "name": IsStageCompletedE7bfToolConfig.get_name(),
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "app_requirements_finalized": {
+                "transitions": [
+                    {
+                        "name": "ask_about_api",
+                        "next": "proceed_to_saving_files",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": NotifyStartedApplicationGenerationMessageConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 900000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "proceed_to_saving_files": {
                 "transitions": [
                     {
                         "name": "init_chats",
