@@ -44,9 +44,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             {
                 "name": WebScrapeBc54ToolConfig.get_tool_name()
             },
-            {
-                "name": FinishDiscussion66e9ToolConfig.get_tool_name()
-            }
         ],
         "messages": [
             {
