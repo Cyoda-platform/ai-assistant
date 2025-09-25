@@ -16,13 +16,13 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
 Please help me run and test the application against Cyoda, do end to end testing. Make sure all processors and criteria are invoked and you see logs for them. Use AI_TESTING_GUIDE.md as a reference.
 Prerequisites:
 Have MCP tools configured in the IDE with:
-Install mcp tools with:  https://pypi.org/project/mcp-cyoda-client/
-pipx install mcp-cyoda-client
+Install mcp tools with:  https://pypi.org/project/mcp-cyoda/
+pipx install mcp-cyoda
 ```json --remember to add markdown
 {
   "mcpServers": {
     "cyoda": {
-      "command": "mcp-cyoda-client",
+      "command": "mcp-cyoda",
       "env": {
         "CYODA_CLIENT_ID": "your-client-id-here",
         "CYODA_CLIENT_SECRET": "your-client-secret-here",

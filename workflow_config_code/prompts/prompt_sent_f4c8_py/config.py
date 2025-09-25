@@ -20,13 +20,13 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install .
 
 Then they can either run it locally with python app.py or ask the IDE agent to read AI_TESTING_GUIDE.md and do everything for them.
-Install mcp tools with:  https://pypi.org/project/mcp-cyoda-client/
-pipx install mcp-cyoda-client
+Install mcp tools with:  https://pypi.org/project/mcp-cyoda/
+pipx install mcp-cyoda
 ```json --remember to add markdown
 {
   "mcpServers": {
     "cyoda": {
-      "command": "mcp-cyoda-client",
+      "command": "mcp-cyoda",
       "env": {
         "CYODA_CLIENT_ID": "your-client-id-here",
         "CYODA_CLIENT_SECRET": "your-client-secret-here",
