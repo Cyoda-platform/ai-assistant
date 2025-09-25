@@ -14,6 +14,7 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
 ### 
 You are provided with a user requirement in `src/main/resources/functional_requirements/user_requirement.md` and `src/main/resources/functional_requirements/user_requirement_additional_info.md`.
 Make sure you take in account all the information from src/main/resources/functional_requirements/user_requirement.md` and `src/main/resources/functional_requirements/user_requirement_additional_info.md`
+There might be additional files in src/main/resources/functional_requirements directory. Read them all and take them into account.
 
 #### Instructions:
 1. **Understand the user requirement.**

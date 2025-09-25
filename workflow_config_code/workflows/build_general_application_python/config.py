@@ -442,6 +442,25 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
             "proceeded_to_functional_requirements": {
                 "transitions": [
                     {
+                        "name": "save_additional_requirements_files",
+                        "next": "saved_additional_requirements_files",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": InitChatsD512ToolConfig.get_name(),
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 900000
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "saved_additional_requirements_files": {
+                "transitions": [
+                    {
                         "name": "define_functional_requirements",
                         "next": "waiting_for_requirements_gen",
                         "manual": False,

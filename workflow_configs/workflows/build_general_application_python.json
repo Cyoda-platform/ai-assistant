@@ -730,17 +730,16 @@
     "proceeded_to_functional_requirements": {
       "transitions": [
         {
-          "name": "define_functional_requirements",
-          "next": "waiting_for_requirements_gen",
+          "name": "save_additional_requirements_files",
+          "next": "saved_additional_requirements_files",
           "manual": false,
           "processors": [
             {
-              "name": "AgentProcessor.define_functional_requirements_8ee2_py",
+              "name": "FunctionProcessor.init_chats_d512",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 900000,
-                "retryPolicy": "NONE"
+                "responseTimeoutMs": 900000
               }
             }
           ]
@@ -774,6 +773,57 @@
         {
           "name": "unlock",
           "next": "proceeded_to_functional_requirements",
+          "manual": true
+        }
+      ]
+    },
+    "saved_additional_requirements_files": {
+      "transitions": [
+        {
+          "name": "define_functional_requirements",
+          "next": "waiting_for_requirements_gen",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.define_functional_requirements_8ee2_py",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000,
+                "retryPolicy": "NONE"
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "saved_additional_requirements_files",
+          "manual": true
+        },
+        {
+          "name": "fail_saved_additional_requirements_files",
+          "next": "locked_saved_additional_requirements_files",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_saved_additional_requirements_files": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "saved_additional_requirements_files",
           "manual": true
         }
       ]
