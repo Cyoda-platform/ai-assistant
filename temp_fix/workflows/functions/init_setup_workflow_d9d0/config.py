@@ -1,0 +1,54 @@
+"""
+InitSetupWorkflowD9d0ToolConfig Configuration
+
+Generated from config: workflow_configs/tools/init_setup_workflow_d9d0/tool.json
+Configuration data for the tool.
+"""
+
+from typing import Any, Dict, Callable
+
+from common.config.config import config
+
+
+def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+    """Get tool configuration factory"""
+    return lambda params=None: {
+        "type": "function",
+        "function": {
+            "name": "init_setup_workflow",
+            "description": "Launches workflow that is necessary to help the user to do initial setup and launch locally their client (user) application.  Git branch is required. Ask the user explicitly or use the last branch from messages. Never default to main branch.",
+            "strict": True,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "git_branch": {
+                        "type": "string"
+                    },
+                    "user_request": {
+                        "type": "string"
+                    },
+                    "programming_language": {
+                        "type": "string",
+                        "enum": [
+                            "JAVA",
+                            "PYTHON"
+                        ]
+                    },
+                    "repository_name": {
+                        "type": "string",
+                        "enum": [
+                            config.JAVA_REPOSITORY_NAME,
+                            config.PYTHON_REPOSITORY_NAME
+                        ]
+                    }
+                },
+                "required": [
+                    "user_request",
+                    "git_branch",
+                    "programming_language",
+                    "repository_name"
+                ],
+                "additionalProperties": False
+            }
+        }
+    }
