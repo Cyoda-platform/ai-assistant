@@ -7,9 +7,9 @@ jsonschema==4.23.0
 #grpc
 grpcio==1.64.1
 grpcio-tools==1.64.1
-protobuf==5.27.3
+protobuf==5.29.5
 
-requests==2.32.3
+requests==2.32.4
 python-dotenv==1.0.1
 
 black==24.10.0
