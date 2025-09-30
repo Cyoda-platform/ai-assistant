@@ -1,0 +1,22 @@
+{
+  "type": "agent",
+  "publish": true,
+  "allow_anonymous_users": true,
+  "model": {},
+  "tools": [
+    {
+      "name": "get_user_info_d020"
+    }
+  ],
+  "memory_tags": [
+    "chat_deploy_env"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "notify_user_env_deployed_72b7"
+    }
+  ],
+  "tool_choice": "auto",
+  "max_iteration": 30
+}

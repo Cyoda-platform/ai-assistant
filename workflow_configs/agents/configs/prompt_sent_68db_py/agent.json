@@ -1,0 +1,14 @@
+{
+  "type": "agent",
+  "approve": true,
+  "model": {
+    "model_name": "gpt-4o-mini"
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "prompt_sent_d866_py"
+    }
+  ],
+  "publish": true
+}

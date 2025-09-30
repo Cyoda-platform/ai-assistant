@@ -1,0 +1,37 @@
+{
+  "type": "agent",
+  "publish": true,
+  "allow_anonymous_users": true,
+  "model": {
+    "model_name": "gpt-4o-mini"
+  },
+  "memory_tags": [
+    "process_initial_requirement"
+  ],
+  "tools": [
+    {
+      "name": "add_collaborator_to_default_repos_ffe7"
+    },
+    {
+      "name": "get_cyoda_guidelines_c748"
+    },
+    {
+      "name": "web_search_7e4b"
+    },
+    {
+      "name": "read_link_c472"
+    },
+    {
+      "name": "web_scrape_bc54"
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "process_user_input_23bd_optimized"
+    }
+  ],
+  "tool_choice": "auto",
+  "max_iteration": 30,
+  "approve": true
+}

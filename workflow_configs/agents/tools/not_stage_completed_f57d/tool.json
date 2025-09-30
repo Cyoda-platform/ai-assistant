@@ -1,0 +1,10 @@
+{
+  "type": "function",
+  "function": {
+    "name": "not_stage_completed",
+    "description": "not_stage_completed",
+    "parameters": {
+      "transition": "process_application_requirement"
+    }
+  }
+}

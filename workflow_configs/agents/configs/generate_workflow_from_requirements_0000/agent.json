@@ -1,0 +1,28 @@
+{
+  "type": "prompt",
+  "name": "generate_workflow_from_requirements_0000",
+  "model": {},
+  "memory_tags": [
+    "configs_generation"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "generate_workflow_from_requirements_0000"
+    }
+  ],
+  "tools": [
+    {
+      "name": "add_application_resource_3d0b"
+    },
+    {
+      "name": "list_directory_files_1ab7"
+    }
+  ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/functional_requirement.md"
+    ]
+  },
+  "publish": false
+}

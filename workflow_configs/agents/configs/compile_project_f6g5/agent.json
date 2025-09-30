@@ -1,0 +1,72 @@
+{
+  "type": "agent",
+  "publish": false,
+  "model": {},
+  "tools": [],
+  "memory_tags": [
+    "CompileProjectF6g5PromptConfig"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "compile_project_f6g5"
+    }
+  ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/project_compilation.log"
+    ]
+  },
+  "output": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/project_compilation_output.json"
+    ]
+  },
+  "response_format": {
+    "name": "workflow_design_schema",
+    "description": "workflow design schema",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "compilation_status": {
+          "type": "string",
+          "enum": [
+            "SUCCESS",
+            "FAILURE"
+          ],
+          "description": "Indicates whether the compilation succeeded or failed."
+        },
+        "files_with_errors": {
+          "type": "array",
+          "description": "List of files that contain compilation errors.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "file_path": {
+                "type": "string",
+                "description": "Path to the file that encountered errors."
+              },
+              "errors": {
+                "type": "array",
+                "description": "List of error messages for this file.",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "file_path",
+              "errors"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "compilation_status",
+        "files_with_errors"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

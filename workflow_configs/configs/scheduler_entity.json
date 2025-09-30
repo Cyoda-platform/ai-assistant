@@ -1,0 +1,2202 @@
+{
+  "version": "1.0",
+  "name": "scheduler_entity",
+  "desc": "Scheduler entity workflow for managing scheduled processes",
+  "initialState": "initial_state",
+  "active": true,
+  "criterion": {
+    "type": "simple",
+    "jsonPath": "$.workflow_name",
+    "operation": "EQUALS",
+    "value": "scheduler_entity"
+  },
+  "states": {
+    "initial_state": {
+      "transitions": [
+        {
+          "name": "schedule",
+          "next": "scheduled",
+          "manual": false
+        },
+        {
+          "name": "retry",
+          "next": "initial_state",
+          "manual": true
+        },
+        {
+          "name": "fail_initial_state",
+          "next": "locked_initial_state",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "initial_state",
+          "manual": true
+        },
+        {
+          "name": "fail_initial_state",
+          "next": "locked_initial_state",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "initial_state",
+          "manual": true
+        },
+        {
+          "name": "fail_initial_state",
+          "next": "locked_initial_state",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "initial_state",
+          "manual": true
+        },
+        {
+          "name": "fail_initial_state",
+          "next": "locked_initial_state",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_initial_state": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "initial_state",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_initial_state",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_initial_state",
+          "next": "locked_locked_initial_state",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_initial_state",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_initial_state",
+          "next": "locked_locked_initial_state",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_initial_state",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_initial_state",
+          "next": "locked_locked_initial_state",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_initial_state": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_initial_state",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_initial_state",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_initial_state",
+          "next": "locked_locked_locked_initial_state",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_initial_state",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_initial_state",
+          "next": "locked_locked_locked_initial_state",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_initial_state": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_initial_state",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_locked_initial_state",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_locked_initial_state",
+          "next": "locked_locked_locked_locked_initial_state",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_locked_initial_state": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_locked_initial_state",
+          "manual": true
+        }
+      ]
+    },
+    "scheduled": {
+      "transitions": [
+        {
+          "name": "wait",
+          "next": "waiting",
+          "manual": false,
+          "processors": [
+            {
+              "type": "scheduled",
+              "name": "schedule_close_process",
+              "config": {
+                "delayMs": 30000,
+                "timeoutMs": 3600000,
+                "transition": "check_status"
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "scheduled",
+          "manual": true
+        },
+        {
+          "name": "fail_scheduled",
+          "next": "locked_scheduled",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "scheduled",
+          "manual": true
+        },
+        {
+          "name": "fail_scheduled",
+          "next": "locked_scheduled",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "scheduled",
+          "manual": true
+        },
+        {
+          "name": "fail_scheduled",
+          "next": "locked_scheduled",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "scheduled",
+          "manual": true
+        },
+        {
+          "name": "fail_scheduled",
+          "next": "locked_scheduled",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_scheduled": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "scheduled",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_scheduled",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_scheduled",
+          "next": "locked_locked_scheduled",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_scheduled",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_scheduled",
+          "next": "locked_locked_scheduled",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_scheduled",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_scheduled",
+          "next": "locked_locked_scheduled",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_scheduled": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_scheduled",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_scheduled",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_scheduled",
+          "next": "locked_locked_locked_scheduled",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_scheduled",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_scheduled",
+          "next": "locked_locked_locked_scheduled",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_scheduled": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_scheduled",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_locked_scheduled",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_locked_scheduled",
+          "next": "locked_locked_locked_locked_scheduled",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_locked_scheduled": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_locked_scheduled",
+          "manual": true
+        }
+      ]
+    },
+    "waiting": {
+      "transitions": [
+        {
+          "name": "check_status",
+          "next": "checked_status",
+          "manual": true,
+          "processors": [
+            {
+              "name": "FunctionProcessor.check_scheduled_entity_status_4d37",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "waiting",
+          "manual": true
+        },
+        {
+          "name": "fail_waiting",
+          "next": "locked_waiting",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "waiting",
+          "manual": true
+        },
+        {
+          "name": "fail_waiting",
+          "next": "locked_waiting",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "waiting",
+          "manual": true
+        },
+        {
+          "name": "fail_waiting",
+          "next": "locked_waiting",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "waiting",
+          "manual": true
+        },
+        {
+          "name": "fail_waiting",
+          "next": "locked_waiting",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_waiting": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "waiting",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_waiting",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_waiting",
+          "next": "locked_locked_waiting",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_waiting",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_waiting",
+          "next": "locked_locked_waiting",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_waiting",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_waiting",
+          "next": "locked_locked_waiting",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_waiting": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_waiting",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_waiting",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_waiting",
+          "next": "locked_locked_locked_waiting",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_waiting",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_waiting",
+          "next": "locked_locked_locked_waiting",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_waiting": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_waiting",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_locked_waiting",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_locked_waiting",
+          "next": "locked_locked_locked_locked_waiting",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_locked_waiting": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_locked_waiting",
+          "manual": true
+        }
+      ]
+    },
+    "checked_status": {
+      "transitions": [
+        {
+          "name": "complete",
+          "next": "complete",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.status",
+                "operation": "IEQUALS",
+                "value": "complete"
+              }
+            ]
+          }
+        },
+        {
+          "name": "wait",
+          "next": "scheduled",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.status",
+                "operation": "IEQUALS",
+                "value": "in_progress"
+              }
+            ]
+          }
+        },
+        {
+          "name": "error",
+          "next": "error",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.status",
+                "operation": "IEQUALS",
+                "value": "error"
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "checked_status",
+          "manual": true
+        },
+        {
+          "name": "fail_checked_status",
+          "next": "locked_checked_status",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "checked_status",
+          "manual": true
+        },
+        {
+          "name": "fail_checked_status",
+          "next": "locked_checked_status",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "checked_status",
+          "manual": true
+        },
+        {
+          "name": "fail_checked_status",
+          "next": "locked_checked_status",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "checked_status",
+          "manual": true
+        },
+        {
+          "name": "fail_checked_status",
+          "next": "locked_checked_status",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_checked_status": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "checked_status",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_checked_status",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_checked_status",
+          "next": "locked_locked_checked_status",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_checked_status",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_checked_status",
+          "next": "locked_locked_checked_status",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_checked_status",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_checked_status",
+          "next": "locked_locked_checked_status",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_checked_status": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_checked_status",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_checked_status",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_checked_status",
+          "next": "locked_locked_locked_checked_status",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_checked_status",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_checked_status",
+          "next": "locked_locked_locked_checked_status",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_checked_status": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_checked_status",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_locked_checked_status",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_locked_checked_status",
+          "next": "locked_locked_locked_locked_checked_status",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_locked_checked_status": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_locked_checked_status",
+          "manual": true
+        }
+      ]
+    },
+    "complete": {
+      "transitions": [
+        {
+          "name": "trigger_parent_entity",
+          "next": "unlocked_parent_entity",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.trigger_parent_entity_b4c4",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "complete",
+          "manual": true
+        },
+        {
+          "name": "fail_complete",
+          "next": "locked_complete",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "complete",
+          "manual": true
+        },
+        {
+          "name": "fail_complete",
+          "next": "locked_complete",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "complete",
+          "manual": true
+        },
+        {
+          "name": "fail_complete",
+          "next": "locked_complete",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "complete",
+          "manual": true
+        },
+        {
+          "name": "fail_complete",
+          "next": "locked_complete",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_complete": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "complete",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_complete",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_complete",
+          "next": "locked_locked_complete",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_complete",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_complete",
+          "next": "locked_locked_complete",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_complete",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_complete",
+          "next": "locked_locked_complete",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_complete": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_complete",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_complete",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_complete",
+          "next": "locked_locked_locked_complete",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_complete",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_complete",
+          "next": "locked_locked_locked_complete",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_complete": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_complete",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_locked_complete",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_locked_complete",
+          "next": "locked_locked_locked_locked_complete",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_locked_complete": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_locked_complete",
+          "manual": true
+        }
+      ]
+    },
+    "unlocked_parent_entity": {
+      "transitions": [
+        {
+          "name": "finish",
+          "next": "finished",
+          "manual": false
+        },
+        {
+          "name": "retry",
+          "next": "unlocked_parent_entity",
+          "manual": true
+        },
+        {
+          "name": "fail_unlocked_parent_entity",
+          "next": "locked_unlocked_parent_entity",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "unlocked_parent_entity",
+          "manual": true
+        },
+        {
+          "name": "fail_unlocked_parent_entity",
+          "next": "locked_unlocked_parent_entity",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "unlocked_parent_entity",
+          "manual": true
+        },
+        {
+          "name": "fail_unlocked_parent_entity",
+          "next": "locked_unlocked_parent_entity",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "unlocked_parent_entity",
+          "manual": true
+        },
+        {
+          "name": "fail_unlocked_parent_entity",
+          "next": "locked_unlocked_parent_entity",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_unlocked_parent_entity": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "unlocked_parent_entity",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_unlocked_parent_entity",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_unlocked_parent_entity",
+          "next": "locked_locked_unlocked_parent_entity",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_unlocked_parent_entity",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_unlocked_parent_entity",
+          "next": "locked_locked_unlocked_parent_entity",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_unlocked_parent_entity",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_unlocked_parent_entity",
+          "next": "locked_locked_unlocked_parent_entity",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_unlocked_parent_entity": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_unlocked_parent_entity",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_unlocked_parent_entity",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_unlocked_parent_entity",
+          "next": "locked_locked_locked_unlocked_parent_entity",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_unlocked_parent_entity",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_unlocked_parent_entity",
+          "next": "locked_locked_locked_unlocked_parent_entity",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_unlocked_parent_entity": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_unlocked_parent_entity",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_locked_unlocked_parent_entity",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_locked_unlocked_parent_entity",
+          "next": "locked_locked_locked_locked_unlocked_parent_entity",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_locked_unlocked_parent_entity": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_locked_unlocked_parent_entity",
+          "manual": true
+        }
+      ]
+    },
+    "error": {
+      "transitions": [
+        {
+          "name": "retry",
+          "next": "error",
+          "manual": true
+        },
+        {
+          "name": "fail_error",
+          "next": "locked_error",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "error",
+          "manual": true
+        },
+        {
+          "name": "fail_error",
+          "next": "locked_error",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "error",
+          "manual": true
+        },
+        {
+          "name": "fail_error",
+          "next": "locked_error",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "error",
+          "manual": true
+        },
+        {
+          "name": "fail_error",
+          "next": "locked_error",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_error": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "error",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_error",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_error",
+          "next": "locked_locked_error",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_error",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_error",
+          "next": "locked_locked_error",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_error",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_error",
+          "next": "locked_locked_error",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_error": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_error",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_error",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_error",
+          "next": "locked_locked_locked_error",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_error",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_error",
+          "next": "locked_locked_locked_error",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_error": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_error",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_locked_error",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_locked_error",
+          "next": "locked_locked_locked_locked_error",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_locked_error": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_locked_error",
+          "manual": true
+        }
+      ]
+    },
+    "finished": {
+      "transitions": [
+        {
+          "name": "retry",
+          "next": "finished",
+          "manual": true
+        },
+        {
+          "name": "fail_finished",
+          "next": "locked_finished",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "finished",
+          "manual": true
+        },
+        {
+          "name": "fail_finished",
+          "next": "locked_finished",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "finished",
+          "manual": true
+        },
+        {
+          "name": "fail_finished",
+          "next": "locked_finished",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "finished",
+          "manual": true
+        },
+        {
+          "name": "fail_finished",
+          "next": "locked_finished",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_finished": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "finished",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_finished",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_finished",
+          "next": "locked_locked_finished",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_finished",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_finished",
+          "next": "locked_locked_finished",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_finished",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_finished",
+          "next": "locked_locked_finished",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_finished": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_finished",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_finished",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_finished",
+          "next": "locked_locked_locked_finished",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_finished",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_finished",
+          "next": "locked_locked_locked_finished",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_finished": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_finished",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_locked_locked_finished",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_locked_locked_finished",
+          "next": "locked_locked_locked_locked_finished",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_locked_locked_locked_finished": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "locked_locked_locked_finished",
+          "manual": true
+        }
+      ]
+    }
+  }
+}

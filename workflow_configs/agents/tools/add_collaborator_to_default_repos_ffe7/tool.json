@@ -1,0 +1,21 @@
+{
+  "type": "function",
+  "function": {
+    "name": "add_collaborator",
+    "description": "Adds a user as collaborator to the default Cyoda repositories (mcp-cyoda-quart-app, java-client-template). Use when user requests repository access, push rights, or to be added to repositories. Use when the user says they have an issue pushing/accessing to the repository. The AI must extract the GitHub username from the user's request - cannot invent usernames.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "GitHub username extracted from user's request. Must be provided by the user - AI cannot invent this."
+        }
+      },
+      "required": [
+        "username"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

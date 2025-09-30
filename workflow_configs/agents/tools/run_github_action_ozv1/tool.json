@@ -1,0 +1,40 @@
+{
+  "type": "function",
+  "function": {
+    "name": "run_github_action",
+    "description": "Run a GitHub Actions workflow and wait for completion with timeout. This is a high-level tool that triggers a workflow, monitors its progress, and returns the final result. Use this when you need to run a build, deployment, or other CI/CD process and get the final outcome.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "workflow_id": {
+          "type": "string",
+          "description": "Workflow ID or filename (e.g., 'build.yml')",
+          "enum": [
+            "build.yml"
+          ]
+        },
+        "owner": {
+          "type": "string",
+          "description": "Repository owner (optional, uses config default if not provided)",
+          "enum": [
+            "Cyoda-platform"
+          ]
+        },
+        "option": {
+          "type": "string",
+          "description": "Git option (optional, defaults to 'compile-only')",
+          "enum": [
+            "compile-only"
+          ]
+        }
+      },
+      "required": [
+        "workflow_id",
+        "owner",
+        "option"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

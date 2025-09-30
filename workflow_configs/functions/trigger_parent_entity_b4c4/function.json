@@ -1,0 +1,8 @@
+{
+  "type": "function",
+  "function": {
+    "name": "trigger_parent_entity",
+    "description": "Triggers the parent entity after completion",
+    "strict": true
+  }
+}

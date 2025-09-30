@@ -1,0 +1,14 @@
+{
+  "type": "prompt",
+  "approve": true,
+  "model": {
+    "model_name": "gpt-4o-mini"
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "prompt_sent_88b3"
+    }
+  ],
+  "publish": true
+}
