@@ -1,0 +1,33 @@
+"""
+NotifyRequirementsDiscussionOptimizedMessageConfig Configuration
+
+Generated from config: workflow_configs/messages/notify_requirements_discussion_optimized/meta.json
+Configuration data for the message.
+"""
+
+from typing import Any, Dict, Callable
+import json
+
+
+def get_config() -> Callable[[Dict[str, Any]], str]:
+    """Get message configuration factory"""
+    return lambda params=None: """Hello! Thank you for your contribution!
+
+We are building in **optimized mode**.
+
+Would you like to attach additional files or data for your requirement?
+There are 2 alternatives:
+1. You can attach files to your message. I will use them as input data once we proceed to building the application.
+2. Checkout your branch and add files to the branch directly to `src/main/resources/functional_requirements` directory. I will use them as input data.
+
+If you do not have rights to push to the branch, please request them by sending me a message:
+```markdown
+Please grant me push rights to the branch. My GitHub username is {github_username}.
+```
+
+If there are no more files to attach, please click 'Approve' to proceed."""
+
+
+def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+    """Get message meta configuration factory"""
+    return lambda params=None: {'type': 'question', 'approve': True, 'publish': True}
