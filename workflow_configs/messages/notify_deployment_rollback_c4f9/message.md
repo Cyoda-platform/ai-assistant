@@ -1,1 +1,0 @@
-🙈  We encountered internal issues with checking the status of your Cyoda environment. You can check the the deployment status for {build_id} manually here or in any chat. Don't worry!

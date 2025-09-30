@@ -10,42 +10,18 @@ from typing import Dict, Any, Optional
 logger = logging.getLogger(__name__)
 
 
-def _find_project_root() -> Path:
-    """
-    Find the project root directory by looking for key files.
-
-    Returns:
-        Path to the project root directory
-
-    Raises:
-        FileNotFoundError: If project root cannot be determined
-    """
-    # Start from current file's directory and walk up
-    current_path = Path(__file__).parent
-
-    # Look for project indicators
-    project_indicators = ['app.py', 'workflow_configs', '.git', 'requirements.txt']
-
-    for parent in [current_path] + list(current_path.parents):
-        if any((parent / indicator).exists() for indicator in project_indicators):
-            return parent
-
-    # Fallback: if we can't find project root, use current working directory
-    cwd = Path.cwd()
-    logger.warning(f"Could not determine project root, using current working directory: {cwd}")
-    return cwd
-
 
 class ConfigBuilder:
     """
-    Builds processor configurations from workflow_configs directory structure.
+    Builds processor configurations from workflow_configs hierarchical directory structure.
 
     Handles three processor types:
     - AgentProcessor: Loads agent config and resolves tool/prompt references
-    - FunctionProcessor: Returns tool config directly
+    - FunctionProcessor: Returns function/tool config from functions/ or agents/functions/
     - MessageProcessor: Builds config from message directory (message.md + meta.json)
 
     Features thread-safe caching for improved performance.
+    Uses only workflow_configs/ hierarchical structure.
     """
 
     def __init__(self, workflow_configs_path: str = "workflow_configs"):
@@ -55,17 +31,21 @@ class ConfigBuilder:
         Args:
             workflow_configs_path: Path to workflow_configs directory (relative or absolute)
         """
-        # If path is relative, resolve it relative to project root
+        # If path is relative, resolve it relative to current working directory
         if not Path(workflow_configs_path).is_absolute():
-            project_root = _find_project_root()
-            self.workflow_configs_path = project_root / workflow_configs_path
+            self.workflow_configs_path = Path.cwd() / workflow_configs_path
         else:
             self.workflow_configs_path = Path(workflow_configs_path)
 
-        self.agents_path = self.workflow_configs_path / "agents"
-        self.tools_path = self.workflow_configs_path / "tools"
-        self.prompts_path = self.workflow_configs_path / "prompts"
+        # Hierarchical structure paths
+        self.agents_configs_path = self.workflow_configs_path / "agents" / "configs"
+        self.agents_tools_path = self.workflow_configs_path / "agents" / "tools"
+        self.agents_prompts_path = self.workflow_configs_path / "agents" / "prompts"
+        self.functions_configs_path = self.workflow_configs_path / "functions"
         self.messages_path = self.workflow_configs_path / "messages"
+        self.workflow_configs_configs_path = self.workflow_configs_path / "configs"
+
+
 
         # Thread-safe cache for configurations
         self._config_cache: Dict[str, Dict[str, Any]] = {}
@@ -134,7 +114,7 @@ class ConfigBuilder:
         Returns:
             Complete agent configuration with resolved tools and prompts
         """
-        agent_config_path = self.agents_path / agent_name / "agent.json"
+        agent_config_path = self.agents_configs_path / agent_name / "agent.json"
 
         if not agent_config_path.exists():
             # Enhanced error message with debugging information
@@ -142,8 +122,8 @@ class ConfigBuilder:
                 f"Agent config not found: {agent_config_path}\n"
                 f"Current working directory: {Path.cwd()}\n"
                 f"Workflow configs path: {self.workflow_configs_path}\n"
-                f"Agents path exists: {self.agents_path.exists()}\n"
-                f"Agent directory exists: {(self.agents_path / agent_name).exists()}"
+                f"Agents configs path exists: {self.agents_configs_path.exists()}\n"
+                f"Agent directory exists: {(self.agents_configs_path / agent_name).exists()}"
             )
             raise FileNotFoundError(error_msg)
 
@@ -162,21 +142,40 @@ class ConfigBuilder:
     
     async def _build_function_config(self, function_name: str) -> Dict[str, Any]:
         """
-        Build function configuration by loading tool.json.
-        
+        Build function configuration by loading from:
+        1. workflow_configs/functions/name/function.json (workflow functions)
+        2. workflow_configs/agents/functions/name/function.json (agent functions)
+
         Args:
-            function_name: Function/tool name (e.g., "add_new_workflow")
-        
+            function_name: Function/tool name (e.g., "clone_repo_b60a", "add_collaborator")
+
         Returns:
-            Tool configuration
+            Function/tool configuration
         """
-        tool_config_path = self.tools_path / function_name / "tool.json"
-        
-        if not tool_config_path.exists():
-            raise FileNotFoundError(f"Tool config not found: {tool_config_path}")
-        
-        with open(tool_config_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        # First try workflow_configs/functions/name/function.json
+        function_config_path = self.functions_configs_path / function_name / "function.json"
+        if function_config_path.exists():
+            with open(function_config_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+
+        # Then try the hierarchical tools directory
+        tool_config_path = self.agents_tools_path / function_name / "tool.json"
+        if tool_config_path.exists():
+            with open(tool_config_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+
+
+
+        # If not found in any location, raise error with helpful information
+        error_msg = (
+            f"Function/tool config not found for: {function_name}\n"
+            f"Checked locations:\n"
+            f"  - Functions: {function_config_path}\n"
+            f"  - Agent Tools: {self.agents_tools_path / function_name / 'tool.json'}\n"
+            f"Functions directory exists: {self.functions_configs_path.exists()}\n"
+            f"Agent tools directory exists: {self.agents_tools_path.exists()}"
+        )
+        raise FileNotFoundError(error_msg)
     
     async def _build_message_config(self, message_name: str) -> Dict[str, Any]:
         """
@@ -279,15 +278,15 @@ class ConfigBuilder:
     def _load_prompt_content(self, prompt_name: str) -> str:
         """
         Load prompt content from prompts directory.
-        
+
         Args:
             prompt_name: Prompt directory name
-        
+
         Returns:
             Prompt content as string
         """
-        prompt_dir = self.prompts_path / prompt_name
-        
+        prompt_dir = self.agents_prompts_path / prompt_name
+
         if not prompt_dir.exists():
             raise FileNotFoundError(f"Prompt directory not found: {prompt_dir}")
 

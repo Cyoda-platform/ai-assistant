@@ -23,7 +23,7 @@ from typing import Dict, Any, List, Optional
 class WorkflowConfigConverter:
     """Converts workflow JSON configs to Python code"""
     
-    def __init__(self, source_dir: str = "workflow_configs", target_dir: str = "workflow_config_code"):
+    def __init__(self, source_dir: str = "workflow_configs", target_dir: str = "workflow_config_code/workflows"):
         self.source_dir = Path(source_dir)
         self.target_dir = Path(target_dir)
         
@@ -40,26 +40,32 @@ class WorkflowConfigConverter:
         self.target_dir.mkdir(exist_ok=True)
         self._create_init_file(self.target_dir)
         
-        # Convert each type
-        self._convert_agents()
+        # Convert each type to new structure
+        self._convert_agent_configs()
+        self._convert_agent_tools()
+        self._convert_agent_prompts()
+        self._convert_workflow_functions()
         self._convert_messages()
-        self._convert_tools()
-        self._convert_prompts()
         self._convert_workflows()
         
         print(f"\n✅ Conversion complete! Generated code in: {self.target_dir}")
         
-    def _convert_agents(self):
+    def _convert_agent_configs(self):
         """Convert all agent configurations"""
-        agents_dir = self.source_dir / "agents"
+        # Try new hierarchical structure first
+        agents_dir = self.source_dir / "agents" / "configs"
         if not agents_dir.exists():
-            return
-            
-        target_agents_dir = self.target_dir / "agents"
-        target_agents_dir.mkdir(exist_ok=True)
+            # Fallback to old flat structure
+            agents_dir = self.source_dir / "agents"
+            if not agents_dir.exists():
+                return
+
+        target_agents_dir = self.target_dir / "agents" / "configs"
+        target_agents_dir.mkdir(parents=True, exist_ok=True)
+        self._create_init_file(target_agents_dir.parent)
         self._create_init_file(target_agents_dir)
-        
-        print("\n📋 Converting agents...")
+
+        print("\n📋 Converting agent configs...")
         for agent_dir in agents_dir.iterdir():
             if agent_dir.is_dir():
                 agent_json = agent_dir / "agent.json"
@@ -84,34 +90,59 @@ class WorkflowConfigConverter:
                 if meta_json.exists():
                     self._convert_message_config(meta_json, message_md, target_messages_dir / message_dir.name)
                     
-    def _convert_tools(self):
-        """Convert all tool configurations"""
-        tools_dir = self.source_dir / "tools"
+    def _convert_agent_tools(self):
+        """Convert all agent tool configurations"""
+        # Try new hierarchical structure first
+        tools_dir = self.source_dir / "agents" / "tools"
         if not tools_dir.exists():
-            return
-            
-        target_tools_dir = self.target_dir / "tools"
-        target_tools_dir.mkdir(exist_ok=True)
+            # Fallback to old flat structure
+            tools_dir = self.source_dir / "tools"
+            if not tools_dir.exists():
+                return
+
+        target_tools_dir = self.target_dir / "agents" / "tools"
+        target_tools_dir.mkdir(parents=True, exist_ok=True)
         self._create_init_file(target_tools_dir)
-        
-        print("\n🔧 Converting tools...")
+
+        print("\n🔧 Converting agent tools...")
         for tool_dir in tools_dir.iterdir():
             if tool_dir.is_dir():
                 tool_json = tool_dir / "tool.json"
                 if tool_json.exists():
                     self._convert_tool_config(tool_json, target_tools_dir / tool_dir.name)
-                    
-    def _convert_prompts(self):
-        """Convert all prompt configurations"""
-        prompts_dir = self.source_dir / "prompts"
-        if not prompts_dir.exists():
+
+    def _convert_workflow_functions(self):
+        """Convert all workflow function configurations"""
+        functions_dir = self.source_dir / "functions"
+        if not functions_dir.exists():
             return
-            
-        target_prompts_dir = self.target_dir / "prompts"
-        target_prompts_dir.mkdir(exist_ok=True)
+
+        target_functions_dir = self.target_dir / "functions"
+        target_functions_dir.mkdir(exist_ok=True)
+        self._create_init_file(target_functions_dir)
+
+        print("\n⚙️ Converting workflow functions...")
+        for function_dir in functions_dir.iterdir():
+            if function_dir.is_dir():
+                function_json = function_dir / "function.json"
+                if function_json.exists():
+                    self._convert_function_config(function_json, target_functions_dir / function_dir.name)
+                    
+    def _convert_agent_prompts(self):
+        """Convert all agent prompt configurations"""
+        # Try new hierarchical structure first
+        prompts_dir = self.source_dir / "agents" / "prompts"
+        if not prompts_dir.exists():
+            # Fallback to old flat structure
+            prompts_dir = self.source_dir / "prompts"
+            if not prompts_dir.exists():
+                return
+
+        target_prompts_dir = self.target_dir / "agents" / "prompts"
+        target_prompts_dir.mkdir(parents=True, exist_ok=True)
         self._create_init_file(target_prompts_dir)
-        
-        print("\n📝 Converting prompts...")
+
+        print("\n📝 Converting agent prompts...")
         for prompt_dir in prompts_dir.iterdir():
             if prompt_dir.is_dir():
                 # Look for message_0.md or any .md file
@@ -121,14 +152,18 @@ class WorkflowConfigConverter:
                     
     def _convert_workflows(self):
         """Convert all workflow configurations"""
-        workflows_dir = self.source_dir / "workflows"
+        # Try new hierarchical structure first
+        workflows_dir = self.source_dir / "configs"
         if not workflows_dir.exists():
-            return
-            
-        target_workflows_dir = self.target_dir / "workflows"
+            # Fallback to old structure
+            workflows_dir = self.source_dir / "workflows"
+            if not workflows_dir.exists():
+                return
+
+        target_workflows_dir = self.target_dir / "configs"
         target_workflows_dir.mkdir(exist_ok=True)
         self._create_init_file(target_workflows_dir)
-        
+
         print("\n🔄 Converting workflows...")
         for workflow_file in workflows_dir.glob("*.json"):
             self._convert_workflow_config(workflow_file, target_workflows_dir)
@@ -388,6 +423,88 @@ class {class_name}(FunctionProcessor):
         except Exception as e:
             print(f"  ❌ Failed to convert {tool_json}: {e}")
 
+    def _convert_function_config(self, function_json: Path, target_dir: Path):
+        """Convert function JSON to Python code"""
+        try:
+            with open(function_json, 'r') as f:
+                config = json.load(f)
+
+            function_name = self._extract_name_from_path(function_json.parent.name)
+            class_name = self._to_class_name(function_name, "function")
+
+            target_dir.mkdir(exist_ok=True)
+            self._create_init_file(target_dir)
+            target_file = target_dir / "function.py"
+
+            # Format JSON with proper indentation for Python code
+            config_json = self._format_json_for_python(config)
+
+            # Create config.py file
+            config_file = target_dir / "config.py"
+            config_code = f'''"""
+{class_name} Configuration
+
+Generated from config: {function_json}
+Configuration data for the function.
+"""
+
+from typing import Any, Dict, Callable
+
+
+def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+    """Get function configuration factory"""
+    return lambda params=None: {config_json}
+'''
+            self._write_code_file(config_file, config_code)
+
+            # Create main function.py file
+            code = f'''"""
+{class_name} Function
+
+Generated from config: {function_json}
+Implements FunctionProcessor interface with get_name() and get_config() methods.
+"""
+
+from typing import Any, Dict
+from workflow.interfaces.interfaces import FunctionProcessor
+from .config import get_config
+
+
+class {class_name}(FunctionProcessor):
+    """Function configuration for {function_name}"""
+
+    @staticmethod
+    def get_type() -> str:
+        """Get the processor type"""
+        return FunctionProcessor.get_type()
+
+    @staticmethod
+    def get_name() -> str:
+        """Get the full processor name"""
+        return f"{{{class_name}.get_type()}}.{function_name}"
+
+    @staticmethod
+    def get_config(params: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Get function configuration"""
+        config_factory = get_config()
+        return config_factory(params or {{}})
+
+    @staticmethod
+    def get_function_name() -> str:
+        """Get the function name without processor type"""
+        return "{function_name}"
+
+
+# Create singleton instance
+{function_name}_function = {class_name}()
+'''
+
+            self._write_code_file(target_file, code)
+            print(f"  ✅ {function_name}")
+
+        except Exception as e:
+            print(f"  ❌ Failed to convert {function_json}: {e}")
+
     def _convert_prompt_config(self, prompt_md: Path, target_dir: Path):
         """Convert prompt markdown to Python code"""
         try:
@@ -552,6 +669,8 @@ class {class_name}:
             class_name += "MessageConfig"
         elif config_type == "tool":
             class_name += "ToolConfig"
+        elif config_type == "function":
+            class_name += "FunctionConfig"
         elif config_type == "prompt":
             class_name += "PromptConfig"
         elif config_type == "workflow":
@@ -608,8 +727,16 @@ class {class_name}:
                                     # Handle FunctionProcessor.function_name format
                                     elif processor_name.startswith("FunctionProcessor."):
                                         function_name = processor_name.replace("FunctionProcessor.", "")
-                                        tool_class_name = self._get_class_name_for_reference(function_name, "tool")
-                                        processor["name"] = f"{tool_class_name}.get_name()"
+                                        # Check if this is a workflow function or a tool
+                                        function_path = Path(f"workflow_config_code/workflows/functions/{function_name}")
+                                        if function_path.exists():
+                                            # It's a workflow function
+                                            function_class_name = self._get_class_name_for_reference(function_name, "function")
+                                            processor["name"] = f"{function_class_name}.get_name()"
+                                        else:
+                                            # It's a tool
+                                            tool_class_name = self._get_class_name_for_reference(function_name, "tool")
+                                            processor["name"] = f"{tool_class_name}.get_name()"
                                     # Handle MessageProcessor.message_name format
                                     elif processor_name.startswith("MessageProcessor."):
                                         message_name = processor_name.replace("MessageProcessor.", "")
@@ -622,9 +749,17 @@ class {class_name}:
                             if "name" in function_config:
                                 function_name = function_config["name"]
                                 if function_name.startswith("FunctionProcessor."):
-                                    tool_name = function_name.replace("FunctionProcessor.", "")
-                                    tool_class_name = self._get_class_name_for_reference(tool_name, "tool")
-                                    function_config["name"] = f"{tool_class_name}.get_name()"
+                                    function_name_clean = function_name.replace("FunctionProcessor.", "")
+                                    # Check if this is a workflow function or a tool
+                                    function_path = Path(f"workflow_config_code/workflows/functions/{function_name_clean}")
+                                    if function_path.exists():
+                                        # It's a workflow function
+                                        function_class_name = self._get_class_name_for_reference(function_name_clean, "function")
+                                        function_config["name"] = f"{function_class_name}.get_name()"
+                                    else:
+                                        # It's a tool
+                                        tool_class_name = self._get_class_name_for_reference(function_name_clean, "tool")
+                                        function_config["name"] = f"{tool_class_name}.get_name()"
                                 elif function_name.startswith("MessageProcessor."):
                                     message_name = function_name.replace("MessageProcessor.", "")
                                     message_class_name = self._get_class_name_for_reference(message_name, "message")
@@ -640,7 +775,7 @@ class {class_name}:
                 if "name" in tool:
                     tool_name = tool["name"]
                     tool_class_name = self._get_class_name_for_reference(tool_name, "tool")
-                    imports.append(f"from workflow_config_code.tools.{tool_name}.tool import {tool_class_name}")
+                    imports.append(f"from workflow_config_code.workflows.agents.tools.{tool_name}.tool import {tool_class_name}")
 
         # Import prompt classes for messages
         if "messages" in config:
@@ -648,7 +783,7 @@ class {class_name}:
                 if "content_from_file" in message:
                     prompt_name = message["content_from_file"]
                     prompt_class_name = self._get_class_name_for_reference(prompt_name, "prompt")
-                    imports.append(f"from workflow_config_code.prompts.{prompt_name}.prompt import {prompt_class_name}")
+                    imports.append(f"from workflow_config_code.workflows.agents.prompts.{prompt_name}.prompt import {prompt_class_name}")
 
         return "\n".join(imports) if imports else ""
 
@@ -668,15 +803,23 @@ class {class_name}:
                                     if processor_name.startswith("AgentProcessor."):
                                         agent_name = processor_name.replace("AgentProcessor.", "")
                                         agent_class_name = self._get_class_name_for_reference(agent_name, "agent")
-                                        imports.append(f"from workflow_config_code.agents.{agent_name}.agent import {agent_class_name}")
+                                        imports.append(f"from workflow_config_code.workflows.agents.configs.{agent_name}.agent import {agent_class_name}")
                                     elif processor_name.startswith("FunctionProcessor."):
                                         function_name = processor_name.replace("FunctionProcessor.", "")
-                                        tool_class_name = self._get_class_name_for_reference(function_name, "tool")
-                                        imports.append(f"from workflow_config_code.tools.{function_name}.tool import {tool_class_name}")
+                                        # Check if this is a workflow function or a tool
+                                        function_path = Path(f"workflow_config_code/workflows/functions/{function_name}")
+                                        if function_path.exists():
+                                            # It's a workflow function
+                                            function_class_name = self._get_class_name_for_reference(function_name, "function")
+                                            imports.append(f"from workflow_config_code.workflows.functions.{function_name}.function import {function_class_name}")
+                                        else:
+                                            # It's a tool
+                                            tool_class_name = self._get_class_name_for_reference(function_name, "tool")
+                                            imports.append(f"from workflow_config_code.workflows.agents.tools.{function_name}.tool import {tool_class_name}")
                                     elif processor_name.startswith("MessageProcessor."):
                                         message_name = processor_name.replace("MessageProcessor.", "")
                                         message_class_name = self._get_class_name_for_reference(message_name, "message")
-                                        imports.append(f"from workflow_config_code.messages.{message_name}.message import {message_class_name}")
+                                        imports.append(f"from workflow_config_code.workflows.messages.{message_name}.message import {message_class_name}")
 
                         # Import tool classes from criterion functions
                         if "criterion" in transition and "function" in transition["criterion"]:
@@ -684,13 +827,21 @@ class {class_name}:
                             if "name" in function_config:
                                 function_name = function_config["name"]
                                 if function_name.startswith("FunctionProcessor."):
-                                    tool_name = function_name.replace("FunctionProcessor.", "")
-                                    tool_class_name = self._get_class_name_for_reference(tool_name, "tool")
-                                    imports.append(f"from workflow_config_code.tools.{tool_name}.tool import {tool_class_name}")
+                                    function_name_clean = function_name.replace("FunctionProcessor.", "")
+                                    # Check if this is a workflow function or a tool
+                                    function_path = Path(f"workflow_config_code/workflows/functions/{function_name_clean}")
+                                    if function_path.exists():
+                                        # It's a workflow function
+                                        function_class_name = self._get_class_name_for_reference(function_name_clean, "function")
+                                        imports.append(f"from workflow_config_code.workflows.functions.{function_name_clean}.function import {function_class_name}")
+                                    else:
+                                        # It's a tool
+                                        tool_class_name = self._get_class_name_for_reference(function_name_clean, "tool")
+                                        imports.append(f"from workflow_config_code.workflows.agents.tools.{function_name_clean}.tool import {tool_class_name}")
                                 elif function_name.startswith("MessageProcessor."):
                                     message_name = function_name.replace("MessageProcessor.", "")
                                     message_class_name = self._get_class_name_for_reference(message_name, "message")
-                                    imports.append(f"from workflow_config_code.messages.{message_name}.message import {message_class_name}")
+                                    imports.append(f"from workflow_config_code.workflows.messages.{message_name}.message import {message_class_name}")
 
         # Remove duplicates and return
         return "\n".join(list(set(imports))) if imports else ""

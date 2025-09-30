@@ -1,9 +1,0 @@
-{
-  "type": "function",
-  "function": {
-    "name": "is_stage_completed",
-    "parameters": {
-      "transition": "discuss_api"
-    }
-  }
-}

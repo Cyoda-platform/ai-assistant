@@ -113,7 +113,7 @@ class TestReverseMarshalling:
             sys.path.insert(0, str(self.generated_dir))
             
             # Import the generated module
-            from tools.web_search.tool import WebSearchComponent, web_search_tool
+            from functions.web_search.tool import WebSearchComponent, web_search_tool
             
             # Test static get_name method
             assert hasattr(WebSearchComponent, 'get_name'), "Generated class must have get_name method"

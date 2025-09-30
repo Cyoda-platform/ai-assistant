@@ -7,10 +7,14 @@ A comprehensive configuration builder for workflow processors that handles three
 The Config Builder takes processor names in the format `ProcessorType.config_name` and builds complete configurations by:
 
 1. **AgentProcessor**: Loads agent config and resolves tool/prompt references
-2. **FunctionProcessor**: Returns tool configuration directly  
+2. **FunctionProcessor**: Returns tool configuration from functions/ or workflow functions/
 3. **MessageProcessor**: Builds config from message directory structure
 
 ## Directory Structure
+
+The config builder supports both original and generated directory structures:
+
+### Original Structure (`workflow_configs/`)
 
 The config builder expects the following directory structure under `workflow_configs/`:
 
@@ -19,9 +23,9 @@ workflow_configs/
 ├── agents/
 │   └── {agent_name}/
 │       └── agent.json
-├── tools/
-│   └── {tool_name}/
-│       └── tool.json
+├── functions/
+│   └── {function_name}/
+│       └── function.json
 ├── prompts/
 │   └── {prompt_name}/
 │       ├── message_0.md
@@ -32,6 +36,48 @@ workflow_configs/
         ├── message.md
         └── meta.json
 ```
+
+### Generated Structure (`workflow_config_code/workflows/`)
+
+The config builder also supports the generated Python code structure for workflow functions:
+
+```
+workflow_config_code/workflows/
+├── functions/
+│   └── {function_name}/
+│       ├── function.py
+│       └── config.py
+├── agents/
+│   ├── configs/
+│   │   └── {agent_name}/
+│   │       ├── agent.py
+│   │       └── config.py
+│   ├── functions/
+│   │   └── {function_name}/
+│   │       ├── function.py
+│   │       └── config.py
+│   └── prompts/
+│       └── {prompt_name}/
+│           ├── prompt.py
+│           └── config.py
+├── messages/
+│   └── {message_name}/
+│       ├── message.py
+│       └── config.py
+└── configs/
+    └── {workflow_name}/
+        ├── workflow.py
+        └── config.py
+```
+
+## Function Resolution Priority
+
+For `FunctionProcessor` items, the config builder checks locations in this order:
+
+1. **Original functions**: `workflow_configs/functions/{function_name}/function.json`
+2. **Workflow functions**: `workflow_config_code/workflows/functions/{function_name}/config.py`
+
+This allows seamless integration between original tool configurations and generated workflow function wrappers.
 
 ## Usage
 
@@ -70,7 +116,7 @@ config = builder.build_config("AgentProcessor.my_agent")
 
 **Process**:
 1. Loads `workflow_configs/agents/{agent_name}/agent.json`
-2. Resolves tool references by replacing `{"name": "tool_name"}` with full tool configs from `workflow_configs/tools/{tool_name}/tool.json`
+2. Resolves function references by replacing `{"name": "function_name"}` with full function configs from `workflow_configs/functions/{function_name}/function.json`
 3. Resolves prompt references by replacing `"content_from_file": "prompt_name"` with actual content from `workflow_configs/prompts/{prompt_name}/`
 
 **Example Input**:
@@ -117,7 +163,7 @@ config = builder.build_config("AgentProcessor.my_agent")
 **Input**: `FunctionProcessor.{function_name}`
 
 **Process**:
-1. Returns the tool config directly from `workflow_configs/tools/{function_name}/tool.json`
+1. Returns the function config directly from `workflow_configs/functions/{function_name}/function.json`
 
 **Example Output**:
 ```json

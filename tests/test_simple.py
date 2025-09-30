@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 def test_basic_import():
     """Test that we can import the base service."""
-    from tools.base_service import BaseWorkflowService
+    from functions.base_service import BaseWorkflowService
     assert BaseWorkflowService is not None
 
 
@@ -40,7 +40,7 @@ async def test_async_mock():
 
 def test_base_service_creation():
     """Test that we can create a BaseWorkflowService instance."""
-    from tools.base_service import BaseWorkflowService
+    from functions.base_service import BaseWorkflowService
     
     # Create mock dependencies
     mock_deps = {
@@ -64,7 +64,7 @@ def test_base_service_creation():
 
 def test_parse_from_string():
     """Test the parse_from_string utility method."""
-    from tools.base_service import BaseWorkflowService
+    from functions.base_service import BaseWorkflowService
     
     mock_deps = {
         'workflow_helper_service': AsyncMock(),
@@ -87,7 +87,7 @@ def test_parse_from_string():
 @pytest.mark.asyncio
 async def test_validate_required_params():
     """Test parameter validation."""
-    from tools.base_service import BaseWorkflowService
+    from functions.base_service import BaseWorkflowService
     
     mock_deps = {
         'workflow_helper_service': AsyncMock(),
@@ -121,7 +121,7 @@ async def test_validate_required_params():
 
 def test_file_operations_service_creation():
     """Test that we can create a FileOperationsService instance."""
-    from tools.file_operations_service import FileOperationsService
+    from functions.file_operations_service import FileOperationsService
     
     mock_deps = {
         'workflow_helper_service': AsyncMock(),
@@ -142,7 +142,7 @@ def test_file_operations_service_creation():
 
 def test_web_operations_service_creation():
     """Test that we can create a WebOperationsService instance."""
-    from tools.web_operations_service import WebOperationsService
+    from functions.web_operations_service import WebOperationsService
     
     mock_deps = {
         'workflow_helper_service': AsyncMock(),
@@ -185,7 +185,7 @@ def test_core_services_can_be_imported():
 def test_workflow_management_service_import():
     """Test workflow management service import separately (may fail due to dependencies)."""
     try:
-        from tools.workflow_management_service import WorkflowManagementService
+        from functions.workflow_management_service import WorkflowManagementService
         assert WorkflowManagementService is not None
     except ImportError as e:
         # This is expected if libcst is not available

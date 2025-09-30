@@ -1,2 +1,0 @@
-Let the user know: they should test their API by visiting `http://localhost:8000` and ensure everything works.
-- Let the user know: when they save `{entity_name}`, an event will be sent and processed by their workflow code in `application/processor/* and application/criterion/*`

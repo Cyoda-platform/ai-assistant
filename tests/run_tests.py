@@ -113,12 +113,12 @@ def main():
     # Add test paths based on component
     if args.component == "all":
         cmd.append("tests/")
-    elif args.component == "tools":
-        cmd.append("tests/tools/")
+    elif args.component == "functions":
+        cmd.append("tests/functions/")
     elif args.component == "dispatcher":
         cmd.append("tests/workflow/dispatcher/")
     elif args.component == "base":
-        cmd.append("tests/tools/test_base_service.py")
+        cmd.append("tests/functions/test_base_service.py")
     
     # Add verbosity
     if args.verbose > 0:
@@ -191,8 +191,8 @@ def run_specific_tests():
     
     scenarios = {
         "1": {
-            "cmd": ["python", "-m", "pytest", "tests/tools/", "-v", "--tb=short"],
-            "desc": "Quick unit tests for tools"
+            "cmd": ["python", "-m", "pytest", "tests/functions/", "-v", "--tb=short"],
+            "desc": "Quick unit tests for functions"
         },
         "2": {
             "cmd": ["python", "-m", "pytest", "tests/workflow/dispatcher/", "-v", "--tb=short"],

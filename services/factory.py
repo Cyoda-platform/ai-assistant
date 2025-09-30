@@ -20,7 +20,7 @@ from entity.chat.workflow import ChatWorkflow
 from services.chat_service import ChatService
 from services.labels_config_service import LabelsConfigService
 from services.scheduler import Scheduler
-from tools.deployment_service import DeploymentService
+from functions.deployment_service import DeploymentService
 from entity.workflow import Workflow
 from workflow.dispatcher.workflow_dispatcher import WorkflowDispatcher
 
