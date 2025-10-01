@@ -125,7 +125,7 @@ async def rename_chat_route(technical_id):
     return jsonify(result), 200
 
 
-@chat_bp.route('/<technical_id>/text-questions', methods=['POST'])
+@chat_bp.route('/text-questions', methods=['POST'])
 @rate_limit(const.RATE_LIMIT, timedelta(days=1), key_function=token_key_function)
 @auth_required
 async def submit_text_question_route(technical_id):
@@ -134,7 +134,7 @@ async def submit_text_question_route(technical_id):
     return await chat_service.submit_text_question(header, technical_id, question)
 
 
-@chat_bp.route('/<technical_id>/questions', methods=['POST'])
+@chat_bp.route('/questions', methods=['POST'])
 @rate_limit(const.RATE_LIMIT, timedelta(days=1), key_function=token_key_function)
 @auth_required
 async def submit_question_route(technical_id):

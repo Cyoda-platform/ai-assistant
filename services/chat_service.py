@@ -598,6 +598,8 @@ class ChatService:
 
         # Format the response similar to regular list_chats
         formatted_chats = []
+        if not all_chats:
+            return formatted_chats
         for chat in all_chats:
             formatted_chats.append({
                 "technical_id": chat.technical_id,
