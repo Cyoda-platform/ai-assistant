@@ -125,26 +125,39 @@ async def rename_chat_route(technical_id):
     return jsonify(result), 200
 
 
+#todo add chatid and memory!
+
 @chat_bp.route('/text-questions', methods=['POST'])
 @rate_limit(const.RATE_LIMIT, timedelta(days=1), key_function=token_key_function)
 @auth_required
-async def submit_text_question_route(technical_id):
-    header, _ = await extract_auth_info()
+async def submit_text_question_route():
     question, = await get_json_data('question')
-    return await chat_service.submit_text_question(header, technical_id, question)
+    return await chat_service.submit_text_question(question)
 
 
 @chat_bp.route('/questions', methods=['POST'])
 @rate_limit(const.RATE_LIMIT, timedelta(days=1), key_function=token_key_function)
 @auth_required
-async def submit_question_route(technical_id):
-    header, _ = await extract_auth_info()
+async def submit_question_route():
     (question,), user_file, user_files = await get_form_data(
         'question',
         file_key='file',      # Single file for backward compatibility
         files_key='files'     # Multiple files for new functionality
     )
-    return await chat_service.submit_question(header, technical_id, question, user_file, user_files)
+    return await chat_service.submit_question(question, user_file, user_files)
+
+
+@chat_bp.route('/workflow-questions', methods=['POST'])
+@rate_limit(const.RATE_LIMIT, timedelta(days=1), key_function=token_key_function)
+@auth_required
+async def submit_workflow_question_route():
+    (question, workflow), user_file, user_files = await get_form_data(
+        'question',
+        'workflow',
+        file_key='file',      # Single file for backward compatibility
+        files_key='files'     # Multiple files for new functionality
+    )
+    return await chat_service.submit_workflow_question(question, workflow, user_file, user_files)
 
 
 @chat_bp.route('/<technical_id>/text-answers', methods=['POST'])
