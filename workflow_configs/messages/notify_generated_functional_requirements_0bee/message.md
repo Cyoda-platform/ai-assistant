@@ -1,1 +1,0 @@
-✅  Saved functional requirements to `src/main/java/com/java_template/prototype/functional_requirement.md`. Proceeding to entities generation....⏳😌

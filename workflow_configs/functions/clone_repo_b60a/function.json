@@ -1,9 +1,0 @@
-{
-  "type": "function",
-  "function": {
-    "name": "clone_repo",
-    "description": "Clones template repository"
-  },
-  "publish": true,
-  "allow_anonymous_users": true
-}

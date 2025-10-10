@@ -1,1 +1,0 @@
-✅  Saved entities to `src/main/java/com/java_template/application/entity/*`. Proceeding to generating entities workflows....⏳😌
