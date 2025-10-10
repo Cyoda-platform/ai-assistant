@@ -7,12 +7,12 @@ Configuration data for the workflow.
 
 from typing import Any, Dict, Callable
 
-from workflow_config_code.messages.notify_deployment_failure_b556.message import \
-    NotifyDeploymentFailureB556MessageConfig
-from workflow_config_code.messages.notify_deployment_rollback_c4f9.message import \
-    NotifyDeploymentRollbackC4f9MessageConfig
-from workflow_config_code.messages.notify_deployment_success_7458.message import \
-    NotifyDeploymentSuccess7458MessageConfig
+from workflow_config_code.messages.message_deployment_failure_b556.message import \
+    MessageDeploymentFailureB556MessageConfig
+from workflow_config_code.messages.message_deployment_rollback_c4f9.message import \
+    MessageDeploymentRollbackC4f9MessageConfig
+from workflow_config_code.messages.message_deployment_success_7458.message import \
+    MessageDeploymentSuccess7458MessageConfig
 from workflow_config_code.tools.schedule_deploy_env_f9ed.tool import ScheduleDeployEnvF9edToolConfig
 from workflow_config_code.tools.lock_chat_670c.tool import LockChat670cToolConfig
 
@@ -78,7 +78,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "manual": True,
                         "processors": [
                             {
-                                "name": NotifyDeploymentSuccess7458MessageConfig.get_name(),
+                                "name": MessageDeploymentSuccess7458MessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",
@@ -93,7 +93,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "manual": True,
                         "processors": [
                             {
-                                "name": NotifyDeploymentFailureB556MessageConfig.get_name(),
+                                "name": MessageDeploymentFailureB556MessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",
@@ -108,7 +108,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "manual": True,
                         "processors": [
                             {
-                                "name": NotifyDeploymentRollbackC4f9MessageConfig.get_name(),
+                                "name": MessageDeploymentRollbackC4f9MessageConfig.get_name(),
                                 "executionMode": "ASYNC_NEW_TX",
                                 "config": {
                                     "calculationNodesTags": "ai_assistant",

@@ -119,7 +119,7 @@
           "manual": true,
           "processors": [
             {
-              "name": "MessageProcessor.notify_deployment_success_7458",
+              "name": "MessageProcessor.message_deployment_success_7458",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
@@ -134,7 +134,7 @@
           "manual": true,
           "processors": [
             {
-              "name": "MessageProcessor.notify_deployment_failure_b556",
+              "name": "MessageProcessor.message_deployment_failure_b556",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
@@ -149,7 +149,7 @@
           "manual": true,
           "processors": [
             {
-              "name": "MessageProcessor.notify_deployment_rollback_c4f9",
+              "name": "MessageProcessor.message_deployment_rollback_c4f9",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
