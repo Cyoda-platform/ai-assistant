@@ -1,0 +1,23 @@
+{
+  "type": "function",
+  "function": {
+    "name": "finish_discussion",
+    "description": "Use if the user is ready to proceed or asks to proceed to the next question. If the user wants to go to the next step - use immediately.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "transition": {
+          "type": "string",
+          "enum": [
+            "process_app_setup_6"
+          ]
+        }
+      },
+      "required": [
+        "transition"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "prompt",
+  "publish": false,
+  "allow_anonymous_users": true,
+  "model": {},
+  "memory_tags": [
+    "saving_user_requirements"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "generate_original_requirements_52ef"
+    }
+  ],
+  "input": {},
+  "output": {
+    "local_fs": [
+      "src/main/resources/functional_requirements/user_requirement.md"
+    ]
+  }
+}

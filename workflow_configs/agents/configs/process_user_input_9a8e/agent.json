@@ -1,0 +1,28 @@
+{
+  "type": "agent",
+  "publish": true,
+  "allow_anonymous_users": true,
+  "model": {},
+  "tools": [
+    {
+      "name": "get_user_info_d020"
+    },
+    {
+      "name": "deploy_cyoda_env_background_01c7"
+    },
+    {
+      "name": "finish_discussion_7606"
+    }
+  ],
+  "memory_tags": [
+    "chat_deploy_env"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "process_user_input_e154"
+    }
+  ],
+  "tool_choice": "auto",
+  "max_iteration": 30
+}

@@ -1,0 +1,9 @@
+{
+  "type": "function",
+  "publish": true,
+  "function": {
+    "name": "schedule_deploy_env",
+    "description": "Schedules deployment of Cyoda environment for the user",
+    "strict": true
+  }
+}

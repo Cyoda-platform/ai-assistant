@@ -1,7 +1,6 @@
 """
 NotifyRequirementDiscussionA1b3MessageConfig Message
 
-Generated from config: workflow_configs/messages/notify_requirement_discussion_a1b3/meta.json
 Implements MessageProcessor interface with get_name() and get_config() methods.
 """
 

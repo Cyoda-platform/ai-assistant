@@ -37,4 +37,4 @@ class NotifyPrototypeGeneration0000MessageConfig(MessageProcessor):
 
 
 # Create singleton instance
-notify_prototype_generation_0000_message = NotifyPrototypeGeneration0000MessageConfig()
+notify_prototype_generation_0f5b_message = NotifyPrototypeGeneration0000MessageConfig()

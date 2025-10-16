@@ -1,0 +1,30 @@
+{
+  "type": "function",
+  "function": {
+    "name": "monitor_workflow_run",
+    "description": "Monitor a GitHub Actions workflow run and get detailed status information. Use this to check the progress and results of a previously triggered workflow.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "repo": {
+          "type": "string",
+          "description": "Repository name (e.g., 'java-client-template')"
+        },
+        "run_id": {
+          "type": "string",
+          "description": "Workflow run ID to monitor"
+        },
+        "owner": {
+          "type": "string",
+          "description": "Repository owner (optional, uses config default if not provided)"
+        }
+      },
+      "required": [
+        "repo",
+        "run_id"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

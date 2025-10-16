@@ -1,0 +1,32 @@
+{
+  "type": "agent",
+  "publish": false,
+  "model": {},
+  "tools": [
+    {
+      "name": "add_application_resource_3d0b"
+    },
+    {
+      "name": "validate_workflow_processors"
+    },
+    {
+      "name": "extract_workflow_components_k2l3"
+    }
+  ],
+  "memory_tags": [
+    "generate_processors_and_criteria"
+  ],
+  "input": {
+    "local_fs": [
+      "src/main/java/com/java_template/prototype/functional_requirement.md",
+      "src/main/resources/functional_requirements/user_requirement.md",
+      "src/main/resources/workflow"
+    ]
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content_from_file": "generate_processors_and_criteria_e5f4"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "type": "function",
+  "function": {
+    "name": "get_entity_pojo_contents",
+    "description": "Get entity POJO contents to understand the data model and available properties",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "entity_name": {
+          "type": "string",
+          "description": "Name of the entity to get POJO contents"
+        }
+      },
+      "required": [
+        "entity_name"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

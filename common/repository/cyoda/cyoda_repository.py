@@ -91,11 +91,31 @@ class CyodaRepository(CrudRepository):
     async def exists_by_key(self, meta, key: Any) -> bool:
         return (await self.find_by_key(meta, key)) is not None
 
-    #does not return current_state!
     async def find_all(self, meta) -> List[Any]:
         path = f"entity/{meta['entity_model']}/{meta['entity_version']}?pageSize={const.CYODA_PAGE_SIZE}"
         resp = await send_cyoda_request(cyoda_auth_service=self._cyoda_auth_service, method="get", path=path)
-        return resp.get("json", [])
+
+        if resp.get("status") != 200:
+            return []
+
+        entities: List[Any] = []
+
+        def _extract(nodes):
+            for node in nodes:
+                tree = node.get("data", {})
+                if not tree.get("technical_id"):
+                    tree["technical_id"] = node.get("meta", {}).get("id")
+                    tree["current_state"] = node.get("meta", {}).get("state")
+                entities.append(tree)
+
+        resp_json = resp.get("json", {})
+        if isinstance(resp_json, dict):
+            nodes = resp_json.get("_embedded", {}).get("objectNodes", [])
+            _extract(nodes)
+        elif isinstance(resp_json, list):
+            _extract(resp_json)
+
+        return entities
 
     async def find_all_by_key(self, meta, keys: List[Any]) -> List[Any]:
         results = []

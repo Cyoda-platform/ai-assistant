@@ -1246,12 +1246,22 @@ def parse_entity(model_cls, resp: Any) -> Any:
     try:
         if model_cls:
             if isinstance(resp, list):
-
-                return [model_cls.model_validate(item) for item in resp]
+                parsed = []
+                for item in resp:
+                    try:
+                        parsed.append(model_cls.model_validate(item))
+                    except Exception as e:
+                        logger.exception(f"Validation failed for item: {item}\n{e}")
+                        # You could also `parsed.append(None)` instead of skipping
+                return parsed
 
             else:
                 if not isinstance(resp, model_cls):
-                    return model_cls.model_validate(resp)
+                    try:
+                        return model_cls.model_validate(resp)
+                    except Exception as e:
+                        logger.exception(f"Validation failed for single response: {resp}\n{e}")
+                        return None
                 return resp
         return resp
     except Exception as e:

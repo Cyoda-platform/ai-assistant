@@ -1,0 +1,12 @@
+{
+  "type": "function",
+  "function": {
+    "name": "save_requirement_files_optimized",
+    "description": "Initialises ai service",
+    "parameters": {
+      "JAVA": "src/main/resources/functional_requirements",
+      "PYTHON": "application/resources/functional_requirements"
+    }
+  },
+  "allow_anonymous_users": true
+}

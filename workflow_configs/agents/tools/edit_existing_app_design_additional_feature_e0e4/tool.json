@@ -1,0 +1,24 @@
+{
+  "type": "function",
+  "function": {
+    "name": "edit_existing_app_design_additional_feature",
+    "description": "Launches workflow that is necessary to help the user plan how to edit an existing application or add a new feature. Key factor is that an application already exists. if the user doesn't specify the branch, ask yourself.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "git_branch": {
+          "type": "string"
+        },
+        "user_request": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "user_request",
+        "git_branch"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

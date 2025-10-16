@@ -13,6 +13,7 @@ from common.exception.exceptions import (
     ChatNotFoundException,
     GuestChatsLimitExceededException,
 )
+from common.schemas.workflow_schema import WORKFLOW_RESPONSE_FORMAT
 from common.service.entity_service_interface import EntityService
 from common.utils.chat_util_functions import (
     get_user_message,
@@ -350,18 +351,14 @@ class ChatService:
         )
         return {"message": "Chat renamed", "technical_id": technical_id}
 
-    async def submit_text_question(self, auth_header, technical_id, question):
-        chat = await self._get_chat_for_user(auth_header, technical_id)
-        return await self._submit_question_helper(auth_header, technical_id, chat, question)
+    async def submit_text_question(self, question):
+        return await self._submit_question_helper(question)
 
-    async def submit_question(self, auth_header, technical_id, question, user_file=None, user_files=None):
+    async def submit_question(self, question, user_file=None, user_files=None):
         # Convert single file to user_files for consistent processing
         if user_file and not user_files:
             user_files = [user_file]
             user_file = None  # Clear single file since we moved it to user_files
-
-        chat = await self._get_chat_for_user(auth_header, technical_id)
-
         # Handle multiple files
         files_to_process = user_files if user_files else []
 
@@ -371,7 +368,30 @@ class ChatService:
                 filename = getattr(file, 'filename', 'unknown')
                 return {"error": f"File '{filename}' size exceeds {config.MAX_FILE_SIZE} limit"}
 
-        return await self._submit_question_helper(auth_header, technical_id, chat, question, user_files)
+        return await self._submit_question_helper(question, user_files)
+
+    async def submit_workflow_question(self, question, workflow, user_file=None, user_files=None):
+        # Convert single file to user_files for consistent processing
+        if user_file and not user_files:
+            user_files = [user_file]
+            user_file = None  # Clear single file since we moved it to user_files
+        # Handle multiple files
+        files_to_process = user_files if user_files else []
+
+        # Check file size limits for all files
+        for file in files_to_process:
+            if file and file.content_length > config.MAX_FILE_SIZE:
+                filename = getattr(file, 'filename', 'unknown')
+                return {"error": f"File '{filename}' size exceeds {config.MAX_FILE_SIZE} limit"}
+
+        # Enhance question with workflow context
+        workflow_question = f"Question: {question}. My current workflow is {workflow}. Response schema: {WORKFLOW_RESPONSE_FORMAT}. Please return a only valid JSON without any extra text or markdown."
+
+        return await self._submit_question_helper(
+            question=workflow_question if workflow else question,
+            user_files=user_files,
+            response_format=WORKFLOW_RESPONSE_FORMAT
+        )
 
     async def submit_text_answer(self, auth_header, technical_id, answer, user_files=None, user_file=None):
         # Convert single file to user_files for consistent processing
@@ -598,6 +618,8 @@ class ChatService:
 
         # Format the response similar to regular list_chats
         formatted_chats = []
+        if not all_chats:
+            return formatted_chats
         for chat in all_chats:
             formatted_chats.append({
                 "technical_id": chat.technical_id,
@@ -610,7 +632,7 @@ class ChatService:
 
         return formatted_chats
 
-    async def _submit_question_helper(self, auth_header, technical_id, chat, question, user_files=None):
+    async def _submit_question_helper(self, question, user_files=None, response_format=None):
         if not question:
             return {"error": "Invalid entity"}, 400
         if config.MOCK_AI == "true":
@@ -618,15 +640,17 @@ class ChatService:
         if user_files:
             question = await get_user_message(message=question, user_files=user_files)
 
+        # Mock entity and technical_id for compatibility (not needed for simple question submission)
         result = await self.ai_agent.run_agent(
             methods_dict=None,
             cls_instance=None,
-            entity=chat,
-            technical_id=technical_id,
+            entity=None,
+            technical_id="mock_technical_id",
             tools=None,
-            model=ModelConfig(),
+            model=ModelConfig(model_name="gpt-5-mini"),
             tool_choice=None,
-            messages=[AIMessage(role="user", content=question)]
+            messages=[AIMessage(role="user", content=question)],
+            response_format=response_format
         )
         return {"message": result}, 200
 

@@ -1,0 +1,21 @@
+{
+  "type": "function",
+  "function": {
+    "name": "get_file_contents",
+    "description": "Get file contents by path to review existing code structure",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "file_path": {
+          "type": "string",
+          "description": "Path to the file to read. Examples: 'src/main/java/com/java_template/prototype/EntityControllerPrototype.java', 'src/main/java/com/java_template/application/entity/EntityName.java', 'src/main/java/com/java_template/application/processor/ProcessorName.java', 'src/main/java/com/java_template/application/criterion/CriteriaName.java'"
+        }
+      },
+      "required": [
+        "file_path"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

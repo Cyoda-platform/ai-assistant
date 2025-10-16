@@ -1,0 +1,9 @@
+{
+  "type": "scheduled",
+  "name": "schedule_close_process",
+  "config": {
+    "delayMs": 30000,
+    "timeoutMs": 3600000,
+    "transition": "check_status"
+  }
+}

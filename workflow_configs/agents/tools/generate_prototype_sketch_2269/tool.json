@@ -1,0 +1,21 @@
+{
+  "type": "function",
+  "function": {
+    "name": "generate_prototype_sketch_2269",
+    "description": "Generates a prototype sketch by launching the functional requirements to prototype Java workflow. This tool saves a new entity and launches the agentic workflow for prototype generation.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "user_request": {
+          "type": "string",
+          "description": "The user request for prototype generation"
+        }
+      },
+      "required": [
+        "user_request"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
