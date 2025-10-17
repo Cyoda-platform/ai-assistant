@@ -3,8 +3,9 @@ from types import SimpleNamespace
 import pytest
 import pytest_asyncio
 from unittest.mock import AsyncMock, MagicMock
-import entity.workflow_dispatcher as wfd
-from entity.workflow_dispatcher import WorkflowDispatcher, AIMessage, FlowEdgeMessage
+import workflow.dispatcher.workflow_dispatcher as wfd
+from workflow.dispatcher.workflow_dispatcher import WorkflowDispatcher
+from workflow.dispatcher.message_processor import AIMessage, FlowEdgeMessage
 
 # A dummy class whose methods will be dispatched
 class DummyClass:
