@@ -1,8 +1,9 @@
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from entity.chat.chat import ChatEntity
 from entity.model import AgenticFlowEntity, SchedulerEntity
+import common.config.const as const
 
 logger = logging.getLogger(__name__)
 
@@ -147,3 +148,20 @@ class BaseWorkflowService:
         except Exception as e:
             self.logger.exception(f"Error resolving entity name: {e}")
             return entity_name
+
+    def _get_repository_name(self, entity: AgenticFlowEntity, programming_language: Optional[str] = None) -> str:
+        """
+        Get repository name from entity cache or calculate it.
+
+        Args:
+            entity: Agentic flow entity
+            programming_language: Optional programming language override
+
+        Returns:
+            Repository name
+        """
+        repository_name = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM)
+        if not repository_name:
+            from functions.repository_resolver import resolve_repository_name_with_language_param
+            repository_name = resolve_repository_name_with_language_param(entity, programming_language)
+        return repository_name

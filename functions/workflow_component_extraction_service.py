@@ -37,7 +37,7 @@ class WorkflowComponentExtractionService(BaseWorkflowService):
                 return error_msg
 
             # Get repository information using repository resolver
-            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            repository_name = self._get_repository_name(entity, "JAVA")
             git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
 
             # Get paths from parameters

@@ -114,8 +114,8 @@ class FileOperationsService(BaseWorkflowService):
             if not is_valid:
                 return error_msg
 
-            # Use repository resolver to determine repository name
-            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            # Get repository name from cache or calculate it
+            repository_name = self._get_repository_name(entity, "JAVA")
             if repository_name.startswith("java"):
                 new_content = params.get("new_content")
             else:
@@ -151,8 +151,8 @@ class FileOperationsService(BaseWorkflowService):
             if not is_valid:
                 return error_msg
 
-            # Use repository resolver to determine repository name
-            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            # Get repository name from cache or calculate it
+            repository_name = self._get_repository_name(entity, "JAVA")
             git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
 
             return await read_file_util(
@@ -186,8 +186,8 @@ class FileOperationsService(BaseWorkflowService):
             directory_path = params.get("directory_path")
             git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
 
-            # Use repository resolver to determine repository name
-            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            # Get repository name from cache or calculate it
+            repository_name = self._get_repository_name(entity, "JAVA")
 
             # Generate unique operation ID for safe concurrent operations
             operation_id = str(generate_uuid())
@@ -323,8 +323,8 @@ class FileOperationsService(BaseWorkflowService):
 
             entity_name = params.get("entity_name")
 
-            # Use repository resolver to determine repository name
-            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            # Get repository name from cache or calculate it
+            repository_name = self._get_repository_name(entity, "JAVA")
             git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
 
             # Try common entity POJO paths
@@ -370,8 +370,8 @@ class FileOperationsService(BaseWorkflowService):
             if not is_valid:
                 return error_msg
                 
-            # Use repository resolver to determine repository name
-            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            # Get repository name from cache or calculate it
+            repository_name = self._get_repository_name(entity, "JAVA")
             git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
 
             return await read_file_util(
@@ -401,8 +401,8 @@ class FileOperationsService(BaseWorkflowService):
         try:
 
             programming_language = entity.workflow_cache.get("programming_language", "JAVA")
-            # Use repository resolver to determine repository name
-            repository_name = resolve_repository_name_with_language_param(entity, programming_language)
+            # Get repository name from cache or calculate it
+            repository_name = self._get_repository_name(entity, programming_language)
 
             # Use safe clone and file operations (utils.py handles all concurrency safety)
             clone_result = await clone_repo(git_branch_id=technical_id, repository_name=repository_name)
@@ -446,8 +446,8 @@ class FileOperationsService(BaseWorkflowService):
             if not files and not directories:
                 return "No files or directories specified for deletion"
 
-            # Use repository resolver to determine repository name
-            repository_name = resolve_repository_name_with_language_param(entity)
+            # Get repository name from cache or calculate it
+            repository_name = self._get_repository_name(entity)
             git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
 
             # Use safe delete operations (utils.py handles all concurrency safety)
@@ -488,8 +488,8 @@ class FileOperationsService(BaseWorkflowService):
             Success message or error
         """
         try:
-            # Use repository resolver to determine repository name
-            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            # Get repository name from cache or calculate it
+            repository_name = self._get_repository_name(entity, "JAVA")
 
             # Generate unique operation ID for safe concurrent operations
             operation_id = str(generate_uuid())
@@ -599,16 +599,20 @@ class FileOperationsService(BaseWorkflowService):
             return True
         return False
 
-    def _get_repository_name(self, entity: AgenticFlowEntity) -> str:
-        """Get repository name for the entity using the resolver.
+    def _get_repository_name(self, entity: AgenticFlowEntity, programming_language: str = "JAVA") -> str:
+        """Get repository name from cache or calculate it.
 
         Args:
             entity: Agentic flow entity
+            programming_language: Programming language (default: JAVA)
 
         Returns:
             Repository name
         """
-        return resolve_repository_name_with_language_param(entity, "JAVA")
+        repository_name = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM)
+        if not repository_name:
+            repository_name = resolve_repository_name_with_language_param(entity, programming_language)
+        return repository_name
 
     def _get_git_branch_id(self, entity: AgenticFlowEntity, technical_id: str) -> str:
         """Get git branch ID from entity cache or fallback to technical ID.

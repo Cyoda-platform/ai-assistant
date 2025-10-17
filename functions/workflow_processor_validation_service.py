@@ -31,8 +31,8 @@ class WorkflowProcessorValidationService(BaseWorkflowService):
             List of required processor names from workflow configurations
         """
         try:
-            # Get repository information using repository resolver
-            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            # Get repository name from cache or calculate it
+            repository_name = self._get_repository_name(entity, "JAVA")
             git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
 
             # Get paths from parameters
@@ -68,8 +68,8 @@ class WorkflowProcessorValidationService(BaseWorkflowService):
             List of required criteria names from workflow configurations
         """
         try:
-            # Get repository information using repository resolver
-            repository_name = resolve_repository_name_with_language_param(entity, "JAVA")
+            # Get repository name from cache or calculate it
+            repository_name = self._get_repository_name(entity, "JAVA")
             git_branch_id = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
 
             # Get paths from parameters

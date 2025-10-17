@@ -69,6 +69,37 @@ class TestApplicationBuilderService:
             )
 
     @pytest.mark.asyncio
+    async def test_build_general_application_stores_repository_name(self, service, mock_chat_entity, mock_dependencies):
+        """Test that build_general_application stores repository_name and programming_language in workflow_cache."""
+        # Setup
+        mock_chat_entity.chat_flow = MagicMock()
+        mock_chat_entity.chat_flow.finished_flow = []
+
+        # Mock workflow helper to capture workflow_cache
+        captured_cache = {}
+        async def capture_cache(*args, **kwargs):
+            captured_cache.update(kwargs.get('workflow_cache', {}))
+            return "child_tech_id_123"
+
+        mock_dependencies['workflow_helper_service'].launch_agentic_workflow = AsyncMock(side_effect=capture_cache)
+
+        # Execute
+        result = await service.build_general_application(
+            technical_id="tech_id",
+            entity=mock_chat_entity,
+            user_request="Build an app",
+            programming_language="PYTHON",
+            mode="optimized"
+        )
+
+        # Verify
+        assert const.PROGRAMMING_LANGUAGE_PARAM in captured_cache
+        assert captured_cache[const.PROGRAMMING_LANGUAGE_PARAM] == "PYTHON"
+        assert const.REPOSITORY_NAME_PARAM in captured_cache
+        assert captured_cache[const.REPOSITORY_NAME_PARAM] is not None
+        assert "Workflow" in result and "scheduled successfully" in result
+
+    @pytest.mark.asyncio
     async def test_build_general_application_error(self, service, mock_chat_entity):
         """Test general application building with error."""
         # Mock the method to simulate an error
@@ -196,12 +227,42 @@ class TestApplicationBuilderService:
         assert "workflow" in result.lower() or "scheduled" in result.lower()
 
     @pytest.mark.asyncio
+    async def test_cached_repository_name_is_used(self, service, mock_agentic_entity):
+        """Test that cached repository_name is used instead of recalculating."""
+        # Setup entity with cached repository_name
+        mock_agentic_entity.workflow_cache = {
+            const.GIT_BRANCH_PARAM: "test_branch",
+            const.REPOSITORY_NAME_PARAM: "cached_repo_name",
+            const.PROGRAMMING_LANGUAGE_PARAM: "PYTHON"
+        }
+
+        # Mock clone_repo to verify it's called with cached repository name
+        with patch('functions.application_builder_service.clone_repo', new_callable=AsyncMock) as mock_clone:
+            result = await service.resume_build_general_application(
+                technical_id="tech_id",
+                entity=mock_agentic_entity,
+                programming_language="PYTHON",
+                git_branch="test_branch",
+                transition="some_transition"
+            )
+
+            # Verify clone_repo was called with cached repository name
+            if mock_clone.called:
+                call_args = mock_clone.call_args
+                assert call_args[1]['repository_name'] == "cached_repo_name"
+
+    @pytest.mark.asyncio
     async def test_build_application_with_custom_params(self, service, mock_chat_entity):
         """Test building application with custom parameters."""
+        # Setup chat_flow for the entity
+        mock_chat_entity.chat_flow = MagicMock()
+        mock_chat_entity.chat_flow.finished_flow = []
+
         result = await service.build_general_application(
             "tech_id", mock_chat_entity,
             user_request="Build an app",
             programming_language="python",
+            mode="optimized",
             custom_param="value",
             timeout=300
         )

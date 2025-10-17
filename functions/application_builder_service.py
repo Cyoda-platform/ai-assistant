@@ -102,6 +102,13 @@ class ApplicationBuilderService(BaseWorkflowService):
             if file_edge_message_ids:
                 params["file_edge_message_ids"] = file_edge_message_ids
 
+            # Store programming_language in workflow_cache (already in params)
+            params[const.PROGRAMMING_LANGUAGE_PARAM] = programming_language
+
+            # Calculate and store repository_name in workflow_cache
+            repository_name = resolve_repository_name_with_language_param(entity, programming_language)
+            params[const.REPOSITORY_NAME_PARAM] = repository_name
+
             # Determine workflow name based on programming language
             workflow_name = WorkflowNameResolver.resolve_general_app_workflow_name(programming_language=programming_language,
                                                                                    mode=params.get("mode"),
@@ -148,6 +155,13 @@ class ApplicationBuilderService(BaseWorkflowService):
             user_request = params.get("user_request")
             programming_language = params.get("programming_language")
 
+            # Store programming_language in workflow_cache (already in params)
+            params[const.PROGRAMMING_LANGUAGE_PARAM] = programming_language
+
+            # Calculate and store repository_name in workflow_cache
+            repository_name = resolve_repository_name_with_language_param(entity, programming_language)
+            params[const.REPOSITORY_NAME_PARAM] = repository_name
+
             # Determine workflow name based on programming language
             workflow_name = WorkflowNameResolver.resolve_general_app_workflow_name(programming_language=programming_language,
                                                                                    type="edit")
@@ -170,12 +184,12 @@ class ApplicationBuilderService(BaseWorkflowService):
     async def resume_build_general_application(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
         """
         Resume building a general application from a specific transition.
-        
+
         Args:
             technical_id: Technical identifier
             entity: Agentic flow entity
             **params: Parameters including programming_language, git_branch, and transition
-            
+
         Returns:
             Success message with workflow information or error message
         """
@@ -191,8 +205,10 @@ class ApplicationBuilderService(BaseWorkflowService):
             git_branch_id = params.get(const.GIT_BRANCH_PARAM)
             transition = params.get("transition")
 
-            # Determine repository name based on programming language
-            repository_name = resolve_repository_name_with_language_param(entity, programming_language)
+            # Get repository_name from cache or calculate it
+            repository_name = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM)
+            if not repository_name:
+                repository_name = resolve_repository_name_with_language_param(entity, programming_language)
 
             # Validate branch (no modifications to main branch allowed)
             if git_branch_id and git_branch_id == "main":
@@ -236,17 +252,20 @@ class ApplicationBuilderService(BaseWorkflowService):
             Success message with workflow information or error message
         """
         try:
-            # Validate required parameters
+            # Get parameters from cache if not provided
             if const.REPOSITORY_NAME_PARAM not in params:
                 params[const.REPOSITORY_NAME_PARAM] = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM)
             if const.GIT_BRANCH_PARAM not in params:
                 params[const.GIT_BRANCH_PARAM] = entity.workflow_cache.get(const.GIT_BRANCH_PARAM)
             if const.PROGRAMMING_LANGUAGE_PARAM not in params:
                 params[const.PROGRAMMING_LANGUAGE_PARAM] = entity.workflow_cache.get(const.PROGRAMMING_LANGUAGE_PARAM)
-            programming_language = params[const.PROGRAMMING_LANGUAGE_PARAM]
 
+            # Validate required parameters
+            programming_language = params.get(const.PROGRAMMING_LANGUAGE_PARAM)
+            if not programming_language:
+                return "Missing required parameters: programming_language"
 
-        # Determine workflow name based on programming language
+            # Determine workflow name based on programming language
             workflow_name = WorkflowNameResolver.resolve_setup_workflow_name(programming_language)
 
             return await self._schedule_workflow(
@@ -260,12 +279,12 @@ class ApplicationBuilderService(BaseWorkflowService):
         except Exception as e:
             return self._handle_error(entity, e, f"Error initializing setup workflow: {e}")
 
-    async def _schedule_workflow(self, technical_id: str, entity: AgenticFlowEntity, 
+    async def _schedule_workflow(self, technical_id: str, entity: AgenticFlowEntity,
                                 entity_model: str, workflow_name: str, params: dict,
                                 resolve_entity_name: bool = False) -> str:
         """
         Internal method to schedule workflow operations with repository cloning and entity resolution.
-        
+
         Args:
             technical_id: Technical identifier
             entity: Agentic flow entity
@@ -273,13 +292,16 @@ class ApplicationBuilderService(BaseWorkflowService):
             workflow_name: Workflow name
             params: Parameters for the workflow
             resolve_entity_name: Whether to resolve entity name
-            
+
         Returns:
             Success message with workflow information or error message
         """
         try:
-            # Clone the repo based on branch ID if provided
-            repository_name = resolve_repository_name_with_language_param(entity)
+            # Get repository_name from cache or calculate it
+            repository_name = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM)
+            if not repository_name:
+                repository_name = resolve_repository_name_with_language_param(entity)
+
             git_branch_id: str = params.get(const.GIT_BRANCH_PARAM, entity.workflow_cache.get(const.GIT_BRANCH_PARAM))
             
             if git_branch_id:
