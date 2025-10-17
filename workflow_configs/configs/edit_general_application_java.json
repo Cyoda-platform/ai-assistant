@@ -49,116 +49,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_initial_state",
-          "next": "locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_initial_state",
-          "next": "locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_initial_state",
-          "next": "locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_initial_state",
-          "next": "locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_initial_state",
-          "next": "locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -168,94 +58,6 @@
           "name": "unlock",
           "next": "initial_state",
           "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_initial_state",
-          "next": "locked_locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_initial_state",
-          "next": "locked_locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_initial_state",
-          "next": "locked_locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_initial_state",
-          "next": "locked_locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -309,72 +111,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_initial_state",
-          "next": "locked_locked_locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_initial_state",
-          "next": "locked_locked_locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_initial_state",
-          "next": "locked_locked_locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -384,50 +120,6 @@
           "name": "unlock",
           "next": "locked_locked_initial_state",
           "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_locked_initial_state",
-          "next": "locked_locked_locked_locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_locked_initial_state",
-          "next": "locked_locked_locked_locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -481,28 +173,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_locked_locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_locked_locked_initial_state",
-          "next": "locked_locked_locked_locked_locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -511,37 +181,6 @@
         {
           "name": "unlock",
           "next": "locked_locked_locked_locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_locked_locked_locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_locked_locked_locked_initial_state",
-          "next": "locked_locked_locked_locked_locked_locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_locked_locked_locked_initial_state": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_locked_locked_locked_initial_state",
           "manual": true
         }
       ]
@@ -562,116 +201,6 @@
           "name": "manual_approve",
           "next": "edit_application_requested",
           "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_processing_user_input",
-          "next": "locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_processing_user_input",
-          "next": "locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_processing_user_input",
-          "next": "locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_processing_user_input",
-          "next": "locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_processing_user_input",
-          "next": "locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -725,94 +254,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_processing_user_input",
-          "next": "locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_processing_user_input",
-          "next": "locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_processing_user_input",
-          "next": "locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_processing_user_input",
-          "next": "locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -822,72 +263,6 @@
           "name": "unlock",
           "next": "locked_processing_user_input",
           "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_processing_user_input",
-          "next": "locked_locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_processing_user_input",
-          "next": "locked_locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_processing_user_input",
-          "next": "locked_locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -941,50 +316,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_locked_processing_user_input",
-          "next": "locked_locked_locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_locked_processing_user_input",
-          "next": "locked_locked_locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -1016,28 +347,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_locked_locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_locked_locked_processing_user_input",
-          "next": "locked_locked_locked_locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -1046,37 +355,6 @@
         {
           "name": "unlock",
           "next": "locked_locked_locked_locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_locked_locked_locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_locked_locked_locked_processing_user_input",
-          "next": "locked_locked_locked_locked_locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_locked_locked_locked_processing_user_input": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_locked_locked_locked_processing_user_input",
           "manual": true
         }
       ]
@@ -1097,116 +375,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "retry",
-          "next": "edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_edit_application_requested",
-          "next": "locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_edit_application_requested",
-          "next": "locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_edit_application_requested",
-          "next": "locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_edit_application_requested",
-          "next": "locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_edit_application_requested",
-          "next": "locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -1260,94 +428,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_edit_application_requested",
-          "next": "locked_locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_edit_application_requested",
-          "next": "locked_locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_edit_application_requested",
-          "next": "locked_locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_edit_application_requested",
-          "next": "locked_locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -1357,72 +437,6 @@
           "name": "unlock",
           "next": "locked_edit_application_requested",
           "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_edit_application_requested",
-          "next": "locked_locked_locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_edit_application_requested",
-          "next": "locked_locked_locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_edit_application_requested",
-          "next": "locked_locked_locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -1476,50 +490,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_locked_edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_locked_edit_application_requested",
-          "next": "locked_locked_locked_locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_locked_edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_locked_edit_application_requested",
-          "next": "locked_locked_locked_locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -1551,28 +521,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_locked_locked_edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_locked_locked_edit_application_requested",
-          "next": "locked_locked_locked_locked_locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -1581,37 +529,6 @@
         {
           "name": "unlock",
           "next": "locked_locked_locked_locked_edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_locked_locked_locked_edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_locked_locked_locked_edit_application_requested",
-          "next": "locked_locked_locked_locked_locked_locked_edit_application_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_locked_locked_locked_edit_application_requested": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_locked_locked_locked_edit_application_requested",
           "manual": true
         }
       ]

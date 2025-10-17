@@ -1,7 +1,7 @@
 """
 DeployCyodaEnvWorkflowConfig Workflow
 
-Generated from config: workflow_configs/workflows/deploy_cyoda_env.json
+Generated from config: workflow_configs/configs/deploy_cyoda_env.json
 Workflow configuration with get_name() and get_config() methods.
 """
 

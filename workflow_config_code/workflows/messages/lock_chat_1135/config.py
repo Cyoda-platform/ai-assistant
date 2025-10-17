@@ -11,9 +11,7 @@ import json
 
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
-    return lambda params=None: """
-    
-🎉 Congrats on launching your app! 
+    return lambda params=None: """🎉 Congrats on launching your app! 
 
 
 Your hard work paid off—this is just the beginning. 
@@ -21,10 +19,7 @@ Your hard work paid off—this is just the beginning.
 Keep iterating, stay creative, and aim high! 
 
 
-🚀 Join our [Discord](https://discord.gg/95rdAyBZr2) to share feedback and stay updated. 🙌
-
-
-"""
+🚀 Join our [Discord](https://discord.gg/95rdAyBZr2) to share feedback and stay updated. 🙌"""
 
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:

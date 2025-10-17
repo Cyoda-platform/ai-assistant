@@ -1,7 +1,7 @@
 """
 SubmitAnswerDca5PromptConfig Configuration
 
-Generated from config: workflow_configs/prompts/submit_answer_dca5/message_0.md
+Generated from config: workflow_configs/agents/prompts/submit_answer_dca5/message_0.md
 Configuration data for the prompt.
 """
 
@@ -10,8 +10,7 @@ from typing import Any, Dict, Callable
 
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get prompt configuration factory"""
-    return lambda params=None: """
-Hello! You are a very helpful Cyoda assistant who always aims to achieve what the user needs in the most effective way.
+    return lambda params=None: """Hello! You are a very helpful Cyoda assistant who always aims to achieve what the user needs in the most effective way.
 If the user provides an **application requirement** or asks to **build an application**, follow this flow:
 ## 1)
 User requirement is less than 10 words and no files attached? -> Ask for more details.

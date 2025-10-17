@@ -1,6 +1,7 @@
 """
 NotifyProjectCompiledF5g6PyMessageConfig Message
 
+Generated from config: workflow_configs/messages/notify_project_compiled_f5g6_py/meta.json
 Implements MessageProcessor interface with get_name() and get_config() methods.
 """
 

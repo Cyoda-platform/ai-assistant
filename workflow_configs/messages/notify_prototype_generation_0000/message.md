@@ -1,4 +1,3 @@
-
 🌟 Let’s kick off the first prototype! 🛠️
 
 We are going to generate Controllers, Processors, Criteria and Tests based on the functional requirements and entity class files!

@@ -1,20 +1,16 @@
 """
 DeployCyodaEnvWorkflowConfig Configuration
 
-Generated from config: workflow_configs/workflows/deploy_cyoda_env.json
+Generated from config: workflow_configs/configs/deploy_cyoda_env.json
 Configuration data for the workflow.
 """
 
 from typing import Any, Dict, Callable
-
-from workflow_config_code.workflows.agents.tools.lock_chat_670c.tool import LockChat670cToolConfig
-from workflow_config_code.workflows.agents.tools.schedule_deploy_env_f9ed.tool import ScheduleDeployEnvF9edToolConfig
-from workflow_config_code.workflows.messages.message_deployment_failure_b556.message import \
-    MessageDeploymentFailureB556MessageConfig
-from workflow_config_code.workflows.messages.message_deployment_rollback_c4f9.message import \
-    MessageDeploymentRollbackC4f9MessageConfig
-from workflow_config_code.workflows.messages.message_deployment_success_7458.message import \
-    MessageDeploymentSuccess7458MessageConfig
+from workflow_config_code.workflows.messages.message_deployment_rollback_c4f9.message import MessageDeploymentRollbackC4f9MessageConfig
+from workflow_config_code.workflows.functions.lock_chat_670c.function import LockChat670cFunctionConfig
+from workflow_config_code.workflows.messages.message_deployment_success_7458.message import MessageDeploymentSuccess7458MessageConfig
+from workflow_config_code.workflows.functions.schedule_deploy_env_f9ed.function import ScheduleDeployEnvF9edFunctionConfig
+from workflow_config_code.workflows.messages.message_deployment_failure_b556.message import MessageDeploymentFailureB556MessageConfig
 
 
 def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
@@ -26,126 +22,126 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "initialState": "initial_state",
         "active": True,
         "criterion": {
-            "type": "simple",
-            "jsonPath": "$.workflow_name",
-            "operation": "EQUALS",
-            "value": "deploy_cyoda_env"
+                "type": "simple",
+                "jsonPath": "$.workflow_name",
+                "operation": "EQUALS",
+                "value": "deploy_cyoda_env"
         },
         "states": {
-            "initial_state": {
-                "transitions": [
-                    {
-                        "name": "schedule_deploy_env",
-                        "next": "scheduled_deploy_env",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": ScheduleDeployEnvF9edToolConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 300000
+                "initial_state": {
+                        "transitions": [
+                                {
+                                        "name": "schedule_deploy_env",
+                                        "next": "scheduled_deploy_env",
+                                        "manual": False,
+                                        "processors": [
+                                                {
+                                                        "name": ScheduleDeployEnvF9edFunctionConfig.get_name(),
+                                                        "executionMode": "ASYNC_NEW_TX",
+                                                        "config": {
+                                                                "calculationNodesTags": "ai_assistant",
+                                                                "responseTimeoutMs": 300000
+                                                        }
+                                                }
+                                        ]
                                 }
-                            }
                         ]
-                    }
-                ]
-            },
-            "scheduled_deploy_env": {
-                "transitions": [
-                    {
-                        "name": "lock_chat",
-                        "next": "locked_chat_while_deployment",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": LockChat670cToolConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 300000
+                },
+                "scheduled_deploy_env": {
+                        "transitions": [
+                                {
+                                        "name": "lock_chat",
+                                        "next": "locked_chat_while_deployment",
+                                        "manual": False,
+                                        "processors": [
+                                                {
+                                                        "name": LockChat670cFunctionConfig.get_name(),
+                                                        "executionMode": "ASYNC_NEW_TX",
+                                                        "config": {
+                                                                "calculationNodesTags": "ai_assistant",
+                                                                "responseTimeoutMs": 300000
+                                                        }
+                                                }
+                                        ]
                                 }
-                            }
                         ]
-                    }
-                ]
-            },
-            "locked_chat_while_deployment": {
-                "transitions": [
-                    {
-                        "name": "finish_deployment_success",
-                        "next": "deployed_env",
-                        "manual": True,
-                        "processors": [
-                            {
-                                "name": MessageDeploymentSuccess7458MessageConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 300000
+                },
+                "locked_chat_while_deployment": {
+                        "transitions": [
+                                {
+                                        "name": "finish_deployment_success",
+                                        "next": "deployed_env",
+                                        "manual": True,
+                                        "processors": [
+                                                {
+                                                        "name": MessageDeploymentSuccess7458MessageConfig.get_name(),
+                                                        "executionMode": "ASYNC_NEW_TX",
+                                                        "config": {
+                                                                "calculationNodesTags": "ai_assistant",
+                                                                "responseTimeoutMs": 300000
+                                                        }
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "finish_deployment_failure",
+                                        "next": "deployed_env",
+                                        "manual": True,
+                                        "processors": [
+                                                {
+                                                        "name": MessageDeploymentFailureB556MessageConfig.get_name(),
+                                                        "executionMode": "ASYNC_NEW_TX",
+                                                        "config": {
+                                                                "calculationNodesTags": "ai_assistant",
+                                                                "responseTimeoutMs": 300000
+                                                        }
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "rollback",
+                                        "next": "deployed_env",
+                                        "manual": True,
+                                        "processors": [
+                                                {
+                                                        "name": MessageDeploymentRollbackC4f9MessageConfig.get_name(),
+                                                        "executionMode": "ASYNC_NEW_TX",
+                                                        "config": {
+                                                                "calculationNodesTags": "ai_assistant",
+                                                                "responseTimeoutMs": 300000
+                                                        }
+                                                }
+                                        ]
                                 }
-                            }
                         ]
-                    },
-                    {
-                        "name": "finish_deployment_failure",
-                        "next": "deployed_env",
-                        "manual": True,
-                        "processors": [
-                            {
-                                "name": MessageDeploymentFailureB556MessageConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 300000
+                },
+                "deployed_env": {
+                        "transitions": [
+                                {
+                                        "name": "lock_chat",
+                                        "next": "locked_chat",
+                                        "manual": False,
+                                        "processors": [
+                                                {
+                                                        "name": LockChat670cFunctionConfig.get_name(),
+                                                        "executionMode": "ASYNC_NEW_TX",
+                                                        "config": {
+                                                                "calculationNodesTags": "ai_assistant",
+                                                                "responseTimeoutMs": 300000
+                                                        }
+                                                }
+                                        ]
                                 }
-                            }
                         ]
-                    },
-                    {
-                        "name": "rollback",
-                        "next": "deployed_env",
-                        "manual": True,
-                        "processors": [
-                            {
-                                "name": MessageDeploymentRollbackC4f9MessageConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 300000
+                },
+                "locked_chat": {
+                        "transitions": [
+                                {
+                                        "name": "unlock_chat",
+                                        "next": "deployed_env",
+                                        "manual": True
                                 }
-                            }
                         ]
-                    }
-                ]
-            },
-            "deployed_env": {
-                "transitions": [
-                    {
-                        "name": "lock_chat",
-                        "next": "locked_chat",
-                        "manual": False,
-                        "processors": [
-                            {
-                                "name": LockChat670cToolConfig.get_name(),
-                                "executionMode": "ASYNC_NEW_TX",
-                                "config": {
-                                    "calculationNodesTags": "ai_assistant",
-                                    "responseTimeoutMs": 300000
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            "locked_chat": {
-                "transitions": [
-                    {
-                        "name": "unlock_chat",
-                        "next": "deployed_env",
-                        "manual": True
-                    }
-                ]
-            }
+                }
         }
-    }
+}

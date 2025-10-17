@@ -6,10 +6,10 @@ Configuration data for the workflow.
 """
 
 from typing import Any, Dict, Callable
-from workflow_config_code.workflows.messages.notify_deployment_rollback_c4f9.message import NotifyDeploymentRollbackC4f9MessageConfig
-from workflow_config_code.workflows.messages.notify_deployment_failure_b556.message import NotifyDeploymentFailureB556MessageConfig
-from workflow_config_code.workflows.messages.notify_deployment_success_7458.message import NotifyDeploymentSuccess7458MessageConfig
 from workflow_config_code.workflows.functions.lock_chat_670c.function import LockChat670cFunctionConfig
+from workflow_config_code.workflows.messages.notify_deployment_failure_b556.message import NotifyDeploymentFailureB556MessageConfig
+from workflow_config_code.workflows.messages.notify_deployment_rollback_c4f9.message import NotifyDeploymentRollbackC4f9MessageConfig
+from workflow_config_code.workflows.messages.notify_deployment_success_7458.message import NotifyDeploymentSuccess7458MessageConfig
 from workflow_config_code.workflows.functions.schedule_deploy_env_f9ed.function import ScheduleDeployEnvF9edFunctionConfig
 
 
@@ -22,922 +22,592 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "initialState": "initial_state",
         "active": True,
         "criterion": {
-                "type": "simple",
-                "jsonPath": "$.workflow_name",
-                "operation": "EQUALS",
-                "value": "deploy_cyoda_env_background"
+            "type": "simple",
+            "jsonPath": "$.workflow_name",
+            "operation": "EQUALS",
+            "value": "deploy_cyoda_env_background",
         },
         "states": {
-                "initial_state": {
-                        "transitions": [
-                                {
-                                        "name": "schedule_deploy_env",
-                                        "next": "scheduled_deploy_env",
-                                        "manual": False,
-                                        "processors": [
-                                                {
-                                                        "name": ScheduleDeployEnvF9edFunctionConfig.get_name(),
-                                                        "executionMode": "ASYNC_NEW_TX",
-                                                        "config": {
-                                                                "calculationNodesTags": "ai_assistant",
-                                                                "responseTimeoutMs": 300000
-                                                        }
-                                                }
-                                        ]
+            "initial_state": {
+                "transitions": [
+                    {
+                        "name": "schedule_deploy_env",
+                        "next": "scheduled_deploy_env",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": "FunctionProcessor.schedule_deploy_env_f9ed",
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000,
                                 },
+                            },
+                        ],
+                    },
+                    {
+                        "name": "retry",
+                        "next": "initial_state",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_initial_state",
+                        "next": "locked_initial_state",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "retry",
-                                        "next": "initial_state",
-                                        "manual": True
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_initial_state": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "initial_state",
+                        "manual": True,
+                    },
+                    {
+                        "name": "retry",
+                        "next": "locked_initial_state",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_locked_initial_state",
+                        "next": "locked_locked_initial_state",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "fail_initial_state",
-                                        "next": "locked_initial_state",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_locked_initial_state": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "locked_initial_state",
+                        "manual": True,
+                    },
+                    {
+                        "name": "retry",
+                        "next": "locked_locked_initial_state",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_locked_locked_initial_state",
+                        "next": "locked_locked_locked_initial_state",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "retry",
-                                        "next": "initial_state",
-                                        "manual": True
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
-                                {
-                                        "name": "fail_initial_state",
-                                        "next": "locked_initial_state",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_locked_locked_initial_state": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "locked_locked_initial_state",
+                        "manual": True,
+                    },
+                ],
+            },
+            "scheduled_deploy_env": {
+                "transitions": [
+                    {
+                        "name": "lock_chat",
+                        "next": "locked_chat_while_deployment",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": "FunctionProcessor.lock_chat_670c",
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000,
                                 },
+                            },
+                        ],
+                    },
+                    {
+                        "name": "retry",
+                        "next": "scheduled_deploy_env",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_scheduled_deploy_env",
+                        "next": "locked_scheduled_deploy_env",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "retry",
-                                        "next": "initial_state",
-                                        "manual": True
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_scheduled_deploy_env": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "scheduled_deploy_env",
+                        "manual": True,
+                    },
+                    {
+                        "name": "retry",
+                        "next": "locked_scheduled_deploy_env",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_locked_scheduled_deploy_env",
+                        "next": "locked_locked_scheduled_deploy_env",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "fail_initial_state",
-                                        "next": "locked_initial_state",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_initial_state": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "initial_state",
-                                        "manual": True
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_locked_scheduled_deploy_env": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "locked_scheduled_deploy_env",
+                        "manual": True,
+                    },
+                    {
+                        "name": "retry",
+                        "next": "locked_locked_scheduled_deploy_env",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_locked_locked_scheduled_deploy_env",
+                        "next": "locked_locked_locked_scheduled_deploy_env",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "retry",
-                                        "next": "locked_initial_state",
-                                        "manual": True
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
-                                {
-                                        "name": "fail_locked_initial_state",
-                                        "next": "locked_locked_initial_state",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_locked_locked_scheduled_deploy_env": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "locked_locked_scheduled_deploy_env",
+                        "manual": True,
+                    },
+                ],
+            },
+            "locked_chat_while_deployment": {
+                "transitions": [
+                    {
+                        "name": "finish_deployment_success",
+                        "next": "deployed_env",
+                        "manual": True,
+                        "processors": [
+                            {
+                                "name": "MessageProcessor.notify_deployment_success_7458",
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000,
                                 },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_initial_state",
-                                        "manual": True
+                            },
+                        ],
+                    },
+                    {
+                        "name": "finish_deployment_failure",
+                        "next": "deployed_env",
+                        "manual": True,
+                        "processors": [
+                            {
+                                "name": "MessageProcessor.notify_deployment_failure_b556",
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000,
                                 },
-                                {
-                                        "name": "fail_locked_initial_state",
-                                        "next": "locked_locked_initial_state",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_locked_initial_state": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "locked_initial_state",
-                                        "manual": True
+                            },
+                        ],
+                    },
+                    {
+                        "name": "rollback",
+                        "next": "deployed_env",
+                        "manual": True,
+                        "processors": [
+                            {
+                                "name": "MessageProcessor.notify_deployment_rollback_c4f9",
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000,
                                 },
+                            },
+                        ],
+                    },
+                    {
+                        "name": "retry",
+                        "next": "locked_chat_while_deployment",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_locked_chat_while_deployment",
+                        "next": "locked_locked_chat_while_deployment",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "retry",
-                                        "next": "locked_locked_initial_state",
-                                        "manual": True
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_locked_chat_while_deployment": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "locked_chat_while_deployment",
+                        "manual": True,
+                    },
+                    {
+                        "name": "retry",
+                        "next": "locked_locked_chat_while_deployment",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_locked_locked_chat_while_deployment",
+                        "next": "locked_locked_locked_chat_while_deployment",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "fail_locked_locked_initial_state",
-                                        "next": "locked_locked_locked_initial_state",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_locked_locked_initial_state": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "locked_locked_initial_state",
-                                        "manual": True
-                                }
-                        ]
-                },
-                "scheduled_deploy_env": {
-                        "transitions": [
-                                {
-                                        "name": "lock_chat",
-                                        "next": "locked_chat_while_deployment",
-                                        "manual": False,
-                                        "processors": [
-                                                {
-                                                        "name": LockChat670cFunctionConfig.get_name(),
-                                                        "executionMode": "ASYNC_NEW_TX",
-                                                        "config": {
-                                                                "calculationNodesTags": "ai_assistant",
-                                                                "responseTimeoutMs": 300000
-                                                        }
-                                                }
-                                        ]
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_locked_locked_chat_while_deployment": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "locked_locked_chat_while_deployment",
+                        "manual": True,
+                    },
+                    {
+                        "name": "retry",
+                        "next": "locked_locked_locked_chat_while_deployment",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_locked_locked_locked_chat_while_deployment",
+                        "next": "locked_locked_locked_locked_chat_while_deployment",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "retry",
-                                        "next": "scheduled_deploy_env",
-                                        "manual": True
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
-                                {
-                                        "name": "fail_scheduled_deploy_env",
-                                        "next": "locked_scheduled_deploy_env",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_locked_locked_locked_chat_while_deployment": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "locked_locked_locked_chat_while_deployment",
+                        "manual": True,
+                    },
+                ],
+            },
+            "deployed_env": {
+                "transitions": [
+                    {
+                        "name": "lock_chat",
+                        "next": "locked_chat",
+                        "manual": False,
+                        "processors": [
+                            {
+                                "name": "FunctionProcessor.lock_chat_670c",
+                                "executionMode": "ASYNC_NEW_TX",
+                                "config": {
+                                    "calculationNodesTags": "ai_assistant",
+                                    "responseTimeoutMs": 300000,
+                                    "publish": False,
                                 },
+                            },
+                        ],
+                    },
+                    {
+                        "name": "retry",
+                        "next": "deployed_env",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_deployed_env",
+                        "next": "locked_deployed_env",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "retry",
-                                        "next": "scheduled_deploy_env",
-                                        "manual": True
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_deployed_env": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "deployed_env",
+                        "manual": True,
+                    },
+                    {
+                        "name": "retry",
+                        "next": "locked_deployed_env",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_locked_deployed_env",
+                        "next": "locked_locked_deployed_env",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "fail_scheduled_deploy_env",
-                                        "next": "locked_scheduled_deploy_env",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_locked_deployed_env": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "locked_deployed_env",
+                        "manual": True,
+                    },
+                    {
+                        "name": "retry",
+                        "next": "locked_locked_deployed_env",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_locked_locked_deployed_env",
+                        "next": "locked_locked_locked_deployed_env",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "retry",
-                                        "next": "scheduled_deploy_env",
-                                        "manual": True
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_locked_locked_deployed_env": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "locked_locked_deployed_env",
+                        "manual": True,
+                    },
+                ],
+            },
+            "locked_chat": {
+                "transitions": [
+                    {
+                        "name": "unlock_chat",
+                        "next": "deployed_env",
+                        "manual": True,
+                    },
+                    {
+                        "name": "retry",
+                        "next": "locked_chat",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_locked_chat",
+                        "next": "locked_locked_chat",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "fail_scheduled_deploy_env",
-                                        "next": "locked_scheduled_deploy_env",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_scheduled_deploy_env": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "scheduled_deploy_env",
-                                        "manual": True
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_locked_chat": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "locked_chat",
+                        "manual": True,
+                    },
+                    {
+                        "name": "retry",
+                        "next": "locked_locked_chat",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_locked_locked_chat",
+                        "next": "locked_locked_locked_chat",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "retry",
-                                        "next": "locked_scheduled_deploy_env",
-                                        "manual": True
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_locked_locked_chat": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "locked_locked_chat",
+                        "manual": True,
+                    },
+                    {
+                        "name": "retry",
+                        "next": "locked_locked_locked_chat",
+                        "manual": True,
+                    },
+                    {
+                        "name": "fail_locked_locked_locked_chat",
+                        "next": "locked_locked_locked_locked_chat",
+                        "manual": False,
+                        "criterion": {
+                            "type": "group",
+                            "operator": "AND",
+                            "conditions": [
                                 {
-                                        "name": "fail_locked_scheduled_deploy_env",
-                                        "next": "locked_locked_scheduled_deploy_env",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
+                                    "type": "simple",
+                                    "jsonPath": "$.failed",
+                                    "operation": "EQUALS",
+                                    "value": True,
                                 },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_scheduled_deploy_env",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_scheduled_deploy_env",
-                                        "next": "locked_locked_scheduled_deploy_env",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_locked_scheduled_deploy_env": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "locked_scheduled_deploy_env",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_locked_scheduled_deploy_env",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_locked_scheduled_deploy_env",
-                                        "next": "locked_locked_locked_scheduled_deploy_env",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_locked_locked_scheduled_deploy_env": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "locked_locked_scheduled_deploy_env",
-                                        "manual": True
-                                }
-                        ]
-                },
-                "locked_chat_while_deployment": {
-                        "transitions": [
-                                {
-                                        "name": "finish_deployment_success",
-                                        "next": "deployed_env",
-                                        "manual": True,
-                                        "processors": [
-                                                {
-                                                        "name": NotifyDeploymentSuccess7458MessageConfig.get_name(),
-                                                        "executionMode": "ASYNC_NEW_TX",
-                                                        "config": {
-                                                                "calculationNodesTags": "ai_assistant",
-                                                                "responseTimeoutMs": 300000
-                                                        }
-                                                }
-                                        ]
-                                },
-                                {
-                                        "name": "finish_deployment_failure",
-                                        "next": "deployed_env",
-                                        "manual": True,
-                                        "processors": [
-                                                {
-                                                        "name": NotifyDeploymentFailureB556MessageConfig.get_name(),
-                                                        "executionMode": "ASYNC_NEW_TX",
-                                                        "config": {
-                                                                "calculationNodesTags": "ai_assistant",
-                                                                "responseTimeoutMs": 300000
-                                                        }
-                                                }
-                                        ]
-                                },
-                                {
-                                        "name": "rollback",
-                                        "next": "deployed_env",
-                                        "manual": True,
-                                        "processors": [
-                                                {
-                                                        "name": NotifyDeploymentRollbackC4f9MessageConfig.get_name(),
-                                                        "executionMode": "ASYNC_NEW_TX",
-                                                        "config": {
-                                                                "calculationNodesTags": "ai_assistant",
-                                                                "responseTimeoutMs": 300000
-                                                        }
-                                                }
-                                        ]
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_chat_while_deployment",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_chat_while_deployment",
-                                        "next": "locked_locked_chat_while_deployment",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_chat_while_deployment",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_chat_while_deployment",
-                                        "next": "locked_locked_chat_while_deployment",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_chat_while_deployment",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_chat_while_deployment",
-                                        "next": "locked_locked_chat_while_deployment",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_locked_chat_while_deployment": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "locked_chat_while_deployment",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_locked_chat_while_deployment",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_locked_chat_while_deployment",
-                                        "next": "locked_locked_locked_chat_while_deployment",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_locked_chat_while_deployment",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_locked_chat_while_deployment",
-                                        "next": "locked_locked_locked_chat_while_deployment",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_locked_locked_chat_while_deployment": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "locked_locked_chat_while_deployment",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_locked_locked_chat_while_deployment",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_locked_locked_chat_while_deployment",
-                                        "next": "locked_locked_locked_locked_chat_while_deployment",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_locked_locked_locked_chat_while_deployment": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "locked_locked_locked_chat_while_deployment",
-                                        "manual": True
-                                }
-                        ]
-                },
-                "deployed_env": {
-                        "transitions": [
-                                {
-                                        "name": "lock_chat",
-                                        "next": "locked_chat",
-                                        "manual": False,
-                                        "processors": [
-                                                {
-                                                        "name": LockChat670cFunctionConfig.get_name(),
-                                                        "executionMode": "ASYNC_NEW_TX",
-                                                        "config": {
-                                                                "calculationNodesTags": "ai_assistant",
-                                                                "responseTimeoutMs": 300000,
-                                                                "publish": False
-                                                        }
-                                                }
-                                        ]
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "deployed_env",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_deployed_env",
-                                        "next": "locked_deployed_env",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "deployed_env",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_deployed_env",
-                                        "next": "locked_deployed_env",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "deployed_env",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_deployed_env",
-                                        "next": "locked_deployed_env",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_deployed_env": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "deployed_env",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_deployed_env",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_deployed_env",
-                                        "next": "locked_locked_deployed_env",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_deployed_env",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_deployed_env",
-                                        "next": "locked_locked_deployed_env",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_locked_deployed_env": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "locked_deployed_env",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_locked_deployed_env",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_locked_deployed_env",
-                                        "next": "locked_locked_locked_deployed_env",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_locked_locked_deployed_env": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "locked_locked_deployed_env",
-                                        "manual": True
-                                }
-                        ]
-                },
-                "locked_chat": {
-                        "transitions": [
-                                {
-                                        "name": "unlock_chat",
-                                        "next": "deployed_env",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_chat",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_chat",
-                                        "next": "locked_locked_chat",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_chat",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_chat",
-                                        "next": "locked_locked_chat",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_chat",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_chat",
-                                        "next": "locked_locked_chat",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_locked_chat": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "locked_chat",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_locked_chat",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_locked_chat",
-                                        "next": "locked_locked_locked_chat",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_locked_chat",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_locked_chat",
-                                        "next": "locked_locked_locked_chat",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_locked_locked_chat": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "locked_locked_chat",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "retry",
-                                        "next": "locked_locked_locked_chat",
-                                        "manual": True
-                                },
-                                {
-                                        "name": "fail_locked_locked_locked_chat",
-                                        "next": "locked_locked_locked_locked_chat",
-                                        "manual": False,
-                                        "criterion": {
-                                                "type": "group",
-                                                "operator": "AND",
-                                                "conditions": [
-                                                        {
-                                                                "type": "simple",
-                                                                "jsonPath": "$.failed",
-                                                                "operation": "EQUALS",
-                                                                "value": True
-                                                        }
-                                                ]
-                                        }
-                                }
-                        ]
-                },
-                "locked_locked_locked_locked_chat": {
-                        "transitions": [
-                                {
-                                        "name": "unlock",
-                                        "next": "locked_locked_locked_chat",
-                                        "manual": True
-                                }
-                        ]
-                }
-        }
-}
+                            ],
+                        },
+                    },
+                ],
+            },
+            "locked_locked_locked_locked_chat": {
+                "transitions": [
+                    {
+                        "name": "unlock",
+                        "next": "locked_locked_locked_chat",
+                        "manual": True,
+                    },
+                ],
+            },
+        },
+    }

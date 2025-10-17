@@ -341,12 +341,9 @@ class CodeToConfigConverter:
                         # Get configuration
                         config = workflow_class.get_config()
 
-                        # Enhance workflow with retry and fail transitions
-                        enhanced_config = self._enhance_workflow_with_transitions(config)
-
                         # Save JSON directly in workflows directory
                         with open(workflows_target_dir / f"{workflow_name}.json", 'w') as f:
-                            json.dump(enhanced_config, f, indent=2)
+                            json.dump(config, f, indent=2)
 
                         print(f"  ✅ {workflow_name} (enhanced with retry/fail transitions)")
                     else:
@@ -395,18 +392,6 @@ class CodeToConfigConverter:
         for state_name, state_config in config['states'].items():
             # Copy the original state
             enhanced_state = state_config.copy()
-
-            # Get existing transitions or create empty list
-            existing_transitions = enhanced_state.get('transitions', [])
-
-            # Add retry and fail transitions
-            retry_transition = self._create_retry_transition(state_name)
-            fail_transition = self._create_fail_transition(state_name)
-
-            # Combine all transitions
-            enhanced_transitions = existing_transitions + [retry_transition, fail_transition]
-            enhanced_state['transitions'] = enhanced_transitions
-
             enhanced_states[state_name] = enhanced_state
 
             # Create locked state if it doesn't exist

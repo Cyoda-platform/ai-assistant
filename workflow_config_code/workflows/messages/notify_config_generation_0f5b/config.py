@@ -11,8 +11,7 @@ import json
 
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
-    return lambda params=None: \
-"""🌟 Getting Started with Initial Configurations 🛠️
+    return lambda params=None: """🌟 Getting Started with Initial Configurations 🛠️
 
 
 I’ll generate the initial **Entity POJOs** and **Workflow Configurations** for you. You can review them in the your branch once they are ready.
@@ -52,8 +51,8 @@ You focus on business logic – no boilerplate, no framework stitching.
 * Explore our core **[Cyoda Concepts](https://docs.cyoda.net/#concepts/edbms)** to better understand how everything works.
 * Dive deeper into **[Entity Databases](https://medium.com/@paul_42036/whats-an-entity-database-11f8538b631a)** and **[Entity Workflows](https://medium.com/@paul_42036/entity-workflows-for-event-driven-architectures-4d491cf898a5)** with these articles.
 
-🚧 Configs generation is in progress… I'll let you know once they're ready.
-"""
+🚧 Configs generation is in progress… I'll let you know once they're ready."""
+
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get message meta configuration factory"""

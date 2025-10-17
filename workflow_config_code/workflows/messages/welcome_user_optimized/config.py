@@ -1,7 +1,7 @@
 """
-WelcomeUser25fcMessageConfig Configuration
+WelcomeUserOptimizedMessageConfig Configuration
 
-Generated from config: workflow_configs/messages/welcome_user_25fc/meta.json
+Generated from config: workflow_configs/messages/welcome_user_optimized/meta.json
 Configuration data for the message.
 """
 
@@ -11,8 +11,7 @@ import json
 
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
-    return lambda params=None: """\
-👋 Welcome to Cyoda Application Builder (Optimized flow)!
+    return lambda params=None: """👋 Welcome to Cyoda Application Builder (Optimized flow)!
 
 I will go through the following steps on my own. 
 
@@ -22,8 +21,7 @@ This will take from 10 to 30 minutes depending on the complexity of the applicat
 
 Once the application is ready, I will start launch assistant, so that we can start your application together.
 
-🧐 Learn more about Cyoda on [Our website](https://cyoda.com) and [Docs](https://docs.cyoda.net)
-"""
+🧐 Learn more about Cyoda on [Our website](https://cyoda.com) and [Docs](https://docs.cyoda.net)"""
 
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:

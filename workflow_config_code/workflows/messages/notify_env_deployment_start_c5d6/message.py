@@ -1,6 +1,7 @@
 """
 NotifyEnvDeploymentStartC5d6MessageConfig Message
 
+Generated from config: workflow_configs/messages/notify_env_deployment_start_c5d6/meta.json
 Implements MessageProcessor interface with get_name() and get_config() methods.
 """
 

@@ -1,7 +1,7 @@
 """
-AskAboutApi063fMessageConfig Configuration
+AskAboutApi063fPyMessageConfig Configuration
 
-Generated from config: workflow_configs/messages/ask_about_api_063f/meta.json
+Generated from config: workflow_configs/messages/ask_about_api_063f_py/meta.json
 Configuration data for the message.
 """
 
@@ -15,9 +15,7 @@ def get_config() -> Callable[[Dict[str, Any]], str]:
 It will take me up to 10 mins to add requirements to *`application/resources/functional_requirements/`* directory.
 I will add separate files for entities, workflows, processors, criteria and controllers.
 
-Stay tuned — thoughtful thinking in progress. 🧠✨
-
-"""
+Stay tuned — thoughtful thinking in progress. 🧠✨"""
 
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:

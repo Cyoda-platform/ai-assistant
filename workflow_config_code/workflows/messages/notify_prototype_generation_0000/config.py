@@ -1,7 +1,7 @@
 """
-NotifyPrototypeGeneration0f5bMessageConfig Configuration
+NotifyPrototypeGeneration0000MessageConfig Configuration
 
-Generated from config: workflow_configs/messages/notify_prototype_generation_0f5b/meta.json
+Generated from config: workflow_configs/messages/notify_prototype_generation_0000/meta.json
 Configuration data for the message.
 """
 
@@ -11,9 +11,7 @@ import json
 
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
-    return lambda params=None: \
-"""
-🌟 Let’s kick off the first prototype! 🛠️
+    return lambda params=None: """🌟 Let’s kick off the first prototype! 🛠️
 
 We are going to generate Controllers, Processors, Criteria and Tests based on the functional requirements and entity class files!
 
@@ -25,8 +23,8 @@ Let’s make this prototype work smoothly together! 🚀
 
 It’ll be ready in about 20 minutes ⏳. I’ll notify you as soon as it’s done.
 
-🚧 Initial prototype is now in progress... 🚀💡
-"""
+🚧 Initial prototype is now in progress... 🚀💡"""
+
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Get message meta configuration factory"""

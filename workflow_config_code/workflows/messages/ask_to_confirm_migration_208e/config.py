@@ -11,8 +11,7 @@ import json
 
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
-    return lambda params=None: """\
-You’ve just built a working sketch of your Cyoda application. This marks the beginning of something powerful.
+    return lambda params=None: """You’ve just built a working sketch of your Cyoda application. This marks the beginning of something powerful.
 
 
 Next, we’ll convert this prototype into a full application that connects directly to your Cyoda Cloud environment.
@@ -31,8 +30,7 @@ By doing so, you gain:
 
 👍 Let’s bring your prototype to life in the Cyoda Cloud.
 
-**You'll see a notification soon**
-"""
+**You'll see a notification soon**"""
 
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:

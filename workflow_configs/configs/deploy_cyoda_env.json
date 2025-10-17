@@ -27,37 +27,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "retry",
-          "next": "initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_initial_state",
-          "next": "locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_initial_state": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "initial_state",
-          "manual": true
         }
       ]
     },
@@ -77,37 +46,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "retry",
-          "next": "scheduled_deploy_env",
-          "manual": true
-        },
-        {
-          "name": "fail_scheduled_deploy_env",
-          "next": "locked_scheduled_deploy_env",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_scheduled_deploy_env": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "scheduled_deploy_env",
-          "manual": true
         }
       ]
     },
@@ -157,37 +95,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "retry",
-          "next": "locked_chat_while_deployment",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_chat_while_deployment",
-          "next": "locked_locked_chat_while_deployment",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_chat_while_deployment": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_chat_while_deployment",
-          "manual": true
         }
       ]
     },
@@ -207,37 +114,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "retry",
-          "next": "deployed_env",
-          "manual": true
-        },
-        {
-          "name": "fail_deployed_env",
-          "next": "locked_deployed_env",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_deployed_env": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "deployed_env",
-          "manual": true
         }
       ]
     },
@@ -246,37 +122,6 @@
         {
           "name": "unlock_chat",
           "next": "deployed_env",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_chat",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_chat",
-          "next": "locked_locked_chat",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_chat": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_chat",
           "manual": true
         }
       ]

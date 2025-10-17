@@ -39,50 +39,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_initial_state",
-          "next": "locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_initial_state",
-          "next": "locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -114,28 +70,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_initial_state",
-          "next": "locked_locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -144,37 +78,6 @@
         {
           "name": "unlock",
           "next": "locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_initial_state",
-          "next": "locked_locked_locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_initial_state": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_initial_state",
           "manual": true
         }
       ]
@@ -196,50 +99,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "retry",
-          "next": "generate_controller",
-          "manual": true
-        },
-        {
-          "name": "fail_generate_controller",
-          "next": "locked_generate_controller",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "generate_controller",
-          "manual": true
-        },
-        {
-          "name": "fail_generate_controller",
-          "next": "locked_generate_controller",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -293,28 +152,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_generate_controller",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_generate_controller",
-          "next": "locked_locked_generate_controller",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -323,37 +160,6 @@
         {
           "name": "unlock",
           "next": "locked_generate_controller",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_generate_controller",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_generate_controller",
-          "next": "locked_locked_locked_generate_controller",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_generate_controller": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_generate_controller",
           "manual": true
         }
       ]
@@ -364,50 +170,6 @@
           "name": "complete_generation",
           "next": "resources_generated",
           "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "waiting_for_app_build",
-          "manual": true
-        },
-        {
-          "name": "fail_waiting_for_app_build",
-          "next": "locked_waiting_for_app_build",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "waiting_for_app_build",
-          "manual": true
-        },
-        {
-          "name": "fail_waiting_for_app_build",
-          "next": "locked_waiting_for_app_build",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -461,28 +223,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_waiting_for_app_build",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_waiting_for_app_build",
-          "next": "locked_locked_waiting_for_app_build",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -491,37 +231,6 @@
         {
           "name": "unlock",
           "next": "locked_waiting_for_app_build",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_waiting_for_app_build",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_waiting_for_app_build",
-          "next": "locked_locked_locked_waiting_for_app_build",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_waiting_for_app_build": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_waiting_for_app_build",
           "manual": true
         }
       ]
@@ -541,50 +250,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "retry",
-          "next": "resources_generated",
-          "manual": true
-        },
-        {
-          "name": "fail_resources_generated",
-          "next": "locked_resources_generated",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "resources_generated",
-          "manual": true
-        },
-        {
-          "name": "fail_resources_generated",
-          "next": "locked_resources_generated",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -638,28 +303,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_resources_generated",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_resources_generated",
-          "next": "locked_locked_resources_generated",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -668,37 +311,6 @@
         {
           "name": "unlock",
           "next": "locked_resources_generated",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_resources_generated",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_resources_generated",
-          "next": "locked_locked_locked_resources_generated",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_resources_generated": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_resources_generated",
           "manual": true
         }
       ]
@@ -724,50 +336,6 @@
           "name": "rollback_to_initial_state",
           "next": "initial_state",
           "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "waiting_prototype_discussion_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_waiting_prototype_discussion_requested",
-          "next": "locked_waiting_prototype_discussion_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "waiting_prototype_discussion_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_waiting_prototype_discussion_requested",
-          "next": "locked_waiting_prototype_discussion_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -821,28 +389,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_waiting_prototype_discussion_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_waiting_prototype_discussion_requested",
-          "next": "locked_locked_waiting_prototype_discussion_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -851,37 +397,6 @@
         {
           "name": "unlock",
           "next": "locked_waiting_prototype_discussion_requested",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_waiting_prototype_discussion_requested",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_waiting_prototype_discussion_requested",
-          "next": "locked_locked_locked_waiting_prototype_discussion_requested",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_waiting_prototype_discussion_requested": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_waiting_prototype_discussion_requested",
           "manual": true
         }
       ]
@@ -902,50 +417,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "retry",
-          "next": "prototype_discussion_requested_submitted_answer",
-          "manual": true
-        },
-        {
-          "name": "fail_prototype_discussion_requested_submitted_answer",
-          "next": "locked_prototype_discussion_requested_submitted_answer",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "prototype_discussion_requested_submitted_answer",
-          "manual": true
-        },
-        {
-          "name": "fail_prototype_discussion_requested_submitted_answer",
-          "next": "locked_prototype_discussion_requested_submitted_answer",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -999,28 +470,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_prototype_discussion_requested_submitted_answer",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_prototype_discussion_requested_submitted_answer",
-          "next": "locked_locked_prototype_discussion_requested_submitted_answer",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -1029,37 +478,6 @@
         {
           "name": "unlock",
           "next": "locked_prototype_discussion_requested_submitted_answer",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_prototype_discussion_requested_submitted_answer",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_prototype_discussion_requested_submitted_answer",
-          "next": "locked_locked_locked_prototype_discussion_requested_submitted_answer",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_prototype_discussion_requested_submitted_answer": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_prototype_discussion_requested_submitted_answer",
           "manual": true
         }
       ]
@@ -1117,50 +535,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "prototype_discussion_requested_processing",
-          "manual": true
-        },
-        {
-          "name": "fail_prototype_discussion_requested_processing",
-          "next": "locked_prototype_discussion_requested_processing",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "prototype_discussion_requested_processing",
-          "manual": true
-        },
-        {
-          "name": "fail_prototype_discussion_requested_processing",
-          "next": "locked_prototype_discussion_requested_processing",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -1192,28 +566,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_prototype_discussion_requested_processing",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_prototype_discussion_requested_processing",
-          "next": "locked_locked_prototype_discussion_requested_processing",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -1222,37 +574,6 @@
         {
           "name": "unlock",
           "next": "locked_prototype_discussion_requested_processing",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_prototype_discussion_requested_processing",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_prototype_discussion_requested_processing",
-          "next": "locked_locked_locked_prototype_discussion_requested_processing",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_prototype_discussion_requested_processing": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_prototype_discussion_requested_processing",
           "manual": true
         }
       ]
@@ -1273,50 +594,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "retry",
-          "next": "prototype_discussion_completed",
-          "manual": true
-        },
-        {
-          "name": "fail_prototype_discussion_completed",
-          "next": "locked_prototype_discussion_completed",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "prototype_discussion_completed",
-          "manual": true
-        },
-        {
-          "name": "fail_prototype_discussion_completed",
-          "next": "locked_prototype_discussion_completed",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -1370,28 +647,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_prototype_discussion_completed",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_prototype_discussion_completed",
-          "next": "locked_locked_prototype_discussion_completed",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -1400,37 +655,6 @@
         {
           "name": "unlock",
           "next": "locked_prototype_discussion_completed",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_prototype_discussion_completed",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_prototype_discussion_completed",
-          "next": "locked_locked_locked_prototype_discussion_completed",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_prototype_discussion_completed": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_prototype_discussion_completed",
           "manual": true
         }
       ]
@@ -1451,50 +675,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "retry",
-          "next": "save_env_file",
-          "manual": true
-        },
-        {
-          "name": "fail_save_env_file",
-          "next": "locked_save_env_file",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "save_env_file",
-          "manual": true
-        },
-        {
-          "name": "fail_save_env_file",
-          "next": "locked_save_env_file",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -1548,28 +728,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_save_env_file",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_save_env_file",
-          "next": "locked_locked_save_env_file",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -1578,37 +736,6 @@
         {
           "name": "unlock",
           "next": "locked_save_env_file",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_save_env_file",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_save_env_file",
-          "next": "locked_locked_locked_save_env_file",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_save_env_file": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_save_env_file",
           "manual": true
         }
       ]
@@ -1629,50 +756,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "retry",
-          "next": "delete_files",
-          "manual": true
-        },
-        {
-          "name": "fail_delete_files",
-          "next": "locked_delete_files",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "delete_files",
-          "manual": true
-        },
-        {
-          "name": "fail_delete_files",
-          "next": "locked_delete_files",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -1726,28 +809,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_delete_files",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_delete_files",
-          "next": "locked_locked_delete_files",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -1756,37 +817,6 @@
         {
           "name": "unlock",
           "next": "locked_delete_files",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_delete_files",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_delete_files",
-          "next": "locked_locked_locked_delete_files",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_delete_files": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_delete_files",
           "manual": true
         }
       ]
@@ -1807,50 +837,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "retry",
-          "next": "launch_setup_assistant",
-          "manual": true
-        },
-        {
-          "name": "fail_launch_setup_assistant",
-          "next": "locked_launch_setup_assistant",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "launch_setup_assistant",
-          "manual": true
-        },
-        {
-          "name": "fail_launch_setup_assistant",
-          "next": "locked_launch_setup_assistant",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -1904,28 +890,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_launch_setup_assistant",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_launch_setup_assistant",
-          "next": "locked_locked_launch_setup_assistant",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -1934,37 +898,6 @@
         {
           "name": "unlock",
           "next": "locked_launch_setup_assistant",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_launch_setup_assistant",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_launch_setup_assistant",
-          "next": "locked_locked_locked_launch_setup_assistant",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_launch_setup_assistant": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_launch_setup_assistant",
           "manual": true
         }
       ]
@@ -1975,50 +908,6 @@
           "name": "lock_chat",
           "next": "locked_chat",
           "manual": false
-        },
-        {
-          "name": "retry",
-          "next": "launched_setup_assistant",
-          "manual": true
-        },
-        {
-          "name": "fail_launched_setup_assistant",
-          "next": "locked_launched_setup_assistant",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        },
-        {
-          "name": "retry",
-          "next": "launched_setup_assistant",
-          "manual": true
-        },
-        {
-          "name": "fail_launched_setup_assistant",
-          "next": "locked_launched_setup_assistant",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         },
         {
           "name": "retry",
@@ -2072,28 +961,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "retry",
-          "next": "locked_launched_setup_assistant",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_launched_setup_assistant",
-          "next": "locked_locked_launched_setup_assistant",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
         }
       ]
     },
@@ -2102,37 +969,6 @@
         {
           "name": "unlock",
           "next": "locked_launched_setup_assistant",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_launched_setup_assistant",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_launched_setup_assistant",
-          "next": "locked_locked_locked_launched_setup_assistant",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_launched_setup_assistant": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_launched_setup_assistant",
           "manual": true
         }
       ]

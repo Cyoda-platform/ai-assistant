@@ -1,4 +1,3 @@
-
 🎉 **Project Generation Completed Successfully!**
 
 Your prototype application has been fully generated.

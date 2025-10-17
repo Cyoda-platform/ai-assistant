@@ -1,7 +1,7 @@
 """
 SubmitAnswerDca5PromptConfig Prompt
 
-Generated from config: workflow_configs/prompts/submit_answer_dca5/message_0.md
+Generated from config: workflow_configs/agents/prompts/submit_answer_dca5/message_0.md
 Implements PromptConfig interface with get_name() and get_config() methods.
 """
 

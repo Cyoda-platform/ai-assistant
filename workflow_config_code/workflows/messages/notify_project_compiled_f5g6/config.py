@@ -1,16 +1,17 @@
 """
 NotifyProjectCompiledF5g6MessageConfig Configuration
 
-Configuration data for the notify project compiled message.
+Generated from config: workflow_configs/messages/notify_project_compiled_f5g6/meta.json
+Configuration data for the message.
 """
 
 from typing import Any, Dict, Callable
+import json
 
 
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
-    return lambda params=None: """
-🎉 **Project Generation Completed Successfully!**
+    return lambda params=None: """🎉 **Project Generation Completed Successfully!**
 
 Your prototype application has been fully generated.
 
@@ -116,8 +117,7 @@ If validation fails:
   ```
 * Identify missing or incorrect processors/criteria.
 
-**Exit when**: all entities, workflows, processors, criteria, and controllers validate successfully and build compiles clean.
-"""
+**Exit when**: all entities, workflows, processors, criteria, and controllers validate successfully and build compiles clean."""
 
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:

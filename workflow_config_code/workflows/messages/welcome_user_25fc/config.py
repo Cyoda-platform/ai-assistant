@@ -11,11 +11,9 @@ import json
 
 def get_config() -> Callable[[Dict[str, Any]], str]:
     """Get message configuration factory"""
-    return lambda params=None: """\
-👋 Welcome to Cyoda Application Builder! Let’s build something working together! We are going to go through the following steps:
+    return lambda params=None: """👋 Welcome to Cyoda Application Builder! Let’s build something working together! We are going to go through the following steps:
 
-🧐 Learn more about Cyoda on [Our website](https://cyoda.com) and [Docs](https://docs.cyoda.net)
-"""
+🧐 Learn more about Cyoda on [Our website](https://cyoda.com) and [Docs](https://docs.cyoda.net)"""
 
 
 def get_meta_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
