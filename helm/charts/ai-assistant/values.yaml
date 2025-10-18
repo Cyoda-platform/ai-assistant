@@ -63,6 +63,24 @@ hostAliases: { }
 affinity: { }
 strategy: {}
 
+# GitHub App Configuration
+githubApp:
+  # Option 1: Mount PEM file from existing secret (recommended)
+  # Create secret manually: kubectl create secret generic github-app-private-key --from-file=private-key.pem=./private-key.pem
+  privateKey:
+    # Enable mounting PEM file as volume
+    mountFromSecret: false
+    # Name of the secret containing the PEM file
+    secretName: "github-app-private-key"
+    # Key name in the secret
+    secretKey: "private-key.pem"
+    # Mount path in container
+    mountPath: "/secrets"
+
+  # Option 2: Store PEM content in environment variable
+  # Set privateKeyContent in secretVars (see container.env.secretVars below)
+  # This is less secure but simpler for some deployments
+
 image:
   pullPolicy: Always
   imageName: ai-assistant

@@ -101,16 +101,8 @@ RUN python --version && \
     echo "Testing ps command functionality:" && \
     ps -eo pid,ppid,user,stat,etime,cmd --no-headers | head -5
 
-# Set build arguments for GitHub credentials
-ARG GITHUB_API_TOKEN
-ARG GITHUB_USERNAME
-ENV GITHUB_API_TOKEN=${GITHUB_API_TOKEN}
-ENV GITHUB_USERNAME=${GITHUB_USERNAME}
-
-# Configure Git with credentials
-RUN git config --global credential.helper store && \
-    echo "https://${GITHUB_USERNAME}:${GITHUB_API_TOKEN}@github.com" > ~/.git-credentials && \
-    git config --global user.email "app-builder@example.com" && \
+# Configure Git (GitHub App authentication is used instead of personal tokens)
+RUN git config --global user.email "app-builder@example.com" && \
     git config --global user.name "app-builder"
 
 # Switch to non-root user

@@ -90,17 +90,54 @@ class ApplicationBuilderService(BaseWorkflowService):
             Success message with workflow information or error message
         """
         try:
+            # Log all received parameters
+            self.logger.info("=" * 80)
+            self.logger.info("build_general_application called")
+            self.logger.info("=" * 80)
+            self.logger.info(f"technical_id: {technical_id}")
+            self.logger.info(f"entity.technical_id: {entity.technical_id}")
+            self.logger.info(f"entity.workflow_name: {entity.workflow_name}")
+            self.logger.info("Received parameters:")
+            for key, value in params.items():
+                # Mask sensitive data but show structure
+                if key in ["user_request"]:
+                    self.logger.info(f"  {key}: {value[:100]}..." if len(str(value)) > 100 else f"  {key}: {value}")
+                else:
+                    self.logger.info(f"  {key}: {value}")
+            self.logger.info("=" * 80)
+
             # Validate required parameters
             is_valid, error_msg = await self._validate_required_params(
                 params, ["user_request", "programming_language", "mode"]
             )
             if not is_valid:
+                self.logger.error(f"Parameter validation failed: {error_msg}")
                 return error_msg
 
             user_request = params.get("user_request")
             programming_language = params.get("programming_language")
             installation_id = params.get("installation_id")
             repository_url = params.get("repository_url")
+
+            # If no installation_id/repository_url provided, use public repo configuration
+            if not installation_id and not repository_url:
+                # Use public repository configuration from .env
+                installation_id = config.GITHUB_PUBLIC_REPO_INSTALLATION_ID
+
+                # Select repository URL based on programming language
+                if programming_language.lower() == "python":
+                    repository_url = config.PYTHON_PUBLIC_REPO_URL
+                elif programming_language.lower() == "java":
+                    repository_url = config.JAVA_PUBLIC_REPO_URL
+
+                self.logger.info("Using public repository configuration from .env:")
+                self.logger.info(f"  Programming language: {programming_language}")
+                self.logger.info(f"  Installation ID: {installation_id}")
+                self.logger.info(f"  Repository URL: {repository_url}")
+            else:
+                self.logger.info("Using user-provided private repository configuration:")
+                self.logger.info(f"  Installation ID: {installation_id}")
+                self.logger.info(f"  Repository URL: {repository_url}")
 
             # Collect all file edge message IDs from chat history
             file_edge_message_ids = self._collect_file_edge_message_ids(entity)

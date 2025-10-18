@@ -101,37 +101,38 @@ class CredentialManager:
         credentials_file: str = "~/.git-credentials"
     ) -> GitOperationResult:
         """Store git credentials in file.
-        
+
+        Note: This method is deprecated. GitHub App authentication is now used instead.
+
         Args:
             username: GitHub username
-            token: GitHub token
+            token: GitHub token (must be provided)
             credentials_file: Path to credentials file
-            
+
         Returns:
             GitOperationResult with success status
         """
         username = username or config.GH_DEFAULT_USERNAME
-        token = token or config.GITHUB_API_TOKEN
-        
+
         if not token:
             return GitOperationResult(
                 success=False,
-                message="No GitHub token available",
-                error="GITHUB_API_TOKEN not configured"
+                message="No GitHub token provided",
+                error="Token parameter is required for credential storage"
             )
-        
+
         credentials_path = os.path.expanduser(credentials_file)
         credential_line = f"https://{username}:{token}@github.com\n"
-        
+
         try:
             with open(credentials_path, 'w') as f:
                 f.write(credential_line)
-            
+
             os.chmod(credentials_path, 0o600)
-            
+
             logger.info(f"Credentials stored in {credentials_path}")
             return GitOperationResult(success=True, message="Credentials stored")
-        
+
         except Exception as e:
             error_msg = f"Error storing credentials: {e}"
             logger.error(error_msg)

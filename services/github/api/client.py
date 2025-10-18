@@ -28,11 +28,11 @@ class GitHubAPIClient:
         """Initialize GitHub API client.
 
         Args:
-            token: GitHub API token (defaults to config)
+            token: GitHub API token (optional, for backward compatibility)
             owner: Default repository owner (defaults to config)
-            installation_id: GitHub App installation ID (for private repos)
+            installation_id: GitHub App installation ID (required for authentication)
         """
-        self.token = token or config.GITHUB_API_TOKEN
+        self.token = token
         self.owner = owner or config.GH_DEFAULT_OWNER
         self.installation_id = installation_id
         self._installation_token_manager = None
@@ -40,8 +40,8 @@ class GitHubAPIClient:
         if installation_id:
             self._installation_token_manager = InstallationTokenManager()
             logger.info(f"GitHub API client initialized with installation ID: {installation_id}")
-        elif not self.token:
-            logger.warning("GitHub API token not configured")
+        else:
+            logger.warning("GitHub API client initialized without installation ID - authentication may fail")
     
     async def _get_token(self) -> str:
         """Get authentication token (installation token or personal access token).

@@ -9,6 +9,7 @@ from common.config import const
 from common.config.config import config
 from entity.chat.chat import ChatEntity
 from functions.base_service import BaseWorkflowService
+from services.github.auth.installation_token_manager import InstallationTokenManager
 
 
 logger = logging.getLogger(__name__)
@@ -18,12 +19,34 @@ class GitHubOperationsService(BaseWorkflowService):
     """
     Service responsible for GitHub operations including
     adding collaborators, managing repositories, and other GitHub API interactions.
+    Uses GitHub App authentication.
     """
+
+    def __init__(self,
+                 workflow_helper_service,
+                 entity_service,
+                 cyoda_auth_service,
+                 workflow_converter_service,
+                 scheduler_service,
+                 data_service,
+                 dataset=None,
+                 mock=False):
+        super().__init__(
+            workflow_helper_service=workflow_helper_service,
+            entity_service=entity_service,
+            cyoda_auth_service=cyoda_auth_service,
+            workflow_converter_service=workflow_converter_service,
+            scheduler_service=scheduler_service,
+            data_service=data_service,
+            dataset=dataset,
+            mock=mock
+        )
+        self._installation_token_manager = InstallationTokenManager()
 
     async def add_collaborator(self, technical_id: str, entity: ChatEntity, **params) -> str:
         """
         Invite or add a collaborator to a GitHub repository.
-        Now uses configuration defaults with username as the only required parameter.
+        Uses GitHub App authentication with public repository installation ID.
 
         Args:
             technical_id: Technical identifier
@@ -45,9 +68,9 @@ class GitHubOperationsService(BaseWorkflowService):
             if not is_valid:
                 return error_msg
 
-            # Check if GitHub token is configured
-            if not config.GITHUB_API_TOKEN:
-                return "Error: GITHUB_API_TOKEN not configured in environment variables"
+            # Check if GitHub App installation ID is configured
+            if not config.GITHUB_PUBLIC_REPO_INSTALLATION_ID:
+                return "Error: GITHUB_PUBLIC_REPO_INSTALLATION_ID not configured in environment variables"
 
             # Extract parameters with configuration defaults
             username = params.get("username")
@@ -61,7 +84,8 @@ class GitHubOperationsService(BaseWorkflowService):
                 response = await self._make_github_api_request(
                     method="PUT",
                     path=f"repos/{owner}/{repo}/collaborators/{username}",
-                    data={"permission": permission}
+                    data={"permission": permission},
+                    installation_id=config.GITHUB_PUBLIC_REPO_INSTALLATION_ID
                 )
 
                 # GitHub API returns different status codes:
@@ -84,14 +108,14 @@ class GitHubOperationsService(BaseWorkflowService):
     async def get_repository_info(self, technical_id: str, entity: ChatEntity, **params) -> str:
         """
         Get information about a GitHub repository.
-        
+
         Args:
             technical_id: Technical identifier
             entity: Chat entity
             **params: Parameters including:
                 - owner: Repository owner (username or organization)
                 - repository_name: Repository name
-                
+
         Returns:
             Repository information or error message
         """
@@ -103,9 +127,9 @@ class GitHubOperationsService(BaseWorkflowService):
             if not is_valid:
                 return error_msg
 
-            # Check if GitHub token is configured
-            if not config.GITHUB_API_TOKEN:
-                return "Error: GITHUB_API_TOKEN not configured in environment variables"
+            # Check if GitHub App installation ID is configured
+            if not config.GITHUB_PUBLIC_REPO_INSTALLATION_ID:
+                return "Error: GITHUB_PUBLIC_REPO_INSTALLATION_ID not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner")
@@ -118,14 +142,22 @@ class GitHubOperationsService(BaseWorkflowService):
         except Exception as e:
             return self._handle_error(entity, e, f"Error getting repository info: {e}")
 
-    async def _make_github_api_request(self, method: str, path: str, data: Optional[dict] = None) -> Optional[dict]:
+    async def _make_github_api_request(
+        self,
+        method: str,
+        path: str,
+        data: Optional[dict] = None,
+        installation_id: Optional[int] = None
+    ) -> Optional[dict]:
         """
         Make a GitHub API request with proper headers and error handling.
+        Uses GitHub App authentication.
 
         Args:
             method: HTTP method (GET, POST, PUT, DELETE)
             path: API path (without base URL)
             data: Request data for POST/PUT requests
+            installation_id: GitHub App installation ID (defaults to public repo installation ID)
 
         Returns:
             Response data or None if request failed
@@ -133,9 +165,16 @@ class GitHubOperationsService(BaseWorkflowService):
         Raises:
             Exception: If request fails
         """
+        # Get installation token
+        installation_id = installation_id or config.GITHUB_PUBLIC_REPO_INSTALLATION_ID
+        if not installation_id:
+            raise ValueError("GitHub App installation ID is required")
+
+        token = await self._installation_token_manager.get_installation_token(installation_id)
+
         url = f"https://api.github.com/{path}"
         headers = {
-            "Authorization": f"Bearer {config.GITHUB_API_TOKEN}",
+            "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
             "Content-Type": "application/json"
@@ -202,9 +241,9 @@ class GitHubOperationsService(BaseWorkflowService):
             if not is_valid:
                 return error_msg
 
-            # Check if GitHub token is configured
-            if not config.GITHUB_API_TOKEN:
-                return "Error: GITHUB_API_TOKEN not configured in environment variables"
+            # Check if GitHub App installation ID is configured
+            if not config.GITHUB_PUBLIC_REPO_INSTALLATION_ID:
+                return "Error: GITHUB_PUBLIC_REPO_INSTALLATION_ID not configured in environment variables"
 
             # Extract parameters with defaults
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -291,9 +330,9 @@ class GitHubOperationsService(BaseWorkflowService):
             if not is_valid:
                 return error_msg
 
-            # Check if GitHub token is configured
-            if not config.GITHUB_API_TOKEN:
-                return "Error: GITHUB_API_TOKEN not configured in environment variables"
+            # Check if GitHub App installation ID is configured
+            if not config.GITHUB_PUBLIC_REPO_INSTALLATION_ID:
+                return "Error: GITHUB_PUBLIC_REPO_INSTALLATION_ID not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -303,7 +342,8 @@ class GitHubOperationsService(BaseWorkflowService):
             # Get run status
             response = await self._make_github_api_request(
                 method="GET",
-                path=f"repos/{owner}/{repo}/actions/runs/{run_id}"
+                path=f"repos/{owner}/{repo}/actions/runs/{run_id}",
+                installation_id=config.GITHUB_PUBLIC_REPO_INSTALLATION_ID
             )
 
             if response:
@@ -350,9 +390,9 @@ class GitHubOperationsService(BaseWorkflowService):
             if not is_valid:
                 return error_msg
 
-            # Check if GitHub token is configured
-            if not config.GITHUB_API_TOKEN:
-                return "Error: GITHUB_API_TOKEN not configured in environment variables"
+            # Check if GitHub App installation ID is configured
+            if not config.GITHUB_PUBLIC_REPO_INSTALLATION_ID:
+                return "Error: GITHUB_PUBLIC_REPO_INSTALLATION_ID not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -362,7 +402,8 @@ class GitHubOperationsService(BaseWorkflowService):
             # Get run status
             response = await self._make_github_api_request(
                 method="GET",
-                path=f"repos/{owner}/{repo}/actions/runs/{run_id}"
+                path=f"repos/{owner}/{repo}/actions/runs/{run_id}",
+                installation_id=config.GITHUB_PUBLIC_REPO_INSTALLATION_ID
             )
 
             if response:
@@ -410,9 +451,9 @@ class GitHubOperationsService(BaseWorkflowService):
             params["repository_name"] = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM, "JAVA")
             params["git_branch"] = entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id)
 
-            # Check if GitHub token is configured
-            if not config.GITHUB_API_TOKEN:
-                return "Error: GITHUB_API_TOKEN not configured in environment variables"
+            # Check if GitHub App installation ID is configured
+            if not config.GITHUB_PUBLIC_REPO_INSTALLATION_ID:
+                return "Error: GITHUB_PUBLIC_REPO_INSTALLATION_ID not configured in environment variables"
 
             # Extract parameters with defaults
             timeout_minutes = params.get("timeout_minutes", 2)
@@ -607,9 +648,9 @@ class GitHubOperationsService(BaseWorkflowService):
             if not is_valid:
                 return error_msg
 
-            # Check if GitHub token is configured
-            if not config.GITHUB_API_TOKEN:
-                return "Error: GITHUB_API_TOKEN not configured in environment variables"
+            # Check if GitHub App installation ID is configured
+            if not config.GITHUB_PUBLIC_REPO_INSTALLATION_ID:
+                return "Error: GITHUB_PUBLIC_REPO_INSTALLATION_ID not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -656,9 +697,9 @@ class GitHubOperationsService(BaseWorkflowService):
             if not is_valid:
                 return error_msg
 
-            # Check if GitHub token is configured
-            if not config.GITHUB_API_TOKEN:
-                return "Error: GITHUB_API_TOKEN not configured in environment variables"
+            # Check if GitHub App installation ID is configured
+            if not config.GITHUB_PUBLIC_REPO_INSTALLATION_ID:
+                return "Error: GITHUB_PUBLIC_REPO_INSTALLATION_ID not configured in environment variables"
 
             # Extract parameters
             owner = params.get("owner", config.GH_DEFAULT_OWNER)
@@ -668,7 +709,8 @@ class GitHubOperationsService(BaseWorkflowService):
             # Get basic run info first
             run_info = await self._make_github_api_request(
                 method="GET",
-                path=f"repos/{owner}/{repo}/actions/runs/{run_id}"
+                path=f"repos/{owner}/{repo}/actions/runs/{run_id}",
+                installation_id=config.GITHUB_PUBLIC_REPO_INSTALLATION_ID
             )
 
             info_section = ""
@@ -771,6 +813,7 @@ captured in the GitHub Actions logs.
     async def _download_workflow_logs(self, owner: str, repo: str, run_id: str) -> Optional[str]:
         """
         Download and extract GitHub Actions workflow logs.
+        Uses GitHub App authentication.
 
         Args:
             owner: Repository owner
@@ -781,8 +824,13 @@ captured in the GitHub Actions logs.
             Combined logs content or None if failed
         """
         try:
+            # Get installation token
+            token = await self._installation_token_manager.get_installation_token(
+                config.GITHUB_PUBLIC_REPO_INSTALLATION_ID
+            )
+
             headers = {
-                "Authorization": f"Bearer {config.GITHUB_API_TOKEN}",
+                "Authorization": f"Bearer {token}",
                 "Accept": "application/vnd.github.v3+json",
                 "User-Agent": "AI-Assistant"
             }
@@ -829,6 +877,7 @@ captured in the GitHub Actions logs.
     async def _check_logs_for_tracker_id(self, owner: str, repo: str, run_id: str, tracker_id: str) -> bool:
         """
         Check GitHub Actions logs for tracker ID in the summary.
+        Uses GitHub App authentication.
 
         Args:
             owner: Repository owner
@@ -840,9 +889,14 @@ captured in the GitHub Actions logs.
             True if tracker_id found in logs, False otherwise
         """
         try:
+            # Get installation token
+            token = await self._installation_token_manager.get_installation_token(
+                config.GITHUB_PUBLIC_REPO_INSTALLATION_ID
+            )
+
             # GitHub logs endpoint returns a redirect to the actual download URL
             headers = {
-                "Authorization": f"Bearer {config.GITHUB_API_TOKEN}",
+                "Authorization": f"Bearer {token}",
                 "Accept": "application/vnd.github.v3+json",
                 "User-Agent": "AI-Assistant"
             }

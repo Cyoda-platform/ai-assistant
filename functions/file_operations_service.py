@@ -389,12 +389,12 @@ class FileOperationsService(BaseWorkflowService):
         """
         Clone the GitHub repository to the target directory.
         If the repository should not be copied, it ensures the target directory exists.
-        
+
         Args:
             technical_id: Technical identifier
             entity: Chat entity
             **params: Additional parameters
-            
+
         Returns:
             Success message with branch information
         """
@@ -404,8 +404,25 @@ class FileOperationsService(BaseWorkflowService):
             # Get repository name from cache or calculate it
             repository_name = self._get_repository_name(entity, programming_language)
 
+            # Get private repository parameters from workflow_cache
+            installation_id = entity.workflow_cache.get(const.INSTALLATION_ID_PARAM)
+            repository_url = entity.workflow_cache.get(const.REPOSITORY_URL_PARAM)
+
+            # Log repository mode
+            if installation_id and repository_url:
+                self.logger.info(f"Cloning private repository:")
+                self.logger.info(f"  Installation ID: {installation_id}")
+                self.logger.info(f"  Repository URL: {repository_url}")
+            else:
+                self.logger.info(f"Cloning public repository: {repository_name}")
+
             # Use safe clone and file operations (utils.py handles all concurrency safety)
-            clone_result = await clone_repo(git_branch_id=technical_id, repository_name=repository_name)
+            clone_result = await clone_repo(
+                git_branch_id=technical_id,
+                repository_name=repository_name,
+                installation_id=installation_id,
+                repository_url=repository_url
+            )
 
             # Call the async _save_file function (handles its own safety)
             await _save_file(
@@ -414,15 +431,16 @@ class FileOperationsService(BaseWorkflowService):
                 git_branch_id=entity.workflow_cache.get(const.GIT_BRANCH_PARAM, technical_id),
                 repository_name=repository_name
             )
-            
+
             # Update workflow cache
             entity.workflow_cache[const.GIT_BRANCH_PARAM] = technical_id
             entity.workflow_cache[const.REPOSITORY_NAME_PARAM] = repository_name
             return const.BRANCH_READY_NOTIFICATION.format(
-                repository_name=repository_name, 
+                repository_url=repository_url,
+                repository_name=repository_name,
                 git_branch=technical_id
             )
-            
+
         except Exception as e:
             self.logger.exception("Error cloning repository: %s", str(e))
             return self._handle_error(entity, e, "Error cloning repository")

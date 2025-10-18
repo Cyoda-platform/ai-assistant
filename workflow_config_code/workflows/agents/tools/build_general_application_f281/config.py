@@ -14,7 +14,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "type": "function",
         "function": {
                 "name": "build_general_application",
-                "description": "Launches workflow that is necessary to build a new application. Do not use for editing existing applications. Do not ask user any additional information. Only Java and Python with Cyoda framework are available. Pass full user request as is.",
+                "description": "Launches workflow to build a new application. Supports both public repositories (default Cyoda templates) and private repositories (user's own codebase). For private repositories, requires installation_id and repository_url. Do not use for editing existing applications. Only Java and Python with Cyoda framework are available. Pass full user request as is.",
                 "strict": True,
                 "parameters": {
                         "type": "object",
@@ -35,12 +35,20 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                                 "regular",
                                                 "optimized"
                                         ]
+                                },
+                                "installation_id": {
+                                    "type": "string"
+                                },
+                                "repository_url": {
+                                    "type": "string",
                                 }
                         },
                         "required": [
                                 "user_request",
                                 "programming_language",
-                                "mode"
+                                "mode",
+                                "installation_id",
+                                "repository_url"
                         ],
                         "additionalProperties": False
                 }

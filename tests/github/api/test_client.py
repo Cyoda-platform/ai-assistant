@@ -12,11 +12,11 @@ class TestGitHubAPIClient:
     
     def test_client_initialization_default(self):
         with patch('services.github.api.client.config') as mock_config:
-            mock_config.GITHUB_API_TOKEN = "test-token"
+            mock_config.GITHUB_PUBLIC_REPO_INSTALLATION_ID = 90513399
             mock_config.GH_DEFAULT_OWNER = "test-owner"
 
             client = GitHubAPIClient()
-            assert client.token == "test-token"
+            assert client.token == 90513399
             assert client.owner == "test-owner"
             assert client.BASE_URL == "https://api.github.com"
     
@@ -26,7 +26,7 @@ class TestGitHubAPIClient:
         assert client.owner == "custom-owner"
     
     def test_headers_property(self):
-        client = GitHubAPIClient(token="test-token")
+        client = GitHubAPIClient(token=90513399)
         headers = client._get_headers()
 
         assert headers["Authorization"] == "Bearer test-token"
@@ -36,7 +36,7 @@ class TestGitHubAPIClient:
     
     @pytest.mark.asyncio
     async def test_request_success(self):
-        client = GitHubAPIClient(token="test-token")
+        client = GitHubAPIClient(token=90513399)
 
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -57,7 +57,7 @@ class TestGitHubAPIClient:
     
     @pytest.mark.asyncio
     async def test_request_with_params(self):
-        client = GitHubAPIClient(token="test-token")
+        client = GitHubAPIClient(token=90513399)
 
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -74,7 +74,7 @@ class TestGitHubAPIClient:
     
     @pytest.mark.asyncio
     async def test_request_with_data(self):
-        client = GitHubAPIClient(token="test-token")
+        client = GitHubAPIClient(token=90513399)
 
         mock_response = MagicMock()
         mock_response.status_code = 201
@@ -91,7 +91,7 @@ class TestGitHubAPIClient:
     
     @pytest.mark.asyncio
     async def test_request_error(self):
-        client = GitHubAPIClient(token="test-token")
+        client = GitHubAPIClient(token=90513399)
         
         mock_response = MagicMock()
         mock_response.status_code = 404
@@ -108,7 +108,7 @@ class TestGitHubAPIClient:
     
     @pytest.mark.asyncio
     async def test_get_method(self):
-        client = GitHubAPIClient(token="test-token")
+        client = GitHubAPIClient(token=90513399)
         
         with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"data": "test"}
@@ -119,7 +119,7 @@ class TestGitHubAPIClient:
     
     @pytest.mark.asyncio
     async def test_post_method(self):
-        client = GitHubAPIClient(token="test-token")
+        client = GitHubAPIClient(token=90513399)
         
         with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"created": True}
@@ -130,7 +130,7 @@ class TestGitHubAPIClient:
     
     @pytest.mark.asyncio
     async def test_put_method(self):
-        client = GitHubAPIClient(token="test-token")
+        client = GitHubAPIClient(token=90513399)
         
         with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"updated": True}
@@ -141,7 +141,7 @@ class TestGitHubAPIClient:
     
     @pytest.mark.asyncio
     async def test_delete_method(self):
-        client = GitHubAPIClient(token="test-token")
+        client = GitHubAPIClient(token=90513399)
         
         with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"deleted": True}
@@ -152,7 +152,7 @@ class TestGitHubAPIClient:
     
     @pytest.mark.asyncio
     async def test_patch_method(self):
-        client = GitHubAPIClient(token="test-token")
+        client = GitHubAPIClient(token=90513399)
         
         with patch.object(client, 'request', new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"patched": True}
@@ -163,7 +163,7 @@ class TestGitHubAPIClient:
     
     @pytest.mark.asyncio
     async def test_download_file(self):
-        client = GitHubAPIClient(token="test-token")
+        client = GitHubAPIClient(token=90513399)
         
         mock_response = MagicMock()
         mock_response.status_code = 200

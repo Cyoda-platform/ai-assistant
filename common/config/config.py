@@ -76,7 +76,6 @@ class Config:
         self.CHAT_ID = _get_env("CHAT_ID", default=None)
         self.GRPC_PROCESSOR_TAG = _get_env("GRPC_PROCESSOR_TAG", default="ai_assistant")
         self.CHAT_REPOSITORY = _get_env("CHAT_REPOSITORY", default="local")
-        self.GITHUB_API_TOKEN = _get_env("GITHUB_API_TOKEN")
         self.DEFAULT_MODEL_NAME = _get_env("DEFAULT_MODEL_NAME", default="gpt-4o-mini")
 
         # Augment CLI authentication (API token preferred over session token)
@@ -90,14 +89,20 @@ class Config:
         self.GH_DEFAULT_USERNAME = _get_env("GH_DEFAULT_USERNAME", default="target-username")
         self.GH_DEFAULT_PERMISSION = _get_env("GH_DEFAULT_PERMISSION", default="push")
 
-        # GitHub App configuration (for private repository support)
+        # GitHub App configuration
         self.GITHUB_APP_ID = _get_env("GITHUB_APP_ID")
         self.GITHUB_APP_OWNER = _get_env("GITHUB_APP_OWNER")
         self.GITHUB_APP_CLIENT_ID = _get_env("GITHUB_APP_CLIENT_ID")
         self.GITHUB_APP_PRIVATE_KEY_PATH = _get_env("GITHUB_APP_PRIVATE_KEY_PATH")
+        self.GITHUB_APP_PRIVATE_KEY_CONTENT = _get_env("GITHUB_APP_PRIVATE_KEY_CONTENT")  # For Kubernetes secrets
         self.GITHUB_APP_PUBLIC_LINK = _get_env("GITHUB_APP_PUBLIC_LINK")
         self.GITHUB_WEBHOOK_URL = _get_env("GITHUB_WEBHOOK_URL")
         self.GITHUB_WEBHOOK_SECRET = _get_env("GITHUB_WEBHOOK_SECRET")
+
+        # GitHub App - Public Repository Configuration
+        self.GITHUB_PUBLIC_REPO_INSTALLATION_ID = _get_env("GITHUB_PUBLIC_REPO_INSTALLATION_ID")
+        self.PYTHON_PUBLIC_REPO_URL = _get_env("PYTHON_PUBLIC_REPO_URL", default="https://github.com/Cyoda-platform/mcp-cyoda-quart-app")
+        self.JAVA_PUBLIC_REPO_URL = _get_env("JAVA_PUBLIC_REPO_URL", default="https://github.com/Cyoda-platform/java-client-template")
 
         # Git configuration
         self.CLIENT_GIT_BRANCH = _get_env("CLIENT_GIT_BRANCH", default="main")

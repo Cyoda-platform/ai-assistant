@@ -13,7 +13,7 @@ class TestGitHubService:
     
     def test_service_initialization_default(self):
         with patch('services.github.api.client.config') as mock_config:
-            mock_config.GITHUB_API_TOKEN = "test-token"
+            mock_config.GITHUB_PUBLIC_REPO_INSTALLATION_ID = 90513399
             mock_config.GH_DEFAULT_OWNER = "test-owner"
 
             service = GitHubService()

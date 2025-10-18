@@ -43,8 +43,8 @@ class TestGitHubOperationsService:
     @pytest.mark.asyncio
     async def test_add_collaborator_success(self, github_service, mock_entity):
         """Test successful collaborator addition."""
-        with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GITHUB_API_TOKEN = "test_token"
+        with patch('functions.github_operations_service.config') as mock_config:
+            mock_config.GITHUB_PUBLIC_REPO_INSTALLATION_ID = 90513399
             mock_config.GH_DEFAULT_OWNER = "default_owner"
             mock_config.GH_DEFAULT_REPOS = ["repo1", "repo2"]
             mock_config.GH_DEFAULT_PERMISSION = "push"
@@ -69,11 +69,11 @@ class TestGitHubOperationsService:
                 assert mock_api.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_add_collaborator_missing_token(self, github_service, mock_entity):
-        """Test collaborator addition with missing GitHub token."""
-        with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GITHUB_API_TOKEN = None
-            
+    async def test_add_collaborator_missing_installation_id(self, github_service, mock_entity):
+        """Test collaborator addition with missing GitHub App installation ID."""
+        with patch('functions.github_operations_service.config') as mock_config:
+            mock_config.GITHUB_PUBLIC_REPO_INSTALLATION_ID = None
+
             result = await github_service.add_collaborator(
                 technical_id="test_id",
                 entity=mock_entity,
@@ -81,8 +81,8 @@ class TestGitHubOperationsService:
                 repo="test_repo",
                 username="test_user"
             )
-            
-            assert "Error: GITHUB_API_TOKEN not configured" in result
+
+            assert "Error: GITHUB_PUBLIC_REPO_INSTALLATION_ID not configured" in result
 
     @pytest.mark.asyncio
     async def test_add_collaborator_missing_params(self, github_service, mock_entity):
@@ -98,8 +98,8 @@ class TestGitHubOperationsService:
     @pytest.mark.asyncio
     async def test_add_collaborator_invalid_permission(self, github_service, mock_entity):
         """Test collaborator addition with invalid permission level."""
-        with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GITHUB_API_TOKEN = "test_token"
+        with patch('functions.github_operations_service.config') as mock_config:
+            mock_config.GITHUB_PUBLIC_REPO_INSTALLATION_ID = 90513399
             mock_config.GH_DEFAULT_OWNER = "default_owner"
             mock_config.GH_DEFAULT_REPOS = ["default_repo"]
             mock_config.GH_DEFAULT_PERMISSION = "invalid_permission"
@@ -117,8 +117,8 @@ class TestGitHubOperationsService:
     @pytest.mark.asyncio
     async def test_add_collaborator_api_error(self, github_service, mock_entity):
         """Test collaborator addition with API error."""
-        with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GITHUB_API_TOKEN = "test_token"
+        with patch('functions.github_operations_service.config') as mock_config:
+            mock_config.GITHUB_PUBLIC_REPO_INSTALLATION_ID = 90513399
             mock_config.GH_DEFAULT_OWNER = "default_owner"
             mock_config.GH_DEFAULT_REPOS = ["default_repo"]
             mock_config.GH_DEFAULT_PERMISSION = "push"
@@ -138,8 +138,8 @@ class TestGitHubOperationsService:
     @pytest.mark.asyncio
     async def test_add_collaborator_default_permission(self, github_service, mock_entity):
         """Test collaborator addition with default permission."""
-        with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GITHUB_API_TOKEN = "test_token"
+        with patch('functions.github_operations_service.config') as mock_config:
+            mock_config.GITHUB_PUBLIC_REPO_INSTALLATION_ID = 90513399
             mock_config.GH_DEFAULT_OWNER = "default_owner"
             mock_config.GH_DEFAULT_REPOS = ["default_repo"]
             mock_config.GH_DEFAULT_PERMISSION = "push"
@@ -163,8 +163,8 @@ class TestGitHubOperationsService:
     @pytest.mark.asyncio
     async def test_add_collaborator_with_config_defaults(self, github_service, mock_entity):
         """Test collaborator addition using configuration defaults."""
-        with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GITHUB_API_TOKEN = "test_token"
+        with patch('functions.github_operations_service.config') as mock_config:
+            mock_config.GITHUB_PUBLIC_REPO_INSTALLATION_ID = 90513399
             mock_config.GH_DEFAULT_OWNER = "default-owner"
             mock_config.GH_DEFAULT_REPOS = ["default-repo"]
             mock_config.GH_DEFAULT_PERMISSION = "maintain"
@@ -191,8 +191,8 @@ class TestGitHubOperationsService:
     @pytest.mark.asyncio
     async def test_make_github_api_request_put_success(self, github_service):
         """Test successful PUT request to GitHub API."""
-        with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GITHUB_API_TOKEN = "test_token"
+        with patch('functions.github_operations_service.config') as mock_config:
+            mock_config.GITHUB_PUBLIC_REPO_INSTALLATION_ID = 90513399
             
             mock_response = MagicMock()
             mock_response.status_code = 201
@@ -213,8 +213,8 @@ class TestGitHubOperationsService:
     @pytest.mark.asyncio
     async def test_make_github_api_request_error_status(self, github_service):
         """Test GitHub API request with error status code."""
-        with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GITHUB_API_TOKEN = "test_token"
+        with patch('functions.github_operations_service.config') as mock_config:
+            mock_config.GITHUB_PUBLIC_REPO_INSTALLATION_ID = 90513399
             
             mock_response = MagicMock()
             mock_response.status_code = 404
@@ -235,8 +235,8 @@ class TestGitHubOperationsService:
     @pytest.mark.asyncio
     async def test_make_github_api_request_network_error(self, github_service):
         """Test GitHub API request with network error."""
-        with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GITHUB_API_TOKEN = "test_token"
+        with patch('functions.github_operations_service.config') as mock_config:
+            mock_config.GITHUB_PUBLIC_REPO_INSTALLATION_ID = 90513399
             
             with patch('httpx.AsyncClient') as mock_client:
                 mock_client.return_value.__aenter__.return_value.put.side_effect = httpx.RequestError("Network error")
@@ -253,8 +253,8 @@ class TestGitHubOperationsService:
     @pytest.mark.asyncio
     async def test_get_repository_info_missing_token(self, github_service, mock_entity):
         """Test repository info retrieval with missing token."""
-        with patch('tools.github_operations_service.config') as mock_config:
-            mock_config.GITHUB_API_TOKEN = None
+        with patch('functions.github_operations_service.config') as mock_config:
+            mock_config.GITHUB_PUBLIC_REPO_INSTALLATION_ID = None
             
             result = await github_service.get_repository_info(
                 technical_id="test_id",
@@ -263,7 +263,7 @@ class TestGitHubOperationsService:
                 repo="test_repo"
             )
             
-            assert "Error: GITHUB_API_TOKEN not configured" in result
+            assert "Error: GITHUB_PUBLIC_REPO_INSTALLATION_ID not configured" in result
 
     # Removed test_list_collaborators_missing_params - method doesn't exist in production code
 

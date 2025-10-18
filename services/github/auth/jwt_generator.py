@@ -45,36 +45,56 @@ class GitHubAppJWTGenerator:
     
     def _load_private_key(self) -> str:
         """
-        Load private key from file.
-        
+        Load private key from file or environment variable.
+
+        Supports two modes:
+        1. File path: GITHUB_APP_PRIVATE_KEY_PATH=/path/to/private-key.pem
+        2. Direct content: GITHUB_APP_PRIVATE_KEY_CONTENT="-----BEGIN RSA PRIVATE KEY-----..."
+
         Returns:
             Private key content as string
-            
+
         Raises:
             FileNotFoundError: If private key file doesn't exist
-            ValueError: If private key file is invalid
+            ValueError: If private key is invalid or not configured
         """
         if self._private_key:
             return self._private_key
-        
+
+        # Check if private key content is provided directly (for Kubernetes secrets)
+        from common.config.config import config
+        if hasattr(config, 'GITHUB_APP_PRIVATE_KEY_CONTENT') and config.GITHUB_APP_PRIVATE_KEY_CONTENT:
+            self._private_key = config.GITHUB_APP_PRIVATE_KEY_CONTENT
+            if not self._private_key or len(self._private_key) < 100:
+                raise ValueError("Private key content appears to be empty or invalid")
+            logger.info("Successfully loaded GitHub App private key from environment variable")
+            return self._private_key
+
+        # Otherwise, load from file path
         key_path = Path(self.private_key_path)
-        
+
+        # If path is relative, resolve it relative to project root
+        if not key_path.is_absolute():
+            # Get project root (3 levels up from this file: services/github/auth/jwt_generator.py)
+            project_root = Path(__file__).parent.parent.parent.parent
+            key_path = project_root / key_path
+
         if not key_path.exists():
             raise FileNotFoundError(
-                f"GitHub App private key not found at: {self.private_key_path}. "
-                f"Please ensure the .pem file exists at this location."
+                f"GitHub App private key not found at: {key_path}. "
+                f"Please ensure the .pem file exists at this location or set GITHUB_APP_PRIVATE_KEY_CONTENT."
             )
-        
+
         try:
             with open(key_path, 'r') as key_file:
                 self._private_key = key_file.read()
-            
+
             if not self._private_key or len(self._private_key) < 100:
                 raise ValueError("Private key file appears to be empty or invalid")
-            
-            logger.info(f"Successfully loaded GitHub App private key from {self.private_key_path}")
+
+            logger.info(f"Successfully loaded GitHub App private key from {key_path}")
             return self._private_key
-            
+
         except Exception as e:
             logger.error(f"Failed to load private key from {self.private_key_path}: {e}")
             raise ValueError(f"Failed to load GitHub App private key: {e}")
