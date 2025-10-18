@@ -164,3 +164,7 @@ cython_debug/
 /common/workflow/outputs/
 /backup/
 /common/workflow/outputs_v2/
+
+# GitHub App private key
+private-key.pem
+*.pem

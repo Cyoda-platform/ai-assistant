@@ -90,6 +90,15 @@ class Config:
         self.GH_DEFAULT_USERNAME = _get_env("GH_DEFAULT_USERNAME", default="target-username")
         self.GH_DEFAULT_PERMISSION = _get_env("GH_DEFAULT_PERMISSION", default="push")
 
+        # GitHub App configuration (for private repository support)
+        self.GITHUB_APP_ID = _get_env("GITHUB_APP_ID")
+        self.GITHUB_APP_OWNER = _get_env("GITHUB_APP_OWNER")
+        self.GITHUB_APP_CLIENT_ID = _get_env("GITHUB_APP_CLIENT_ID")
+        self.GITHUB_APP_PRIVATE_KEY_PATH = _get_env("GITHUB_APP_PRIVATE_KEY_PATH")
+        self.GITHUB_APP_PUBLIC_LINK = _get_env("GITHUB_APP_PUBLIC_LINK")
+        self.GITHUB_WEBHOOK_URL = _get_env("GITHUB_WEBHOOK_URL")
+        self.GITHUB_WEBHOOK_SECRET = _get_env("GITHUB_WEBHOOK_SECRET")
+
         # Git configuration
         self.CLIENT_GIT_BRANCH = _get_env("CLIENT_GIT_BRANCH", default="main")
 

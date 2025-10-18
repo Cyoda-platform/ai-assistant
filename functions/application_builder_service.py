@@ -79,7 +79,12 @@ class ApplicationBuilderService(BaseWorkflowService):
         Args:
             technical_id: Technical identifier
             entity: Chat entity
-            **params: Parameters including user_request and programming_language
+            **params: Parameters including:
+                - user_request: User's request
+                - programming_language: Programming language
+                - mode: Build mode
+                - installation_id: (Optional) GitHub App installation ID for private repos
+                - repository_url: (Optional) Custom repository URL for private repos
 
         Returns:
             Success message with workflow information or error message
@@ -94,6 +99,8 @@ class ApplicationBuilderService(BaseWorkflowService):
 
             user_request = params.get("user_request")
             programming_language = params.get("programming_language")
+            installation_id = params.get("installation_id")
+            repository_url = params.get("repository_url")
 
             # Collect all file edge message IDs from chat history
             file_edge_message_ids = self._collect_file_edge_message_ids(entity)
@@ -106,8 +113,20 @@ class ApplicationBuilderService(BaseWorkflowService):
             params[const.PROGRAMMING_LANGUAGE_PARAM] = programming_language
 
             # Calculate and store repository_name in workflow_cache
-            repository_name = resolve_repository_name_with_language_param(entity, programming_language)
+            # For custom repos, extract from URL; otherwise use language-based resolution
+            if repository_url:
+                from services.github.repository.url_parser import parse_repository_url
+                url_info = parse_repository_url(repository_url)
+                repository_name = url_info.repo_name
+                params[const.REPOSITORY_URL_PARAM] = repository_url
+            else:
+                repository_name = resolve_repository_name_with_language_param(entity, programming_language)
+
             params[const.REPOSITORY_NAME_PARAM] = repository_name
+
+            # Store installation_id if provided
+            if installation_id:
+                params[const.INSTALLATION_ID_PARAM] = installation_id
 
             # Determine workflow name based on programming language
             workflow_name = WorkflowNameResolver.resolve_general_app_workflow_name(programming_language=programming_language,
@@ -204,11 +223,18 @@ class ApplicationBuilderService(BaseWorkflowService):
             programming_language = params.get("programming_language")
             git_branch_id = params.get(const.GIT_BRANCH_PARAM)
             transition = params.get("transition")
+            installation_id = params.get(const.INSTALLATION_ID_PARAM, entity.workflow_cache.get(const.INSTALLATION_ID_PARAM))
+            repository_url = params.get(const.REPOSITORY_URL_PARAM, entity.workflow_cache.get(const.REPOSITORY_URL_PARAM))
 
             # Get repository_name from cache or calculate it
             repository_name = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM)
             if not repository_name:
-                repository_name = resolve_repository_name_with_language_param(entity, programming_language)
+                if repository_url:
+                    from services.github.repository.url_parser import parse_repository_url
+                    url_info = parse_repository_url(repository_url)
+                    repository_name = url_info.repo_name
+                else:
+                    repository_name = resolve_repository_name_with_language_param(entity, programming_language)
 
             # Validate branch (no modifications to main branch allowed)
             if git_branch_id and git_branch_id == "main":
@@ -220,7 +246,12 @@ class ApplicationBuilderService(BaseWorkflowService):
 
             # Clone repository if branch ID provided
             if git_branch_id:
-                await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
+                await clone_repo(
+                    git_branch_id=git_branch_id,
+                    repository_name=repository_name,
+                    installation_id=installation_id,
+                    repository_url=repository_url
+                )
 
             # Launch agentic workflow
             child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
@@ -303,12 +334,19 @@ class ApplicationBuilderService(BaseWorkflowService):
                 repository_name = resolve_repository_name_with_language_param(entity)
 
             git_branch_id: str = params.get(const.GIT_BRANCH_PARAM, entity.workflow_cache.get(const.GIT_BRANCH_PARAM))
-            
+            installation_id = params.get(const.INSTALLATION_ID_PARAM, entity.workflow_cache.get(const.INSTALLATION_ID_PARAM))
+            repository_url = params.get(const.REPOSITORY_URL_PARAM, entity.workflow_cache.get(const.REPOSITORY_URL_PARAM))
+
             if git_branch_id:
                 if git_branch_id == "main":
                     self.logger.exception("Modifications to main branch are not allowed")
                     return "Modifications to main branch are not allowed"
-                await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
+                await clone_repo(
+                    git_branch_id=git_branch_id,
+                    repository_name=repository_name,
+                    installation_id=installation_id,
+                    repository_url=repository_url
+                )
 
             # One-off resolution for workflows that need an entity_name
             if resolve_entity_name:

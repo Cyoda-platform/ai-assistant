@@ -708,70 +708,37 @@ def format_json_if_needed(data, key):
         print(f"Data at {key} is not a valid JSON object: {value}")  # Optionally log this or handle it
     return data
 
-async def clone_repo(git_branch_id: str, repository_name: str):
+async def clone_repo(
+    git_branch_id: str,
+    repository_name: str,
+    installation_id: Optional[int] = None,
+    repository_url: Optional[str] = None
+):
     """
     Clone the GitHub repository to the target directory.
     If the repository should not be copied, it ensures the target directory exists.
+
+    Args:
+        git_branch_id: Branch ID to create
+        repository_name: Repository name (used for public repos)
+        installation_id: GitHub App installation ID (for private repos)
+        repository_url: Custom repository URL (for private repos)
     """
-    async with _git_operations_lock:
-        repository_url = config.REPOSITORY_URL.format(repository_name=repository_name)
-        clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
+    from services.github.github_service import GitHubService
 
-        if await repo_exists(clone_dir):
-            await _git_pull_internal(git_branch_id=git_branch_id, repository_name=repository_name)
-            return
+    # Use GitHubService for cloning (supports both public and private repos)
+    github_service = GitHubService(installation_id=installation_id)
 
-        if config.CLONE_REPO != "true":
-            # Create the directory asynchronously using asyncio.to_thread
-            await asyncio.to_thread(os.makedirs, clone_dir, exist_ok=True)
-            logger.info(f"Target directory '{clone_dir}' is created.")
-            return
+    result = await github_service.clone_repository(
+        git_branch_id=git_branch_id,
+        repository_name=repository_name,
+        repository_url=repository_url
+    )
 
-        # Asynchronously clone the repository using subprocess
-
-        clone_process = await asyncio.create_subprocess_exec(
-            'git', 'clone', repository_url, clone_dir,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        stdout, stderr = await clone_process.communicate()
-
-        if clone_process.returncode != 0:
-            logger.error(f"Error during git clone: {stderr.decode()}")
-            return
-
-        # First, checkout the base branch
-        base_checkout_process = await asyncio.create_subprocess_exec(
-            'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'checkout', config.CLIENT_GIT_BRANCH,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        stdout, stderr = await base_checkout_process.communicate()
-
-        if base_checkout_process.returncode != 0:
-            logger.error(f"Error during git checkout of base branch '{config.CLIENT_GIT_BRANCH}': {stderr.decode()}")
-            return
-
-        # Then create and checkout the new branch from the base branch
-        checkout_process = await asyncio.create_subprocess_exec(
-            'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-            'checkout', '-b', str(git_branch_id),
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        stdout, stderr = await checkout_process.communicate()
-
-        if checkout_process.returncode != 0:
-            logger.error(f"Error during git checkout of new branch '{git_branch_id}': {stderr.decode()}")
-            return
-
-        logger.info(f"Repository cloned to {clone_dir}")
-
-        os.chdir(clone_dir)
-        await set_upstream_tracking(git_branch_id=git_branch_id)
-        await run_git_config_command()
-        await _git_pull_internal(git_branch_id=git_branch_id, repository_name=repository_name)
+    if not result.success:
+        logger.error(f"Failed to clone repository: {result.message}")
+        if result.error:
+            logger.error(f"Error: {result.error}")
 
 
 async def get_project_file_name(git_branch_id, file_name, repository_name: str, folder_name=None):

@@ -1,6 +1,7 @@
 """
 Git operations module for local repository management.
 Handles clone, pull, push, and other git commands.
+Supports both public repositories (personal access token) and private repositories (GitHub App).
 """
 
 import asyncio
@@ -10,6 +11,8 @@ from typing import List, Optional
 
 from common.config.config import config
 from services.github.models.types import GitOperationResult, CloneOptions, PushOptions, PullOptions
+from services.github.repository.url_parser import construct_repository_url, parse_repository_url
+from services.github.auth.installation_token_manager import InstallationTokenManager
 
 logger = logging.getLogger(__name__)
 
@@ -18,34 +21,83 @@ _git_operations_lock = asyncio.Lock()
 
 
 class GitOperations:
-    """Handles all local git command operations."""
-    
-    def __init__(self):
+    """Handles all local git command operations with dual-mode authentication."""
+
+    def __init__(self, installation_id: Optional[int] = None):
+        """Initialize git operations.
+
+        Args:
+            installation_id: GitHub App installation ID (for private repos)
+        """
         self._lock = _git_operations_lock
-    
+        self.installation_id = installation_id
+        self._installation_token_manager = None
+
+        if installation_id:
+            self._installation_token_manager = InstallationTokenManager()
+            logger.info(f"Git operations initialized with installation ID: {installation_id}")
+
+    async def _get_repository_url(
+        self,
+        repository_name: str,
+        repository_url: Optional[str] = None
+    ) -> str:
+        """Get repository URL with authentication.
+
+        Args:
+            repository_name: Repository name (used for public repos)
+            repository_url: Custom repository URL (used for private repos)
+
+        Returns:
+            Authenticated repository URL
+        """
+        # If custom URL provided (private repo), use installation token
+        if repository_url:
+            if self.installation_id and self._installation_token_manager:
+                token = await self._installation_token_manager.get_installation_token(self.installation_id)
+                url_info = parse_repository_url(repository_url)
+                return url_info.to_authenticated_url(token)
+            else:
+                # Custom URL without installation ID - use as-is (might fail if private)
+                logger.warning(f"Custom repository URL provided without installation ID: {repository_url}")
+                return repository_url
+
+        # Public repo - use config URL template
+        return config.REPOSITORY_URL.format(repository_name=repository_name)
+
     async def clone_repository(
         self,
         git_branch_id: str,
         repository_name: str,
         base_branch: Optional[str] = None,
+        repository_url: Optional[str] = None
     ) -> GitOperationResult:
         """Clone repository and create new branch.
-        
+
         Args:
             git_branch_id: Branch ID to create
             repository_name: Repository name
             base_branch: Base branch to checkout (defaults to config.CLIENT_GIT_BRANCH)
-            
+            repository_url: Custom repository URL (for private repos)
+
         Returns:
             GitOperationResult with success status and message
         """
         async with self._lock:
-            repository_url = config.REPOSITORY_URL.format(repository_name=repository_name)
-            clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
+            repo_url = await self._get_repository_url(repository_name, repository_url)
+
+            # Determine clone directory name
+            if repository_url:
+                url_info = parse_repository_url(repository_url)
+                clone_dir_name = url_info.repo_name
+            else:
+                clone_dir_name = repository_name
+
+            clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{clone_dir_name}"
             base_branch = base_branch or config.CLIENT_GIT_BRANCH
 
             if await self._repo_exists(clone_dir):
-                await self._pull_internal(git_branch_id, repository_name)
+                await self._pull_internal(git_branch_id, clone_dir_name, repository_url)
                 return GitOperationResult(
                     success=True,
                     message=f"Repository already exists at {clone_dir}, pulled latest changes"
@@ -60,7 +112,7 @@ class GitOperations:
                 )
 
             clone_process = await asyncio.create_subprocess_exec(
-                'git', 'clone', repository_url, clone_dir,
+                'git', 'clone', repo_url, clone_dir,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
@@ -102,7 +154,7 @@ class GitOperations:
             os.chdir(clone_dir)
             await self._set_upstream_tracking(git_branch_id)
             await self._run_git_config()
-            await self._pull_internal(git_branch_id, repository_name)
+            await self._pull_internal(git_branch_id, clone_dir_name, repository_url)
 
             return GitOperationResult(
                 success=True,
@@ -113,29 +165,39 @@ class GitOperations:
         self,
         git_branch_id: str,
         repository_name: str,
-        merge_strategy: str = "recursive"
+        merge_strategy: str = "recursive",
+        repository_url: Optional[str] = None
     ) -> GitOperationResult:
         """Pull latest changes from remote.
-        
+
         Args:
             git_branch_id: Branch ID
             repository_name: Repository name
             merge_strategy: Git merge strategy
-            
+            repository_url: Custom repository URL (for private repos)
+
         Returns:
             GitOperationResult with diff information
         """
         async with self._lock:
-            return await self._pull_internal(git_branch_id, repository_name, merge_strategy)
+            return await self._pull_internal(git_branch_id, repository_name, repository_url, merge_strategy)
     
     async def _pull_internal(
         self,
         git_branch_id: str,
         repository_name: str,
+        repository_url: Optional[str] = None,
         merge_strategy: str = "recursive"
     ) -> GitOperationResult:
         """Internal pull without lock."""
-        clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
+        # Determine clone directory name
+        if repository_url:
+            url_info = parse_repository_url(repository_url)
+            clone_dir_name = url_info.repo_name
+        else:
+            clone_dir_name = repository_name
+
+        clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{clone_dir_name}"
 
         try:
             checkout_process = await asyncio.create_subprocess_exec(
@@ -222,23 +284,32 @@ class GitOperations:
         git_branch_id: str,
         repository_name: str,
         file_paths: List[str],
-        commit_message: str
+        commit_message: str,
+        repository_url: Optional[str] = None
     ) -> GitOperationResult:
         """Push changes to remote repository.
-        
+
         Args:
             git_branch_id: Branch ID
             repository_name: Repository name
             file_paths: List of file paths to add
             commit_message: Commit message
-            
+            repository_url: Custom repository URL (for private repos)
+
         Returns:
             GitOperationResult with success status
         """
         async with self._lock:
-            await self._pull_internal(git_branch_id, repository_name)
+            await self._pull_internal(git_branch_id, repository_name, repository_url)
 
-            clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}"
+            # Determine clone directory name
+            if repository_url:
+                url_info = parse_repository_url(repository_url)
+                clone_dir_name = url_info.repo_name
+            else:
+                clone_dir_name = repository_name
+
+            clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{clone_dir_name}"
 
             try:
                 checkout_process = await asyncio.create_subprocess_exec(

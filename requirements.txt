@@ -2,7 +2,7 @@ Quart>=0.20.0
 quart-cors==0.7.0
 quart-openapi==1.7.2
 Hypercorn==0.17.3
-pyjwt
+pyjwt[crypto]
 jsonschema==4.23.0
 #grpc
 grpcio==1.64.1

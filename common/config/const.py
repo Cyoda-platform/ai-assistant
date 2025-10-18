@@ -251,6 +251,8 @@ QUESTION_OR_VALIDATE = (
 )
 GIT_BRANCH_PARAM="git_branch"
 REPOSITORY_NAME_PARAM="repository_name"
+REPOSITORY_URL_PARAM="repository_url"
+INSTALLATION_ID_PARAM="installation_id"
 PROGRAMMING_LANGUAGE_PARAM="programming_language"
 # === Numeric limits ===
 RATE_LIMIT = 300

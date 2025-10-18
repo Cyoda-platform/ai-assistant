@@ -39,84 +39,98 @@ from entity.model import WorkflowEntity
 class GitHubService:
     """
     Unified GitHub service providing all GitHub and Git functionality.
-    
+
     This is the main entry point for all GitHub-related operations in the application.
+    Supports both public repositories (personal access token) and private repositories (GitHub App).
     """
-    
-    def __init__(self, token: Optional[str] = None, owner: Optional[str] = None):
+
+    def __init__(
+        self,
+        token: Optional[str] = None,
+        owner: Optional[str] = None,
+        installation_id: Optional[int] = None
+    ):
         """Initialize GitHub service.
-        
+
         Args:
             token: GitHub API token (defaults to config)
             owner: Default repository owner (defaults to config)
+            installation_id: GitHub App installation ID (for private repos)
         """
-        self.api_client = GitHubAPIClient(token=token, owner=owner)
-        
+        self.installation_id = installation_id
+        self.api_client = GitHubAPIClient(token=token, owner=owner, installation_id=installation_id)
+
         self.workflows = WorkflowOperations(client=self.api_client)
         self.repositories = RepositoryOperations(client=self.api_client)
         self.collaborators = CollaboratorOperations(client=self.api_client)
-        
-        self.git = GitOperations()
+
+        self.git = GitOperations(installation_id=installation_id)
         self.branches = BranchManager()
         self.credentials = CredentialManager()
-        
+
         self.resolver_factory = RepositoryResolverFactory()
     
     async def clone_repository(
         self,
         git_branch_id: str,
         repository_name: str,
-        base_branch: Optional[str] = None
+        base_branch: Optional[str] = None,
+        repository_url: Optional[str] = None
     ) -> GitOperationResult:
         """Clone repository and create new branch.
-        
+
         Args:
             git_branch_id: Branch ID to create
             repository_name: Repository name
             base_branch: Base branch to checkout
-            
+            repository_url: Custom repository URL (for private repos)
+
         Returns:
             GitOperationResult with success status
         """
-        return await self.git.clone_repository(git_branch_id, repository_name, base_branch)
+        return await self.git.clone_repository(git_branch_id, repository_name, base_branch, repository_url)
     
     async def pull_changes(
         self,
         git_branch_id: str,
         repository_name: str,
-        merge_strategy: str = "recursive"
+        merge_strategy: str = "recursive",
+        repository_url: Optional[str] = None
     ) -> GitOperationResult:
         """Pull latest changes from remote.
-        
+
         Args:
             git_branch_id: Branch ID
             repository_name: Repository name
             merge_strategy: Git merge strategy
-            
+            repository_url: Custom repository URL (for private repos)
+
         Returns:
             GitOperationResult with diff information
         """
-        return await self.git.pull(git_branch_id, repository_name, merge_strategy)
+        return await self.git.pull(git_branch_id, repository_name, merge_strategy, repository_url)
     
     async def push_changes(
         self,
         git_branch_id: str,
         repository_name: str,
         file_paths: List[str],
-        commit_message: str
+        commit_message: str,
+        repository_url: Optional[str] = None
     ) -> GitOperationResult:
         """Push changes to remote repository.
-        
+
         Args:
             git_branch_id: Branch ID
             repository_name: Repository name
             file_paths: List of file paths to add
             commit_message: Commit message
-            
+            repository_url: Custom repository URL (for private repos)
+
         Returns:
             GitOperationResult with success status
         """
-        return await self.git.push(git_branch_id, repository_name, file_paths, commit_message)
+        return await self.git.push(git_branch_id, repository_name, file_paths, commit_message, repository_url)
     
     async def repository_exists(self, git_branch_id: str, repository_name: str) -> bool:
         """Check if repository directory exists locally.

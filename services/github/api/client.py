@@ -1,5 +1,6 @@
 """
 GitHub API client for making authenticated requests.
+Supports both personal access tokens and GitHub App installation tokens.
 """
 
 import logging
@@ -7,37 +8,60 @@ from typing import Optional, Dict, Any
 import httpx
 
 from common.config.config import config
+from services.github.auth.installation_token_manager import InstallationTokenManager
 
 logger = logging.getLogger(__name__)
 
 
 class GitHubAPIClient:
-    """Base client for GitHub API interactions."""
-    
+    """Base client for GitHub API interactions with dual-mode authentication."""
+
     BASE_URL = "https://api.github.com"
     API_VERSION = "2022-11-28"
-    
-    def __init__(self, token: Optional[str] = None, owner: Optional[str] = None):
+
+    def __init__(
+        self,
+        token: Optional[str] = None,
+        owner: Optional[str] = None,
+        installation_id: Optional[int] = None
+    ):
         """Initialize GitHub API client.
-        
+
         Args:
             token: GitHub API token (defaults to config)
             owner: Default repository owner (defaults to config)
+            installation_id: GitHub App installation ID (for private repos)
         """
         self.token = token or config.GITHUB_API_TOKEN
         self.owner = owner or config.GH_DEFAULT_OWNER
-        
-        if not self.token:
+        self.installation_id = installation_id
+        self._installation_token_manager = None
+
+        if installation_id:
+            self._installation_token_manager = InstallationTokenManager()
+            logger.info(f"GitHub API client initialized with installation ID: {installation_id}")
+        elif not self.token:
             logger.warning("GitHub API token not configured")
     
-    def _get_headers(self) -> Dict[str, str]:
+    async def _get_token(self) -> str:
+        """Get authentication token (installation token or personal access token).
+
+        Returns:
+            Authentication token
+        """
+        if self.installation_id and self._installation_token_manager:
+            return await self._installation_token_manager.get_installation_token(self.installation_id)
+        return self.token
+
+    async def _get_headers(self) -> Dict[str, str]:
         """Get headers for GitHub API requests.
-        
+
         Returns:
             Headers dictionary
         """
+        token = await self._get_token()
         return {
-            "Authorization": f"Bearer {self.token}",
+            "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": self.API_VERSION,
             "Content-Type": "application/json"
@@ -52,22 +76,22 @@ class GitHubAPIClient:
         timeout: float = 150.0
     ) -> Optional[Dict[str, Any]]:
         """Make a GitHub API request.
-        
+
         Args:
             method: HTTP method (GET, POST, PUT, DELETE)
             path: API path (without base URL)
             data: Request body data
             params: Query parameters
             timeout: Request timeout in seconds
-            
+
         Returns:
             Response data or None if request failed
-            
+
         Raises:
             Exception: If request fails
         """
         url = f"{self.BASE_URL}/{path}"
-        headers = self._get_headers()
+        headers = await self._get_headers()
         
         try:
             timeout_config = httpx.Timeout(timeout, connect=60.0)
@@ -165,14 +189,14 @@ class GitHubAPIClient:
     
     async def download_file(self, url: str) -> bytes:
         """Download a file from URL.
-        
+
         Args:
             url: File URL
-            
+
         Returns:
             File content as bytes
         """
-        headers = self._get_headers()
+        headers = await self._get_headers()
         
         try:
             timeout_config = httpx.Timeout(150.0, connect=60.0)

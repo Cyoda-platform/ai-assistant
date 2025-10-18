@@ -9,6 +9,7 @@ from common.exception.errors import init_error_handlers
 from common.utils.event_loop import BackgroundEventLoop
 from routes.chat import chat_bp
 from routes.deployment import deployment_bp
+from routes.github import github_bp
 from routes.labels_config import labels_config_bp
 from routes.token import token_bp
 from routes.workflow import workflow_bp
@@ -82,6 +83,7 @@ def create_app():
     app.register_blueprint(token_bp)
     app.register_blueprint(chat_bp)
     app.register_blueprint(deployment_bp)
+    app.register_blueprint(github_bp, url_prefix='/api/v1/github')
     app.register_blueprint(labels_config_bp)
     app.register_blueprint(workflow_bp)
 
