@@ -1,0 +1,19 @@
+{
+  "type": "agent",
+  "publish": false,
+  "allow_anonymous_users": true,
+  "model": {
+    "model_name": "gpt-4o"
+  },
+  "memory_tags": [],
+  "messages": [
+    {
+      "role": "system",
+      "content_from_file": "system_prompt"
+    }
+  ],
+  "tools": [],
+  "max_iteration": 5,
+  "approve": true
+}
+

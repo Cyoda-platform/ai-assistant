@@ -1,0 +1,92 @@
+{
+  "type": "function",
+  "function": {
+    "name": "generate_entity_config",
+    "description": "Generate an entity configuration with fields, types, and relationships based on the user's requirements",
+    "parameters": {
+      "type": "object",
+      "required": ["name", "fields"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Entity name in camelCase"
+        },
+        "version": {
+          "type": "string",
+          "description": "Entity version",
+          "default": "1"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of what this entity represents"
+        },
+        "fields": {
+          "type": "array",
+          "description": "List of entity fields",
+          "items": {
+            "type": "object",
+            "required": ["name", "type"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Field name"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["string", "integer", "boolean", "date", "array", "object", "float", "decimal"],
+                "description": "Field data type"
+              },
+              "required": {
+                "type": "boolean",
+                "description": "Whether this field is required",
+                "default": false
+              },
+              "description": {
+                "type": "string",
+                "description": "Field description"
+              },
+              "enum": {
+                "type": "array",
+                "description": "Allowed values for enum fields",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "default": {
+                "description": "Default value for the field"
+              }
+            }
+          }
+        },
+        "relationships": {
+          "type": "array",
+          "description": "Relationships to other entities",
+          "items": {
+            "type": "object",
+            "required": ["name", "type", "target"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Relationship name"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["one-to-one", "one-to-many", "many-to-one", "many-to-many"],
+                "description": "Relationship type"
+              },
+              "target": {
+                "type": "string",
+                "description": "Target entity name"
+              },
+              "description": {
+                "type": "string",
+                "description": "Relationship description"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

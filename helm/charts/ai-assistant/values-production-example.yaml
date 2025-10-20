@@ -43,9 +43,6 @@ container:
       
       # GitHub webhook secret
       GITHUB_WEBHOOK_SECRET: "eW91ci1wYXNzd29yZA=="  # base64: your-password
-      
-      # OPTION 2: PEM content as environment variable (if not using volume mount)
-      # Uncomment and set this if you want to use environment variable instead of volume mount
 
     # Additional ConfigMaps to load
     configMaps: []

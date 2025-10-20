@@ -1,0 +1,64 @@
+{
+  "type": "object",
+  "required": ["name", "entities", "environments"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Application name"
+    },
+    "description": {
+      "type": "string"
+    },
+    "language": {
+      "type": "string",
+      "enum": ["python", "java"],
+      "default": "python"
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "version"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "workflows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "version"],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "environments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+

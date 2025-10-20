@@ -1,0 +1,56 @@
+{
+  "type": "object",
+  "required": ["name", "version", "initialState", "states"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Workflow name"
+    },
+    "version": {
+      "type": "string",
+      "default": "1.0"
+    },
+    "description": {
+      "type": "string"
+    },
+    "initialState": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "states": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["transitions"],
+        "properties": {
+          "transitions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "next"],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "next": {
+                  "type": "string"
+                },
+                "manual": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

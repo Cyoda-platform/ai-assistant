@@ -1,0 +1,73 @@
+{
+  "type": "function",
+  "function": {
+    "name": "generate_workflow_config",
+    "description": "Generate a workflow configuration with states and transitions based on the user's requirements",
+    "parameters": {
+      "type": "object",
+      "required": ["name", "initialState", "states"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Workflow name"
+        },
+        "version": {
+          "type": "string",
+          "description": "Workflow version",
+          "default": "1.0"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of what this workflow manages"
+        },
+        "initialState": {
+          "type": "string",
+          "description": "The initial state of the workflow"
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether this workflow is active",
+          "default": true
+        },
+        "states": {
+          "type": "object",
+          "description": "Workflow states and their transitions",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["transitions"],
+            "properties": {
+              "transitions": {
+                "type": "array",
+                "description": "Possible transitions from this state",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "next"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Transition name"
+                    },
+                    "next": {
+                      "type": "string",
+                      "description": "Next state after this transition"
+                    },
+                    "manual": {
+                      "type": "boolean",
+                      "description": "Whether this transition requires manual trigger",
+                      "default": false
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Transition description"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

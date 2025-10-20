@@ -1,0 +1,82 @@
+{
+  "type": "function",
+  "function": {
+    "name": "generate_app_config",
+    "description": "Generate an application configuration with entities, workflows, and environments based on the user's requirements",
+    "parameters": {
+      "type": "object",
+      "required": ["name", "entities", "environments"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Application name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the application"
+        },
+        "language": {
+          "type": "string",
+          "enum": ["python", "java"],
+          "description": "Programming language for the application",
+          "default": "python"
+        },
+        "entities": {
+          "type": "array",
+          "description": "List of entities in the application",
+          "items": {
+            "type": "object",
+            "required": ["name", "version"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Entity name"
+              },
+              "version": {
+                "type": "string",
+                "description": "Entity version"
+              },
+              "workflows": {
+                "type": "array",
+                "description": "Workflows associated with this entity",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "version"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Workflow name"
+                    },
+                    "version": {
+                      "type": "string",
+                      "description": "Workflow version"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "environments": {
+          "type": "array",
+          "description": "List of deployment environments",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Environment name"
+              },
+              "description": {
+                "type": "string",
+                "description": "Environment description"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

@@ -1,0 +1,41 @@
+{
+  "type": "function",
+  "function": {
+    "name": "generate_environment_config",
+    "description": "Generate an environment configuration with settings and parameters based on the user's requirements",
+    "parameters": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Environment name (e.g., development, staging, production)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of this environment"
+        },
+        "config": {
+          "type": "object",
+          "description": "Environment-specific configuration settings",
+          "properties": {
+            "database_url": {
+              "type": "string",
+              "description": "Database connection URL"
+            },
+            "api_url": {
+              "type": "string",
+              "description": "API base URL"
+            },
+            "debug": {
+              "type": "boolean",
+              "description": "Whether debug mode is enabled",
+              "default": false
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

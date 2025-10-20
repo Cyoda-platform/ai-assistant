@@ -160,6 +160,62 @@ async def submit_workflow_question_route():
     return await chat_service.submit_workflow_question(question, workflow, user_file, user_files)
 
 
+@chat_bp.route('/canvas-questions', methods=['POST'])
+@rate_limit(const.RATE_LIMIT, timedelta(minutes=1), key_function=token_key_function)
+@auth_optional
+async def submit_canvas_question():
+    """
+    Submit a canvas question to generate entity, workflow, app config, or environment config.
+
+    Request body:
+    {
+        "chat_id": "optional-chat-uuid",
+        "question": "Create a Pet entity with name and age",
+        "response_type": "entity_json" | "workflow_json" | "app_config_json" | "environment_json",
+        "context": {
+            "app_name": "Pet Adoption System",
+            "existing_entities": ["adopter", "shelter"],
+            "language": "python"
+        }
+    }
+    """
+    header, user_id = await extract_auth_info()
+
+    req_data = await request.get_json()
+
+    chat_id = req_data.get('chat_id')
+    question = req_data.get('question')
+    response_type = req_data.get('response_type')
+    context = req_data.get('context', {})
+
+    # Validate required fields
+    if not question:
+        return jsonify({"error": "Missing required field: question"}), 400
+
+    if not response_type:
+        return jsonify({"error": "Missing required field: response_type"}), 400
+
+    # Validate response_type
+    valid_types = ['entity_json', 'workflow_json', 'app_config_json', 'environment_json']
+    if response_type not in valid_types:
+        return jsonify({
+            "error": "Invalid request",
+            "details": {
+                "field": "response_type",
+                "message": f"Must be one of: {', '.join(valid_types)}"
+            }
+        }), 400
+
+    result = await chat_service.submit_canvas_question(
+        chat_id=chat_id,
+        question=question,
+        response_type=response_type,
+        context=context
+    )
+
+    return jsonify(result), 400 if result.get("error") else 200
+
+
 @chat_bp.route('/<technical_id>/text-answers', methods=['POST'])
 @rate_limit(const.RATE_LIMIT, timedelta(minutes=1), key_function=token_key_function)
 @auth_optional

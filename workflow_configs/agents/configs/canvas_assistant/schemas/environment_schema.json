@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Environment name (e.g., dev, staging, prod)"
+    },
+    "description": {
+      "type": "string"
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "database_url": {
+          "type": "string"
+        },
+        "api_url": {
+          "type": "string"
+        },
+        "debug": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    }
+  }
+}
+

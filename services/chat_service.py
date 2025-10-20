@@ -393,6 +393,130 @@ class ChatService:
             response_format=WORKFLOW_RESPONSE_FORMAT
         )
 
+    async def submit_canvas_question(self, chat_id, question, response_type, context):
+        """
+        Submit a canvas question to generate entity, workflow, app config, or environment config.
+
+        Args:
+            chat_id: Optional chat ID to associate with this question
+            question: Natural language question
+            response_type: Type of config to generate (entity_json, workflow_json, app_config_json, environment_json)
+            context: Additional context (app_name, existing_entities, language, etc.)
+
+        Returns:
+            Response with message and hook structure
+        """
+        import json
+        from pathlib import Path
+        from common.schemas.canvas_schemas import get_response_format
+
+        # Map response_type to hook type
+        hook_type_map = {
+            'entity_json': 'entity_config',
+            'workflow_json': 'workflow_config',
+            'app_config_json': 'app_config',
+            'environment_json': 'environment_config'
+        }
+
+        hook_type = hook_type_map[response_type]
+
+        # Get response format from schemas
+        try:
+            response_format = get_response_format(response_type)
+        except ValueError as e:
+            logger.error(f"Invalid response_type: {e}")
+            return {
+                "error": "Invalid response type",
+                "details": {
+                    "message": str(e)
+                }
+            }
+        except Exception as e:
+            logger.error(f"Failed to load schema for {response_type}: {e}")
+            return {
+                "error": "Failed to generate configuration",
+                "details": {
+                    "message": f"Could not load schema: {str(e)}"
+                }
+            }
+
+        # Enhance question with context
+        context_str = ""
+        if context:
+            context_parts = []
+            if context.get('app_name'):
+                context_parts.append(f"Application: {context['app_name']}")
+            if context.get('existing_entities'):
+                context_parts.append(f"Existing entities: {', '.join(context['existing_entities'])}")
+            if context.get('existing_workflows'):
+                context_parts.append(f"Existing workflows: {', '.join(context['existing_workflows'])}")
+            if context.get('language'):
+                context_parts.append(f"Language: {context['language']}")
+
+            if context_parts:
+                context_str = f"\n\nContext:\n" + "\n".join(context_parts)
+
+        enhanced_question = f"{question}{context_str}"
+
+        # Load system prompt
+        prompt_path = Path('workflow_configs/agents/configs/canvas_assistant/prompts/system_prompt.md')
+        try:
+            with open(prompt_path, 'r') as f:
+                system_prompt = f.read().strip()
+        except Exception as e:
+            logger.error(f"Failed to load system prompt: {e}")
+            system_prompt = "You are a helpful AI assistant for generating application configurations."
+
+        # Call AI agent with canvas assistant config
+        try:
+            result = await self.ai_agent.run_agent(
+                methods_dict=None,
+                cls_instance=None,
+                entity=None,
+                technical_id=chat_id or "canvas_question",
+                tools=None,
+                model=ModelConfig(model_name='gpt-4o'),
+                tool_choice=None,
+                messages=[
+                    AIMessage(role="system", content=system_prompt),
+                    AIMessage(role="user", content=enhanced_question)
+                ],
+                response_format=response_format
+            )
+
+            # Parse JSON result
+            try:
+                config_data = json.loads(result) if isinstance(result, str) else result
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse AI response as JSON: {e}")
+                return {
+                    "error": "Failed to generate configuration",
+                    "details": {
+                        "message": "AI response was not valid JSON",
+                        "suggestion": "Please try rephrasing your question with more specific details"
+                    }
+                }
+
+            # Build response with hook
+            return {
+                "message": f"I've created a {hook_type.replace('_', ' ')} based on your requirements.",
+                "hook": {
+                    "type": hook_type,
+                    "action": "preview",
+                    "data": config_data
+                }
+            }
+
+        except Exception as e:
+            logger.exception(f"Failed to generate canvas config: {e}")
+            return {
+                "error": "Failed to generate configuration",
+                "details": {
+                    "message": str(e),
+                    "suggestion": "Please try rephrasing your question or providing more context"
+                }
+            }
+
     async def submit_text_answer(self, auth_header, technical_id, answer, user_files=None, user_file=None):
         # Convert single file to user_files for consistent processing
         if user_file and not user_files:
