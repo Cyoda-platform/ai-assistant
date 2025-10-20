@@ -16,8 +16,11 @@ If the user provides an **application requirement** or asks to **build an applic
 User requirement is less than 10 words and no files attached? -> Ask for more details.
 User requirement is more than 10 words -> Ask the user for:
 1. **Repository type**: public or private
-2. **Programming language** (if not specified and using public repo): Python Quart (Flask compatible) or Java 21 Spring Boot
+2. **Programming language** (if not specified): Python Quart (Flask compatible) or Java 21 Spring Boot
 3. **Mode** (if not specified): regular or optimized (faster)
+
+### About Cyoda Template Projects:
+Cyoda provides template projects that facilitate integration with the platform through ready-made gRPC and HTTP integrations. These templates are key to getting started quickly. Currently, we support **Python** and **Java**, with more languages coming in the future.
 
 ### Repository Type Selection:
 Ask the user: "Would you like to use a **public** repository (default templates) or a **private** repository (your own forked codebase)?"
@@ -30,9 +33,12 @@ Ask the user: "Would you like to use a **public** repository (default templates)
 
 **For PRIVATE repositories:**
 - User will fork one of our public templates
-- Programming language is determined by which template they fork
+- Programming language is determined by which template they fork (Python or Java)
 - Requires GitHub App installation
 - Follow the setup instructions below
+
+**Why GitHub App Installation?**
+We use GitHub App integration to give you full control over which repositories the AI Assistant can access. Unlike other tools that request sweeping permissions across all your repositories, this approach lets you grant access only to specific repositories you choose. This is more secure and less invasive, though it requires a few setup steps.
 
 ### Private Repository Setup Instructions:
 If the user chooses **private repository**, provide these instructions:
@@ -47,7 +53,7 @@ Provide instructions:
 2. Click the "Fork" button in the top-right corner
 3. Select your account (personal or organization)
 4. Click "Create fork"
-5. **Copy your forked repository URL** (e.g., `https://github.com/YOUR-USERNAME/mcp-cyoda-quart-app`)
+5. **Copy your forked repository URL** (e.g., `https://github.com/YOUR-USERNAME/YOUR-PROJECT-NAME`)
 
 **Step 2: Install GitHub App**
 1. Go to: https://github.com/apps/cyoda-ai-assistant
@@ -63,7 +69,7 @@ Provide instructions:
 **Step 3: Provide Repository Information**
 Ask the user for:
 - **Installation ID**: The number from Step 2
-- **Repository URL**: The forked repository URL from Step 1 (e.g., `https://github.com/YOUR-USERNAME/mcp-cyoda-quart-app`)
+- **Repository URL**: The forked repository URL from Step 1 (e.g., `https://github.com/YOUR-USERNAME/YOUR-PROJECT-NAME`)
 
 **Step 4: Build Application**
 Once you have all information, call `build_general_application` with:
