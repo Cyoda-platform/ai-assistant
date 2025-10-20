@@ -112,10 +112,8 @@ USER appuser
 ENV PATH="/home/appuser/.local/bin:$PATH"
 RUN pipx ensurepath
 
-# Configure Git for appuser with credentials
-RUN git config --global credential.helper store && \
-    echo "https://${GITHUB_USERNAME}:${GITHUB_API_TOKEN}@github.com" > ~/.git-credentials && \
-    git config --global user.email "app-builder@example.com" && \
+# Configure Git for appuser (GitHub App authentication is used for repository access)
+RUN git config --global user.email "app-builder@example.com" && \
     git config --global user.name "app-builder"
 
 # Expose port
