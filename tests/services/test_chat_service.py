@@ -54,56 +54,7 @@ def make_jwt(payload: dict) -> str:
     return "dummy.jwt.token"
 
 
-@pytest.mark.parametrize("header,exc_type", [
-    (None, InvalidTokenException),
-    ("", InvalidTokenException),
-    ("Bearer ", InvalidTokenException),
-])
-def test_get_user_id_no_header(header, exc_type, service_mocks):
-    svc, _, _ = service_mocks
-    with pytest.raises(exc_type):
-        svc._get_user_id(header)
 
-
-def test_get_user_id_invalid_token(monkeypatch, service_mocks):
-    svc, _, _ = service_mocks
-    # jwt.decode in _get_user_id should raise InvalidTokenError → method returns None
-    monkeypatch.setattr(jwt, "decode", lambda *args, **kwargs: (_ for _ in ()).throw(jwt.InvalidTokenError()))
-    assert svc._get_user_id("Bearer foo.bar") is None
-
-
-def test_get_user_id_expired_token(monkeypatch, service_mocks):
-    svc, _, _ = service_mocks
-    # jwt.decode in _get_user_id should raise ExpiredSignatureError → method raises TokenExpiredException
-    monkeypatch.setattr(jwt, "decode", lambda *args, **kwargs: (_ for _ in ()).throw(jwt.ExpiredSignatureError()))
-    with pytest.raises(TokenExpiredException):
-        svc._get_user_id("Bearer expired.token")
-
-
-def test_get_user_id_success_non_guest(monkeypatch, service_mocks):
-    svc, _, _ = service_mocks
-    # jwt.decode returns payload with caas_org_id
-    monkeypatch.setattr(jwt, "decode", lambda *args, **kwargs: {"caas_org_id": "user123"})
-    user_id = svc._get_user_id(f"Bearer {make_jwt({'caas_org_id': 'user123'})}")
-    assert user_id == "user123"
-
-
-def test_get_user_id_success_guest(monkeypatch, service_mocks):
-    svc, _, _ = service_mocks
-    # jwt.decode returns a guest ID
-    monkeypatch.setattr(jwt, "decode", lambda *args, **kwargs: {"caas_org_id": "guest.foo"})
-    called = False
-
-    def fake_validate(token, *args, **kwargs):
-        nonlocal called
-        called = True
-
-    # patch the validate_token that chat_service imported
-    monkeypatch.setattr(chat_service, "validate_token", fake_validate)
-
-    user_id = svc._get_user_id(f"Bearer {make_jwt({'caas_org_id': 'guest.foo'})}")
-    assert user_id == "guest.foo"
-    assert called, "validate_token should be called for guest tokens"
 
 
 def test_validate_answer_empty_no_file(service_mocks):

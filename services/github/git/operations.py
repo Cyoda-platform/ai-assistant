@@ -86,13 +86,9 @@ class GitOperations:
         async with self._lock:
             repo_url = await self._get_repository_url(repository_name, repository_url)
 
-            # Determine clone directory name
-            if repository_url:
-                url_info = parse_repository_url(repository_url)
-                clone_dir_name = url_info.repo_name
-            else:
-                clone_dir_name = repository_name
-
+            # Always use repository_name as the clone directory name
+            # This ensures consistency regardless of the actual repository URL
+            clone_dir_name = repository_name
             clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{clone_dir_name}"
             base_branch = base_branch or config.CLIENT_GIT_BRANCH
 
@@ -302,13 +298,8 @@ class GitOperations:
         async with self._lock:
             await self._pull_internal(git_branch_id, repository_name, repository_url)
 
-            # Determine clone directory name
-            if repository_url:
-                url_info = parse_repository_url(repository_url)
-                clone_dir_name = url_info.repo_name
-            else:
-                clone_dir_name = repository_name
-
+            # Always use repository_name as the clone directory name
+            clone_dir_name = repository_name
             clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{clone_dir_name}"
 
             try:

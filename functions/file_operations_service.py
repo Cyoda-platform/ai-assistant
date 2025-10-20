@@ -417,7 +417,7 @@ class FileOperationsService(BaseWorkflowService):
                 self.logger.info(f"Cloning public repository: {repository_name}")
 
             # Use safe clone and file operations (utils.py handles all concurrency safety)
-            clone_result = await clone_repo(
+            await clone_repo(
                 git_branch_id=technical_id,
                 repository_name=repository_name,
                 installation_id=installation_id,

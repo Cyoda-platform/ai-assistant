@@ -2,7 +2,6 @@ import logging
 import random
 from datetime import datetime
 
-import jwt
 from typing import List, Tuple
 import common.config.const as const
 from common.config.config import config
@@ -23,7 +22,7 @@ from common.utils.chat_util_functions import (
 )
 from common.utils.utils import (
     current_timestamp,
-    validate_token, send_cyoda_request, get_current_timestamp_num,
+    send_cyoda_request, get_current_timestamp_num,
 )
 from entity.chat.chat import ChatEntity, ChatBusinessEntity
 from entity.model import FlowEdgeMessage, ChatMemory, ModelConfig, AgenticFlowEntity, AIMessage, ChatFlow, \
@@ -43,8 +42,9 @@ class ChatService:
         self.validation_service = UserAnswerValidationService(entity_service, cyoda_auth_service)
 
     async def transfer_chats(self, guest_token, auth_header):
-        guest_user_id = self._get_user_id(auth_header=f"Bearer {guest_token}")
-        user_id = self._get_user_id(auth_header=auth_header)
+        from common.utils.auth_utils import get_user_id
+        guest_user_id = await get_user_id(auth_header=f"Bearer {guest_token}")
+        user_id = await get_user_id(auth_header=auth_header)
 
         transfer_chats_entities = await self.data_service.get_entities_by_user_name(user_id=user_id,
                                                                                     model=const.ModelName.TRANSFER_CHATS_ENTITY.value)
@@ -568,7 +568,8 @@ class ChatService:
     # ─── Private helpers ─────────────────────────────────────────────────────
 
     async def _get_business_chat_for_user(self, auth_header, technical_id, is_super: bool = False):
-        user_id, token_is_super = self._get_user_info(auth_header)
+        from common.utils.auth_utils import get_user_info
+        user_id, token_is_super = await get_user_info(auth_header)
         if not user_id:
             raise InvalidTokenException()
 
@@ -618,54 +619,7 @@ class ChatService:
         if not transfer_chats or not has_transfer:
             raise InvalidTokenException()
 
-    def _get_user_id(self, auth_header):
-        if not auth_header:
-            raise InvalidTokenException()
-        token = auth_header.split(" ")[1]
-        if not token:
-            raise InvalidTokenException()
-        try:
-            decoded = jwt.decode(token, options={"verify_signature": False})
-            user_id = decoded.get("caas_org_id")
-            if not user_id:
-                raise InvalidTokenException()
-            if user_id.startswith("guest."):
-                validate_token(token)
-            return user_id
-        except jwt.ExpiredSignatureError:
-            raise TokenExpiredException()
-        except jwt.InvalidTokenError:
-            return None
 
-    def _get_user_info(self, auth_header):
-        """
-        Extract user ID and super user status from JWT token.
-
-        Returns:
-            tuple: (user_id, is_super_user)
-        """
-        if not auth_header:
-            raise InvalidTokenException()
-        token = auth_header.split(" ")[1]
-        if not token:
-            raise InvalidTokenException()
-        try:
-            decoded = jwt.decode(token, options={"verify_signature": False})
-            user_id = decoded.get("caas_org_id")
-            if not user_id:
-                raise InvalidTokenException()
-
-            # Extract super user status (defaults to False if not present)
-            is_super = decoded.get("super", False)
-
-            if user_id.startswith("guest."):
-                validate_token(token)
-
-            return user_id, is_super
-        except jwt.ExpiredSignatureError:
-            raise TokenExpiredException()
-        except jwt.InvalidTokenError:
-            return None, False
 
     async def _list_all_chats(self, target_user_id: str = None) -> List[dict]:
         """
