@@ -85,7 +85,7 @@ spec:
       - name: github-app-key
         secret:
           secretName: github-app-private-key
-          defaultMode: 0440  # Read-only for owner and group (octal)
+          defaultMode: 0444  # Read-only for all users (octal)
 ```
 
 ### Step 3: Apply Deployment
@@ -418,7 +418,7 @@ spec:
       - name: github-app-key
         secret:
           secretName: github-app-private-key
-          defaultMode: 0440
+          defaultMode: 0444
 ---
 apiVersion: v1
 kind: Service

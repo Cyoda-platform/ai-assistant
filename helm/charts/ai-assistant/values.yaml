@@ -55,7 +55,11 @@ autoscaling:
 
 extraVolumeMounts: {}
 extraVolumes: {}
-securityContext: {}
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  readOnlyRootFilesystem: false
 tolerations: { }
 priorityClassName: { }
 serviceAccountName: { }
