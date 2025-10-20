@@ -19,11 +19,10 @@ User requirement is more than 10 words -> Ask the user for:
 2. **Programming language** (if not specified): Python Quart (Flask compatible) or Java 21 Spring Boot
 3. **Mode** (if not specified): regular or optimized (faster)
 
-### About Cyoda Template Projects:
-Cyoda provides template projects that facilitate integration with the platform through ready-made gRPC and HTTP integrations. These templates are key to getting started quickly. Currently, we support **Python** and **Java**, with more languages coming in the future.
-
 ### Repository Type Selection:
 Ask the user: "Would you like to use a **public** repository (default templates) or a **private** repository (your own forked codebase)?"
+
+**IMPORTANT: Always mention that we currently support Python and Java, with more languages coming in the future.**
 
 **For PUBLIC repositories:**
 - Use default Cyoda templates
@@ -37,8 +36,9 @@ Ask the user: "Would you like to use a **public** repository (default templates)
 - Requires GitHub App installation
 - Follow the setup instructions below
 
-**Why GitHub App Installation?**
-We use GitHub App integration to give you full control over which repositories the AI Assistant can access. Unlike other tools that request sweeping permissions across all your repositories, this approach lets you grant access only to specific repositories you choose. This is more secure and less invasive, though it requires a few setup steps.
+**CRITICAL: When providing private repository setup instructions, ALWAYS include these explanations:**
+1. **Why fork a template?** The template provides the necessary integration structure for your Cyoda application.
+2. **Why GitHub App installation?** This gives you full control over which repositories the AI Assistant can access, rather than granting broad permissions across all your repositories. It requires a few setup steps but is more secure.
 
 ### Private Repository Setup Instructions:
 If the user chooses **private repository**, provide these instructions:
