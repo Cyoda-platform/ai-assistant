@@ -150,14 +150,13 @@ class ApplicationBuilderService(BaseWorkflowService):
             params[const.PROGRAMMING_LANGUAGE_PARAM] = programming_language
 
             # Calculate and store repository_name in workflow_cache
-            # For custom repos, extract from URL; otherwise use language-based resolution
+            # IMPORTANT: Always use environment variable name (JAVA_REPOSITORY_NAME or PYTHON_REPOSITORY_NAME)
+            # as the directory name, regardless of the actual repository name in the URL.
+            # This ensures consistent directory naming for scripts that reference the cloned directory.
+            repository_name = resolve_repository_name_with_language_param(entity, programming_language)
+
             if repository_url:
-                from services.github.repository.url_parser import parse_repository_url
-                url_info = parse_repository_url(repository_url)
-                repository_name = url_info.repo_name
                 params[const.REPOSITORY_URL_PARAM] = repository_url
-            else:
-                repository_name = resolve_repository_name_with_language_param(entity, programming_language)
 
             params[const.REPOSITORY_NAME_PARAM] = repository_name
 
@@ -264,14 +263,12 @@ class ApplicationBuilderService(BaseWorkflowService):
             repository_url = params.get(const.REPOSITORY_URL_PARAM, entity.workflow_cache.get(const.REPOSITORY_URL_PARAM))
 
             # Get repository_name from cache or calculate it
+            # IMPORTANT: Always use environment variable name (JAVA_REPOSITORY_NAME or PYTHON_REPOSITORY_NAME)
+            # as the directory name, regardless of the actual repository name in the URL.
+            # This ensures consistent directory naming for scripts that reference the cloned directory.
             repository_name = entity.workflow_cache.get(const.REPOSITORY_NAME_PARAM)
             if not repository_name:
-                if repository_url:
-                    from services.github.repository.url_parser import parse_repository_url
-                    url_info = parse_repository_url(repository_url)
-                    repository_name = url_info.repo_name
-                else:
-                    repository_name = resolve_repository_name_with_language_param(entity, programming_language)
+                repository_name = resolve_repository_name_with_language_param(entity, programming_language)
 
             # Validate branch (no modifications to main branch allowed)
             if git_branch_id and git_branch_id == "main":

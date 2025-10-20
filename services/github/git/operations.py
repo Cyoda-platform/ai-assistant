@@ -76,21 +76,31 @@ class GitOperations:
 
         Args:
             git_branch_id: Branch ID to create
-            repository_name: Repository name
+            repository_name: Repository name (should be JAVA_REPOSITORY_NAME or PYTHON_REPOSITORY_NAME from config)
             base_branch: Base branch to checkout (defaults to config.CLIENT_GIT_BRANCH)
             repository_url: Custom repository URL (for private repos)
 
         Returns:
             GitOperationResult with success status and message
+
+        Note:
+            The repository_name parameter MUST be the value from config.JAVA_REPOSITORY_NAME or
+            config.PYTHON_REPOSITORY_NAME to ensure consistent directory naming regardless of the
+            actual repository name in the URL. This is critical for scripts that reference the
+            cloned directory.
         """
         async with self._lock:
             repo_url = await self._get_repository_url(repository_name, repository_url)
 
-            # Always use repository_name as the clone directory name
-            # This ensures consistency regardless of the actual repository URL
+            # CRITICAL: Always use repository_name as the clone directory name
+            # This ensures consistency regardless of the actual repository URL or repository name
+            # The repository_name parameter should always be config.JAVA_REPOSITORY_NAME or
+            # config.PYTHON_REPOSITORY_NAME, NOT the actual repository name from the URL
             clone_dir_name = repository_name
             clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{clone_dir_name}"
             base_branch = base_branch or config.CLIENT_GIT_BRANCH
+
+            logger.info(f"Cloning repository to: {clone_dir} (using directory name: {clone_dir_name})")
 
             if await self._repo_exists(clone_dir):
                 await self._pull_internal(git_branch_id, clone_dir_name, repository_url)
@@ -107,6 +117,9 @@ class GitOperations:
                     message=f"Directory created at {clone_dir} (CLONE_REPO=false)"
                 )
 
+            # Clone with explicit target directory to ensure we use repository_name as the directory name
+            # This is crucial: git clone <url> <directory> will clone into <directory> regardless of
+            # the repository name in the URL
             clone_process = await asyncio.create_subprocess_exec(
                 'git', 'clone', repo_url, clone_dir,
                 stdout=asyncio.subprocess.PIPE,
@@ -186,13 +199,11 @@ class GitOperations:
         merge_strategy: str = "recursive"
     ) -> GitOperationResult:
         """Internal pull without lock."""
-        # Determine clone directory name
-        if repository_url:
-            url_info = parse_repository_url(repository_url)
-            clone_dir_name = url_info.repo_name
-        else:
-            clone_dir_name = repository_name
-
+        # CRITICAL: Always use repository_name as the clone directory name
+        # This ensures consistency regardless of the actual repository URL or repository name
+        # The repository_name parameter should always be config.JAVA_REPOSITORY_NAME or
+        # config.PYTHON_REPOSITORY_NAME, NOT the actual repository name from the URL
+        clone_dir_name = repository_name
         clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{clone_dir_name}"
 
         try:
