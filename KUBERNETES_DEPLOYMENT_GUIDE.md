@@ -85,7 +85,7 @@ spec:
       - name: github-app-key
         secret:
           secretName: github-app-private-key
-          defaultMode: 0400  # Read-only for owner (octal)
+          defaultMode: 0440  # Read-only for owner and group (octal)
 ```
 
 ### Step 3: Apply Deployment
@@ -418,7 +418,7 @@ spec:
       - name: github-app-key
         secret:
           secretName: github-app-private-key
-          defaultMode: 0400
+          defaultMode: 0440
 ---
 apiVersion: v1
 kind: Service
@@ -458,7 +458,12 @@ kubectl exec -it deployment/ai-assistant -n your-namespace -- ls -la /secrets/
 kubectl exec -it deployment/ai-assistant -n your-namespace -- ls -la /secrets/private-key.pem
 ```
 
-**Should show:** `-r-------- 1 root root`
+**Should show:** `-r--r----- 1 root root` (mode 0440)
+
+**If you see permission denied errors:**
+- Ensure `defaultMode: 0440` is set in the secret volume (not 0400)
+- The container runs as non-root user (UID 1000) with fsGroup 1000
+- Mode 0440 allows the group to read the file
 
 ### Issue: "Invalid private key"
 

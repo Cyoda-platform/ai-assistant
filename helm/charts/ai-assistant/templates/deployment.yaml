@@ -53,7 +53,7 @@ spec:
         - name: github-app-key
           secret:
             secretName: {{ .Values.githubApp.privateKey.secretName }}
-            defaultMode: 0400
+            defaultMode: 0440
         {{- end }}
         {{- with .Values.extraVolumes }}
         {{- tpl . $ | nindent 8 }}
