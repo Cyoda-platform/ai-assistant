@@ -63,7 +63,7 @@ class AuggieProcessor:
             model = config.get("model", "")
 
             if not script_path:
-                return "Error: script_path is required in Auggie agent configuration"
+                return "Error: script_path is required in CLI agent configuration"
 
             # Validate agent type
             if config.get("type") != "agent" or config.get("agent_type") != "auggie":
@@ -77,7 +77,7 @@ class AuggieProcessor:
                 return f"Error: Script not found at path: {resolved_script_path}"
 
             # Execute the script asynchronously
-            logger.info(f"🚀 Executing Auggie script: {script_path}")
+            logger.info(f"🚀 Executing CLI script: {script_path}")
             logger.info(f"🎯 Model: {model}")
 
             # Get workspace and branch info from entity
@@ -104,10 +104,10 @@ class AuggieProcessor:
 
             # Save all entity changes after successful script execution
             if result:
-                logger.info("💾 Saving entity changes after Auggie script execution")
+                logger.info("💾 Saving entity changes after CLI script execution")
                 commit_result = await self._commit_all_changes(branch_id, repository_name)
                 if commit_result["success"]:
-                    logger.info(f"🎉 [{branch_id}] All Auggie tasks completed and committed successfully!")
+                    logger.info(f"🎉 [{branch_id}] All CLI tasks completed and committed successfully!")
                     # Send final commit notification
                     if commit_result["had_changes"]:
                         await self._send_commit_notification(
@@ -121,8 +121,8 @@ class AuggieProcessor:
             return result
 
         except Exception as e:
-            logger.exception(f"Error in Auggie agent processing: {e}")
-            return f"Sorry, I'm having trouble with the Auggie agent: {str(e)}"
+            logger.exception(f"Error in CLI agent processing: {e}")
+            return f"Sorry, I'm having trouble with the CLI agent: {str(e)}"
 
     async def _execute_script(
             self,
@@ -479,7 +479,7 @@ class AuggieProcessor:
             work_dir = f"{config.PROJECT_DIR}/{branch_id}/{repository_name}"
 
             # Generate commit message
-            commit_message = f"Generated code using Auggie CLI - tasks completed"
+            commit_message = f"Generated code using CLI - tasks completed"
             logger.info(f"📁 [{branch_id}] Working in directory: {work_dir}")
             logger.info(f"💬 [{branch_id}] Commit message: {commit_message}")
 
@@ -509,7 +509,7 @@ class AuggieProcessor:
 
             # If return code is 0, there are no changes to commit
             if process.returncode == 0:
-                logger.info(f"ℹ️ [{branch_id}] No changes to commit from Auggie tasks")
+                logger.info(f"ℹ️ [{branch_id}] No changes to commit from CLI tasks")
                 return {"success": True, "had_changes": False, "diff": ""}
 
             # Get git diff stats before committing
@@ -552,11 +552,11 @@ class AuggieProcessor:
                 logger.error(f"❌ [{branch_id}] Git push failed: {stderr.decode('utf-8')}")
                 return {"success": False, "had_changes": True, "diff": git_diff}
 
-            logger.info(f"🎉 [{branch_id}] Successfully committed and pushed Auggie changes: {commit_message}")
+            logger.info(f"🎉 [{branch_id}] Successfully committed and pushed CLI changes: {commit_message}")
             return {"success": True, "had_changes": True, "diff": git_diff}
 
         except Exception as e:
-            logger.exception(f"Error committing Auggie changes: {e}")
+            logger.exception(f"Error committing CLI changes: {e}")
             return {"success": False, "had_changes": False, "diff": ""}
 
     async def _send_commit_notification(self, entity: AgenticFlowEntity, branch_id: str, repository_name: str,

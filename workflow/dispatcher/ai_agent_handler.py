@@ -105,7 +105,7 @@ class AIAgentHandler:
                 self._background_tasks.add(task)
                 # Remove task from set when it completes to prevent memory leaks
                 task.add_done_callback(self._background_tasks.discard)
-                response = "Auggie process started successfully. You will be notified when it completes."
+                response = "CLI process started successfully. You will be notified when it completes."
             elif not config.get("jobs"):
                 await self._append_messages(entity=entity, memory=memory, config=config, finished_flow=finished_flow)
                 # Get memory messages including input data
@@ -138,7 +138,7 @@ class AIAgentHandler:
 
             else:
                 # No specific processing type found
-                response = "Configuration error: No valid processing type found (jobs or auggie)"
+                response = "Configuration error: No valid processing type found (jobs or cli)"
 
             return response
 
@@ -524,11 +524,11 @@ class AIAgentHandler:
             tasks = config.get("tasks", [])
 
             if not tasks:
-                return False, "Auggie config missing tasks array"
+                return False, "CLI config missing tasks array"
 
             for i, task in enumerate(tasks):
                 if not task.get("instruction"):
-                    return False, f"Auggie task {i} missing instruction"
+                    return False, f"CLI task {i} missing instruction"
 
         # Add more validation rules as needed
 
@@ -675,19 +675,19 @@ class AIAgentHandler:
             technical_id: Technical identifier
         """
         try:
-            logger.info(f"🚀 Starting Auggie background task for entity {technical_id}")
+            logger.info(f"🚀 Starting CLI background task for entity {technical_id}")
 
             # Run the Auggie processor
             response = await self.auggie_processor.process_auggie_agent(config, entity, memory, technical_id)
 
-            logger.info(f"✅ Auggie background task completed for entity {technical_id}")
-            logger.debug(f"Auggie response: {response[:200]}{'...' if len(response) > 200 else ''}")
+            logger.info(f"✅ CLI background task completed for entity {technical_id}")
+            logger.debug(f"CLI response: {response[:200]}{'...' if len(response) > 200 else ''}")
 
             # Update entity with 'complete_generation' transition
             await self._trigger_complete_generation_transition(technical_id, entity)
 
         except Exception as e:
-            logger.exception(f"❌ Error in Auggie background task for entity {technical_id}: {e}")
+            logger.exception(f"❌ Error in CLI background task for entity {technical_id}: {e}")
             # Optionally, you could trigger an error transition here
             # await self._trigger_error_transition(technical_id, entity, str(e))
 
