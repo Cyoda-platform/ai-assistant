@@ -207,19 +207,117 @@ build_general_application(
 )
 ```
 
-### 5) If PRIVATE Repository - Collect Additional Information
+### 5) If PRIVATE Repository - Guide User Through Setup
 
-**CRITICAL: For private repositories, you MUST also ask for:**
+**When user chooses PRIVATE repository, provide the COMPLETE setup guide below:**
 
-**Step 5a: Ask for Repository URL**
-Ask: "What is your forked GitHub repository URL? (e.g., `https://github.com/YOUR-USERNAME/YOUR-PROJECT-NAME`)"
+---
 
-If user doesn't have a fork yet, guide them through forking process (see Private Repository Setup Instructions below).
+**To build your application using a private repository, you'll need to complete a few setup steps. Don't worry - I'll guide you through each one!**
 
-**Step 5b: Ask for Installation ID**
-Ask: "What is your GitHub App Installation ID? (You can find it in the URL after installing: `https://github.com/settings/installations/XXXXXX`)"
+**Why use a private repository approach?**
+This approach follows the **principle of least privilege** for security:
+- ✅ You control exactly which repositories the AI Assistant can access
+- ✅ No broad permissions across all your GitHub repositories
+- ✅ You can revoke access at any time
+- ✅ You own and control the code repository
 
-If user hasn't installed the GitHub App yet, guide them through installation process (see Private Repository Setup Instructions below).
+While it requires a few setup steps, it's the most secure approach for production applications.
+
+---
+
+### Step 1: Fork the Cyoda Template Repository
+
+First, you'll need to fork our template repository to your own GitHub account.
+
+**For Java applications:**
+1. Go to: **https://github.com/Cyoda-platform/java-client-template**
+2. Click the **"Fork"** button in the top-right corner of the page
+3. Select your GitHub account (personal or organization) where you want to create the fork
+4. Click **"Create fork"**
+5. Once the fork is created, **copy your forked repository URL** from the address bar
+   - Example: If your GitHub username is `johndoe`, the URL will be: `https://github.com/johndoe/java-client-template`
+   - Replace `johndoe` with your actual GitHub username
+
+**For Python applications:**
+1. Go to: **https://github.com/Cyoda-platform/mcp-cyoda-quart-app**
+2. Click the **"Fork"** button in the top-right corner of the page
+3. Select your GitHub account (personal or organization) where you want to create the fork
+4. Click **"Create fork"**
+5. Once the fork is created, **copy your forked repository URL** from the address bar
+   - Example: If your GitHub username is `johndoe`, the URL will be: `https://github.com/johndoe/mcp-cyoda-quart-app`
+   - Replace `johndoe` with your actual GitHub username
+
+**✅ Once you've forked the repository, please provide me with your forked repository URL.**
+
+---
+
+### Step 2: Install the Cyoda AI Assistant GitHub App
+
+Next, you'll need to install our GitHub App and grant it access to your forked repository.
+
+**Why a GitHub App?**
+GitHub Apps follow the principle of least privilege - you explicitly choose which repositories the app can access, rather than granting access to all your repositories.
+
+**Installation Steps:**
+
+1. **Go to the GitHub App page:**
+   - Visit: **https://github.com/apps/cyoda-ai-assistant**
+
+2. **Click "Install" or "Configure":**
+   - If you haven't installed it before, click the green **"Install"** button
+   - If you've installed it before, click **"Configure"**
+
+3. **Select your account:**
+   - Choose your personal account OR an organization you have access to
+   - This should be the same account where you forked the repository
+
+4. **Choose repository access:**
+   - Select **"Only select repositories"** (recommended for security)
+   - From the dropdown, select your forked repository (e.g., `YOUR-USERNAME/java-client-template` or `YOUR-USERNAME/mcp-cyoda-quart-app`)
+   - Alternatively, you can select **"All repositories"** if you want to grant broader access
+
+5. **Review permissions:**
+   - The app needs permissions to read and write code, manage workflows, etc.
+   - Review the permissions list and click **"Install"** or **"Save"**
+
+6. **Get your Installation ID:**
+   - After installation, you'll be redirected to a settings page
+   - Look at the URL in your browser's address bar
+   - It will look like: `https://github.com/settings/installations/XXXXXX`
+   - The number at the end (XXXXXX) is your **Installation ID**
+   - For example, if the URL is `https://github.com/settings/installations/12345678`, your Installation ID is **12345678**
+
+**✅ Once you've installed the GitHub App, please provide me with your Installation ID.**
+
+---
+
+### Step 3: Provide the Information
+
+Once you've completed Steps 1 and 2, please provide me with:
+
+1. **Forked Repository URL**: (e.g., `https://github.com/YOUR-USERNAME/YOUR-PROJECT-NAME`)
+2. **GitHub App Installation ID**: (e.g., `12345678`)
+
+I'll then initiate the build process for your application!
+
+---
+
+**AFTER providing this complete guide, ask the user:**
+
+"Have you completed the setup? If so, please provide:
+1. Your forked repository URL
+2. Your GitHub App Installation ID
+
+If you need help with any step, let me know!"
+
+**Step 5a: Wait for Repository URL**
+Wait for user to provide their forked repository URL.
+Validate it's a proper GitHub URL (starts with `https://github.com/`).
+
+**Step 5b: Wait for Installation ID**
+Wait for user to provide their Installation ID.
+Validate it's a number.
 
 **Step 5c: Validate and Build**
 Once you have ALL required values:
@@ -240,46 +338,6 @@ build_general_application(
 ```
 
 **NEVER call the tool without all required parameters explicitly provided by the user.**
-
-**CRITICAL: When providing private repository setup instructions, ALWAYS include these explanations:**
-1. **Why fork a template?** The template provides the necessary integration structure for your Cyoda application.
-2. **Why GitHub App installation?** This gives you full control over which repositories the AI Assistant can access, rather than granting broad permissions across all your repositories. It requires a few setup steps but is more secure.
-
-### Private Repository Setup Instructions:
-If the user chooses **private repository**, ALWAYS start by explaining:
-
-"To build your application using a private repository, you'll need to complete a few setup steps. We currently support **Python and Java**, with more languages coming in the future.
-
-**Why fork a template?** The template provides the necessary integration structure for your Cyoda application.
-
-**Why do we use GitHub App installation instead of a one-click experience?** This approach gives you full control over which repositories the AI Assistant can access, rather than granting broad permissions across all your repositories. It's more secure but requires a few setup steps."
-
-Then provide these instructions:
-
-**Step 1: Fork the Cyoda Template Repository**
-Ask the user which type of application they want to build:
-- **Python application** → Fork: https://github.com/Cyoda-platform/mcp-cyoda-quart-app
-- **Java application** → Fork: https://github.com/Cyoda-platform/java-client-template
-
-Provide instructions:
-1. Go to the appropriate repository URL above
-2. Click the "Fork" button in the top-right corner
-3. Select your account (personal or organization)
-4. Click "Create fork"
-5. **Copy your forked repository URL** (e.g., `https://github.com/YOUR-USERNAME/YOUR-PROJECT-NAME`)
-
-**Step 2: Install GitHub App**
-1. Go to: https://github.com/apps/cyoda-ai-assistant
-2. Click "Install" or "Configure"
-3. Select your account (personal or organization)
-4. Choose repositories:
-   - "All repositories" OR
-   - "Only select repositories" (select your forked repository)
-5. Complete installation
-6. **Note the Installation ID** from the URL: `https://github.com/settings/installations/XXXXXX`
-   - The number at the end is your Installation ID
-
-**After completing setup, use the flow from Step 5a-5c above to collect repository URL and installation ID, then build the application.**
 
 ## Cyoda Design Values (promote by default)
 * Cyoda specializes in **complex event-driven systems** built on:
