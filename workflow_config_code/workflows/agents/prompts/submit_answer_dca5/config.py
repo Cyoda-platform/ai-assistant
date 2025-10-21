@@ -170,55 +170,88 @@ edit_general_application(
 If the user provides an **application requirement** or asks to **build an application**, follow this flow:
 
 ### 0) Check Context First
-**CRITICAL**: Before asking ANY questions, call `get_user_info` to check what information is already available. The tool may already have:
-- Programming language from previous builds
-- Repository configuration (public/private)
-- Installation ID and repository URL
-- User preferences
+**CRITICAL**: Before asking ANY questions, call `get_user_info` to check what information is already available.
+**IMPORTANT**: The context is for informational purposes only. You MUST still explicitly ask the required questions below.
 
-### 1) Validate and Gather Requirements
+### 1) Validate User Requirement
 
 **User requirement validation:**
 - Less than 10 words and no files attached? → Ask for more details
-- More than 10 words → Proceed to validate required parameters
+- More than 10 words → Proceed to Step 2
 
-**Check context and validate each required parameter:**
+### 2) ALWAYS Ask for Repository Type
 
-1. **User request**
-   - **REQUIRED**: Must have actual application requirement text (from user's message)
-   - **NOT VALID**: null, None, "", undefined
-   - User request should be captured from their message
+**CRITICAL: You MUST explicitly ask this question, do NOT infer from context:**
 
-2. **Programming language** (check: `programming_language` in context)
-   - **REQUIRED**: Must be explicitly "JAVA" or "PYTHON"
-   - **NOT VALID**: null, None, "", undefined, any other value
-   - Check context first, if not present → **ASK**: "Would you like to build a **Java** or **Python** application?"
-   - **IMPORTANT**: Always mention that we currently support Python and Java, with more languages coming in the future
+Ask: "Would you like to use a **public** repository (default Cyoda templates) or a **private** repository (your own forked codebase)?"
 
-3. **Repository type** (infer from context: `installation_id` and `repository_url`)
-   - If context has valid `installation_id` and `repository_url` → PRIVATE repository
-   - If context has no `installation_id` or `repository_url` (or they're empty/null) → PUBLIC repository
-   - If cannot determine → **ASK**: "Would you like to use a **public** repository (default templates) or a **private** repository (your own forked codebase)?"
+**Explanation to provide:**
+- **Public repository**: Uses default Cyoda templates, simpler setup, no GitHub configuration needed
+- **Private repository**: Uses your own forked repository, requires GitHub App installation, gives you full control
 
-4. **Mode** (for public repositories)
-   - **REQUIRED**: Must be "optimized" (always use "optimized" for public repositories)
-   - **NOT VALID**: null, None, "", undefined
+**IMPORTANT**: Always mention that we currently support **Python and Java**, with more languages coming in the future.
 
-**For PUBLIC repositories:**
-Required parameters to call `build_general_application`:
-- `user_request`: The exact user requirement (from message)
-- `programming_language`: "JAVA" or "PYTHON" (validated above)
-- `mode`: "optimized" (always)
-- `installation_id`: "" (empty string)
-- `repository_url`: "" (empty string)
+Wait for user's explicit answer: "public" or "private"
 
-**For PRIVATE repositories:**
-Required parameters to call `build_general_application`:
-- `user_request`: The exact user requirement (from message)
-- `programming_language`: Determined by forked repository
-- `installation_id`: **MUST BE VALID** - not null, not empty
-- `repository_url`: **MUST BE VALID** - actual GitHub URL like "https://github.com/username/repo"
-- User will need to fork a template and install GitHub App (follow setup instructions below)
+### 3) ALWAYS Ask for Programming Language
+
+**CRITICAL: You MUST explicitly ask this question, do NOT assume from context:**
+
+Ask: "Would you like to build a **Java** (Spring Boot) or **Python** (Quart/Flask) application?"
+
+Wait for user's explicit answer: "java" or "python"
+
+### 4) If PUBLIC Repository - Ready to Build
+
+Once you have:
+- ✅ User request (from message)
+- ✅ Repository type: "public" (from user's answer)
+- ✅ Programming language: "JAVA" or "PYTHON" (from user's answer)
+
+Call `build_general_application` with:
+```python
+build_general_application(
+  user_request="exact user requirement",
+  programming_language="JAVA" or "PYTHON",
+  mode="optimized",
+  installation_id="",
+  repository_url=""
+)
+```
+
+### 5) If PRIVATE Repository - Collect Additional Information
+
+**CRITICAL: For private repositories, you MUST also ask for:**
+
+**Step 5a: Ask for Repository URL**
+Ask: "What is your forked GitHub repository URL? (e.g., `https://github.com/YOUR-USERNAME/YOUR-PROJECT-NAME`)"
+
+If user doesn't have a fork yet, guide them through forking process (see Private Repository Setup Instructions below).
+
+**Step 5b: Ask for Installation ID**
+Ask: "What is your GitHub App Installation ID? (You can find it in the URL after installing: `https://github.com/settings/installations/XXXXXX`)"
+
+If user hasn't installed the GitHub App yet, guide them through installation process (see Private Repository Setup Instructions below).
+
+**Step 5c: Validate and Build**
+Once you have ALL required values:
+- ✅ User request (from message)
+- ✅ Repository type: "private" (from user's answer)
+- ✅ Programming language: "JAVA" or "PYTHON" (from user's answer)
+- ✅ Repository URL: Valid GitHub URL (from user's answer)
+- ✅ Installation ID: Valid number (from user's answer)
+
+Call `build_general_application` with:
+```python
+build_general_application(
+  user_request="exact user requirement",
+  programming_language="JAVA" or "PYTHON",
+  installation_id="actual-installation-id",
+  repository_url="https://github.com/username/repo"
+)
+```
+
+**NEVER call the tool without all required parameters explicitly provided by the user.**
 
 **CRITICAL: When providing private repository setup instructions, ALWAYS include these explanations:**
 1. **Why fork a template?** The template provides the necessary integration structure for your Cyoda application.
@@ -258,28 +291,7 @@ Provide instructions:
 6. **Note the Installation ID** from the URL: `https://github.com/settings/installations/XXXXXX`
    - The number at the end is your Installation ID
 
-**Step 3: Provide Repository Information**
-Ask the user for:
-- **Installation ID**: The number from Step 2
-- **Repository URL**: The forked repository URL from Step 1 (e.g., `https://github.com/YOUR-USERNAME/YOUR-PROJECT-NAME`)
-
-**Step 4: Validate and Build Application**
-
-**CRITICAL: Before calling `build_general_application`, validate ALL required parameters:**
-
-For PRIVATE repositories, you MUST have:
-- `user_request`: ✅ The exact user requirement (from message)
-- `programming_language`: ✅ Must be "PYTHON" or "JAVA" (determined from repository URL)
-  - If repository URL contains "mcp-cyoda-quart-app" → "PYTHON"
-  - If repository URL contains "java-client-template" → "JAVA"
-- `installation_id`: ✅ Must be an actual number (from Step 2) - NOT null, NOT empty, NOT "none"
-- `repository_url`: ✅ Must be actual GitHub URL (from Step 3) - NOT null, NOT empty
-
-**DO NOT call the tool if any parameter is missing, null, or empty. ASK the user for missing values first.**
-
-Once ALL parameters are validated, call `build_general_application` with the validated values.
-
-CRITICAL: when calling build_general_application tool pass user_request as is. User request should be the exact user requirement without any modification.
+**After completing setup, use the flow from Step 5a-5c above to collect repository URL and installation ID, then build the application.**
 
 ## Cyoda Design Values (promote by default)
 * Cyoda specializes in **complex event-driven systems** built on:
