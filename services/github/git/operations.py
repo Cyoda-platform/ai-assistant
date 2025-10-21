@@ -191,6 +191,92 @@ class GitOperations:
         async with self._lock:
             return await self._pull_internal(git_branch_id, repository_name, repository_url, merge_strategy)
     
+    async def _ensure_branch_exists(
+        self,
+        clone_dir: str,
+        git_branch_id: str,
+        base_branch: Optional[str] = None
+    ) -> GitOperationResult:
+        """Ensure branch exists, create if it doesn't.
+
+        Args:
+            clone_dir: Directory of the cloned repository
+            git_branch_id: Branch ID to ensure exists
+            base_branch: Base branch to create from if branch doesn't exist
+
+        Returns:
+            GitOperationResult with success status
+        """
+        # Check if branch exists locally
+        check_branch_process = await asyncio.create_subprocess_exec(
+            'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+            'rev-parse', '--verify', str(git_branch_id),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        await check_branch_process.communicate()
+
+        if check_branch_process.returncode == 0:
+            # Branch exists, just checkout
+            checkout_process = await asyncio.create_subprocess_exec(
+                'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+                'checkout', str(git_branch_id),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await checkout_process.communicate()
+
+            if checkout_process.returncode != 0:
+                error_msg = f"Error during git checkout: {stderr.decode()}"
+                logger.error(error_msg)
+                return GitOperationResult(success=False, message="Checkout failed", error=error_msg)
+
+            logger.info(f"Checked out existing branch: {git_branch_id}")
+            return GitOperationResult(success=True, message=f"Checked out branch {git_branch_id}")
+        else:
+            # Branch doesn't exist, create it
+            base_branch = base_branch or config.CLIENT_GIT_BRANCH
+            logger.info(f"Branch {git_branch_id} doesn't exist, creating from {base_branch}")
+
+            # First checkout base branch
+            base_checkout_process = await asyncio.create_subprocess_exec(
+                'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+                'checkout', base_branch,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await base_checkout_process.communicate()
+
+            if base_checkout_process.returncode != 0:
+                error_msg = f"Error during git checkout of base branch '{base_branch}': {stderr.decode()}"
+                logger.error(error_msg)
+                return GitOperationResult(success=False, message="Base checkout failed", error=error_msg)
+
+            # Create new branch
+            create_branch_process = await asyncio.create_subprocess_exec(
+                'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+                'checkout', '-b', str(git_branch_id),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await create_branch_process.communicate()
+
+            if create_branch_process.returncode != 0:
+                error_msg = f"Error during git checkout of new branch '{git_branch_id}': {stderr.decode()}"
+                logger.error(error_msg)
+                return GitOperationResult(success=False, message="Branch creation failed", error=error_msg)
+
+            # Set upstream tracking (requires being in the repo directory)
+            original_dir = os.getcwd()
+            try:
+                os.chdir(clone_dir)
+                await self._set_upstream_tracking(git_branch_id)
+            finally:
+                os.chdir(original_dir)
+
+            logger.info(f"Created and checked out new branch: {git_branch_id}")
+            return GitOperationResult(success=True, message=f"Created branch {git_branch_id}")
+
     async def _pull_internal(
         self,
         git_branch_id: str,
@@ -207,18 +293,10 @@ class GitOperations:
         clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{clone_dir_name}"
 
         try:
-            checkout_process = await asyncio.create_subprocess_exec(
-                'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-                'checkout', str(git_branch_id),
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
-            stdout, stderr = await checkout_process.communicate()
-
-            if checkout_process.returncode != 0:
-                error_msg = f"Error during git checkout: {stderr.decode()}"
-                logger.error(error_msg)
-                return GitOperationResult(success=False, message="Checkout failed", error=error_msg)
+            # Ensure branch exists (create if needed)
+            branch_result = await self._ensure_branch_exists(clone_dir, git_branch_id)
+            if not branch_result.success:
+                return branch_result
 
             fetch_process = await asyncio.create_subprocess_exec(
                 'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
@@ -307,26 +385,19 @@ class GitOperations:
             GitOperationResult with success status
         """
         async with self._lock:
-            await self._pull_internal(git_branch_id, repository_name, repository_url)
+            pull_result = await self._pull_internal(git_branch_id, repository_name, repository_url)
+
+            # If pull failed due to branch issues, the branch should have been created by _ensure_branch_exists
+            # So we can continue with the push operation
 
             # Always use repository_name as the clone directory name
             clone_dir_name = repository_name
             clone_dir = f"{config.PROJECT_DIR}/{git_branch_id}/{clone_dir_name}"
 
             try:
-                checkout_process = await asyncio.create_subprocess_exec(
-                    'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
-                    'checkout', str(git_branch_id),
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
-                )
-                stdout, stderr = await checkout_process.communicate()
-                if checkout_process.returncode != 0:
-                    error_msg = f"Error during git checkout: {stderr.decode()}"
-                    logger.error(error_msg)
-                    return GitOperationResult(success=False, message="Checkout failed", error=error_msg)
 
                 for file_path in file_paths:
+                    logger.info(f"Adding file to git: {file_path}")
                     add_process = await asyncio.create_subprocess_exec(
                         'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
                         'add', file_path,
@@ -338,6 +409,18 @@ class GitOperations:
                         error_msg = f"Error during git add {file_path}: {stderr.decode()}"
                         logger.error(error_msg)
                         return GitOperationResult(success=False, message="Add failed", error=error_msg)
+                    else:
+                        logger.info(f"Successfully added file: {file_path}")
+
+                # Check git status before committing to see what's staged
+                status_process = await asyncio.create_subprocess_exec(
+                    'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
+                    'status', '--short',
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                status_stdout, status_stderr = await status_process.communicate()
+                logger.info(f"Git status before commit: {status_stdout.decode().strip()}")
 
                 commit_process = await asyncio.create_subprocess_exec(
                     'git', '--git-dir', f"{clone_dir}/.git", '--work-tree', clone_dir,
@@ -346,8 +429,20 @@ class GitOperations:
                     stderr=asyncio.subprocess.PIPE
                 )
                 stdout, stderr = await commit_process.communicate()
+                stdout_str = stdout.decode().strip()
+                stderr_str = stderr.decode().strip()
+
+                logger.info(f"Git commit stdout: {stdout_str}")
+                logger.info(f"Git commit stderr: {stderr_str}")
+                logger.info(f"Git commit return code: {commit_process.returncode}")
+
                 if commit_process.returncode != 0:
-                    error_msg = f"Error during git commit: {stderr.decode()}"
+                    # Check if the error is "nothing to commit" - this is not a real error
+                    if "nothing to commit" in stdout_str.lower() or "nothing to commit" in stderr_str.lower():
+                        logger.info("No changes to commit - files are already up to date")
+                        return GitOperationResult(success=True, message="No changes to commit")
+
+                    error_msg = f"Error during git commit: stdout='{stdout_str}', stderr='{stderr_str}'"
                     logger.error(error_msg)
                     return GitOperationResult(success=False, message="Commit failed", error=error_msg)
 

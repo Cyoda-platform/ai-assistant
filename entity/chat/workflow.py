@@ -304,6 +304,7 @@ class ChatWorkflow(Workflow):
             'get_humidity': self.utility_service.get_humidity,
             'get_user_info': self.utility_service.get_user_info,
             'init_chats': self.utility_service.init_chats,
+            'init_chats_for_editing': self.utility_service.init_chats_for_editing,
             'fail_workflow': self.utility_service.fail_workflow,
             'check_scheduled_entity_status': self.utility_service.check_scheduled_entity_status,
             'trigger_parent_entity': self.utility_service.trigger_parent_entity,

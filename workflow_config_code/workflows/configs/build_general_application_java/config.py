@@ -90,7 +90,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_initial_state",
-                        "next": "locked_locked_initial_state",
+                        "next": "locked_initial_state",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -104,15 +104,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_initial_state": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_initial_state",
-                        "manual": True,
                     },
                 ],
             },
@@ -282,7 +273,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_initialized",
-                        "next": "locked_locked_initialized",
+                        "next": "locked_initialized",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -296,15 +287,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_initialized": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_initialized",
-                        "manual": True,
                     },
                 ],
             },
@@ -363,7 +345,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_building_new_app",
-                        "next": "locked_locked_building_new_app",
+                        "next": "locked_building_new_app",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -377,15 +359,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_building_new_app": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_building_new_app",
-                        "manual": True,
                     },
                 ],
             },
@@ -444,7 +417,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_greeting_sent",
-                        "next": "locked_locked_greeting_sent",
+                        "next": "locked_greeting_sent",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -458,15 +431,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_greeting_sent": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_greeting_sent",
-                        "manual": True,
                     },
                 ],
             },
@@ -525,7 +489,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_repository_cloned",
-                        "next": "locked_locked_repository_cloned",
+                        "next": "locked_repository_cloned",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -539,15 +503,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_repository_cloned": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_repository_cloned",
-                        "manual": True,
                     },
                 ],
             },
@@ -606,7 +561,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_generated_original_requirements",
-                        "next": "locked_locked_generated_original_requirements",
+                        "next": "locked_generated_original_requirements",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -620,15 +575,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_generated_original_requirements": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_generated_original_requirements",
-                        "manual": True,
                     },
                 ],
             },
@@ -687,7 +633,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_notified_generated_original_requirements_saved",
-                        "next": "locked_locked_notified_generated_original_requirements_saved",
+                        "next": "locked_notified_generated_original_requirements_saved",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -701,15 +647,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_notified_generated_original_requirements_saved": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_notified_generated_original_requirements_saved",
-                        "manual": True,
                     },
                 ],
             },
@@ -768,7 +705,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_notified_generated_original_requirements",
-                        "next": "locked_locked_notified_generated_original_requirements",
+                        "next": "locked_notified_generated_original_requirements",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -782,15 +719,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_notified_generated_original_requirements": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_notified_generated_original_requirements",
-                        "manual": True,
                     },
                 ],
             },
@@ -849,7 +777,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_app_requirements_requested",
-                        "next": "locked_locked_app_requirements_requested",
+                        "next": "locked_app_requirements_requested",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -863,15 +791,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_app_requirements_requested": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_app_requirements_requested",
-                        "manual": True,
                     },
                 ],
             },
@@ -930,7 +849,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_app_requirements_requested_submitted_answer",
-                        "next": "locked_locked_app_requirements_requested_submitted_answer",
+                        "next": "locked_app_requirements_requested_submitted_answer",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -944,15 +863,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_app_requirements_requested_submitted_answer": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_app_requirements_requested_submitted_answer",
-                        "manual": True,
                     },
                 ],
             },
@@ -1026,7 +936,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_app_requirements_requested_processing",
-                        "next": "locked_locked_app_requirements_requested_processing",
+                        "next": "locked_app_requirements_requested_processing",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -1040,15 +950,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_app_requirements_requested_processing": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_app_requirements_requested_processing",
-                        "manual": True,
                     },
                 ],
             },
@@ -1107,7 +1008,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_app_requirements_finalized",
-                        "next": "locked_locked_app_requirements_finalized",
+                        "next": "locked_app_requirements_finalized",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -1121,15 +1022,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_app_requirements_finalized": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_app_requirements_finalized",
-                        "manual": True,
                     },
                 ],
             },
@@ -1188,7 +1080,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_proceeded_to_functional_requirements",
-                        "next": "locked_locked_proceeded_to_functional_requirements",
+                        "next": "locked_proceeded_to_functional_requirements",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -1202,15 +1094,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_proceeded_to_functional_requirements": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_proceeded_to_functional_requirements",
-                        "manual": True,
                     },
                 ],
             },
@@ -1270,7 +1153,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_saved_additional_requirements_files",
-                        "next": "locked_locked_saved_additional_requirements_files",
+                        "next": "locked_saved_additional_requirements_files",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -1284,15 +1167,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_saved_additional_requirements_files": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_saved_additional_requirements_files",
-                        "manual": True,
                     },
                 ],
             },
@@ -1341,7 +1215,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_waiting_for_requirements_gen",
-                        "next": "locked_locked_waiting_for_requirements_gen",
+                        "next": "locked_waiting_for_requirements_gen",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -1355,15 +1229,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_waiting_for_requirements_gen": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_waiting_for_requirements_gen",
-                        "manual": True,
                     },
                 ],
             },
@@ -1422,7 +1287,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_functional_requirements_specified",
-                        "next": "locked_locked_functional_requirements_specified",
+                        "next": "locked_functional_requirements_specified",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -1436,15 +1301,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_functional_requirements_specified": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_functional_requirements_specified",
-                        "manual": True,
                     },
                 ],
             },
@@ -1503,7 +1359,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_api_inquired",
-                        "next": "locked_locked_api_inquired",
+                        "next": "locked_api_inquired",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -1517,15 +1373,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_api_inquired": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_api_inquired",
-                        "manual": True,
                     },
                 ],
             },
@@ -1584,7 +1431,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_api_inquired_submitted_answer",
-                        "next": "locked_locked_api_inquired_submitted_answer",
+                        "next": "locked_api_inquired_submitted_answer",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -1598,15 +1445,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_api_inquired_submitted_answer": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_api_inquired_submitted_answer",
-                        "manual": True,
                     },
                 ],
             },
@@ -1680,7 +1518,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_api_inquired_processing",
-                        "next": "locked_locked_api_inquired_processing",
+                        "next": "locked_api_inquired_processing",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -1694,15 +1532,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_api_inquired_processing": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_api_inquired_processing",
-                        "manual": True,
                     },
                 ],
             },
@@ -1756,7 +1585,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_waiting_for_user_deployment_input",
-                        "next": "locked_locked_waiting_for_user_deployment_input",
+                        "next": "locked_waiting_for_user_deployment_input",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -1770,15 +1599,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_waiting_for_user_deployment_input": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_waiting_for_user_deployment_input",
-                        "manual": True,
                     },
                 ],
             },
@@ -1837,7 +1657,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_env_deployment_started",
-                        "next": "locked_locked_env_deployment_started",
+                        "next": "locked_env_deployment_started",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -1851,15 +1671,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_env_deployment_started": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_env_deployment_started",
-                        "manual": True,
                     },
                 ],
             },
@@ -1918,7 +1729,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_env_deployment_notified",
-                        "next": "locked_locked_env_deployment_notified",
+                        "next": "locked_env_deployment_notified",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -1932,15 +1743,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_env_deployment_notified": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_env_deployment_notified",
-                        "manual": True,
                     },
                 ],
             },
@@ -2019,7 +1821,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_app_requirements_step3_processing",
-                        "next": "locked_locked_app_requirements_step3_processing",
+                        "next": "locked_app_requirements_step3_processing",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -2033,15 +1835,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_app_requirements_step3_processing": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_app_requirements_step3_processing",
-                        "manual": True,
                     },
                 ],
             },
@@ -2100,7 +1893,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_deployed_cyoda_env",
-                        "next": "locked_locked_deployed_cyoda_env",
+                        "next": "locked_deployed_cyoda_env",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -2114,15 +1907,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_deployed_cyoda_env": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_deployed_cyoda_env",
-                        "manual": True,
                     },
                 ],
             },
@@ -2181,7 +1965,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_api_discussion_completed",
-                        "next": "locked_locked_api_discussion_completed",
+                        "next": "locked_api_discussion_completed",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -2195,15 +1979,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_api_discussion_completed": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_api_discussion_completed",
-                        "manual": True,
                     },
                 ],
             },
@@ -2262,7 +2037,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_prototype_generation_started",
-                        "next": "locked_locked_prototype_generation_started",
+                        "next": "locked_prototype_generation_started",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -2276,15 +2051,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_prototype_generation_started": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_prototype_generation_started",
-                        "manual": True,
                     },
                 ],
             },
@@ -2333,7 +2099,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                     },
                     {
                         "name": "fail_locked_completed",
-                        "next": "locked_locked_completed",
+                        "next": "locked_completed",
                         "manual": False,
                         "criterion": {
                             "type": "group",
@@ -2347,15 +2113,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 },
                             ],
                         },
-                    },
-                ],
-            },
-            "locked_locked_completed": {
-                "transitions": [
-                    {
-                        "name": "unlock",
-                        "next": "locked_completed",
-                        "manual": True,
                     },
                 ],
             },

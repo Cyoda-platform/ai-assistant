@@ -169,6 +169,9 @@ class ApplicationBuilderService(BaseWorkflowService):
                                                                                    mode=params.get("mode"),
                                                                                    has_files=bool(file_edge_message_ids))
 
+            # Save params to current entity's workflow_cache for context
+            entity.workflow_cache.update(params)
+
             # Launch agentic workflow
             child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
                 technical_id=technical_id,
@@ -189,37 +192,127 @@ class ApplicationBuilderService(BaseWorkflowService):
 
     async def edit_general_application(self, technical_id: str, entity: ChatEntity, **params: Any) -> str:
         """
-        Build a general application based on user request and programming language.
+        Edit an existing application based on user request and programming language.
 
         Args:
             technical_id: Technical identifier
             entity: Chat entity
-            **params: Parameters including user_request and programming_language
+            **params: Parameters including:
+                - user_request: User's edit/update request
+                - git_branch: Git branch where the application exists
+                - programming_language: Programming language (JAVA or PYTHON)
+                - repository_type: (Optional) "public" or "private" - determines repo configuration
+                - installation_id: (Optional) GitHub App installation ID for private repos
+                - repository_url: (Optional) Repository URL for private repos
 
         Returns:
             Success message with workflow information or error message
         """
         try:
+            # Log all received parameters
+            self.logger.info("=" * 80)
+            self.logger.info("edit_general_application called")
+            self.logger.info("=" * 80)
+            self.logger.info(f"technical_id: {technical_id}")
+            self.logger.info(f"entity.technical_id: {entity.technical_id}")
+            self.logger.info(f"entity.workflow_name: {entity.workflow_name}")
+            self.logger.info("Received parameters:")
+            for key, value in params.items():
+                # Mask sensitive data but show structure
+                if key in ["user_request"]:
+                    self.logger.info(f"  {key}: {value[:100]}..." if len(str(value)) > 100 else f"  {key}: {value}")
+                else:
+                    self.logger.info(f"  {key}: {value}")
+            self.logger.info("=" * 80)
+
             # Validate required parameters
             is_valid, error_msg = await self._validate_required_params(
                 params, ["user_request", "programming_language", "git_branch"]
             )
             if not is_valid:
+                self.logger.error(f"Parameter validation failed: {error_msg}")
                 return error_msg
 
             user_request = params.get("user_request")
             programming_language = params.get("programming_language")
+            git_branch = params.get("git_branch")
+            repository_type = params.get("repository_type", "").lower()
+            installation_id = params.get("installation_id")
+            repository_url = params.get("repository_url")
+
+            # Validate git branch (prevent main branch modifications)
+            if git_branch == "main":
+                self.logger.error("Modifications to main branch are not allowed")
+                return "Modifications to main branch are not allowed"
+
+            # Validate repository_type if provided
+            if repository_type and repository_type not in ["public", "private"]:
+                error_msg = f"Invalid repository_type '{repository_type}'. Must be 'public' or 'private'."
+                self.logger.error(error_msg)
+                return error_msg
+
+            # If repository_type is "private", validate that installation_id and repository_url are provided
+            if repository_type == "private":
+                if not installation_id or not repository_url:
+                    error_msg = "For private repositories, both 'installation_id' and 'repository_url' are required."
+                    self.logger.error(error_msg)
+                    return error_msg
+                self.logger.info("Using private repository configuration:")
+                self.logger.info(f"  Programming language: {programming_language}")
+                self.logger.info(f"  Git branch: {git_branch}")
+                self.logger.info(f"  Installation ID: {installation_id}")
+                self.logger.info(f"  Repository URL: {repository_url}")
+            # If no installation_id/repository_url provided OR repository_type is "public", use public repo configuration
+            elif not installation_id and not repository_url:
+                # Use public repository configuration from .env
+                installation_id = config.GITHUB_PUBLIC_REPO_INSTALLATION_ID
+
+                # Select repository URL based on programming language
+                if programming_language.lower() == "python":
+                    repository_url = config.PYTHON_PUBLIC_REPO_URL
+                elif programming_language.lower() == "java":
+                    repository_url = config.JAVA_PUBLIC_REPO_URL
+
+                self.logger.info("Using public repository configuration from .env:")
+                self.logger.info(f"  Programming language: {programming_language}")
+                self.logger.info(f"  Git branch: {git_branch}")
+                self.logger.info(f"  Installation ID: {installation_id}")
+                self.logger.info(f"  Repository URL: {repository_url}")
+
+            # Collect all file edge message IDs from chat history
+            file_edge_message_ids = self._collect_file_edge_message_ids(entity)
+
+            # Add file edge message IDs to workflow cache
+            if file_edge_message_ids:
+                params["file_edge_message_ids"] = file_edge_message_ids
 
             # Store programming_language in workflow_cache (already in params)
             params[const.PROGRAMMING_LANGUAGE_PARAM] = programming_language
 
+            # Store git_branch in workflow_cache
+            params[const.GIT_BRANCH_PARAM] = git_branch
+
             # Calculate and store repository_name in workflow_cache
+            # IMPORTANT: Always use environment variable name (JAVA_REPOSITORY_NAME or PYTHON_REPOSITORY_NAME)
+            # as the directory name, regardless of the actual repository name in the URL.
+            # This ensures consistent directory naming for scripts that reference the cloned directory.
             repository_name = resolve_repository_name_with_language_param(entity, programming_language)
             params[const.REPOSITORY_NAME_PARAM] = repository_name
 
+            # Store repository_url in workflow_cache
+            params[const.REPOSITORY_URL_PARAM] = repository_url
+
+            # Store installation_id in workflow_cache
+            params[const.INSTALLATION_ID_PARAM] = installation_id
+
             # Determine workflow name based on programming language
-            workflow_name = WorkflowNameResolver.resolve_general_app_workflow_name(programming_language=programming_language,
-                                                                                   type="edit")
+            workflow_name = WorkflowNameResolver.resolve_general_app_workflow_name(
+                programming_language=programming_language,
+                type="edit"
+            )
+
+            # Save params to current entity's workflow_cache for context
+            entity.workflow_cache.update(params)
 
             # Launch agentic workflow
             child_technical_id = await self.workflow_helper_service.launch_agentic_workflow(
@@ -227,14 +320,16 @@ class ApplicationBuilderService(BaseWorkflowService):
                 entity=entity,
                 entity_model=const.ModelName.CHAT_ENTITY.value,
                 workflow_name=workflow_name,
-                workflow_cache=params
+                user_request=user_request,
+                workflow_cache=params,
+                resume_transition=None
             )
 
             return (f"Workflow {workflow_name} {child_technical_id} has been scheduled successfully. "
                     f"You'll be notified when it is in progress.")
 
         except Exception as e:
-            return self._handle_error(entity, e, f"Error building general application: {e}")
+            return self._handle_error(entity, e, f"Error editing general application: {e}")
 
     async def resume_build_general_application(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
         """

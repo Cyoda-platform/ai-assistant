@@ -862,12 +862,21 @@ async def save_all(responses: list, git_branch_id: str, repository_name: str, co
         logger.exception(f"Error in save_all: {e}")
         return False
 
-async def _save_file(_data, item, git_branch_id, repository_name: str, folder_name = None) -> str:
+async def _save_file(_data, item, git_branch_id, repository_name: str, folder_name = None, installation_id: Optional[int] = None, repository_url: Optional[str] = None) -> str:
     """
     Save a file (text or binary) inside a specific directory.
     Handles FileStorage objects directly.
+
+    Args:
+        _data: Data to save (can be string, bytes, or file-like object)
+        item: Filename to save
+        git_branch_id: Git branch identifier
+        repository_name: Repository name
+        folder_name: Optional folder path within repository
+        installation_id: Optional GitHub App installation ID for private repos
+        repository_url: Optional repository URL for private repos
     """
-    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name)
+    await clone_repo(git_branch_id=git_branch_id, repository_name=repository_name, installation_id=installation_id, repository_url=repository_url)
     target_dir = os.path.join(f"{config.PROJECT_DIR}/{git_branch_id}/{repository_name}", folder_name or "")
     file_path = os.path.join(target_dir, item)
     logger.info(f"Saving to {file_path}")
@@ -932,12 +941,32 @@ async def _save_file(_data, item, git_branch_id, repository_name: str, folder_na
             file_paths_to_commit.append(init_file)
 
     if config.CLONE_REPO == "true":
-        await _git_push(git_branch_id=git_branch_id,
-                        file_paths=file_paths_to_commit,
-                        commit_message=f"saved {item}",
-                        repository_name=repository_name)
+        # Use GitHub service for private repos with installation_id, otherwise use legacy git push
+        if installation_id and repository_url:
+            logger.info(f"Using GitHub service to push files (installation_id: {installation_id})")
+            from services.github.github_service import GitHubService
 
-    logger.info(f"pushed to git")
+            github_service = GitHubService(installation_id=installation_id)
+
+            result = await github_service.push_changes(
+                git_branch_id=git_branch_id,
+                repository_name=repository_name,
+                file_paths=file_paths_to_commit,
+                commit_message=f"saved {item}",
+                repository_url=repository_url
+            )
+
+            if not result.success:
+                logger.error(f"GitHub service push failed: {result.error}")
+            else:
+                logger.info("GitHub service push successful!")
+        else:
+            logger.info("Using legacy git push")
+            await _git_push(git_branch_id=git_branch_id,
+                            file_paths=file_paths_to_commit,
+                            commit_message=f"saved {item}",
+                            repository_name=repository_name)
+            logger.info(f"pushed to git")
 
     return str(file_path)
 

@@ -70,9 +70,6 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                         "name": UiFunctionResetClientSecret1dd6ToolConfig.get_tool_name()
                 },
                 {
-                        "name": ResumeBuildGeneralApplication2af7ToolConfig.get_tool_name()
-                },
-                {
                         "name": GetEnvDeployStatus53e7ToolConfig.get_tool_name()
                 },
                 {

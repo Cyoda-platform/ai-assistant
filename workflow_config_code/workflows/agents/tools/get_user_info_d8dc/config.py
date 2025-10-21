@@ -14,13 +14,14 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "type": "function",
         "function": {
                 "name": "get_user_info",
-                "description": "Use this tool to get user information like user environment URL, user branch name etc",
+                "description": "Use this tool to get comprehensive user and workflow information including: user authentication status, Cyoda environment URL and deployment status, repository details (git branch, repository name, URL, installation ID), programming language, workflow state and name, build/deployment status, user requests, file attachments, and any other workflow cache data. This provides the complete context needed to understand the user's current application development state.",
                 "strict": True,
                 "parameters": {
                         "type": "object",
                         "properties": {
                                 "user_request": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "description": "The user's request or query for context"
                                 }
                         },
                         "required": [

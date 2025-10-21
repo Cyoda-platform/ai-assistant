@@ -32,7 +32,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "mode": {
                                         "type": "string",
                                         "enum": [
-                                                "regular",
+                                                #"regular",
                                                 "optimized"
                                         ]
                                 },

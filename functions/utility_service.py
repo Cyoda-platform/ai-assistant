@@ -58,20 +58,26 @@ class UtilityService(BaseWorkflowService):
 
     async def get_user_info(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
         """
-        Retrieve and cache user information including Cyoda environment URL.
-        
+        Retrieve comprehensive user and workflow information from entity and workflow cache.
+
+        This function collects all available information about the user's current context including:
+        - User authentication status and Cyoda environment details
+        - Repository information (branch, name, URL, installation ID)
+        - Programming language and workflow settings
+        - Build and deployment status
+        - User requests and file attachments
+        - Any other cached workflow data
+
         Args:
             technical_id: Technical identifier
-            entity: Agentic flow entity
+            entity: Agentic flow entity containing workflow_cache and other context
             **params: Additional parameters (unused)
-            
+
         Returns:
-            JSON string with user information
+            JSON string with comprehensive user and workflow information
         """
         try:
-            cache = entity.workflow_cache
-
-            # Only construct and check the Cyoda environment URL if not already cached
+            # User authentication and environment information
             user_id = entity.user_id
             is_guest = user_id.startswith('guest.')
             url: str
@@ -87,13 +93,21 @@ class UtilityService(BaseWorkflowService):
                     deployed = True
                 except Exception as e:
                     self.logger.exception(f"Error checking Cyoda environment status: {e}")
-            cache['user_logged_in'] = not is_guest
-            cache['cyoda_env_url'] = url
-            cache['cyoda_environment_status'] = 'deployed' if deployed else 'is not yet deployed'
 
-            # Prepare the final result
-            cache_json = json.dumps(cache)
-            return f"Please base your answer on this information: {cache_json}"
+            # Build info dictionary with entity information
+            info = {
+                'user_logged_in_most_recent_status': not is_guest,
+                'user_id': user_id,
+                'cyoda_env_most_recent_url': url,
+                'cyoda_environment_most_recent_status': 'deployed' if deployed else 'is not yet deployed',
+            }
+
+            # Merge workflow_cache into info dictionary
+            info.update(entity.workflow_cache)
+
+            # Prepare the final result with all available information
+            info_json = json.dumps(info, indent=2)
+            return f"Please base your answer on this comprehensive information about the user and workflow context:\n{info_json}"
 
         except Exception as e:
             return self._handle_error(entity, e, f"Error getting user info: {e}")
@@ -115,6 +129,8 @@ class UtilityService(BaseWorkflowService):
             git_branch_id = entity.workflow_cache.get('git_branch')
             repository_name = entity.workflow_cache.get('repository_name')
             programming_language = entity.workflow_cache.get(const.PROGRAMMING_LANGUAGE_PARAM)
+            installation_id = entity.workflow_cache.get(const.INSTALLATION_ID_PARAM)
+            repository_url = entity.workflow_cache.get(const.REPOSITORY_URL_PARAM)
 
             if not git_branch_id or not repository_name:
                 self.logger.error("Missing git_branch or repository_name in workflow cache")
@@ -127,7 +143,9 @@ class UtilityService(BaseWorkflowService):
                 item="user_requirement.md",
                 git_branch_id=git_branch_id,
                 repository_name=repository_name,
-                folder_name=params.get(programming_language)
+                folder_name=params.get(programming_language),
+                installation_id=installation_id,
+                repository_url=repository_url
             )
 
             # Get file edge message IDs from workflow cache
@@ -219,7 +237,9 @@ class UtilityService(BaseWorkflowService):
                             item=filename,
                             git_branch_id=git_branch_id,
                             repository_name=repository_name,
-                            folder_name=params.get(programming_language)
+                            folder_name=params.get(programming_language),
+                            installation_id=installation_id,
+                            repository_url=repository_url
                         )
 
                         self.logger.info(f"Saved file {filename} from edge message {message_id}")
@@ -235,6 +255,198 @@ class UtilityService(BaseWorkflowService):
 
         except Exception as e:
             return self._handle_error(entity, e, f"Error initializing chats: {e}")
+
+    async def init_chats_for_editing(self, technical_id: str, entity: ChatEntity, **params) -> None:
+        """
+        Initialize chats for editing workflow by saving both original user request
+        and current editing request to functional requirements directory.
+
+        Args:
+            technical_id: Technical identifier
+            entity: Chat entity
+            **params: Additional parameters (unused)
+        """
+        try:
+            # Get current editing request from workflow cache
+            editing_request = entity.workflow_cache.get('user_request', '')
+
+            # Get repository information
+            git_branch_id = entity.workflow_cache.get('git_branch')
+            repository_name = entity.workflow_cache.get('repository_name')
+            programming_language = entity.workflow_cache.get(const.PROGRAMMING_LANGUAGE_PARAM)
+            installation_id = entity.workflow_cache.get(const.INSTALLATION_ID_PARAM)
+            repository_url = entity.workflow_cache.get(const.REPOSITORY_URL_PARAM)
+
+            if not git_branch_id or not repository_name:
+                self.logger.error("Missing git_branch or repository_name in workflow cache")
+                return "Error: Missing repository information"
+
+            self.logger.info(f"Initializing chats for editing with:")
+            self.logger.info(f"  Git branch: {git_branch_id}")
+            self.logger.info(f"  Repository: {repository_name}")
+            self.logger.info(f"  Installation ID: {installation_id}")
+            self.logger.info(f"  Repository URL: {repository_url}")
+
+            from common.utils.utils import _save_file, read_file_util
+
+            # Try to read the original user requirement if it exists
+            original_user_request = None
+            try:
+                # Construct filename with folder path if programming_language is provided
+                folder_name = params.get(programming_language)
+                filename = f"{folder_name}/user_requirement.md" if folder_name else "user_requirement.md"
+
+                original_user_request = await read_file_util(
+                    filename=filename,
+                    technical_id=git_branch_id,
+                    repository_name=repository_name
+                )
+                self.logger.info("Found original user requirement file")
+            except Exception as e:
+                self.logger.warning(f"Could not read original user requirement: {e}")
+
+            # Save editing request to editing_requirement.md
+            await _save_file(
+                _data=editing_request,
+                item="editing_requirement.md",
+                git_branch_id=git_branch_id,
+                repository_name=repository_name,
+                folder_name=params.get(programming_language),
+                installation_id=installation_id,
+                repository_url=repository_url
+            )
+            self.logger.info("Saved editing requirement to editing_requirement.md")
+
+            # If we found the original requirement, also create a combined file
+            if original_user_request:
+                combined_request = f"""# Original Application Requirement
+
+{original_user_request}
+
+---
+
+# Current Editing Request
+
+{editing_request}
+"""
+                await _save_file(
+                    _data=combined_request,
+                    item="combined_requirements.md",
+                    git_branch_id=git_branch_id,
+                    repository_name=repository_name,
+                    folder_name=params.get(programming_language),
+                    installation_id=installation_id,
+                    repository_url=repository_url
+                )
+                self.logger.info("Saved combined requirements to combined_requirements.md")
+
+            # Get file edge message IDs from workflow cache
+            file_edge_message_ids = entity.workflow_cache.get('file_edge_message_ids', [])
+
+            # Also collect file_blob_ids from chat_flow.finished_flow
+            if entity.chat_flow and entity.chat_flow.finished_flow:
+                for message in entity.chat_flow.finished_flow:
+                    if hasattr(message, 'file_blob_ids') and message.file_blob_ids:
+                        file_edge_message_ids.extend(message.file_blob_ids)
+
+            # Remove duplicates while preserving order
+            unique_file_ids = []
+            seen = set()
+            for file_id in file_edge_message_ids:
+                if file_id not in seen:
+                    unique_file_ids.append(file_id)
+                    seen.add(file_id)
+
+            file_edge_message_ids = unique_file_ids
+
+            # Save each file from file_edge_message_ids
+            for i, message_id in enumerate(file_edge_message_ids):
+                try:
+                    # Retrieve edge message content using entity service
+                    edge_message = await self.entity_service.get_item(
+                        token=self.cyoda_auth_service,
+                        entity_model=const.ModelName.FLOW_EDGE_MESSAGE.value,
+                        entity_version=config.ENTITY_VERSION,
+                        technical_id=message_id,
+                        meta={"type": config.CYODA_ENTITY_TYPE_EDGE_MESSAGE}
+                    )
+
+                    if edge_message:
+                        # Extract blob data from edge message
+                        filename = f"uploaded_file_{i+1}.txt"
+                        file_content = ""
+
+                        # Handle FlowEdgeMessage blob format
+                        if isinstance(edge_message, dict):
+                            # Get base64 encoded content from message field
+                            base64_content = edge_message.get('message', '')
+                            metadata = edge_message.get('metadata', {})
+
+                            # Extract filename from metadata
+                            if metadata and 'filename' in metadata:
+                                filename = metadata['filename']
+
+                            # Decode base64 content if it's a file blob
+                            if base64_content and metadata.get('encoding') == 'base64':
+                                try:
+                                    import base64
+                                    # Decode base64 to get original binary data
+                                    file_content = base64.b64decode(base64_content)
+                                    self.logger.info(f"Decoded file blob: {filename} ({len(file_content)} bytes)")
+                                except Exception as decode_error:
+                                    self.logger.error(f"Error decoding base64 content: {decode_error}")
+                                    file_content = f"[Error decoding file content: {decode_error}]"
+                            else:
+                                # Fallback to raw message content
+                                file_content = str(base64_content)
+
+                        elif hasattr(edge_message, 'message') and hasattr(edge_message, 'metadata'):
+                            # Handle object format
+                            base64_content = edge_message.message
+                            metadata = edge_message.metadata or {}
+
+                            if metadata.get('filename'):
+                                filename = metadata['filename']
+
+                            if base64_content and metadata.get('encoding') == 'base64':
+                                try:
+                                    import base64
+                                    # Decode base64 to get original binary data
+                                    file_content = base64.b64decode(base64_content)
+                                    self.logger.info(f"Decoded file blob: {filename} ({len(file_content)} bytes)")
+                                except Exception as decode_error:
+                                    self.logger.error(f"Error decoding base64 content: {decode_error}")
+                                    file_content = f"[Error decoding file content: {decode_error}]"
+                            else:
+                                file_content = str(base64_content)
+                        else:
+                            # Fallback for unexpected format
+                            file_content = str(edge_message)
+
+                        # Save file content to functional_requirements directory
+                        await _save_file(
+                            _data=file_content,
+                            item=filename,
+                            git_branch_id=git_branch_id,
+                            repository_name=repository_name,
+                            folder_name=params.get(programming_language),
+                            installation_id=installation_id,
+                            repository_url=repository_url
+                        )
+
+                        self.logger.info(f"Saved file {filename} from edge message {message_id}")
+                    else:
+                        self.logger.warning(f"Could not retrieve content for edge message {message_id}")
+
+                except Exception as e:
+                    self.logger.error(f"Error processing edge message {message_id}: {e}")
+                    continue
+
+            self.logger.info(f"Successfully initialized editing chats with editing request and {len(file_edge_message_ids)} files")
+            return entity.workflow_cache['user_request']
+
+        except Exception as e:
+            return self._handle_error(entity, e, f"Error initializing chats for editing: {e}")
 
     async def fail_workflow(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
         """

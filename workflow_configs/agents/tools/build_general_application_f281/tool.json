@@ -20,7 +20,6 @@
         "mode": {
           "type": "string",
           "enum": [
-            "regular",
             "optimized"
           ]
         },

@@ -1,0 +1,12 @@
+{
+  "type": "function",
+  "function": {
+    "name": "init_chats_for_editing",
+    "description": "Initialises ai service for editing workflow with original and editing requirements",
+    "parameters": {
+      "JAVA": "src/main/resources/functional_requirements",
+      "PYTHON": "application/resources/functional_requirements"
+    }
+  },
+  "allow_anonymous_users": true
+}

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "name": "edit_general_application_python",
-  "desc": "Complete workflow to transform functional requirements into a working application",
+  "desc": "Complete workflow to edit existing Python applications using user-defined repository",
   "initialState": "initial_state",
   "active": true,
   "criterion": {
@@ -14,19 +14,9 @@
     "initial_state": {
       "transitions": [
         {
-          "name": "start_edit_application",
-          "next": "edit_application_requested",
-          "manual": false,
-          "processors": [
-            {
-              "name": "MessageProcessor.notify_editing_started",
-              "executionMode": "ASYNC_NEW_TX",
-              "config": {
-                "calculationNodesTags": "ai_assistant",
-                "responseTimeoutMs": 300000
-              }
-            }
-          ]
+          "name": "initialize",
+          "next": "initialized",
+          "manual": false
         },
         {
           "name": "retry",
@@ -66,38 +56,7 @@
         },
         {
           "name": "fail_locked_initial_state",
-          "next": "locked_locked_initial_state",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_initial_state": {
-      "transitions": [
-        {
-          "name": "unlock",
           "next": "locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_initial_state",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_initial_state",
-          "next": "locked_locked_locked_initial_state",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -114,21 +73,21 @@
         }
       ]
     },
-    "locked_locked_locked_initial_state": {
+    "initialized": {
       "transitions": [
         {
-          "name": "unlock",
-          "next": "locked_locked_initial_state",
-          "manual": true
+          "name": "start_editing",
+          "next": "editing_started",
+          "manual": false
         },
         {
           "name": "retry",
-          "next": "locked_locked_locked_initial_state",
+          "next": "initialized",
           "manual": true
         },
         {
-          "name": "fail_locked_locked_locked_initial_state",
-          "next": "locked_locked_locked_locked_initial_state",
+          "name": "fail_initialized",
+          "next": "locked_initialized",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -145,21 +104,21 @@
         }
       ]
     },
-    "locked_locked_locked_locked_initial_state": {
+    "locked_initialized": {
       "transitions": [
         {
           "name": "unlock",
-          "next": "locked_locked_locked_initial_state",
+          "next": "initialized",
           "manual": true
         },
         {
           "name": "retry",
-          "next": "locked_locked_locked_locked_initial_state",
+          "next": "locked_initialized",
           "manual": true
         },
         {
-          "name": "fail_locked_locked_locked_locked_initial_state",
-          "next": "locked_locked_locked_locked_locked_initial_state",
+          "name": "fail_locked_initialized",
+          "next": "locked_initialized",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -176,198 +135,15 @@
         }
       ]
     },
-    "locked_locked_locked_locked_locked_initial_state": {
+    "editing_started": {
       "transitions": [
         {
-          "name": "unlock",
-          "next": "locked_locked_locked_locked_initial_state",
-          "manual": true
-        }
-      ]
-    },
-    "processing_user_input": {
-      "transitions": [
-        {
-          "name": "submit_answer",
-          "next": "edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "rollback",
-          "next": "edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "manual_approve",
-          "next": "edit_application_requested",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_processing_user_input",
-          "next": "locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_processing_user_input": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_processing_user_input",
-          "next": "locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_processing_user_input": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_processing_user_input",
-          "next": "locked_locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_processing_user_input": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_locked_processing_user_input",
-          "next": "locked_locked_locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_locked_processing_user_input": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "retry",
-          "next": "locked_locked_locked_locked_processing_user_input",
-          "manual": true
-        },
-        {
-          "name": "fail_locked_locked_locked_locked_processing_user_input",
-          "next": "locked_locked_locked_locked_locked_processing_user_input",
-          "manual": false,
-          "criterion": {
-            "type": "group",
-            "operator": "AND",
-            "conditions": [
-              {
-                "type": "simple",
-                "jsonPath": "$.failed",
-                "operation": "EQUALS",
-                "value": true
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "locked_locked_locked_locked_locked_processing_user_input": {
-      "transitions": [
-        {
-          "name": "unlock",
-          "next": "locked_locked_locked_locked_processing_user_input",
-          "manual": true
-        }
-      ]
-    },
-    "edit_application_requested": {
-      "transitions": [
-        {
-          "name": "edit_application_requested_processing",
-          "next": "processing_user_input",
+          "name": "notify_editing",
+          "next": "repository_ready",
           "manual": false,
           "processors": [
             {
-              "name": "AgentProcessor.process_user_input_57d2_py",
+              "name": "MessageProcessor.notify_editing_started",
               "executionMode": "ASYNC_NEW_TX",
               "config": {
                 "calculationNodesTags": "ai_assistant",
@@ -378,12 +154,12 @@
         },
         {
           "name": "retry",
-          "next": "edit_application_requested",
+          "next": "editing_started",
           "manual": true
         },
         {
-          "name": "fail_edit_application_requested",
-          "next": "locked_edit_application_requested",
+          "name": "fail_editing_started",
+          "next": "locked_editing_started",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -400,21 +176,21 @@
         }
       ]
     },
-    "locked_edit_application_requested": {
+    "locked_editing_started": {
       "transitions": [
         {
           "name": "unlock",
-          "next": "edit_application_requested",
+          "next": "editing_started",
           "manual": true
         },
         {
           "name": "retry",
-          "next": "locked_edit_application_requested",
+          "next": "locked_editing_started",
           "manual": true
         },
         {
-          "name": "fail_locked_edit_application_requested",
-          "next": "locked_locked_edit_application_requested",
+          "name": "fail_locked_editing_started",
+          "next": "locked_editing_started",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -431,21 +207,62 @@
         }
       ]
     },
-    "locked_locked_edit_application_requested": {
+    "repository_ready": {
+      "transitions": [
+        {
+          "name": "notify_editing_requirements_discussion_python",
+          "next": "app_requirements_requested",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_editing_requirements_discussion_python",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "repository_ready",
+          "manual": true
+        },
+        {
+          "name": "fail_repository_ready",
+          "next": "locked_repository_ready",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_repository_ready": {
       "transitions": [
         {
           "name": "unlock",
-          "next": "locked_edit_application_requested",
+          "next": "repository_ready",
           "manual": true
         },
         {
           "name": "retry",
-          "next": "locked_locked_edit_application_requested",
+          "next": "locked_repository_ready",
           "manual": true
         },
         {
-          "name": "fail_locked_locked_edit_application_requested",
-          "next": "locked_locked_locked_edit_application_requested",
+          "name": "fail_locked_repository_ready",
+          "next": "locked_repository_ready",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -462,21 +279,31 @@
         }
       ]
     },
-    "locked_locked_locked_edit_application_requested": {
+    "app_requirements_requested": {
       "transitions": [
         {
-          "name": "unlock",
-          "next": "locked_locked_edit_application_requested",
+          "name": "submit_answer",
+          "next": "app_requirements_requested_submitted_answer",
+          "manual": true
+        },
+        {
+          "name": "manual_approve",
+          "next": "app_requirements_finalized",
+          "manual": true
+        },
+        {
+          "name": "rollback",
+          "next": "app_requirements_requested_submitted_answer",
           "manual": true
         },
         {
           "name": "retry",
-          "next": "locked_locked_locked_edit_application_requested",
+          "next": "app_requirements_requested",
           "manual": true
         },
         {
-          "name": "fail_locked_locked_locked_edit_application_requested",
-          "next": "locked_locked_locked_locked_edit_application_requested",
+          "name": "fail_app_requirements_requested",
+          "next": "locked_app_requirements_requested",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -493,21 +320,21 @@
         }
       ]
     },
-    "locked_locked_locked_locked_edit_application_requested": {
+    "locked_app_requirements_requested": {
       "transitions": [
         {
           "name": "unlock",
-          "next": "locked_locked_locked_edit_application_requested",
+          "next": "app_requirements_requested",
           "manual": true
         },
         {
           "name": "retry",
-          "next": "locked_locked_locked_locked_edit_application_requested",
+          "next": "locked_app_requirements_requested",
           "manual": true
         },
         {
-          "name": "fail_locked_locked_locked_locked_edit_application_requested",
-          "next": "locked_locked_locked_locked_locked_edit_application_requested",
+          "name": "fail_locked_app_requirements_requested",
+          "next": "locked_app_requirements_requested",
           "manual": false,
           "criterion": {
             "type": "group",
@@ -524,11 +351,816 @@
         }
       ]
     },
-    "locked_locked_locked_locked_locked_edit_application_requested": {
+    "app_requirements_requested_submitted_answer": {
+      "transitions": [
+        {
+          "name": "process_user_input",
+          "next": "app_requirements_requested_processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_user_input_2c31_optimized",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "app_requirements_requested_submitted_answer",
+          "manual": true
+        },
+        {
+          "name": "fail_app_requirements_requested_submitted_answer",
+          "next": "locked_app_requirements_requested_submitted_answer",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_app_requirements_requested_submitted_answer": {
       "transitions": [
         {
           "name": "unlock",
-          "next": "locked_locked_locked_locked_edit_application_requested",
+          "next": "app_requirements_requested_submitted_answer",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_app_requirements_requested_submitted_answer",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_app_requirements_requested_submitted_answer",
+          "next": "locked_app_requirements_requested_submitted_answer",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "app_requirements_requested_processing": {
+      "transitions": [
+        {
+          "name": "process_application_requirement_processing",
+          "next": "app_requirements_requested",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.not_stage_completed_f57d",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          }
+        },
+        {
+          "name": "process_application_requirement_success",
+          "next": "app_requirements_finalized",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.is_stage_completed_e7bf",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          }
+        },
+        {
+          "name": "retry",
+          "next": "app_requirements_requested_processing",
+          "manual": true
+        },
+        {
+          "name": "fail_app_requirements_requested_processing",
+          "next": "locked_app_requirements_requested_processing",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_app_requirements_requested_processing": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "app_requirements_requested_processing",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_app_requirements_requested_processing",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_app_requirements_requested_processing",
+          "next": "locked_app_requirements_requested_processing",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "app_requirements_finalized": {
+      "transitions": [
+        {
+          "name": "ask_about_api",
+          "next": "proceed_to_saving_files",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_started_application_generation",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "app_requirements_finalized",
+          "manual": true
+        },
+        {
+          "name": "fail_app_requirements_finalized",
+          "next": "locked_app_requirements_finalized",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_app_requirements_finalized": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "app_requirements_finalized",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_app_requirements_finalized",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_app_requirements_finalized",
+          "next": "locked_app_requirements_finalized",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "proceed_to_saving_files": {
+      "transitions": [
+        {
+          "name": "init_chats_for_editing",
+          "next": "env_deployment_notified",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.init_chats_for_editing_e8f3",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "proceed_to_saving_files",
+          "manual": true
+        },
+        {
+          "name": "fail_proceed_to_saving_files",
+          "next": "locked_proceed_to_saving_files",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_proceed_to_saving_files": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "proceed_to_saving_files",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_proceed_to_saving_files",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_proceed_to_saving_files",
+          "next": "locked_proceed_to_saving_files",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "env_deployment_notified": {
+      "transitions": [
+        {
+          "name": "process_user_input_1",
+          "next": "app_requirements_step3_processing",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.process_user_input_9a8e",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "env_deployment_notified",
+          "manual": true
+        },
+        {
+          "name": "fail_env_deployment_notified",
+          "next": "locked_env_deployment_notified",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_env_deployment_notified": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "env_deployment_notified",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_env_deployment_notified",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_env_deployment_notified",
+          "next": "locked_env_deployment_notified",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "app_requirements_step3_processing": {
+      "transitions": [
+        {
+          "name": "process_app_setup_3_processing",
+          "next": "waiting_for_user_deployment_input",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.not_stage_completed_f259",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          }
+        },
+        {
+          "name": "process_app_setup_3_success",
+          "next": "deployed_cyoda_env",
+          "manual": false,
+          "criterion": {
+            "type": "function",
+            "function": {
+              "name": "FunctionProcessor.is_stage_completed_b809",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          }
+        },
+        {
+          "name": "rollback",
+          "next": "deployed_cyoda_env",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "app_requirements_step3_processing",
+          "manual": true
+        },
+        {
+          "name": "fail_app_requirements_step3_processing",
+          "next": "locked_app_requirements_step3_processing",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_app_requirements_step3_processing": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "app_requirements_step3_processing",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_app_requirements_step3_processing",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_app_requirements_step3_processing",
+          "next": "locked_app_requirements_step3_processing",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "waiting_for_user_deployment_input": {
+      "transitions": [
+        {
+          "name": "submit_answer",
+          "next": "env_deployment_notified",
+          "manual": true
+        },
+        {
+          "name": "rollback",
+          "next": "env_deployment_notified",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "waiting_for_user_deployment_input",
+          "manual": true
+        },
+        {
+          "name": "fail_waiting_for_user_deployment_input",
+          "next": "locked_waiting_for_user_deployment_input",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_waiting_for_user_deployment_input": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "waiting_for_user_deployment_input",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_waiting_for_user_deployment_input",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_waiting_for_user_deployment_input",
+          "next": "locked_waiting_for_user_deployment_input",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "deployed_cyoda_env": {
+      "transitions": [
+        {
+          "name": "notify_user_env_deployed",
+          "next": "prototype_generation_started",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.notify_user_env_deployed_58e2",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "deployed_cyoda_env",
+          "manual": true
+        },
+        {
+          "name": "fail_deployed_cyoda_env",
+          "next": "locked_deployed_cyoda_env",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_deployed_cyoda_env": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "deployed_cyoda_env",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_deployed_cyoda_env",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_deployed_cyoda_env",
+          "next": "locked_deployed_cyoda_env",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "prototype_generation_started": {
+      "transitions": [
+        {
+          "name": "start_editing_application",
+          "next": "waiting_for_app_build",
+          "manual": false,
+          "processors": [
+            {
+              "name": "AgentProcessor.edit_app_python",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "prototype_generation_started",
+          "manual": true
+        },
+        {
+          "name": "fail_prototype_generation_started",
+          "next": "locked_prototype_generation_started",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_prototype_generation_started": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "prototype_generation_started",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_prototype_generation_started",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_prototype_generation_started",
+          "next": "locked_prototype_generation_started",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "waiting_for_app_build": {
+      "transitions": [
+        {
+          "name": "complete_generation",
+          "next": "resources_generated",
+          "manual": true
+        },
+        {
+          "name": "submit_answer",
+          "next": "waiting_for_app_build",
+          "manual": true
+        },
+        {
+          "name": "rollback",
+          "next": "waiting_for_app_build",
+          "manual": true
+        },
+        {
+          "name": "manual_approve",
+          "next": "resources_generated",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "waiting_for_app_build",
+          "manual": true
+        },
+        {
+          "name": "fail_waiting_for_app_build",
+          "next": "locked_waiting_for_app_build",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "locked_waiting_for_app_build": {
+      "transitions": [
+        {
+          "name": "unlock",
+          "next": "waiting_for_app_build",
+          "manual": true
+        },
+        {
+          "name": "retry",
+          "next": "locked_waiting_for_app_build",
+          "manual": true
+        },
+        {
+          "name": "fail_locked_waiting_for_app_build",
+          "next": "locked_waiting_for_app_build",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "resources_generated": {
+      "transitions": [
+        {
+          "name": "notify_editing_complete",
+          "next": "completed",
+          "manual": false,
+          "processors": [
+            {
+              "name": "MessageProcessor.notify_editing_complete",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 900000
+              }
+            }
+          ]
+        },
+        {
+          "name": "retry",
+          "next": "resources_generated",
+          "manual": true
+        },
+        {
+          "name": "fail_resources_generated",
+          "next": "locked_resources_generated",
+          "manual": false,
+          "criterion": {
+            "type": "group",
+            "operator": "AND",
+            "conditions": [
+              {
+                "type": "simple",
+                "jsonPath": "$.failed",
+                "operation": "EQUALS",
+                "value": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "completed": {
+      "transitions": [
+        {
+          "name": "complete",
+          "next": "locked_chat_completed",
+          "manual": false
+        }
+      ]
+    },
+    "locked_chat_completed": {
+      "transitions": [
+        {
+          "name": "complete_editing",
+          "next": "completed",
           "manual": true
         }
       ]

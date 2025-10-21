@@ -684,12 +684,11 @@ class AIAgentHandler:
             logger.debug(f"CLI response: {response[:200]}{'...' if len(response) > 200 else ''}")
 
             # Update entity with 'complete_generation' transition
-            await self._trigger_complete_generation_transition(technical_id, entity)
+            await self._trigger_complete_generation_transition(technical_id=technical_id, entity=entity)
 
         except Exception as e:
-            logger.exception(f"❌ Error in CLI background task for entity {technical_id}: {e}")
-            # Optionally, you could trigger an error transition here
-            # await self._trigger_error_transition(technical_id, entity, str(e))
+            logger.error(f"❌ Error in CLI background task for entity {technical_id}: {e}")
+            # The error is already logged, no need to re-raise since this is a background task
 
     async def _trigger_complete_generation_transition(self, technical_id: str, entity: AgenticFlowEntity) -> None:
         """
@@ -714,8 +713,9 @@ class AIAgentHandler:
             logger.info(f"✅ Successfully triggered 'complete_generation' transition for entity {technical_id}")
 
         except Exception as e:
-            logger.exception(f"❌ Failed to trigger 'complete_generation' transition for entity {technical_id}: {e}")
-            raise
+            logger.error(f"❌ Failed to trigger 'complete_generation' transition for entity {technical_id}: {e}")
+            # Don't re-raise since this is called from a background task
+            # The CLI process has already completed successfully, so we just log the error
 
     async def _process_file_content_for_empty_messages(self, messages: List[AIMessage],
                                                        finished_flow: List[FlowEdgeMessage]) -> None:

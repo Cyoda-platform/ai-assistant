@@ -562,16 +562,25 @@ class AuggieProcessor:
     async def _send_commit_notification(self, entity: AgenticFlowEntity, branch_id: str, repository_name: str,
                                         elapsed_time: int, git_diff: str, commit_type: str):
         try:
+            # Get repository URL from workflow cache
+            repository_url = entity.workflow_cache.get(const.REPOSITORY_URL_PARAM)
+
+            # Extract repository name from URL (last part after /)
+            if repository_url:
+                repo_display = repository_url.rstrip('/').split('/')[-1]
+            else:
+                repo_display = repository_name
+
             # Format the notification message
             if commit_type == "incremental":
                 message_content = f"**Script Progress Update**\n\n"
                 message_content += f"⏱️ **Time Elapsed**: {elapsed_time} seconds\n"
                 message_content += f"🌿 **Branch**: {branch_id}\n"
-                message_content += f"📁 **Repository**: {repository_name}\n\n"
+                message_content += f"📁 **Repository**: {repo_display}\n\n"
             else:
                 message_content = f"**Script Completed Successfully**\n\n"
                 message_content += f"🌿 **Branch**: {branch_id}\n"
-                message_content += f"📁 **Repository**: {repository_name}\n\n"
+                message_content += f"📁 **Repository**: {repo_display}\n\n"
 
             # Add git diff if available
             if git_diff.strip():
