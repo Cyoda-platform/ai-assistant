@@ -37,17 +37,37 @@ For private repos: Guide user through setup, then call build_general_application
 
 ### Private Repository Setup
 
-If user chooses private repository, help them:
+If user chooses private repository, explain:
 
-1. Fork the template:
-   - Java: https://github.com/Cyoda-platform/java-client-template
-   - Python: https://github.com/Cyoda-platform/mcp-cyoda-quart-app
+We use GitHub Apps to enable fine-grained, least-privilege access to your repositories. This ensures the AI assistant only has the specific permissions needed to help you build your application, following security best practices.
 
-2. Install GitHub App at https://github.com/apps/cyoda-ai-assistant
-   - Select repositories (recommend "Only select repositories" for security)
-   - Get Installation ID from URL: https://github.com/settings/installations/XXXXXX
+Then guide them through setup based on their language choice:
 
-3. Provide the forked repository URL and Installation ID
+For Java applications, use template: https://github.com/Cyoda-platform/java-client-template
+For Python applications, use template: https://github.com/Cyoda-platform/mcp-cyoda-quart-app
+
+Steps:
+1. Fork the template repository:
+   - Navigate to the appropriate template URL above
+   - Click the "Fork" button to create your own copy
+   - Your forked repository will be at: https://github.com/YOUR-USERNAME/YOUR-PROJECT-NAME
+
+2. Install the Cyoda AI Assistant GitHub App:
+   - Visit: https://github.com/apps/cyoda-ai-assistant
+   - Click "Install" or "Configure"
+   - Select repositories (we recommend "Only select repositories" for security)
+   - Choose your forked repository
+
+3. Get your Installation ID:
+   - Go to: https://github.com/settings/installations
+   - Find "Cyoda AI Assistant" in the list
+   - Click "Configure"
+   - Look at the URL - it will be in the format: https://github.com/settings/installations/XXXXXX
+   - The XXXXXX number is your Installation ID
+
+4. Provide the following information:
+   - Your forked repository URL (format: https://github.com/YOUR-USERNAME/YOUR-PROJECT-NAME)
+   - Your Installation ID (the number from step 3)
 
 Validate the URL starts with https://github.com/ and Installation ID is a number.
 
