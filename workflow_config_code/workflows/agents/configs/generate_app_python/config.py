@@ -17,5 +17,5 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "agent_type": "auggie",
         "script_path": "workflow/scripts/auggie_example.sh",
         "prompt": GenerateAppPythonPromptConfig.get_config(),
-        "model": "sonnet4"
+        "model": "haiku4.5"
 }
