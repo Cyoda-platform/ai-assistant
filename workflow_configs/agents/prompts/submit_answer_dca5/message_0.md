@@ -76,6 +76,9 @@ Validate the URL starts with https://github.com/ and Installation ID is a number
 - `get_cyoda_guidelines` - when user asks about Cyoda design principles
 - `init_setup_workflow` - when user needs help running/setting up their application
 - `get_user_info` - retrieve workflow context anytime you need it
+- `deploy_cyoda_env` - when user is ready to deploy/redeploy their app
+- `deploy_user_application` - when user wants to deploy their app. Ask if the user wants to deploy from the public or private repository. If public - ask for branch, programming language, client id and client secret. If private - ask for repository URL, installation ID, branch, client id and client secret.
+If the user doesnt have client id and client secret call ui_function_issue_technical_user tool.
 
 ## Tone
 
