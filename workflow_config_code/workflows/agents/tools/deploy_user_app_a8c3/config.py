@@ -41,6 +41,16 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "installation_id": {
                                         "type": "string",
                                         "description": "GitHub App installation ID for private repositories"
+                                },
+                                "is_public": {
+                                        "type": "string",
+                                        "enum": ["true", "false"],
+                                        "description": "Is the repository public or private"
+                                },
+                                "programming_language": {
+                                        "type": "string",
+                                        "description": "Programming language of the application",
+                                        "enum": ["PYTHON", "JAVA", "private_repo"]
                                 }
                         },
                         "required": [
@@ -49,7 +59,9 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
                                 "cyoda_client_id",
                                 "cyoda_client_secret",
                                 "repository_url",
-                                "installation_id"
+                                "installation_id",
+                                "is_public",
+                                "programming_language"
                         ],
                         "additionalProperties": False
                 }

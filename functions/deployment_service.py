@@ -121,12 +121,16 @@ class DeploymentService(BaseWorkflowService):
     async def deploy_user_application(self, technical_id: str, entity: AgenticFlowEntity, **params) -> str:
         """
         Deploy user application.
-        
+
         Args:
             technical_id: Technical identifier
             entity: Agentic flow entity
-            **params: Additional parameters
-            
+            **params: Additional parameters including:
+                - is_public: "true" or "false" indicating if repository is public
+                - programming_language: "PYTHON" or "JAVA"
+                - repository_url: Repository URL (optional, auto-set for public repos)
+                - installation_id: GitHub App installation ID (optional, auto-set for public repos)
+
         Returns:
             Success message or error for guest users
         """
@@ -135,6 +139,19 @@ class DeploymentService(BaseWorkflowService):
 
         # Set user environment name
         params['user_env_name'] = f"client-{entity.user_id.lower()}.{config.CLIENT_HOST}"
+
+        # Set repository_url and installation_id for public repositories
+        if params.get("is_public") == "true":
+            programming_language = params.get("programming_language", "").upper()
+
+            if programming_language == "PYTHON":
+                params['repository_url'] = config.PYTHON_PUBLIC_REPO_URL
+            elif programming_language == "JAVA":
+                params['repository_url'] = config.JAVA_PUBLIC_REPO_URL
+            else:
+                return f"Unsupported programming language: {programming_language}. Supported languages: PYTHON, JAVA"
+
+            params['installation_id'] = config.GITHUB_PUBLIC_REPO_INSTALLATION_ID
 
         return await self._schedule_workflow(
             technical_id=technical_id,
