@@ -183,6 +183,10 @@ class ApplicationBuilderService(BaseWorkflowService):
                 resume_transition=const.TransitionKey.BUILD_NEW_APP.value
             )
 
+            entity.workflow_cache[const.CURRENT_CHAT_GITHUB_BRANCH] = child_technical_id
+            entity.workflow_cache[const.CURRENT_CHAT_ALLOWED_GITHUB_BRANCH] = child_technical_id
+
+
             return (f"Workflow {workflow_name} {child_technical_id} has been scheduled successfully. "
                    f"You'll be notified when it is in progress.")
 
@@ -232,6 +236,9 @@ class ApplicationBuilderService(BaseWorkflowService):
             if not is_valid:
                 self.logger.error(f"Parameter validation failed: {error_msg}")
                 return error_msg
+
+            if entity.user_id.startswith("guest_"):
+                return "Editing applications is not supported for guest users. Please sign up for a free account and continue in a newchat. You will need to start a new chat to continue."
 
             user_request = params.get("user_request")
             programming_language = params.get("programming_language")

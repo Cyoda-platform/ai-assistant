@@ -14,7 +14,7 @@ def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         "type": "function",
         "function": {
                 "name": "get_env_deploy_status",
-                "description": "Use if the user wants to know the status of their environment build/deploy.",
+                "description": "Use if the user wants to know the status of their build/deploy.",
                 "strict": True,
                 "parameters": {
                         "type": "object",

@@ -1,7 +1,6 @@
 """
-DeployCyodaEnvWorkflowConfig Workflow
+DeployUserAppWorkflowConfig Workflow
 
-Generated from config: workflow_configs/workflows/deploy_cyoda_env.json
 Workflow configuration with get_name() and get_config() methods.
 """
 
@@ -9,13 +8,13 @@ from typing import Any, Dict
 from .config import get_config
 
 
-class DeployCyodaEnvWorkflowConfig:
-    """Workflow configuration for deploy_cyoda_env"""
+class DeployUserAppWorkflowConfig:
+    """Workflow configuration for deploy_user_app"""
 
     @staticmethod
     def get_name() -> str:
         """Get the static name of this workflow"""
-        return "deploy_cyoda_env"
+        return "deploy_user_app"
 
     @staticmethod
     def get_config(params: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -25,4 +24,5 @@ class DeployCyodaEnvWorkflowConfig:
 
 
 # Create singleton instance
-deploy_cyoda_env_workflow = DeployCyodaEnvWorkflowConfig()
+deploy_user_app_workflow = DeployUserAppWorkflowConfig()
+

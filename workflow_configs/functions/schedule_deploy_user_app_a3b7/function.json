@@ -1,0 +1,9 @@
+{
+  "type": "function",
+  "publish": true,
+  "function": {
+    "name": "schedule_deploy_user_application",
+    "description": "Schedules deployment of user application",
+    "strict": true
+  }
+}

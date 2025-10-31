@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from typing import Any
 
 import common.config.const as const
@@ -71,13 +72,7 @@ class DeploymentService(BaseWorkflowService):
         Returns:
             Success message with deployment information
         """
-        repository_name = get_repository_name(entity)
-        repository_url = f"{config.REPOSITORY_URL.format(repository_name=repository_name)}.git"
-        extra_payload = {
-            "repository_url": repository_url,
-            "branch": entity.workflow_cache.get(const.GIT_BRANCH_PARAM),
-            "is_public": "true"
-        }
+        extra_payload = deepcopy(entity.workflow_cache)
         return await self._schedule_deploy(
             technical_id,
             entity,

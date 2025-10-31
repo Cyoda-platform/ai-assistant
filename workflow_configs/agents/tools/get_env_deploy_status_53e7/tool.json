@@ -2,7 +2,7 @@
   "type": "function",
   "function": {
     "name": "get_env_deploy_status",
-    "description": "Use if the user wants to know the status of their environment build/deploy.",
+    "description": "Use if the user wants to know the status of their build/deploy.",
     "strict": true,
     "parameters": {
       "type": "object",

@@ -3,7 +3,7 @@
   "publish": true,
   "allow_anonymous_users": true,
   "model": {
-    "model_name": "gpt-4o",
+    "model_name": "gpt-5-mini",
     "temperature": 0.7,
     "max_tokens": 10000
   },
@@ -28,6 +28,9 @@
     },
     {
       "name": "deploy_cyoda_env_76b1"
+    },
+    {
+      "name": "deploy_user_app_a8c3"
     },
     {
       "name": "get_cyoda_guidelines_4c97"

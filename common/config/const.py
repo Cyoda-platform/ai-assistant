@@ -137,7 +137,7 @@ class DeploymentFlow(str, Enum):
     DEPLOY_CYODA_ENV = "deploy_cyoda_env"
     DEPLOY_CYODA_ENV_BACKGROUND = "deploy_cyoda_env_background"
     BUILD_USER_APP = "build_user_application"
-    DEPLOY_USER_APPLICATION = "deploy_user_application"
+    DEPLOY_USER_APPLICATION = "deploy_user_app"
 
 
 # === Error codes ===
@@ -254,6 +254,8 @@ REPOSITORY_NAME_PARAM="repository_name"
 REPOSITORY_URL_PARAM="repository_url"
 INSTALLATION_ID_PARAM="installation_id"
 PROGRAMMING_LANGUAGE_PARAM="programming_language"
+CURRENT_CHAT_GITHUB_BRANCH="current_chat_github_branch"
+CURRENT_CHAT_ALLOWED_GITHUB_BRANCH="current_chat_allowed_github_branch"
 # === Numeric limits ===
 RATE_LIMIT = 300
 SCHEDULER_CHECK_INTERVAL = 60

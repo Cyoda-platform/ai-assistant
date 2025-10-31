@@ -1,0 +1,130 @@
+{
+  "version": "1.0",
+  "name": "deploy_user_app",
+  "desc": "Workflow for deploying user application",
+  "initialState": "initial_state",
+  "active": true,
+  "criterion": {
+    "type": "simple",
+    "jsonPath": "$.workflow_name",
+    "operation": "EQUALS",
+    "value": "deploy_user_app"
+  },
+  "states": {
+    "initial_state": {
+      "transitions": [
+        {
+          "name": "schedule_deploy_user_app",
+          "next": "scheduled_deploy_user_app",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.schedule_deploy_user_app_a3b7",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "scheduled_deploy_user_app": {
+      "transitions": [
+        {
+          "name": "lock_chat",
+          "next": "locked_chat_while_deployment",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.lock_chat_670c",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "locked_chat_while_deployment": {
+      "transitions": [
+        {
+          "name": "finish_deployment_success",
+          "next": "deployed_app",
+          "manual": true,
+          "processors": [
+            {
+              "name": "MessageProcessor.message_deployment_success_7458",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        },
+        {
+          "name": "finish_deployment_failure",
+          "next": "deployed_app",
+          "manual": true,
+          "processors": [
+            {
+              "name": "MessageProcessor.message_deployment_failure_b556",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        },
+        {
+          "name": "rollback",
+          "next": "deployed_app",
+          "manual": true,
+          "processors": [
+            {
+              "name": "MessageProcessor.message_deployment_rollback_c4f9",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "deployed_app": {
+      "transitions": [
+        {
+          "name": "lock_chat",
+          "next": "locked_chat",
+          "manual": false,
+          "processors": [
+            {
+              "name": "FunctionProcessor.lock_chat_670c",
+              "executionMode": "ASYNC_NEW_TX",
+              "config": {
+                "calculationNodesTags": "ai_assistant",
+                "responseTimeoutMs": 300000
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "locked_chat": {
+      "transitions": [
+        {
+          "name": "unlock_chat",
+          "next": "deployed_app",
+          "manual": true
+        }
+      ]
+    }
+  }
+}

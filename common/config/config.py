@@ -144,14 +144,15 @@ class Config:
         self.GRPC_ADDRESS = _get_env("GRPC_ADDRESS", default=f"grpc-{self.CYODA_HOST}")
 
         cm = self.CLOUD_MANAGER_HOST
-        self.DEPLOY_CYODA_ENV = _get_env("DEPLOY_CYODA_ENV", default=f"https://{cm}/deploy/cyoda-env")
-        self.DEPLOY_USER_APP = _get_env("DEPLOY_USER_APP", default=f"https://{cm}/deploy/user-app")
-        self.BUILD_USER_APP = _get_env("BUILD_USER_APP", default=f"https://{cm}/build/user-app")
+        protocol = "http" if "localhost" in cm else "https"
+        self.DEPLOY_CYODA_ENV = _get_env("DEPLOY_CYODA_ENV", default=f"{protocol}://{cm}/deploy/cyoda-env")
+        self.DEPLOY_USER_APP = _get_env("DEPLOY_USER_APP", default=f"{protocol}://{cm}/deploy/user-app")
+        self.BUILD_USER_APP = _get_env("BUILD_USER_APP", default=f"{protocol}://{cm}/build/user-app")
         self.DEPLOY_CYODA_ENV_STATUS = _get_env(
-            "DEPLOY_CYODA_ENV_STATUS", default=f"https://{cm}/deploy/cyoda-env/status"
+            "DEPLOY_CYODA_ENV_STATUS", default=f"{protocol}://{cm}/deploy/cyoda-env/status"
         )
         self.DEPLOY_USER_APP_STATUS = _get_env(
-            "DEPLOY_USER_APP_STATUS", default=f"https://{cm}/deploy/user-app/status"
+            "DEPLOY_USER_APP_STATUS", default=f"{protocol}://{cm}/deploy/user-app/status"
         )
 
         # — action mappings (instance-level) —

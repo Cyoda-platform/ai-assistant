@@ -65,7 +65,7 @@ If not run `./gradlew build`
 ./gradlew build  # Ensure generated classes exist
 ```
 - Review `src/main/resources/functional_requirements/*` to understand requirements. There can be multiple files - study them all.
-- Study examples in `llm_example/code/application/` directory
+- Study examples in `src/test/java/com/example/application/` directory
 - Plan entities and their relationships
 
 ## Repository Map
@@ -74,8 +74,8 @@ If not run `./gradlew build`
    - common/service/EntityService.java
    - common/workflow/CyodaEntity.java
    - common/workflow/CyodaEventContext.java
-2. **Examples**: llm_example/code/application (processors, criteria, controllers)
-   **CRITICAL: Check llm_example/code/application before implementing your own.**
+2. **Examples**: src/test/java/com/example/application (processors, criteria, controllers)
+   **CRITICAL: Check src/test/java/com/example/application before implementing your own.**
 
 3. **Functional Requirements**
    - Entities: src/main/resources/functional_requirements/entityName/entityName.md
@@ -90,7 +90,7 @@ If not run `./gradlew build`
 ### 2. Entity Implementation
 **Location**: `application/entity/{entity_name}/version_1/{EntityName}.java`
 
-1. Familiarize with codebase in llm_example/code/application directory.
+1. Familiarize with codebase in src/test/java/com/example/application directory.
 2. Entities
    - Implement POJOs under application/entity/{entity_name}/version_1/ with Lombok @Data.
    - Constants:

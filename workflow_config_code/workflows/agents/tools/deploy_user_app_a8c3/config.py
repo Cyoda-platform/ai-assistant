@@ -1,0 +1,58 @@
+"""
+DeployUserAppA8c3ToolConfig Configuration
+
+Configuration data for the tool.
+"""
+
+from typing import Any, Dict, Callable
+
+
+def get_config() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+    """Get tool configuration factory"""
+    return lambda params=None: {
+        "type": "function",
+        "function": {
+                "name": "deploy_user_application",
+                "description": "Launches workflow that is necessary to deploy user application. User needs to explicitly ask for deployment of their application.",
+                "strict": True,
+                "parameters": {
+                        "type": "object",
+                        "properties": {
+                                "user_request": {
+                                        "type": "string",
+                                        "description": "User's request for deploying the application"
+                                },
+                                "branch_name": {
+                                        "type": "string",
+                                        "description": "Git branch name to deploy from"
+                                },
+                                "cyoda_client_id": {
+                                        "type": "string",
+                                        "description": "Cyoda client ID for authentication"
+                                },
+                                "cyoda_client_secret": {
+                                        "type": "string",
+                                        "description": "Cyoda client secret for authentication"
+                                },
+                                "repository_url": {
+                                        "type": "string",
+                                        "description": "Repository URL to deploy from"
+                                },
+                                "installation_id": {
+                                        "type": "string",
+                                        "description": "GitHub App installation ID for private repositories"
+                                }
+                        },
+                        "required": [
+                                "user_request",
+                                "branch_name",
+                                "cyoda_client_id",
+                                "cyoda_client_secret",
+                                "repository_url",
+                                "installation_id"
+                        ],
+                        "additionalProperties": False
+                }
+        }
+}
+
