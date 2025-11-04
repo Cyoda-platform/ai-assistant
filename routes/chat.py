@@ -196,7 +196,7 @@ async def submit_canvas_question():
         return jsonify({"error": "Missing required field: response_type"}), 400
 
     # Validate response_type
-    valid_types = ['entity_json', 'workflow_json', 'app_config_json', 'environment_json']
+    valid_types = ['entity_json', 'workflow_json', 'app_config_json', 'environment_json', 'requirement_json', 'text']
     if response_type not in valid_types:
         return jsonify({
             "error": "Invalid request",

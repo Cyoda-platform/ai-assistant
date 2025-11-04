@@ -23,7 +23,8 @@ def get_response_format(response_type: str) -> Dict[str, Any]:
         "entity_json": ("entity_schema", "entity_config_schema", "Entity configuration schema"),
         "workflow_json": ("workflow_schema", "workflow_config_schema", "Workflow configuration schema"),
         "app_config_json": ("app_config_schema", "app_config_schema", "Application configuration schema"),
-        "environment_json": ("environment_schema", "environment_config_schema", "Environment configuration schema")
+        "environment_json": ("environment_schema", "environment_config_schema", "Environment configuration schema"),
+        "requirement_json": ("requirement_schema", "requirement_config_schema", "Requirement configuration schema")
     }
 
     if response_type not in schema_map:

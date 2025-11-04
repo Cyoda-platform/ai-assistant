@@ -1,0 +1,42 @@
+{
+  "type": "object",
+  "required": ["title", "description"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Requirement title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the requirement"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "default": "medium"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "approved", "implemented", "verified"],
+      "default": "draft"
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of acceptance criteria for this requirement"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of other requirements this depends on"
+    },
+    "estimated_hours": {
+      "type": "number",
+      "description": "Estimated hours to implement"
+    }
+  }
+}

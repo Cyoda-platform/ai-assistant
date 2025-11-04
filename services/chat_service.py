@@ -410,15 +410,76 @@ class ChatService:
         from pathlib import Path
         from common.schemas.canvas_schemas import get_response_format
 
-        # Map response_type to hook type
+        # Handle 'text' response type (for Code tab) - just return a helpful text response
+        if response_type == 'text':
+            # For text responses, we don't need structured output
+            prompt_path = Path('workflow_configs/agents/configs/canvas_assistant/prompts/system_prompt.md')
+            try:
+                with open(prompt_path, 'r') as f:
+                    system_prompt = f.read().strip()
+            except Exception as e:
+                logger.error(f"Failed to load system prompt: {e}")
+                system_prompt = "You are a helpful AI assistant."
+
+            # Enhance question with context
+            context_str = ""
+            if context:
+                context_parts = []
+                if context.get('app_name'):
+                    context_parts.append(f"Application: {context['app_name']}")
+                if context.get('active_tab'):
+                    context_parts.append(f"Active tab: {context['active_tab']}")
+                if context_parts:
+                    context_str = f"\n\nContext:\n" + "\n".join(context_parts)
+
+            enhanced_question = f"{question}{context_str}"
+
+            try:
+                result = await self.ai_agent.run_agent(
+                    methods_dict=None,
+                    cls_instance=None,
+                    entity=None,
+                    technical_id=chat_id or "canvas_question",
+                    tools=None,
+                    model=ModelConfig(model_name='gpt-4o'),
+                    tool_choice=None,
+                    messages=[
+                        AIMessage(role="system", content=system_prompt),
+                        AIMessage(role="user", content=enhanced_question)
+                    ],
+                    response_format=None  # No structured output for text
+                )
+
+                return {
+                    "message": result,
+                    # No hook for text responses - just plain text
+                }
+            except Exception as e:
+                logger.exception(f"AI agent failed for text response: {e}")
+                return {
+                    "error": "Failed to generate response",
+                    "details": {
+                        "message": str(e)
+                    }
+                }
+
+        # Map response_type to hook type (for structured JSON responses)
         hook_type_map = {
             'entity_json': 'entity_config',
             'workflow_json': 'workflow_config',
             'app_config_json': 'app_config',
-            'environment_json': 'environment_config'
+            'environment_json': 'environment_config',
+            'requirement_json': 'requirement_config'
         }
 
-        hook_type = hook_type_map[response_type]
+        hook_type = hook_type_map.get(response_type)
+        if not hook_type:
+            return {
+                "error": "Invalid response type",
+                "details": {
+                    "message": f"Unknown response_type: {response_type}"
+                }
+            }
 
         # Get response format from schemas
         try:
